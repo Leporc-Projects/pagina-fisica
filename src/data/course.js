@@ -1,8 +1,13 @@
-// Información académica de Física Básica I.
-//
-// Este archivo concentra los datos del curso para evitar repetirlos
-// manualmente en diferentes páginas.
+// Contrato académico central de Física Básica I.
+// Los datos estables provienen del programa oficial; SCHEDULE proviene del
+// plan clase a clase 2026-2. Las páginas consumen estas exportaciones para no
+// repetir información ni introducir versiones contradictorias.
 
+/**
+ * Identidad, carga académica y resultados estables del curso.
+ * La consumen las cabeceras y las páginas académicas. No debe incorporar
+ * contacto, oficina, horarios ni información del profesor del taller.
+ */
 export const COURSE = {
     name: "Física Básica I",
     code: "0302270",
@@ -39,6 +44,11 @@ export const COURSE = {
     ],
 };
 
+/**
+ * Índice canónico de rutas internas del curso.
+ * CourseNav y la navegación global comparten esta misma lista; validate.mjs
+ * comprueba que no haya rutas duplicadas y que cada destino exista.
+ */
 export const COURSE_NAV = [
     {
         label: "Curso",
@@ -66,6 +76,12 @@ export const COURSE_NAV = [
     },
 ];
 
+/**
+ * Organización temática vigente en siete unidades.
+ * La consumen el curso, el catálogo de unidades, ejercicios y videos. No debe
+ * reorganizarse por inferencia: cualquier diferencia entre fuentes requiere
+ * revisión académica con el profesor.
+ */
 export const UNITS = [
     {
         number: 1,
@@ -195,6 +211,11 @@ export const UNITS = [
     },
 ];
 
+/**
+ * Componentes y porcentajes establecidos por el programa oficial.
+ * Las vistas calculan el total desde estos registros y la validación exige
+ * que la suma permanezca en 100 %.
+ */
 export const EVALUATION = [
     {
         name: "Primer examen",
@@ -223,6 +244,11 @@ export const EVALUATION = [
     },
 ];
 
+/**
+ * Referencias bibliográficas del programa oficial.
+ * Se muestran como metadatos en el curso y en Recursos; nunca deben convertirse
+ * en enlaces a copias no autorizadas de libros comerciales.
+ */
 export const BIBLIOGRAPHY = [
     {
         shortName: "S–Z",
@@ -254,6 +280,11 @@ export const BIBLIOGRAPHY = [
     },
 ];
 
+/**
+ * Desarrollo concreto del semestre según el plan clase a clase 2026-2.
+ * El orden del arreglo es el orden cronológico de publicación. Los números de
+ * sesión deben ser consecutivos y este conjunto no incluye el cronograma del taller.
+ */
 export const SCHEDULE = [
     {
         session: 1,
@@ -755,6 +786,7 @@ export const SCHEDULE = [
     },
 ];
 
+/** Etiquetas de presentación para los tipos admitidos por SCHEDULE. */
 export const SCHEDULE_TYPES = {
     class: {
         label: "Clase",

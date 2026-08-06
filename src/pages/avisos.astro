@@ -1,4 +1,5 @@
 ---
+// Archivo público que comparte la misma fuente de avisos con la portada.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import { SITE } from "../data/site.js";
@@ -6,6 +7,7 @@ import { getNoticesByDate } from "../data/notices.js";
 
 const notices = getNoticesByDate();
 
+// Añadir la hora local evita que una fecha ISO sin hora retroceda por zona horaria.
 const formatDate = (date) =>
   new Date(`${date}T00:00:00`).toLocaleDateString(
     SITE.locale,
@@ -27,6 +29,7 @@ const formatDate = (date) =>
     description="Información pública sobre el desarrollo del sitio y la publicación de contenidos revisados."
   />
 
+  <!-- Mantiene un estado vacío válido si la fuente editorial no tiene registros. -->
   <section class="page-section" aria-labelledby="notice-archive-title">
     <div class="section-heading">
       <h2 id="notice-archive-title">Archivo de avisos</h2>
@@ -45,6 +48,7 @@ const formatDate = (date) =>
         )
         : (
           <div class="notice-list notice-list--archive">
+            <!-- Los IDs ARIA derivan del identificador editorial, que validate.mjs exige único. -->
             {
               notices.map((notice) => (
                 <article

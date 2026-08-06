@@ -1,4 +1,5 @@
 ---
+// Biblioteca basada en metadatos; los archivos audiovisuales viven fuera del repositorio.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { COURSE, UNITS } from "../../data/course.js";
@@ -7,6 +8,7 @@ import {
   VIDEO_CONTENT_TYPES,
 } from "../../data/videos.js";
 
+// Cada unidad se conserva visible aunque aún no tenga publicaciones asociadas.
 const videosByUnit = UNITS.map((unit) => ({
   unit,
   videos: VIDEOS.filter((video) => video.unit === unit.number),
@@ -23,6 +25,7 @@ const videosByUnit = UNITS.map((unit) => ({
       description="Biblioteca audiovisual preparada para organizar materiales propios y aprobados por unidad."
     />
 
+    <!-- Documenta el contrato del catálogo sin presentar publicaciones inexistentes. -->
     <section
       class="course-section course-section--split"
       aria-labelledby="video-structure-title"
@@ -64,6 +67,7 @@ const videosByUnit = UNITS.map((unit) => ({
       </header>
 
       {
+        // El estado vacío es parte deliberada del flujo editorial.
         VIDEOS.length === 0 && (
           <div class="empty-state">
             <p class="empty-state__label">Estado actual</p>

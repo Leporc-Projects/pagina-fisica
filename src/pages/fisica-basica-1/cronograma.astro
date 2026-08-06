@@ -1,4 +1,5 @@
 ---
+// Presentación del SCHEDULE académico sin duplicar fechas ni sesiones en la página.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 
@@ -30,10 +31,12 @@ const dateFormatter = new Intl.DateTimeFormat(
 const capitalize = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1);
 
+// El mediodía local evita que una conversión de zona horaria cambie el día visible.
 const parseDate = (date: string) =>
   new Date(`${date}T12:00:00`);
 
 const getTypeLabel = (type: string) =>
+  // El fallback mantiene legible un tipo nuevo mientras se actualiza su etiqueta.
   SCHEDULE_TYPES[
     type as keyof typeof SCHEDULE_TYPES
   ]?.label ?? type;
@@ -44,6 +47,8 @@ const groupedSchedule: Array<{
   sessions: ScheduleEntry[];
 }> = [];
 
+// El ID nace de la fecha ISO, no del nombre traducido del mes, para ser estable y accesible.
+// Se conserva el orden de SCHEDULE; no se aplica un segundo ordenamiento en la vista.
 for (const session of SCHEDULE) {
   const id = `month-${session.date.slice(0, 7)}`;
   const month = capitalize(
@@ -92,6 +97,7 @@ const eventsCount = SCHEDULE.filter(
       description={`Plan de clases, repasos, evaluaciones y eventos académicos del semestre ${COURSE.semester}.`}
     />
 
+    <!-- Las métricas se derivan de SCHEDULE para que nunca se desfasen del calendario. -->
     <section
       class="schedule-overview"
       aria-labelledby="schedule-overview-title"

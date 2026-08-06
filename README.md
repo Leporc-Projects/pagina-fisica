@@ -37,6 +37,11 @@ pagina-fisica/
 └── README.md
 ```
 
+## Documentación
+
+- [Arquitectura y flujo técnico](docs/ARCHITECTURE.md)
+- [Guía para incorporar contenidos](docs/CONTENT_GUIDE.md)
+
 ## Rutas actuales
 
 - `/`: portada y avisos recientes.

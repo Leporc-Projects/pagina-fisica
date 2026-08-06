@@ -1,5 +1,5 @@
-// Avisos públicos del sitio.
-// Esta es la única fuente consumida por la portada y por /avisos.
+// Fuente editorial única de avisos públicos.
+// La portada muestra una selección y /avisos presenta el archivo completo.
 
 /**
  * @typedef {Object} PublicNotice
@@ -13,7 +13,11 @@
  * @property {string} [href]
  */
 
-/** @type {PublicNotice[]} */
+/**
+ * Los avisos pueden describir publicaciones o el estado real del sitio, pero no
+ * deben inventar eventos académicos. Los identificadores son estables y únicos.
+ * @type {PublicNotice[]}
+ */
 export const NOTICES = [
   {
     id: "sitio-primera-etapa",
@@ -28,6 +32,7 @@ export const NOTICES = [
   },
 ];
 
+// sort() modifica el arreglo; se ordena una copia para mantener NOTICES como fuente inmutable.
 export const getNoticesByDate = () =>
   [...NOTICES].sort((a, b) =>
     b.date.localeCompare(a.date)

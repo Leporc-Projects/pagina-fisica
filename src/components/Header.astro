@@ -5,6 +5,7 @@ import { COURSE } from "../data/course.js";
 
 const { pathname } = Astro.url;
 
+// Una sección principal permanece activa también al visitar cualquiera de sus subrutas.
 const isCurrent = (href: string) => {
   if (href === "/") return pathname === "/";
   if (href.startsWith("/#")) return false;
@@ -208,6 +209,7 @@ const isCurrent = (href: string) => {
 </div>
 
 <script>
+  // El diálogo conserva el foco dentro del menú y lo devuelve al control que lo abrió.
   const menu = document.getElementById("site-menu");
 
   const openButtons = Array
@@ -299,6 +301,7 @@ const isCurrent = (href: string) => {
 
     if (event.key !== "Tab") return;
 
+    // Cierra el ciclo de tabulación para que el foco no escape del diálogo modal.
     const focusable = Array
       .from(menu.querySelectorAll(focusableSelector))
       .filter(

@@ -1,5 +1,5 @@
 ---
-// Estructura común de todas las páginas.
+// Documento HTML compartido: metadatos, navegación, contenido principal y footer.
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
@@ -45,6 +45,7 @@ const fullTitle =
 
     <main id="main-content" tabindex="-1">
       {
+        // La portada controla su ancho por secciones; el resto hereda el contenedor editorial.
         fullWidth
           ? <slot />
           : <div class="container page-main"><slot /></div>

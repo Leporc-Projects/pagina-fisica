@@ -1,8 +1,10 @@
 ---
+// Navegación compartida por todas las páginas internas del curso.
 import { COURSE, COURSE_NAV } from "../../data/course.js";
 
 const { pathname } = Astro.url;
 
+// Astro puede entregar la URL con slash final; normalizar evita falsos inactivos.
 const normalizePath = (path: string) => {
   if (path.length > 1 && path.endsWith("/")) {
     return path.slice(0, -1);
@@ -18,6 +20,7 @@ const currentPath = normalizePath(pathname);
   class="course-nav"
   aria-label={`Secciones de ${COURSE.name}`}
 >
+  <!-- El track conserva el ancho de sus enlaces y el contenedor permite desplazamiento horizontal. -->
   <div class="course-nav__track">
     {
       COURSE_NAV.map((item, index) => {

@@ -1,4 +1,5 @@
 ---
+// Hoja de ruta editorial: combina UNITS con tipos previstos, sin crear ejercicios.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { COURSE, UNITS } from "../../data/course.js";
@@ -22,6 +23,7 @@ const materialTypes = [
       description="Catálogo y hoja de ruta de los materiales de práctica que se publicarán por unidad."
     />
 
+    <!-- Separa el modelo pedagógico del catálogo para no confundir estados con contenido disponible. -->
     <section
       class="course-section course-section--split"
       aria-labelledby="exercise-model-title"
@@ -50,6 +52,7 @@ const materialTypes = [
       </div>
     </section>
 
+    <!-- Los anclajes reutilizan el número estable de cada unidad. -->
     <nav class="unit-index" aria-label="Unidades del catálogo de práctica">
       {
         UNITS.map((unit) => (
@@ -74,6 +77,7 @@ const materialTypes = [
       </header>
 
       <div class="publication-list">
+        <!-- Cada referencia ARIA deriva del número único de la unidad. -->
         {
           UNITS.map((unit) => (
             <article

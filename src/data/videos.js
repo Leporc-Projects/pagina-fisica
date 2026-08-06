@@ -1,5 +1,6 @@
-// Catálogo audiovisual del curso.
-// Los registros se añadirán únicamente cuando exista material aprobado.
+// Contrato del catálogo audiovisual consumido por /fisica-basica-1/videos.
+// El repositorio almacena metadatos y enlaces aprobados, no archivos de video
+// pesados ni títulos, fechas o URL provisionales.
 
 /**
  * @typedef {"en-preparacion" | "disponible"} VideoStatus
@@ -23,5 +24,9 @@ export const VIDEO_CONTENT_TYPES = [
   "Resolución de problemas seleccionados por el docente",
 ];
 
-/** @type {CourseVideo[]} */
+/**
+ * Publicaciones audiovisuales aprobadas. Mantener vacío mientras no existan
+ * recursos reales; validate.mjs verifica la unicidad de sus identificadores.
+ * @type {CourseVideo[]}
+ */
 export const VIDEOS = [];

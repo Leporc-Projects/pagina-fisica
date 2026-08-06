@@ -1,4 +1,5 @@
 ---
+// Presentación pública de EVALUATION y del contrato de privacidad de las notas.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { COURSE, EVALUATION } from "../../data/course.js";
@@ -19,6 +20,7 @@ const totalPercentage = EVALUATION.reduce(
       description="Componentes oficiales de evaluación y principios para el tratamiento local y privado de la información."
     />
 
+    <!-- El total se calcula desde la fuente oficial y también lo comprueba validate.mjs. -->
     <section class="course-section" aria-labelledby="evaluation-plan-title">
       <header class="course-section__header">
         <div>
@@ -46,6 +48,7 @@ const totalPercentage = EVALUATION.reduce(
       </div>
     </section>
 
+    <!-- Esta sección describe el flujo futuro sin habilitar carga ni persistencia de archivos. -->
     <section
       class="course-section course-section--split"
       aria-labelledby="grades-privacy-title"

@@ -1,5 +1,5 @@
-// Información central del sitio.
-// Los nombres, enlaces y textos generales se cambian desde este archivo.
+// Configuración editorial y navegación general del sitio.
+// Los datos académicos se importan desde course.js en lugar de duplicarse aquí.
 
 import { COURSE, COURSE_NAV } from "./course.js";
 
@@ -14,6 +14,10 @@ export const SITE = {
   locale: "es-CO",
 };
 
+/**
+ * Navegación principal consumida por Header y por la validación de enlaces.
+ * La rama del curso reutiliza COURSE_NAV para conservar un único contrato.
+ */
 export const NAV = [
   {
     label: "Inicio",
@@ -38,6 +42,7 @@ export const NAV = [
   },
 ];
 
+/** Accesos editoriales de la portada; todos deben apuntar a rutas internas. */
 export const HOME_LINKS = [
   {
     number: "01",
@@ -65,6 +70,10 @@ export const HOME_LINKS = [
   },
 ];
 
+/**
+ * Taxonomía visual del futuro catálogo de simulaciones.
+ * No equivale a UNITS ni debe utilizarse como fuente académica del curso.
+ */
 export const SIM_CATEGORIES = [
   "Vectores",
   "Cinemática",

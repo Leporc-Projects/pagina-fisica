@@ -232,12 +232,13 @@ main {
   transform: translateY(0);
 }
 
+/* Un único indicador de foco mantiene navegables enlaces, botones y summary. */
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 
-/* Cabecera */
+/* Cabecera: sticky para conservar el acceso al menú durante páginas extensas. */
 
 .site-header {
   position: sticky;
@@ -1240,7 +1241,7 @@ main {
   color: var(--text-muted);
 }
 
-/* Responsive */
+/* Responsive general: primero colapsa la composición y luego ajusta controles móviles. */
 
 @media (max-width: 820px) {
   .menu-overlay {
@@ -1350,6 +1351,7 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Respeta la preferencia del sistema sin eliminar información o controles. */
   html {
     scroll-behavior: auto;
   }
@@ -1423,7 +1425,7 @@ main {
   font-weight: 700;
 }
 
-/* Navegación interna */
+/* Navegación interna: sticky y desplazable para conservar las seis rutas en móvil. */
 
 .course-nav {
   position: sticky;
@@ -1438,6 +1440,7 @@ main {
 }
 
 .course-nav__track {
+  /* Evita comprimir etiquetas; el overflow pertenece al contenedor padre. */
   min-width: max-content;
   display: flex;
 }
@@ -1661,6 +1664,7 @@ main {
   align-items: start;
   border-top: 1px solid var(--line);
   padding-block: 1.35rem;
+  /* Compensa las dos navegaciones sticky al seguir un enlace interno. */
   scroll-margin-top: calc(var(--header-h) + 6rem);
 }
 
@@ -2122,6 +2126,7 @@ main {
 }
 
 .unit-detail {
+  /* Mantiene el título visible al navegar desde el índice de unidades. */
   scroll-margin-top: calc(var(--header-h) + 6rem);
 }
 
@@ -2240,6 +2245,7 @@ main {
   .schedule-stats {
     grid-template-columns:
       repeat(5, minmax(5rem, 1fr));
+    /* Las cinco métricas conservan su lectura sin ensanchar toda la página. */
     overflow-x: auto;
   }
 }

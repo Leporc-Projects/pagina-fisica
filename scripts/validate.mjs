@@ -1,3 +1,7 @@
+// Validación estructural sin dependencias externas.
+// Compara los contratos de datos con el enrutamiento por archivos de Astro y
+// acumula todos los problemas para corregirlos en una sola ejecución.
+
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,6 +21,7 @@ const projectRoot = fileURLToPath(
 
 const failures = [];
 
+// Registra cada contrato sin interrumpir la ejecución en el primer error.
 const check = (condition, message) => {
   if (condition) {
     console.log(`[ok] ${message}`);
@@ -26,6 +31,7 @@ const check = (condition, message) => {
   }
 };
 
+// Devuelve cada valor repetido una sola vez para producir mensajes legibles.
 const duplicates = (values) =>
   [...new Set(
     values.filter(
@@ -33,6 +39,7 @@ const duplicates = (values) =>
     )
   )];
 
+// Recorre directorios porque Astro puede representar rutas mediante carpetas.
 const walkFiles = (directory) =>
   fs.readdirSync(directory, { withFileTypes: true })
     .flatMap((entry) => {
@@ -42,6 +49,7 @@ const walkFiles = (directory) =>
         : [target];
     });
 
+// Unifica rutas con slash final, query o hash antes de compararlas.
 const normalizeRoute = (route) => {
   const cleanRoute = route.split(/[?#]/, 1)[0];
 
@@ -53,6 +61,7 @@ const pageRoot = path.join(projectRoot, "src/pages");
 const pageFiles = walkFiles(pageRoot)
   .filter((file) => file.endsWith(".astro"));
 
+// Reproduce la convención de Astro: index.astro representa la carpeta que lo contiene.
 const routes = new Set(
   pageFiles.map((file) => {
     let route = path.relative(pageRoot, file)
@@ -128,6 +137,7 @@ check(
   "Los videos tienen identificadores únicos."
 );
 
+// Los enlaces literales y los declarados en datos forman juntos el contrato navegable.
 const sourceFiles = walkFiles(path.join(projectRoot, "src"))
   .filter((file) => file.endsWith(".astro"));
 
