@@ -1,88 +1,328 @@
 ---
-// Header.astro — Cabecera del sitio con navegación responsive
+// Cabecera y menú principal de pantalla completa.
 import { SITE, NAV } from "../data/site.js";
+
 const { pathname } = Astro.url;
+
+const isCurrent = (href: string) => {
+  if (href === "/") return pathname === "/";
+  if (href.startsWith("/#")) return false;
+
+  return (
+    pathname === href ||
+    pathname.startsWith(`${href}/`)
+  );
+};
 ---
 
 <header class="site-header" role="banner">
   <div class="container header-inner">
-    <a href="/" class="site-logo" aria-label={`${SITE.name} — Inicio`}>
-      <span class="logo-name">{SITE.name}</span>
-      <span class="logo-sub">Física universitaria</span>
+    <a
+      class="site-brand"
+      href="/"
+      aria-label={`${SITE.name}, página de inicio`}
+    >
+      <img
+        class="site-brand__logo"
+        src={SITE.logoPath}
+        alt=""
+        width="48"
+        height="48"
+      />
+
+      <span class="site-brand__text">
+        <span class="site-brand__name">
+          {SITE.name}
+        </span>
+
+        <span class="site-brand__teacher">
+          {SITE.teacherName}
+        </span>
+      </span>
     </a>
 
-    <!-- Botón menú móvil -->
     <button
-      class="menu-btn"
-      aria-controls="site-nav"
+      class="menu-trigger"
+      type="button"
+      aria-controls="site-menu"
       aria-expanded="false"
-      aria-label="Abrir menú de navegación"
-      id="menu-toggle"
+      data-menu-open
     >
-      <span aria-hidden="true">☰</span>
-    </button>
+      <span class="menu-trigger__label">Menú</span>
 
-    <!-- Navegación principal -->
-    <nav
-      id="site-nav"
-      class="site-nav"
-      aria-label="Navegación principal"
-    >
-      {NAV.map((item) => {
-        const isActive = pathname === item.href ||
-          (item.href !== "/" && pathname.startsWith(item.href));
-        return (
-          <a
-            href={item.href}
-            class="nav-link"
-            aria-current={isActive ? "page" : undefined}
-          >
-            <span aria-hidden="true">{item.icon}</span>
-            {item.label}
-          </a>
-        );
-      })}
-    </nav>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        width="22"
+        height="22"
+      >
+        <path d="M4 7h16M4 12h16M4 17h16"></path>
+      </svg>
+    </button>
   </div>
 </header>
 
+<div class="menu-overlay" id="site-menu" hidden>
+  <div
+    class="menu-backdrop"
+    data-menu-close
+    aria-hidden="true"
+  ></div>
+
+  <section
+    class="menu-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="menu-title"
+  >
+    <div class="menu-panel__top">
+      <div>
+        <p class="menu-panel__eyebrow">
+          Navegación
+        </p>
+
+        <h2 id="menu-title">
+          {SITE.name}
+        </h2>
+      </div>
+
+      <button
+        class="menu-close"
+        type="button"
+        aria-label="Cerrar menú"
+        data-menu-close
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+        >
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav
+      class="menu-nav"
+      aria-label="Navegación principal"
+    >
+      <ol class="menu-list">
+        {
+          NAV.map((item, index) => {
+            const active = isCurrent(item.href);
+
+            if (item.children) {
+              return (
+                <li class="menu-item menu-item--group">
+                  <details open={active}>
+                    <summary class="menu-summary">
+                      <span class="menu-index">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      <span>{item.label}</span>
+
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        width="20"
+                        height="20"
+                      >
+                        <path d="M6 9l6 6 6-6"></path>
+                      </svg>
+                    </summary>
+
+                    <ul class="submenu-list">
+                      {
+                        item.children.map((child) => (
+                          <li>
+                            {
+                              child.disabled
+                                ? (
+                                  <span
+                                    class="submenu-link is-disabled"
+                                    aria-disabled="true"
+                                  >
+                                    <span>{child.label}</span>
+                                    <small>Próximamente</small>
+                                  </span>
+                                )
+                                : (
+                                  <a
+                                    class="submenu-link"
+                                    href={child.href}
+                                    aria-current={
+                                      isCurrent(child.href)
+                                        ? "page"
+                                        : undefined
+                                    }
+                                  >
+                                    {child.label}
+                                  </a>
+                                )
+                            }
+                          </li>
+                        ))
+                      }
+                    </ul>
+                  </details>
+                </li>
+              );
+            }
+
+            return (
+              <li class="menu-item">
+                <a
+                  class="menu-link"
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <span class="menu-index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+
+                  <span>{item.label}</span>
+
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                  >
+                    <path d="M5 12h14M13 6l6 6-6 6"></path>
+                  </svg>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ol>
+    </nav>
+
+    <p class="menu-panel__footer">
+      {SITE.currentCourse} · Semestre 2026-2
+    </p>
+  </section>
+</div>
+
 <script>
-  // Menú móvil accesible
-  const toggle = document.getElementById("menu-toggle");
-  const nav    = document.getElementById("site-nav");
+  const menu = document.getElementById("site-menu");
 
-  toggle?.addEventListener("click", () => {
-    const isOpen = nav?.classList.toggle("is-open");
-    toggle.setAttribute("aria-expanded", String(isOpen));
-    toggle.setAttribute(
-      "aria-label",
-      isOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"
+  const openButtons = Array
+    .from(document.querySelectorAll("[data-menu-open]"))
+    .filter(
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement
     );
-    // Cambiar ícono
-    const icon = toggle.querySelector("[aria-hidden]");
-    if (icon) icon.textContent = isOpen ? "✕" : "☰";
-  });
 
-  // Cerrar menú al redimensionar a escritorio
-  const mq = window.matchMedia("(min-width: 769px)");
-  mq.addEventListener("change", (e) => {
-    if (e.matches) {
-      nav?.classList.remove("is-open");
-      toggle?.setAttribute("aria-expanded", "false");
-      const icon = toggle?.querySelector("[aria-hidden]");
-      if (icon) icon.textContent = "☰";
-    }
-  });
+  const closeButtons = Array
+    .from(document.querySelectorAll("[data-menu-close]"))
+    .filter(
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement
+    );
 
-  // Cerrar menú al hacer clic en un enlace (en móvil)
-  nav?.querySelectorAll(".nav-link").forEach((link) => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth < 769) {
-        nav.classList.remove("is-open");
-        toggle?.setAttribute("aria-expanded", "false");
-        const icon = toggle?.querySelector("[aria-hidden]");
-        if (icon) icon.textContent = "☰";
-      }
+  let lastOpener: HTMLElement | null = null;
+
+  const focusableSelector = [
+    "a[href]",
+    "button:not([disabled])",
+    "summary",
+    "[tabindex]:not([tabindex='-1'])",
+  ].join(",");
+
+  function setExpanded(value: boolean) {
+    openButtons.forEach((button) => {
+      button.setAttribute(
+        "aria-expanded",
+        String(value)
+      );
     });
+  }
+
+  function openMenu(event?: Event) {
+    if (!menu) return;
+
+    lastOpener =
+      event?.currentTarget instanceof HTMLElement
+        ? event.currentTarget
+        : document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+
+    menu.hidden = false;
+    document.body.classList.add("menu-is-open");
+    setExpanded(true);
+
+    const firstTarget =
+      menu.querySelector(".menu-close");
+
+    if (firstTarget instanceof HTMLElement) {
+      firstTarget.focus();
+    }
+  }
+
+  function closeMenu() {
+    if (!menu || menu.hidden) return;
+
+    menu.hidden = true;
+    document.body.classList.remove("menu-is-open");
+    setExpanded(false);
+
+    if (lastOpener instanceof HTMLElement) {
+      lastOpener.focus();
+    }
+  }
+
+  openButtons.forEach((button) => {
+    button.addEventListener("click", openMenu);
+  });
+
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", closeMenu);
+  });
+
+  menu?.querySelectorAll("a[href]").forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!menu || menu.hidden) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMenu();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+
+    const focusable = Array
+      .from(menu.querySelectorAll(focusableSelector))
+      .filter(
+        (element): element is HTMLElement =>
+          element instanceof HTMLElement &&
+          !element.hasAttribute("disabled")
+      );
+
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (
+      event.shiftKey &&
+      document.activeElement === first
+    ) {
+      event.preventDefault();
+      last.focus();
+    } else if (
+      !event.shiftKey &&
+      document.activeElement === last
+    ) {
+      event.preventDefault();
+      first.focus();
+    }
   });
 </script>

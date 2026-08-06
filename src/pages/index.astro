@@ -1,80 +1,196 @@
 ---
-// index.astro — Página de inicio
+// Página de inicio.
 import BaseLayout from "../layouts/BaseLayout.astro";
-import NavCard    from "../components/NavCard.astro";
-import { SITE, NAV, RECENT_NOTICES } from "../data/site.js";
+
+import {
+  SITE,
+  HOME_LINKS,
+  RECENT_NOTICES,
+} from "../data/site.js";
 ---
 
 <BaseLayout
   title="Inicio"
-  description={SITE.tagline}
+  description={SITE.description}
+  fullWidth
 >
-  <!-- Hero -->
-  <section class="hero" aria-labelledby="hero-heading">
-    <div class="hero-inner">
-      <div class="hero-badge" aria-label="Curso activo">
-        📐 Curso activo: {SITE.currentCourse}
+  <section
+    class="landing"
+    aria-labelledby="landing-title"
+  >
+    <div
+      class="landing-grid"
+      aria-hidden="true"
+    ></div>
+
+    <div class="container landing-inner">
+      <div class="landing-mark">
+        <img
+          src={SITE.logoPath}
+          alt="Logotipo de Papilla's Physics"
+          width="220"
+          height="220"
+        />
       </div>
-      <h1 id="hero-heading">{SITE.name}</h1>
-      <p>{SITE.tagline}</p>
-    </div>
-  </section>
 
-  <!-- Aviso reciente -->
-  {RECENT_NOTICES.map((notice) => (
-    <div class="notice" role="note" aria-label="Aviso reciente">
-      <span class="notice-icon" aria-hidden="true">📌</span>
-      <div>
-        <time datetime={notice.date}>
-          {new Date(notice.date + "T00:00:00").toLocaleDateString("es-CO", {
-            year: "numeric", month: "long", day: "numeric",
-          })}
-        </time>
-        <p>{notice.text}</p>
-      </div>
-    </div>
-  ))}
-
-  <!-- Accesos rápidos -->
-  <section class="page-section" aria-labelledby="accesos-heading">
-    <div class="section-heading">
-      <h2 id="accesos-heading">Accesos rápidos</h2>
-      <p>Navega directamente a las secciones del sitio.</p>
-      <div class="section-divider" aria-hidden="true"></div>
-    </div>
-
-    <nav aria-label="Accesos rápidos al sitio">
-      <ul class="nav-cards-grid" role="list">
-        {NAV.filter((n) => n.href !== "/").map((item) => (
-          <li>
-            <NavCard
-              href={item.href}
-              icon={item.icon}
-              label={item.label}
-            />
-          </li>
-        ))}
-      </ul>
-    </nav>
-  </section>
-
-  <!-- Sección destacada: curso activo -->
-  <section class="page-section" aria-labelledby="destacado-heading">
-    <div class="section-heading">
-      <h2 id="destacado-heading">Curso activo</h2>
-      <p>Materiales y recursos del semestre en curso.</p>
-      <div class="section-divider" aria-hidden="true"></div>
-    </div>
-
-    <div class="card" style="max-width: 520px;">
-      <h3>📐 Física Básica I</h3>
-      <p>
-        Mecánica clásica, termodinámica introductoria y laboratorio.
-        El contenido se publicará de forma gradual conforme avance el semestre.
+      <p class="eyebrow">
+        Espacio docente de física
       </p>
-      <a href="/fisica-basica-1" class="chip" style="margin-top: var(--space-2);">
-        Ver curso →
+
+      <h1 id="landing-title">
+        {SITE.name}
+      </h1>
+
+      <p class="landing-teacher">
+        {SITE.teacherName}
+      </p>
+
+      <p class="landing-tagline">
+        {SITE.tagline}
+      </p>
+
+      <button
+        class="landing-menu-button"
+        type="button"
+        aria-controls="site-menu"
+        aria-expanded="false"
+        data-menu-open
+      >
+        <span>Menú</span>
+
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          width="22"
+          height="22"
+        >
+          <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </svg>
+      </button>
+
+      <a class="scroll-cue" href="#contenido">
+        <span>Explorar</span>
+
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+        >
+          <path d="M12 4v16M6 14l6 6 6-6"></path>
+        </svg>
       </a>
+    </div>
+  </section>
+
+  <section
+    class="home-content"
+    id="contenido"
+  >
+    <div class="container">
+      <header class="editorial-heading">
+        <p class="eyebrow eyebrow--dark">
+          Curso activo
+        </p>
+
+        <div>
+          <h2>{SITE.currentCourse}</h2>
+
+          <p>
+            Un espacio para reunir materiales, práctica
+            guiada, simulaciones y recursos del curso de
+            mecánica newtoniana.
+          </p>
+        </div>
+
+        <a
+          class="text-link"
+          href="/fisica-basica-1"
+        >
+          Entrar al curso
+          <span aria-hidden="true">→</span>
+        </a>
+      </header>
+
+      <div
+        class="home-directory"
+        aria-label="Secciones destacadas"
+      >
+        {
+          HOME_LINKS.map((item) => (
+            <a
+              class="directory-row"
+              href={item.href}
+            >
+              <span class="directory-number">
+                {item.number}
+              </span>
+
+              <span class="directory-copy">
+                <strong>{item.label}</strong>
+                <span>{item.description}</span>
+              </span>
+
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section
+    class="notices-section"
+    id="avisos"
+    aria-labelledby="notices-title"
+  >
+    <div class="container notices-layout">
+      <div>
+        <p class="eyebrow eyebrow--dark">
+          Actualizaciones
+        </p>
+
+        <h2 id="notices-title">
+          Avisos
+        </h2>
+      </div>
+
+      <div class="notice-list">
+        {
+          RECENT_NOTICES.map((notice) => (
+            <article class="notice-entry">
+              <div class="notice-meta">
+                <span>{notice.category}</span>
+
+                <time datetime={notice.date}>
+                  {
+                    new Date(
+                      `${notice.date}T00:00:00`
+                    ).toLocaleDateString(
+                      SITE.locale,
+                      {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      }
+                    )
+                  }
+                </time>
+              </div>
+
+              <h3>{notice.title}</h3>
+              <p>{notice.text}</p>
+            </article>
+          ))
+        }
+      </div>
     </div>
   </section>
 </BaseLayout>
