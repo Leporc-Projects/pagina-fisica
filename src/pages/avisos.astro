@@ -1,0 +1,89 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import { SITE } from "../data/site.js";
+import { getNoticesByDate } from "../data/notices.js";
+
+const notices = getNoticesByDate();
+
+const formatDate = (date) =>
+  new Date(`${date}T00:00:00`).toLocaleDateString(
+    SITE.locale,
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }
+  );
+---
+
+<BaseLayout
+  title="Avisos"
+  description="Actualizaciones públicas de Papilla's Physics."
+>
+  <PageHeader
+    eyebrow="Actualizaciones"
+    title="Avisos"
+    description="Información pública sobre el desarrollo del sitio y la publicación de contenidos revisados."
+  />
+
+  <section class="page-section" aria-labelledby="notice-archive-title">
+    <div class="section-heading">
+      <h2 id="notice-archive-title">Archivo de avisos</h2>
+      <p>Los avisos se presentan del más reciente al más antiguo.</p>
+      <div class="section-divider" aria-hidden="true"></div>
+    </div>
+
+    {
+      notices.length === 0
+        ? (
+          <div class="empty-state">
+            <p class="empty-state__label">Estado actual</p>
+            <h3>No hay avisos publicados</h3>
+            <p>Las actualizaciones aparecerán aquí cuando estén disponibles.</p>
+          </div>
+        )
+        : (
+          <div class="notice-list notice-list--archive">
+            {
+              notices.map((notice) => (
+                <article
+                  class="notice-entry"
+                  id={notice.id}
+                  aria-labelledby={`notice-title-${notice.id}`}
+                >
+                  <div class="notice-meta">
+                    <span>{notice.category}</span>
+                    <time datetime={notice.date}>{formatDate(notice.date)}</time>
+                  </div>
+
+                  <div class="notice-entry__heading">
+                    <h3 id={`notice-title-${notice.id}`}>{notice.title}</h3>
+                    {
+                      notice.featured && (
+                        <span class="status-label status-label--featured">
+                          Destacado
+                        </span>
+                      )
+                    }
+                  </div>
+
+                  <p>{notice.summary}</p>
+                  {notice.content && <p>{notice.content}</p>}
+
+                  {
+                    notice.href && (
+                      <a class="text-link" href={notice.href}>
+                        Consultar información
+                        <span aria-hidden="true">→</span>
+                      </a>
+                    )
+                  }
+                </article>
+              ))
+            }
+          </div>
+        )
+    }
+  </section>
+</BaseLayout>

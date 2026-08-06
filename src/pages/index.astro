@@ -5,8 +5,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import {
   SITE,
   HOME_LINKS,
-  RECENT_NOTICES,
 } from "../data/site.js";
+import { COURSE } from "../data/course.js";
+import { getNoticesByDate } from "../data/notices.js";
+
+const recentNotices = getNoticesByDate().slice(0, 3);
 ---
 
 <BaseLayout
@@ -94,7 +97,7 @@ import {
         </p>
 
         <div>
-          <h2>{SITE.currentCourse}</h2>
+          <h2>{COURSE.name}</h2>
 
           <p>
             Un espacio para reunir materiales, práctica
@@ -164,8 +167,11 @@ import {
 
       <div class="notice-list">
         {
-          RECENT_NOTICES.map((notice) => (
-            <article class="notice-entry">
+          recentNotices.map((notice) => (
+            <article
+              class="notice-entry"
+              aria-labelledby={`home-notice-${notice.id}`}
+            >
               <div class="notice-meta">
                 <span>{notice.category}</span>
 
@@ -185,11 +191,18 @@ import {
                 </time>
               </div>
 
-              <h3>{notice.title}</h3>
-              <p>{notice.text}</p>
+              <h3 id={`home-notice-${notice.id}`}>
+                {notice.title}
+              </h3>
+              <p>{notice.summary}</p>
             </article>
           ))
         }
+
+        <a class="notice-list__more" href="/avisos">
+          Consultar todos los avisos
+          <span aria-hidden="true">→</span>
+        </a>
       </div>
     </div>
   </section>

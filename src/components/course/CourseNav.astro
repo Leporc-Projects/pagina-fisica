@@ -1,5 +1,5 @@
 ---
-import { COURSE_NAV } from "../../data/course.js";
+import { COURSE, COURSE_NAV } from "../../data/course.js";
 
 const { pathname } = Astro.url;
 
@@ -16,7 +16,7 @@ const currentPath = normalizePath(pathname);
 
 <nav
   class="course-nav"
-  aria-label="Secciones de Física Básica I"
+  aria-label={`Secciones de ${COURSE.name}`}
 >
   <div class="course-nav__track">
     {

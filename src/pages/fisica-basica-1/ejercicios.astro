@@ -1,0 +1,108 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
+import { COURSE, UNITS } from "../../data/course.js";
+
+const materialTypes = [
+  "Diagnósticos",
+  "Práctica guiada",
+  "Ejercicios",
+  "Retos",
+  "Tutorías interactivas",
+];
+---
+
+<BaseLayout
+  title={`Ejercicios y tutorías · ${COURSE.name}`}
+  description={`Catálogo de práctica y tutorías de ${COURSE.name}.`}
+>
+  <article class="course-subpage">
+    <CoursePageHeader
+      title="Ejercicios y tutorías"
+      description="Catálogo y hoja de ruta de los materiales de práctica que se publicarán por unidad."
+    />
+
+    <section
+      class="course-section course-section--split"
+      aria-labelledby="exercise-model-title"
+    >
+      <div>
+        <p class="course-section__index">Modelo de trabajo</p>
+        <h2 id="exercise-model-title">
+          Práctica diseñada por el docente
+        </h2>
+      </div>
+
+      <div class="course-section__body">
+        <p class="course-lead">
+          Los materiales se incorporarán de forma progresiva después de su revisión académica.
+          No se publicarán preguntas, pistas o soluciones provisionales.
+        </p>
+
+        <div class="policy-panel">
+          <h3>Tutorías interactivas</h3>
+          <p>
+            Las tutorías serán progresivas y deterministas. Sus preguntas,
+            rutas de ayuda y retroalimentaciones serán definidas por el docente,
+            sin procesamiento mediante inteligencia artificial.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <nav class="unit-index" aria-label="Unidades del catálogo de práctica">
+      {
+        UNITS.map((unit) => (
+          <a href={`#ejercicios-unidad-${unit.number}`}>
+            <span>{String(unit.number).padStart(2, "0")}</span>
+            <strong>{unit.title}</strong>
+          </a>
+        ))
+      }
+    </nav>
+
+    <section class="course-section" aria-labelledby="exercise-catalog-title">
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">Catálogo</p>
+          <h2 id="exercise-catalog-title">Materiales por unidad</h2>
+        </div>
+
+        <p>
+          Todas las categorías permanecen en preparación hasta que exista material propio y aprobado.
+        </p>
+      </header>
+
+      <div class="publication-list">
+        {
+          UNITS.map((unit) => (
+            <article
+              class="publication-row"
+              id={`ejercicios-unidad-${unit.number}`}
+              aria-labelledby={`ejercicios-title-${unit.number}`}
+            >
+              <span class="publication-row__number">
+                {String(unit.number).padStart(2, "0")}
+              </span>
+
+              <div>
+                <h3 id={`ejercicios-title-${unit.number}`}>
+                  {unit.title}
+                </h3>
+                <p class="publication-row__meta">{unit.chapters}</p>
+
+                <ul class="publication-tags" aria-label="Tipos previstos">
+                  {materialTypes.map((type) => <li>{type}</li>)}
+                </ul>
+              </div>
+
+              <span class="status-label status-label--preparing">
+                En preparación
+              </span>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+  </article>
+</BaseLayout>

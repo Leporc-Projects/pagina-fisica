@@ -1,0 +1,104 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
+import { COURSE, UNITS } from "../../data/course.js";
+import {
+  VIDEOS,
+  VIDEO_CONTENT_TYPES,
+} from "../../data/videos.js";
+
+const videosByUnit = UNITS.map((unit) => ({
+  unit,
+  videos: VIDEOS.filter((video) => video.unit === unit.number),
+}));
+---
+
+<BaseLayout
+  title={`Videos · ${COURSE.name}`}
+  description={`Biblioteca audiovisual de ${COURSE.name}.`}
+>
+  <article class="course-subpage">
+    <CoursePageHeader
+      title="Videos"
+      description="Biblioteca audiovisual preparada para organizar materiales propios y aprobados por unidad."
+    />
+
+    <section
+      class="course-section course-section--split"
+      aria-labelledby="video-structure-title"
+    >
+      <div>
+        <p class="course-section__index">Estructura</p>
+        <h2 id="video-structure-title">Una biblioteca preparada para crecer</h2>
+      </div>
+
+      <div class="course-section__body">
+        <p class="course-lead">
+          Cada publicación podrá registrar título, descripción, unidad, duración,
+          fecha, dirección web, miniatura opcional y estado de publicación.
+        </p>
+
+        <ul class="content-type-list">
+          {
+            VIDEO_CONTENT_TYPES.map((type, index) => (
+              <li>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <p>{type}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="course-section" aria-labelledby="video-library-title">
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">Publicaciones</p>
+          <h2 id="video-library-title">Biblioteca por unidades</h2>
+        </div>
+
+        <p>
+          No se muestran plataformas externas ni enlaces hasta contar con publicaciones reales y revisadas.
+        </p>
+      </header>
+
+      {
+        VIDEOS.length === 0 && (
+          <div class="empty-state">
+            <p class="empty-state__label">Estado actual</p>
+            <h3>Aún no hay videos publicados</h3>
+            <p>
+              La biblioteca conservará este estado informativo hasta que exista material aprobado.
+            </p>
+          </div>
+        )
+      }
+
+      <div class="publication-list publication-list--spaced">
+        {
+          videosByUnit.map(({ unit, videos }) => (
+            <article class="publication-row">
+              <span class="publication-row__number">
+                {String(unit.number).padStart(2, "0")}
+              </span>
+
+              <div>
+                <h3>{unit.title}</h3>
+                <p class="publication-row__meta">
+                  {videos.length === 0
+                    ? "Sin publicaciones"
+                    : `${videos.length} ${videos.length === 1 ? "video" : "videos"}`}
+                </p>
+              </div>
+
+              <span class="status-label status-label--preparing">
+                En preparación
+              </span>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+  </article>
+</BaseLayout>

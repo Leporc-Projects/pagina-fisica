@@ -1,0 +1,76 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
+import { COURSE, EVALUATION } from "../../data/course.js";
+
+const totalPercentage = EVALUATION.reduce(
+  (total, item) => total + item.percentage,
+  0
+);
+---
+
+<BaseLayout
+  title={`Evaluación y notas · ${COURSE.name}`}
+  description={`Sistema de evaluación y principios de privacidad de ${COURSE.name}.`}
+>
+  <article class="course-subpage">
+    <CoursePageHeader
+      title="Evaluación y notas"
+      description="Componentes oficiales de evaluación y principios para el tratamiento local y privado de la información."
+    />
+
+    <section class="course-section" aria-labelledby="evaluation-plan-title">
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">Plan oficial</p>
+          <h2 id="evaluation-plan-title">Componentes de evaluación</h2>
+        </div>
+
+        <p>
+          Los cuatro exámenes y el taller representan en conjunto el {totalPercentage} % de la calificación.
+        </p>
+      </header>
+
+      <div class="evaluation-list">
+        {
+          EVALUATION.map((item) => (
+            <article class="evaluation-row">
+              <div>
+                <h3>{item.name}</h3>
+                <p>{item.content}</p>
+              </div>
+              <strong>{item.percentage} %</strong>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section
+      class="course-section course-section--split"
+      aria-labelledby="grades-privacy-title"
+    >
+      <div>
+        <p class="course-section__index">Privacidad</p>
+        <h2 id="grades-privacy-title">Las notas no son contenido público</h2>
+      </div>
+
+      <div class="course-section__body">
+        <p class="course-lead">
+          Este sitio no almacena ni publica calificaciones individuales,
+          nombres, correos u otros datos personales de estudiantes.
+        </p>
+
+        <div class="policy-panel">
+          <h3>Herramienta local prevista</h3>
+          <p>
+            Una futura utilidad permitirá consolidar archivos en el navegador.
+            El procesamiento será local, no enviará información a servidores y
+            no conservará datos después de cerrar o recargar la página.
+          </p>
+          <span class="status-label status-label--preparing">En preparación</span>
+        </div>
+      </div>
+    </section>
+  </article>
+</BaseLayout>

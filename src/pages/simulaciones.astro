@@ -1,120 +1,63 @@
 ---
-// simulaciones.astro — Directorio de simulaciones por categoría
-import BaseLayout    from "../layouts/BaseLayout.astro";
+// Directorio de simulaciones por categoría.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import { SIM_CATEGORIES } from "../data/site.js";
 ---
 
 <BaseLayout
   title="Simulaciones"
-  description="Simulaciones interactivas de física organizadas por tema."
+  description="Catálogo de simulaciones interactivas de física organizadas por tema."
 >
-  <div class="page-hero-sm" style="margin-bottom: var(--space-8);">
-    <h1>🔬 Simulaciones</h1>
-    <p class="page-subtitle">Visualización interactiva de fenómenos físicos</p>
+  <PageHeader
+    eyebrow="Exploración"
+    title="Simulaciones"
+    description="Directorio preparado para experiencias interactivas propias y revisadas académicamente."
+  />
+
+  <div class="policy-panel page-section" role="note">
+    <h2>Sección en desarrollo</h2>
+    <p>
+      No hay simulaciones operativas publicadas. Cada recurso aparecerá aquí
+      cuando su comportamiento, contenido y uso educativo hayan sido revisados.
+    </p>
   </div>
 
-  <!-- Aviso sobre estado del desarrollo -->
-  <div class="notice" role="note" aria-label="Estado del desarrollo">
-    <span class="notice-icon" aria-hidden="true">🛠️</span>
-    <div>
-      <p>
-        <strong>En desarrollo.</strong> Las simulaciones se construirán con
-        <a href="https://p5js.org/" target="_blank" rel="noopener noreferrer">p5.js</a>
-        y se añadirán de forma gradual. Toda la ejecución ocurre en el navegador,
-        sin conexión a servidores externos.
-      </p>
-    </div>
-  </div>
-
-  <!-- Cuadrícula de categorías -->
-  <section class="page-section" aria-labelledby="categorias-heading">
+  <section class="page-section" aria-labelledby="simulation-categories-title">
     <SectionHeading
-      id="categorias-heading"
+      id="simulation-categories-title"
       title="Categorías"
-      desc="Cada categoría agrupará las simulaciones correspondientes."
+      desc="Organización temática prevista para el catálogo."
     />
-    <ul class="sim-grid" role="list">
-      {SIM_CATEGORIES.map((cat) => (
-        <li class="sim-category-card">
-          <span class="sim-cat-icon" aria-hidden="true">▷</span>
-          <span class="sim-cat-name">{cat}</span>
-          <span class="unit-badge">⏳ Próximamente</span>
-        </li>
-      ))}
+
+    <ul class="publication-list" role="list">
+      {
+        SIM_CATEGORIES.map((category, index) => (
+          <li class="publication-row">
+            <span class="publication-row__number">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div><h3>{category}</h3></div>
+            <span class="status-label status-label--preparing">En preparación</span>
+          </li>
+        ))
+      }
     </ul>
   </section>
 
-  <!-- Nota técnica -->
-  <section class="page-section" aria-labelledby="nota-tecnica-heading">
+  <section class="page-section" aria-labelledby="simulation-principles-title">
     <SectionHeading
-      id="nota-tecnica-heading"
-      title="Nota técnica"
-      desc="Cómo funcionarán las simulaciones."
+      id="simulation-principles-title"
+      title="Criterios de publicación"
+      desc="Cada simulación deberá ser comprensible, accesible y útil para el análisis físico."
     />
-    <div class="card" style="max-width: 600px;">
-      <h3>⚙️ Tecnología</h3>
-      <p>
-        Cada simulación se ejecutará completamente en el navegador mediante
-        <strong>p5.js</strong>, una biblioteca JavaScript para visualización
-        interactiva. No se requerirá instalación ni conexión a internet durante
-        el uso.
-      </p>
-      <p style="margin-top: var(--space-3);">
-        Las simulaciones se controlarán con parámetros ajustables (velocidad inicial,
-        masa, ángulo, etc.) para facilitar la exploración de los fenómenos.
-      </p>
-    </div>
+
+    <ol class="content-type-list">
+      <li><span>01</span><p>Controles claros y utilizables con teclado.</p></li>
+      <li><span>02</span><p>Variables, unidades y estados identificados explícitamente.</p></li>
+      <li><span>03</span><p>Comportamiento responsive y sin desbordamiento horizontal.</p></li>
+      <li><span>04</span><p>Explicación del modelo y de sus límites físicos.</p></li>
+    </ol>
   </section>
 </BaseLayout>
-
-<style>
-  .page-hero-sm h1 {
-    color: var(--color-primary);
-    margin-bottom: var(--space-2);
-  }
-
-  .page-subtitle {
-    color: var(--color-text-muted);
-    font-size: var(--text-lg);
-  }
-
-  .sim-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: var(--space-4);
-  }
-
-  .sim-category-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-5);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-normal);
-  }
-
-  .sim-category-card:hover {
-    box-shadow: var(--shadow-md);
-  }
-
-  .sim-cat-icon {
-    font-size: 1.5rem;
-    color: var(--color-primary-light);
-  }
-
-  .sim-cat-name {
-    font-weight: 600;
-    color: var(--color-text);
-    font-size: var(--text-base);
-  }
-
-  @media (max-width: 480px) {
-    .sim-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
