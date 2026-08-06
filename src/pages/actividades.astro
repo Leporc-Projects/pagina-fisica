@@ -1,0 +1,87 @@
+---
+// actividades.astro — Ejercicios, cuestionarios y formularios
+import BaseLayout    from "../layouts/BaseLayout.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+---
+
+<BaseLayout
+  title="Actividades"
+  description="Ejercicios, cuestionarios y actividades evaluativas de Física Básica I."
+>
+  <div class="page-hero-sm" style="margin-bottom: var(--space-8);">
+    <h1>✏️ Actividades</h1>
+    <p class="page-subtitle">Ejercicios, cuestionarios y formularios de práctica</p>
+  </div>
+
+  <!-- Ejercicios -->
+  <section class="page-section" aria-labelledby="ejercicios-heading">
+    <SectionHeading
+      title="Ejercicios resueltos"
+      desc="Problemas con solución detallada para autoevaluación."
+    />
+    <div class="coming-soon" role="img" aria-label="Próximamente">
+      <span class="coming-soon-icon" aria-hidden="true">📝</span>
+      <h3>Próximamente</h3>
+      <p>Los ejercicios se añadirán por unidad temática.</p>
+    </div>
+  </section>
+
+  <!-- Cuestionarios -->
+  <section class="page-section" aria-labelledby="cuestionarios-heading">
+    <SectionHeading
+      title="Cuestionarios de comprensión"
+      desc="Preguntas conceptuales para verificar la comprensión de los temas."
+    />
+    <div class="coming-soon" role="img" aria-label="Próximamente">
+      <span class="coming-soon-icon" aria-hidden="true">🧩</span>
+      <h3>Próximamente</h3>
+      <p>Los cuestionarios se habilitarán en el transcurso del semestre.</p>
+    </div>
+  </section>
+
+  <!-- Formularios -->
+  <section class="page-section" aria-labelledby="formularios-heading">
+    <SectionHeading
+      title="Formularios"
+      desc="Hojas de fórmulas organizadas por tema."
+    />
+    <div class="card-grid">
+      <div class="card">
+        <h3>📋 Formulario de cinemática</h3>
+        <p>
+          Variables de movimiento, ecuaciones de posición y velocidad,
+          caída libre y movimiento parabólico.
+        </p>
+        <span class="unit-badge">⏳ Pendiente</span>
+      </div>
+      <div class="card">
+        <h3>📋 Formulario de dinámica</h3>
+        <p>
+          Leyes de Newton, fricción, trabajo, energía,
+          impulso y momento lineal.
+        </p>
+        <span class="unit-badge">⏳ Pendiente</span>
+      </div>
+      <div class="card">
+        <h3>📋 Formulario de rotación</h3>
+        <p>
+          Momento de inercia, torca, energía cinética rotacional
+          y momento angular.
+        </p>
+        <span class="unit-badge">⏳ Pendiente</span>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero-sm h1 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+</style>

@@ -1,0 +1,14 @@
+---
+// SectionHeading.astro — Encabezado de sección reutilizable
+interface Props {
+  title: string;
+  desc?: string;
+}
+const { title, desc } = Astro.props;
+---
+
+<div class="section-heading">
+  <h2>{title}</h2>
+  {desc && <p>{desc}</p>}
+  <div class="section-divider" aria-hidden="true"></div>
+</div>

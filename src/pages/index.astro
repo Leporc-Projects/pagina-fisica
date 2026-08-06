@@ -1,0 +1,80 @@
+---
+// index.astro — Página de inicio
+import BaseLayout from "../layouts/BaseLayout.astro";
+import NavCard    from "../components/NavCard.astro";
+import { SITE, NAV, RECENT_NOTICES } from "../data/site.js";
+---
+
+<BaseLayout
+  title="Inicio"
+  description={SITE.tagline}
+>
+  <!-- Hero -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-inner">
+      <div class="hero-badge" aria-label="Curso activo">
+        📐 Curso activo: {SITE.currentCourse}
+      </div>
+      <h1 id="hero-heading">{SITE.name}</h1>
+      <p>{SITE.tagline}</p>
+    </div>
+  </section>
+
+  <!-- Aviso reciente -->
+  {RECENT_NOTICES.map((notice) => (
+    <div class="notice" role="note" aria-label="Aviso reciente">
+      <span class="notice-icon" aria-hidden="true">📌</span>
+      <div>
+        <time datetime={notice.date}>
+          {new Date(notice.date + "T00:00:00").toLocaleDateString("es-CO", {
+            year: "numeric", month: "long", day: "numeric",
+          })}
+        </time>
+        <p>{notice.text}</p>
+      </div>
+    </div>
+  ))}
+
+  <!-- Accesos rápidos -->
+  <section class="page-section" aria-labelledby="accesos-heading">
+    <div class="section-heading">
+      <h2 id="accesos-heading">Accesos rápidos</h2>
+      <p>Navega directamente a las secciones del sitio.</p>
+      <div class="section-divider" aria-hidden="true"></div>
+    </div>
+
+    <nav aria-label="Accesos rápidos al sitio">
+      <ul class="nav-cards-grid" role="list">
+        {NAV.filter((n) => n.href !== "/").map((item) => (
+          <li>
+            <NavCard
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+            />
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </section>
+
+  <!-- Sección destacada: curso activo -->
+  <section class="page-section" aria-labelledby="destacado-heading">
+    <div class="section-heading">
+      <h2 id="destacado-heading">Curso activo</h2>
+      <p>Materiales y recursos del semestre en curso.</p>
+      <div class="section-divider" aria-hidden="true"></div>
+    </div>
+
+    <div class="card" style="max-width: 520px;">
+      <h3>📐 Física Básica I</h3>
+      <p>
+        Mecánica clásica, termodinámica introductoria y laboratorio.
+        El contenido se publicará de forma gradual conforme avance el semestre.
+      </p>
+      <a href="/fisica-basica-1" class="chip" style="margin-top: var(--space-2);">
+        Ver curso →
+      </a>
+    </div>
+  </section>
+</BaseLayout>

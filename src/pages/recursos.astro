@@ -1,0 +1,140 @@
+---
+// recursos.astro — Biblioteca de recursos de aprendizaje
+import BaseLayout    from "../layouts/BaseLayout.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+---
+
+<BaseLayout
+  title="Recursos"
+  description="Guías, bibliografía, videos y enlaces de interés para Física Básica I."
+>
+  <div class="page-hero-sm" style="margin-bottom: var(--space-8);">
+    <h1>📚 Recursos</h1>
+    <p class="page-subtitle">Materiales de apoyo para el estudio</p>
+  </div>
+
+  <!-- Guías propias -->
+  <section class="page-section" aria-labelledby="guias-heading">
+    <SectionHeading
+      title="Guías y apuntes"
+      desc="Documentos elaborados para el curso."
+    />
+    <div class="coming-soon" role="img" aria-label="Sección en construcción">
+      <span class="coming-soon-icon" aria-hidden="true">📄</span>
+      <h3>Próximamente</h3>
+      <p>Las guías se publicarán conforme avance el semestre.</p>
+    </div>
+  </section>
+
+  <!-- Bibliografía -->
+  <section class="page-section" aria-labelledby="biblio-heading">
+    <SectionHeading
+      title="Bibliografía de referencia"
+      desc="Textos recomendados para profundizar."
+    />
+    <div class="card-grid">
+      <div class="card">
+        <h3>📖 Mecánica clásica</h3>
+        <p>
+          Serway &amp; Jewett — <em>Physics for Scientists and Engineers</em>.
+          Referencia estándar para mecánica universitaria introductoria.
+        </p>
+        <span class="chip">Texto base</span>
+      </div>
+      <div class="card">
+        <h3>📖 Complementario</h3>
+        <p>
+          Halliday, Resnick &amp; Krane — <em>Physics</em>.
+          Tratamiento más riguroso para quienes deseen profundizar.
+        </p>
+        <span class="chip">Complementario</span>
+      </div>
+      <div class="card">
+        <h3>📖 Resolución de problemas</h3>
+        <p>
+          Irodov — <em>Problems in General Physics</em>.
+          Problemas desafiantes para práctica adicional.
+        </p>
+        <span class="chip">Práctica</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Videos -->
+  <section class="page-section" aria-labelledby="videos-heading">
+    <SectionHeading
+      title="Videos de referencia"
+      desc="Canales y playlists recomendados en español e inglés."
+    />
+    <div class="card-grid">
+      <div class="card">
+        <h3>🎬 Mecánica (OCW MIT)</h3>
+        <p>
+          Serie clásica de Walter Lewin sobre mecánica.
+          Disponible en YouTube y en el sitio de MIT OpenCourseWare.
+        </p>
+        <span class="chip">🇺🇸 Inglés</span>
+      </div>
+      <div class="card">
+        <h3>🎬 Física conceptual</h3>
+        <p>
+          Khan Academy en español cubre los fundamentos
+          con explicaciones claras y ejercicios guiados.
+        </p>
+        <span class="chip">🇪🇸 Español</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Enlaces externos -->
+  <section class="page-section" aria-labelledby="enlaces-heading">
+    <SectionHeading
+      title="Enlaces de interés"
+      desc="Recursos externos útiles."
+    />
+    <ul class="card-grid" role="list">
+      <li class="card">
+        <h3>🌐 PhET Interactive Simulations</h3>
+        <p>
+          Simulaciones interactivas desarrolladas por la Universidad de Colorado.
+          Cubren cinemática, dinámica, energía y más.
+        </p>
+        <a
+          href="https://phet.colorado.edu/es/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Abrir PhET Simulations en una nueva pestaña"
+        >
+          Visitar sitio →
+        </a>
+      </li>
+      <li class="card">
+        <h3>🌐 HyperPhysics</h3>
+        <p>
+          Mapa conceptual interactivo de física. Excelente para
+          revisar definiciones, fórmulas y relaciones entre conceptos.
+        </p>
+        <a
+          href="http://hyperphysics.phy-astr.gsu.edu/hbase/hframe.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Abrir HyperPhysics en una nueva pestaña"
+        >
+          Visitar sitio →
+        </a>
+      </li>
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero-sm h1 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+</style>

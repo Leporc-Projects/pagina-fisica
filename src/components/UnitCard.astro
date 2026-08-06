@@ -1,0 +1,21 @@
+---
+// UnitCard.astro — Tarjeta de unidad temática
+interface Props {
+  number: number;
+  title:  string;
+  status: "pendiente" | "en-curso" | "disponible";
+}
+const { number, title, status } = Astro.props;
+
+const statusLabels: Record<string, string> = {
+  pendiente:   "⏳ Pendiente",
+  "en-curso":  "📖 En curso",
+  disponible:  "✅ Disponible",
+};
+---
+
+<article class="unit-card">
+  <span class="unit-number">Unidad {number}</span>
+  <h3 class="unit-title">{title}</h3>
+  <span class="unit-badge">{statusLabels[status]}</span>
+</article>

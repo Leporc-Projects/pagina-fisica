@@ -1,0 +1,114 @@
+---
+// fisica-basica-1.astro — Página del curso Física Básica I
+import BaseLayout   from "../layouts/BaseLayout.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import UnitCard     from "../components/UnitCard.astro";
+import { UNITS }   from "../data/site.js";
+---
+
+<BaseLayout
+  title="Física Básica I"
+  description="Presentación, metodología y contenido temático de Física Básica I."
+>
+  <!-- Encabezado de página -->
+  <div class="page-hero-sm" style="margin-bottom: var(--space-8);">
+    <h1>📐 Física Básica I</h1>
+    <p class="page-subtitle">
+      Semestre en curso · Contenido provisional
+    </p>
+  </div>
+
+  <!-- Aviso de contenido provisional -->
+  <div class="notice" role="note" aria-label="Aviso sobre contenido provisional">
+    <span class="notice-icon" aria-hidden="true">⚠️</span>
+    <div>
+      <p>
+        <strong>Contenido provisional.</strong> El cronograma oficial, las fechas de evaluación
+        y los materiales definitivos se publicarán una vez queden establecidos.
+        Esta página se actualiza durante el semestre.
+      </p>
+    </div>
+  </div>
+
+  <!-- Presentación -->
+  <section class="page-section" aria-labelledby="presentacion-heading">
+    <SectionHeading
+      title="Presentación"
+      desc="Una introducción general al curso."
+    />
+    <div class="card" style="max-width: 680px;">
+      <p>
+        Física Básica I es un curso introductorio de mecánica clásica y termodinámica
+        elemental. Se trabaja con metodología activa: discusión conceptual, resolución
+        guiada de problemas y sesiones de laboratorio.
+      </p>
+      <p style="margin-top: var(--space-3);">
+        El objetivo es que el estudiante desarrolle habilidades de razonamiento
+        cuantitativo y modelado físico que sirvan de base para cursos posteriores.
+      </p>
+    </div>
+  </section>
+
+  <!-- Metodología -->
+  <section class="page-section" aria-labelledby="metodologia-heading">
+    <SectionHeading
+      title="Metodología"
+      desc="Cómo se desarrolla el curso."
+    />
+    <div class="card-grid">
+      <div class="card">
+        <h3>🗣️ Clases</h3>
+        <p>
+          Sesiones presenciales con exposición conceptual, ejemplos resueltos
+          y espacio para preguntas. Se recomienda llegar habiendo revisado
+          el material previo.
+        </p>
+      </div>
+      <div class="card">
+        <h3>🔬 Laboratorio</h3>
+        <p>
+          Prácticas experimentales que acompañan la teoría. Las guías se
+          publicarán antes de cada sesión en esta sección.
+        </p>
+      </div>
+      <div class="card">
+        <h3>✏️ Evaluación</h3>
+        <p>
+          Quices periódicos, parciales y un examen final. Los detalles
+          se definirán conforme al cronograma institucional.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Unidades temáticas -->
+  <section class="page-section" aria-labelledby="unidades-heading">
+    <SectionHeading
+      title="Unidades temáticas"
+      desc="Estructura provisional del contenido. El orden y alcance pueden ajustarse."
+    />
+    <ul class="units-grid" role="list">
+      {UNITS.map((u) => (
+        <li>
+          <UnitCard
+            number={u.number}
+            title={u.title}
+            status={u.status}
+          />
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero-sm h1 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+</style>

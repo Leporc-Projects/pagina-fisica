@@ -1,0 +1,602 @@
+/* ============================================================
+   global.css — Sistema de diseño central
+   Espacio de Física v0.1
+   ============================================================ */
+
+/* --- 1. Variables (tokens de diseño) ----------------------- */
+:root {
+  /* Paleta principal */
+  --color-primary:       hsl(195, 60%, 28%);   /* verde azulado oscuro */
+  --color-primary-light: hsl(195, 55%, 38%);
+  --color-primary-muted: hsl(195, 40%, 92%);
+  --color-accent:        hsl(215, 70%, 42%);   /* azul complementario */
+  --color-accent-light:  hsl(215, 65%, 52%);
+
+  /* Neutros */
+  --color-bg:            hsl(210, 20%, 98%);
+  --color-surface:       hsl(0, 0%, 100%);
+  --color-surface-2:     hsl(210, 18%, 95%);
+  --color-border:        hsl(210, 15%, 88%);
+  --color-text:          hsl(215, 25%, 18%);
+  --color-text-muted:    hsl(215, 15%, 45%);
+
+  /* Semánticos */
+  --color-pending:       hsl(40, 85%, 45%);
+  --color-pending-bg:    hsl(45, 100%, 95%);
+
+  /* Tipografía */
+  --font-system:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "Cascadia Code", "Fira Mono", monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+
+  /* Espaciado */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Radio de borde */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Sombras */
+  --shadow-sm:
+    0 1px 2px hsl(215 25% 18% / 0.06),
+    0 1px 3px hsl(215 25% 18% / 0.08);
+  --shadow-md:
+    0 4px 6px hsl(215 25% 18% / 0.07),
+    0 2px 4px hsl(215 25% 18% / 0.06);
+  --shadow-lg:
+    0 10px 15px hsl(215 25% 18% / 0.08),
+    0 4px 6px  hsl(215 25% 18% / 0.05);
+
+  /* Transiciones */
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+
+  /* Layout */
+  --container-max: 1100px;
+  --header-h:      4rem;
+}
+
+/* --- 2. Reset y base --------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-system);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+img, video, svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-light);
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* --- 3. Tipografía ----------------------------------------- */
+h1, h2, h3, h4 {
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+h1 { font-size: clamp(var(--text-2xl), 4vw, var(--text-4xl)); }
+h2 { font-size: clamp(var(--text-xl), 3vw, var(--text-3xl)); }
+h3 { font-size: clamp(var(--text-lg), 2vw, var(--text-2xl)); }
+h4 { font-size: var(--text-lg); }
+
+p {
+  max-width: 68ch;
+}
+
+code, kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-surface-2);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+/* --- 4. Layout -------------------------------------------- */
+.container {
+  width: min(var(--container-max), 100% - var(--space-8));
+  margin-inline: auto;
+}
+
+main {
+  flex: 1;
+  padding-block: var(--space-10) var(--space-16);
+}
+
+/* --- 5. Header -------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  height: var(--header-h);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  gap: var(--space-4);
+}
+
+.site-logo {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.site-logo .logo-name {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.01em;
+}
+
+.site-logo .logo-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Navegación desktop */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+  background-color: var(--color-primary-muted);
+}
+
+.nav-link[aria-current="page"] {
+  color: var(--color-primary);
+  background-color: var(--color-primary-muted);
+  font-weight: 600;
+}
+
+/* Botón menú móvil */
+.menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text);
+  font-size: var(--text-xl);
+  transition: background-color var(--transition-fast);
+}
+
+.menu-btn:hover {
+  background-color: var(--color-surface-2);
+}
+
+/* Menú móvil desplegable */
+@media (max-width: 768px) {
+  .site-header {
+    height: auto;
+  }
+
+  .header-inner {
+    flex-wrap: wrap;
+    padding-block: var(--space-3);
+    height: auto;
+    min-height: var(--header-h);
+    align-items: center;
+  }
+
+  .menu-btn {
+    display: flex;
+  }
+
+  .site-nav {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    padding-block: var(--space-2) var(--space-4);
+    gap: var(--space-1);
+    order: 3;
+  }
+
+  .site-nav.is-open {
+    display: flex;
+  }
+
+  .nav-link {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-base);
+    border-radius: var(--radius-md);
+  }
+}
+
+/* --- 6. Footer -------------------------------------------- */
+.site-footer {
+  background: var(--color-primary);
+  color: hsl(0, 0%, 90%);
+  padding-block: var(--space-8);
+  font-size: var(--text-sm);
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-brand {
+  font-weight: 600;
+  color: hsl(0, 0%, 100%);
+}
+
+.footer-note {
+  color: hsl(195, 30%, 80%);
+}
+
+/* --- 7. Componente: NavCard -------------------------------- */
+.nav-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-4);
+}
+
+.nav-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal),
+    border-color var(--transition-normal);
+}
+
+.nav-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-light);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.nav-card-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.nav-card-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* --- 8. Componente: SectionHeading ------------------------- */
+.section-heading {
+  margin-bottom: var(--space-6);
+}
+
+.section-heading h2 {
+  color: var(--color-primary);
+  margin-bottom: var(--space-2);
+}
+
+.section-heading p {
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+}
+
+.section-divider {
+  width: 3rem;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    var(--color-primary),
+    var(--color-accent)
+  );
+  border-radius: 999px;
+  margin-top: var(--space-3);
+}
+
+/* --- 9. Componente: UnitCard ------------------------------- */
+.units-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.unit-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: box-shadow var(--transition-normal);
+}
+
+.unit-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.unit-number {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.unit-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.unit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+  background: var(--color-pending-bg);
+  color: var(--color-pending);
+  align-self: flex-start;
+}
+
+/* --- 10. Tarjetas de contenido / recursos ----------------- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+.card h3 {
+  color: var(--color-primary);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.card p {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+}
+
+/* --- 11. Hero --------------------------------------------- */
+.hero {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-accent) 100%
+  );
+  color: hsl(0, 0%, 100%);
+  padding-block: var(--space-12) var(--space-10);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-10);
+}
+
+.hero-inner {
+  max-width: 680px;
+}
+
+.hero h1 {
+  color: hsl(0, 0%, 100%);
+  margin-bottom: var(--space-4);
+}
+
+.hero p {
+  color: hsl(195, 50%, 88%);
+  font-size: var(--text-lg);
+  max-width: 52ch;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: hsl(0 0% 100% / 0.15);
+  border: 1px solid hsl(0 0% 100% / 0.25);
+  backdrop-filter: blur(4px);
+  border-radius: 999px;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-5);
+  color: hsl(0, 0%, 100%);
+}
+
+/* --- 12. Aviso / Notice ------------------------------------ */
+.notice {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-primary-muted);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin-bottom: var(--space-8);
+}
+
+.notice-icon {
+  font-size: var(--text-lg);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notice p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.notice time {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+/* --- 13. Chip / Etiqueta ----------------------------------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* --- 14. Futura sección / placeholder --------------------- */
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10);
+  background: var(--color-surface-2);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.coming-soon-icon {
+  font-size: 2.5rem;
+}
+
+.coming-soon h3 {
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+}
+
+/* --- 15. Foco y accesibilidad ----------------------------- */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- 16. Secciones de página ------------------------------ */
+.page-section {
+  margin-bottom: var(--space-12);
+}
+
+/* --- 17. Responsive general ------------------------------- */
+@media (max-width: 480px) {
+  .hero {
+    padding-block: var(--space-8) var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+
+  .card-grid,
+  .units-grid,
+  .nav-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}

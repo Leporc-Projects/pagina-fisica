@@ -1,0 +1,24 @@
+---
+// NavCard.astro — Tarjeta de acceso rápido de navegación
+interface Props {
+  href:  string;
+  icon:  string;
+  label: string;
+  desc?: string;
+}
+const { href, icon, label, desc } = Astro.props;
+---
+
+<a href={href} class="nav-card">
+  <span class="nav-card-icon" aria-hidden="true">{icon}</span>
+  <span class="nav-card-label">{label}</span>
+  {desc && <span class="nav-card-desc">{desc}</span>}
+</a>
+
+<style>
+  .nav-card-desc {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
+</style>

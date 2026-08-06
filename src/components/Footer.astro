@@ -1,0 +1,17 @@
+---
+// Footer.astro — Pie de página del sitio
+import { SITE } from "../data/site.js";
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-inner">
+    <p class="footer-brand">{SITE.name}</p>
+    <p class="footer-note">
+      Materiales de enseñanza · {year}
+    </p>
+    <p class="footer-note">
+      Sitio estático · Sin datos personales almacenados
+    </p>
+  </div>
+</footer>

@@ -1,0 +1,189 @@
+---
+// herramientas.astro — Herramientas docentes
+import BaseLayout    from "../layouts/BaseLayout.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+---
+
+<BaseLayout
+  title="Herramientas docentes"
+  description="Herramientas de apoyo para la enseñanza y evaluación en Física Básica I."
+>
+  <div class="page-hero-sm" style="margin-bottom: var(--space-8);">
+    <h1>🛠️ Herramientas docentes</h1>
+    <p class="page-subtitle">Utilidades para el proceso de evaluación y seguimiento</p>
+  </div>
+
+  <!-- Consolidador de quices -->
+  <section class="page-section" aria-labelledby="consolidador-heading">
+    <SectionHeading
+      title="Herramientas disponibles"
+      desc="Utilidades que se desarrollarán para este espacio."
+    />
+
+    <div class="tool-card" role="article" aria-labelledby="consolidador-titulo">
+      <div class="tool-card-header">
+        <span class="tool-icon" aria-hidden="true">📊</span>
+        <div>
+          <h2 id="consolidador-titulo" class="tool-title">
+            Consolidador de quices
+          </h2>
+          <span class="unit-badge">⏳ Próximamente</span>
+        </div>
+      </div>
+
+      <div class="tool-body">
+        <p>
+          Esta herramienta permitirá <strong>procesar y consolidar los resultados
+          de quices</strong> a partir de archivos exportados desde el sistema de
+          evaluación. El proceso ocurre <strong>completamente en el navegador</strong>:
+          no se envían datos a ningún servidor ni se almacena información de estudiantes.
+        </p>
+
+        <h3 class="tool-subtitle">Características previstas</h3>
+        <ul class="feature-list" role="list">
+          <li>
+            <span aria-hidden="true">📁</span>
+            Carga de archivos local (CSV o XLSX) sin subida a servidores
+          </li>
+          <li>
+            <span aria-hidden="true">📈</span>
+            Cálculo de promedios, notas máximas y mínimas por grupo
+          </li>
+          <li>
+            <span aria-hidden="true">📉</span>
+            Estadísticas básicas: media, mediana, desviación estándar
+          </li>
+          <li>
+            <span aria-hidden="true">⬇️</span>
+            Exportación del consolidado como archivo CSV
+          </li>
+          <li>
+            <span aria-hidden="true">🔒</span>
+            Ningún dato se almacena al cerrar la página
+          </li>
+        </ul>
+
+        <div class="notice" role="note" style="margin-top: var(--space-5); margin-bottom: 0;">
+          <span class="notice-icon" aria-hidden="true">🔒</span>
+          <div>
+            <p>
+              <strong>Privacidad por diseño.</strong> Todo el procesamiento se realiza
+              en el navegador del usuario. No se utilizan bases de datos, servicios
+              en la nube ni cookies de seguimiento.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Más herramientas -->
+  <section class="page-section" aria-labelledby="mas-herramientas-heading">
+    <SectionHeading
+      title="Más herramientas"
+      desc="Ideas en lista de espera."
+    />
+    <div class="card-grid">
+      <div class="card">
+        <h3>🎲 Generador de grupos</h3>
+        <p>
+          Asigna estudiantes a grupos de trabajo de forma aleatoria o por criterios.
+          Sin almacenamiento de datos.
+        </p>
+        <span class="unit-badge">⏳ Pendiente</span>
+      </div>
+      <div class="card">
+        <h3>⏱️ Temporizador de evaluación</h3>
+        <p>
+          Temporizador visual para quices y parciales, con alertas configurable.
+          Funciona sin conexión.
+        </p>
+        <span class="unit-badge">⏳ Pendiente</span>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero-sm h1 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  /* Tarjeta principal de herramienta */
+  .tool-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    max-width: 720px;
+  }
+
+  .tool-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-muted) 0%,
+      var(--color-surface-2) 100%
+    );
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .tool-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .tool-title {
+    font-size: var(--text-2xl);
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .tool-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .tool-subtitle {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: var(--space-2);
+  }
+
+  .feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-left: 0;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+
+  .feature-list li span[aria-hidden] {
+    flex-shrink: 0;
+    font-size: var(--text-base);
+  }
+</style>

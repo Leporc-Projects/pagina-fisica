@@ -1,0 +1,88 @@
+---
+// Header.astro — Cabecera del sitio con navegación responsive
+import { SITE, NAV } from "../data/site.js";
+const { pathname } = Astro.url;
+---
+
+<header class="site-header" role="banner">
+  <div class="container header-inner">
+    <a href="/" class="site-logo" aria-label={`${SITE.name} — Inicio`}>
+      <span class="logo-name">{SITE.name}</span>
+      <span class="logo-sub">Física universitaria</span>
+    </a>
+
+    <!-- Botón menú móvil -->
+    <button
+      class="menu-btn"
+      aria-controls="site-nav"
+      aria-expanded="false"
+      aria-label="Abrir menú de navegación"
+      id="menu-toggle"
+    >
+      <span aria-hidden="true">☰</span>
+    </button>
+
+    <!-- Navegación principal -->
+    <nav
+      id="site-nav"
+      class="site-nav"
+      aria-label="Navegación principal"
+    >
+      {NAV.map((item) => {
+        const isActive = pathname === item.href ||
+          (item.href !== "/" && pathname.startsWith(item.href));
+        return (
+          <a
+            href={item.href}
+            class="nav-link"
+            aria-current={isActive ? "page" : undefined}
+          >
+            <span aria-hidden="true">{item.icon}</span>
+            {item.label}
+          </a>
+        );
+      })}
+    </nav>
+  </div>
+</header>
+
+<script>
+  // Menú móvil accesible
+  const toggle = document.getElementById("menu-toggle");
+  const nav    = document.getElementById("site-nav");
+
+  toggle?.addEventListener("click", () => {
+    const isOpen = nav?.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+    toggle.setAttribute(
+      "aria-label",
+      isOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"
+    );
+    // Cambiar ícono
+    const icon = toggle.querySelector("[aria-hidden]");
+    if (icon) icon.textContent = isOpen ? "✕" : "☰";
+  });
+
+  // Cerrar menú al redimensionar a escritorio
+  const mq = window.matchMedia("(min-width: 769px)");
+  mq.addEventListener("change", (e) => {
+    if (e.matches) {
+      nav?.classList.remove("is-open");
+      toggle?.setAttribute("aria-expanded", "false");
+      const icon = toggle?.querySelector("[aria-hidden]");
+      if (icon) icon.textContent = "☰";
+    }
+  });
+
+  // Cerrar menú al hacer clic en un enlace (en móvil)
+  nav?.querySelectorAll(".nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth < 769) {
+        nav.classList.remove("is-open");
+        toggle?.setAttribute("aria-expanded", "false");
+        const icon = toggle?.querySelector("[aria-hidden]");
+        if (icon) icon.textContent = "☰";
+      }
+    });
+  });
+</script>
