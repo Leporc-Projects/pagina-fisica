@@ -1,0 +1,263 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
+
+import {
+  COURSE,
+  SCHEDULE,
+  SCHEDULE_TYPES,
+} from "../../data/course.js";
+
+type ScheduleEntry = (typeof SCHEDULE)[number];
+
+const monthFormatter = new Intl.DateTimeFormat(
+  "es-CO",
+  {
+    month: "long",
+    year: "numeric",
+  }
+);
+
+const dateFormatter = new Intl.DateTimeFormat(
+  "es-CO",
+  {
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
+  }
+);
+
+const capitalize = (text: string) =>
+  text.charAt(0).toUpperCase() + text.slice(1);
+
+const parseDate = (date: string) =>
+  new Date(`${date}T12:00:00`);
+
+const getTypeLabel = (type: string) =>
+  SCHEDULE_TYPES[
+    type as keyof typeof SCHEDULE_TYPES
+  ]?.label ?? type;
+
+const groupedSchedule: Array<{
+  month: string;
+  sessions: ScheduleEntry[];
+}> = [];
+
+for (const session of SCHEDULE) {
+  const month = capitalize(
+    monthFormatter.format(parseDate(session.date))
+  );
+
+  const existingGroup = groupedSchedule.find(
+    (group) => group.month === month
+  );
+
+  if (existingGroup) {
+    existingGroup.sessions.push(session);
+  } else {
+    groupedSchedule.push({
+      month,
+      sessions: [session],
+    });
+  }
+}
+
+const classesCount = SCHEDULE.filter(
+  (session) => session.type === "class"
+).length;
+
+const reviewsCount = SCHEDULE.filter(
+  (session) => session.type === "review"
+).length;
+
+const examsCount = SCHEDULE.filter(
+  (session) => session.type === "exam"
+).length;
+
+const eventsCount = SCHEDULE.filter(
+  (session) => session.type === "event"
+).length;
+---
+
+<BaseLayout
+  title={`Cronograma · ${COURSE.name}`}
+  description={`Cronograma académico de ${COURSE.name} para el semestre ${COURSE.semester}.`}
+>
+  <article class="course-subpage">
+    <CoursePageHeader
+      title="Cronograma"
+      description="Plan de clases, repasos, evaluaciones y eventos académicos del semestre 2026-2."
+    />
+
+    <section
+      class="schedule-overview"
+      aria-labelledby="schedule-overview-title"
+    >
+      <div class="schedule-overview__intro">
+        <p class="course-section__index">Resumen</p>
+
+        <h2 id="schedule-overview-title">
+          Organización del semestre
+        </h2>
+
+        <p>
+          El curso está organizado en 34 sesiones. Las
+          modificaciones posteriores al cronograma se
+          comunicarán mediante la sección de avisos.
+        </p>
+      </div>
+
+      <dl class="schedule-stats">
+        <div>
+          <dt>Sesiones</dt>
+          <dd>{SCHEDULE.length}</dd>
+        </div>
+
+        <div>
+          <dt>Clases</dt>
+          <dd>{classesCount}</dd>
+        </div>
+
+        <div>
+          <dt>Repasos</dt>
+          <dd>{reviewsCount}</dd>
+        </div>
+
+        <div>
+          <dt>Exámenes</dt>
+          <dd>{examsCount}</dd>
+        </div>
+
+        <div>
+          <dt>Eventos</dt>
+          <dd>{eventsCount}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section
+      class="schedule-legend"
+      aria-label="Tipos de sesión"
+    >
+      {
+        Object.entries(SCHEDULE_TYPES).map(
+          ([type, information]) => (
+            <span
+              class={`schedule-type schedule-type--${type}`}
+            >
+              {information.label}
+            </span>
+          )
+        )
+      }
+    </section>
+
+    <div class="schedule-calendar">
+      {
+        groupedSchedule.map((group) => (
+          <section
+            class="schedule-month"
+            aria-labelledby={`month-${group.month}`}
+          >
+            <header class="schedule-month__header">
+              <h2 id={`month-${group.month}`}>
+                {group.month}
+              </h2>
+
+              <span>
+                {group.sessions.length}
+                {
+                  group.sessions.length === 1
+                    ? " sesión"
+                    : " sesiones"
+                }
+              </span>
+            </header>
+
+            <div class="schedule-list">
+              {
+                group.sessions.map((session) => (
+                  <article
+                    class={`schedule-entry schedule-entry--${session.type}`}
+                  >
+                    <div class="schedule-entry__date">
+                      <span>
+                        Sesión{" "}
+                        {String(session.session).padStart(
+                          2,
+                          "0"
+                        )}
+                      </span>
+
+                      <time datetime={session.date}>
+                        {capitalize(
+                          dateFormatter.format(
+                            parseDate(session.date)
+                          )
+                        )}
+                      </time>
+                    </div>
+
+                    <div class="schedule-entry__content">
+                      <div class="schedule-entry__heading">
+                        <span
+                          class={`schedule-type schedule-type--${session.type}`}
+                        >
+                          {getTypeLabel(session.type)}
+                        </span>
+
+                        {
+                          session.chapter && (
+                            <span class="schedule-entry__chapter">
+                              {session.chapter}
+                            </span>
+                          )
+                        }
+                      </div>
+
+                      <h3>{session.title}</h3>
+
+                      {
+                        session.topics.length > 0 && (
+                          <ul class="schedule-topic-list">
+                            {
+                              session.topics.map(
+                                (topic) => (
+                                  <li>{topic}</li>
+                                )
+                              )
+                            }
+                          </ul>
+                        )
+                      }
+
+                      {
+                        session.objectives.length > 0 && (
+                          <details class="schedule-objectives">
+                            <summary>
+                              Objetivos de la sesión
+                            </summary>
+
+                            <ul>
+                              {
+                                session.objectives.map(
+                                  (objective) => (
+                                    <li>{objective}</li>
+                                  )
+                                )
+                              }
+                            </ul>
+                          </details>
+                        )
+                      }
+                    </div>
+                  </article>
+                ))
+              }
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </article>
+</BaseLayout>

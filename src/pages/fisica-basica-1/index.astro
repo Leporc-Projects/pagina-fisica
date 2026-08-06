@@ -1,0 +1,267 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CourseNav from "../../components/course/CourseNav.astro";
+
+import {
+  COURSE,
+  UNITS,
+  EVALUATION,
+  BIBLIOGRAPHY,
+} from "../../data/course.js";
+
+const totalPercentage = EVALUATION.reduce(
+  (total, item) => total + item.percentage,
+  0
+);
+---
+
+<BaseLayout
+  title={COURSE.name}
+  description={COURSE.summary}
+>
+  <article class="course-page">
+    <header class="course-hero">
+      <div class="course-hero__heading">
+        <p class="eyebrow eyebrow--dark">
+          Curso activo · {COURSE.semester}
+        </p>
+
+        <h1>{COURSE.name}</h1>
+
+        <p class="course-hero__summary">
+          {COURSE.summary}
+        </p>
+      </div>
+
+      <dl class="course-facts">
+        <div>
+          <dt>Código</dt>
+          <dd>{COURSE.code}</dd>
+        </div>
+
+        <div>
+          <dt>Créditos</dt>
+          <dd>{COURSE.credits}</dd>
+        </div>
+
+        <div>
+          <dt>Modalidad</dt>
+          <dd>{COURSE.modality}</dd>
+        </div>
+
+        <div>
+          <dt>Semestre</dt>
+          <dd>{COURSE.semester}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <CourseNav />
+
+    <section
+      class="course-section course-section--split"
+      aria-labelledby="course-purpose"
+    >
+      <div>
+        <p class="course-section__index">01</p>
+
+        <h2 id="course-purpose">
+          Propósito formativo
+        </h2>
+      </div>
+
+      <div class="course-section__body">
+        <p class="course-lead">
+          {COURSE.purpose}
+        </p>
+
+        <div class="course-hours">
+          <div>
+            <strong>{COURSE.interactionHours}</strong>
+            <span>horas de interacción</span>
+          </div>
+
+          <div>
+            <strong>{COURSE.independentHours}</strong>
+            <span>horas de trabajo independiente</span>
+          </div>
+
+          <div>
+            <strong>{COURSE.totalHours}</strong>
+            <span>horas totales</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
+      class="course-section course-section--split"
+      aria-labelledby="course-goals"
+    >
+      <div>
+        <p class="course-section__index">02</p>
+
+        <h2 id="course-goals">
+          Resultados de aprendizaje
+        </h2>
+      </div>
+
+      <ol class="course-numbered-list">
+        {
+          COURSE.learningGoals.map((goal, index) => (
+            <li>
+              <span>
+                {String(index + 1).padStart(2, "0")}
+              </span>
+
+              <p>{goal}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section
+      class="course-section"
+      aria-labelledby="course-units"
+    >
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">03</p>
+          <h2 id="course-units">Unidades del curso</h2>
+        </div>
+
+        <p>
+          La asignatura se organiza en siete unidades que
+          recorren los fundamentos de la mecánica
+          newtoniana.
+        </p>
+      </header>
+
+      <div class="course-unit-list">
+        {
+          UNITS.map((unit) => (
+            <article class="course-unit-row">
+              <span class="course-unit-row__number">
+                {String(unit.number).padStart(2, "0")}
+              </span>
+
+              <div>
+                <h3>{unit.title}</h3>
+                <p>{unit.description}</p>
+              </div>
+
+              <span class="course-unit-row__chapters">
+                {unit.chapters}
+              </span>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section
+      class="course-section course-section--split"
+      aria-labelledby="course-methodology"
+    >
+      <div>
+        <p class="course-section__index">04</p>
+
+        <h2 id="course-methodology">
+          Metodología
+        </h2>
+      </div>
+
+      <ul class="course-method-list">
+        {
+          COURSE.methodology.map((method) => (
+            <li>
+              <span aria-hidden="true"></span>
+              <p>{method}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section
+      class="course-section"
+      aria-labelledby="course-evaluation"
+    >
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">05</p>
+          <h2 id="course-evaluation">Evaluación</h2>
+        </div>
+
+        <p>
+          La suma de los componentes corresponde al
+          {` ${totalPercentage} %`} de la calificación del
+          curso.
+        </p>
+      </header>
+
+      <div class="evaluation-list">
+        {
+          EVALUATION.map((item) => (
+            <article class="evaluation-row">
+              <div>
+                <h3>{item.name}</h3>
+                <p>{item.content}</p>
+              </div>
+
+              <strong>{item.percentage} %</strong>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section
+      class="course-section"
+      aria-labelledby="course-bibliography"
+    >
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">06</p>
+
+          <h2 id="course-bibliography">
+            Bibliografía
+          </h2>
+        </div>
+
+        <p>
+          Textos guía y materiales complementarios
+          establecidos para el desarrollo del curso.
+        </p>
+      </header>
+
+      <div class="bibliography-list">
+        {
+          BIBLIOGRAPHY.map((book) => (
+            <article class="bibliography-row">
+              <span class="bibliography-row__mark">
+                {book.shortName}
+              </span>
+
+              <div>
+                <h3>{book.title}</h3>
+                <p>{book.authors}</p>
+
+                {
+                  book.edition && (
+                    <small>{book.edition}</small>
+                  )
+                }
+              </div>
+
+              <span class="bibliography-row__role">
+                {book.role}
+              </span>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+  </article>
+</BaseLayout>

@@ -1,0 +1,43 @@
+---
+import { COURSE_NAV } from "../../data/course.js";
+
+const { pathname } = Astro.url;
+
+const normalizePath = (path: string) => {
+  if (path.length > 1 && path.endsWith("/")) {
+    return path.slice(0, -1);
+  }
+
+  return path;
+};
+
+const currentPath = normalizePath(pathname);
+---
+
+<nav
+  class="course-nav"
+  aria-label="Secciones de Física Básica I"
+>
+  <div class="course-nav__track">
+    {
+      COURSE_NAV.map((item, index) => {
+        const isCurrent =
+          currentPath === normalizePath(item.href);
+
+        return (
+          <a
+            class="course-nav__link"
+            href={item.href}
+            aria-current={isCurrent ? "page" : undefined}
+          >
+            <span class="course-nav__number">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+
+            <span>{item.label}</span>
+          </a>
+        );
+      })
+    }
+  </div>
+</nav>

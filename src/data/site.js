@@ -22,12 +22,30 @@ export const NAV = [
     label: "Física Básica I",
     href: "/fisica-basica-1",
     children: [
-      { label: "Curso", href: "/fisica-basica-1" },
-      { label: "Cronograma", disabled: true },
-      { label: "Unidades y apuntes", disabled: true },
-      { label: "Ejercicios y tutorías", disabled: true },
-      { label: "Videos", disabled: true },
-      { label: "Evaluación y notas", disabled: true },
+      {
+        label: "Curso",
+        href: "/fisica-basica-1",
+      },
+      {
+        label: "Cronograma",
+        href: "/fisica-basica-1/cronograma",
+      },
+      {
+        label: "Unidades y apuntes",
+        href: "/fisica-basica-1/unidades",
+      },
+      {
+        label: "Ejercicios y tutorías",
+        href: "/fisica-basica-1/ejercicios",
+      },
+      {
+        label: "Videos",
+        href: "/fisica-basica-1/videos",
+      },
+      {
+        label: "Evaluación y notas",
+        href: "/fisica-basica-1/evaluacion",
+      },
     ],
   },
   {
@@ -40,7 +58,7 @@ export const NAV = [
   },
   {
     label: "Avisos",
-    href: "/#avisos",
+    href: "/avisos",
   },
 ];
 
@@ -55,7 +73,7 @@ export const HOME_LINKS = [
     number: "02",
     label: "Ejercicios",
     description: "Práctica conceptual y resolución progresiva de problemas.",
-    href: "/actividades",
+    href: "/fisica-basica-1/ejercicios",
   },
   {
     number: "03",
