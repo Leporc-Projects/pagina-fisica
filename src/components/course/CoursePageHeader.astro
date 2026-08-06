@@ -1,5 +1,6 @@
 ---
 import CourseNav from "./CourseNav.astro";
+import { COURSE } from "../../data/course.js";
 
 interface Props {
   section?: string;
@@ -8,7 +9,7 @@ interface Props {
 }
 
 const {
-  section = "Física Básica I · 2026-2",
+  section = `${COURSE.name} · ${COURSE.semester}`,
   title,
   description,
 } = Astro.props;

@@ -1,6 +1,8 @@
 // Información central del sitio.
 // Los nombres, enlaces y textos generales se cambian desde este archivo.
 
+import { COURSE_NAV } from "./course.js";
+
 export const SITE = {
   name: "Papilla's Physics",
   teacherName: "César Barrero",
@@ -21,32 +23,7 @@ export const NAV = [
   {
     label: "Física Básica I",
     href: "/fisica-basica-1",
-    children: [
-      {
-        label: "Curso",
-        href: "/fisica-basica-1",
-      },
-      {
-        label: "Cronograma",
-        href: "/fisica-basica-1/cronograma",
-      },
-      {
-        label: "Unidades y apuntes",
-        href: "/fisica-basica-1/unidades",
-      },
-      {
-        label: "Ejercicios y tutorías",
-        href: "/fisica-basica-1/ejercicios",
-      },
-      {
-        label: "Videos",
-        href: "/fisica-basica-1/videos",
-      },
-      {
-        label: "Evaluación y notas",
-        href: "/fisica-basica-1/evaluacion",
-      },
-    ],
+    children: COURSE_NAV,
   },
   {
     label: "Simulaciones",
@@ -95,33 +72,6 @@ export const RECENT_NOTICES = [
     category: "Sitio",
     title: "Primera etapa de desarrollo",
     text: "El sitio se encuentra en construcción. Los contenidos del curso se incorporarán y revisarán progresivamente.",
-  },
-];
-
-// Estructura general del curso. Se ampliará en el bloque académico.
-export const UNITS = [
-  { number: 1, title: "Vectores y cinemática", status: "pendiente" },
-  { number: 2, title: "Leyes de Newton", status: "pendiente" },
-  {
-    number: 3,
-    title: "Fuerzas y ecuaciones de movimiento",
-    status: "pendiente",
-  },
-  { number: 4, title: "Trabajo y energía", status: "pendiente" },
-  {
-    number: 5,
-    title: "Momento lineal y sistemas de partículas",
-    status: "pendiente",
-  },
-  {
-    number: 6,
-    title: "Rotación y momento angular",
-    status: "pendiente",
-  },
-  {
-    number: 7,
-    title: "Gravitación y movimiento periódico",
-    status: "pendiente",
   },
 ];
 

@@ -2,6 +2,7 @@
 // recursos.astro — Biblioteca de recursos de aprendizaje
 import BaseLayout    from "../layouts/BaseLayout.astro";
 import SectionHeading from "../components/SectionHeading.astro";
+import { BIBLIOGRAPHY } from "../data/course.js";
 ---
 
 <BaseLayout
@@ -16,6 +17,7 @@ import SectionHeading from "../components/SectionHeading.astro";
   <!-- Guías propias -->
   <section class="page-section" aria-labelledby="guias-heading">
     <SectionHeading
+      id="guias-heading"
       title="Guías y apuntes"
       desc="Documentos elaborados para el curso."
     />
@@ -29,40 +31,31 @@ import SectionHeading from "../components/SectionHeading.astro";
   <!-- Bibliografía -->
   <section class="page-section" aria-labelledby="biblio-heading">
     <SectionHeading
+      id="biblio-heading"
       title="Bibliografía de referencia"
       desc="Textos recomendados para profundizar."
     />
     <div class="card-grid">
-      <div class="card">
-        <h3>📖 Mecánica clásica</h3>
-        <p>
-          Serway &amp; Jewett — <em>Physics for Scientists and Engineers</em>.
-          Referencia estándar para mecánica universitaria introductoria.
-        </p>
-        <span class="chip">Texto base</span>
-      </div>
-      <div class="card">
-        <h3>📖 Complementario</h3>
-        <p>
-          Halliday, Resnick &amp; Krane — <em>Physics</em>.
-          Tratamiento más riguroso para quienes deseen profundizar.
-        </p>
-        <span class="chip">Complementario</span>
-      </div>
-      <div class="card">
-        <h3>📖 Resolución de problemas</h3>
-        <p>
-          Irodov — <em>Problems in General Physics</em>.
-          Problemas desafiantes para práctica adicional.
-        </p>
-        <span class="chip">Práctica</span>
-      </div>
+      {
+        BIBLIOGRAPHY.map((book) => (
+          <article class="card">
+            <h3>{book.title}</h3>
+            <p>
+              {[book.authors, book.edition]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+            <span class="chip">{book.role}</span>
+          </article>
+        ))
+      }
     </div>
   </section>
 
   <!-- Videos -->
   <section class="page-section" aria-labelledby="videos-heading">
     <SectionHeading
+      id="videos-heading"
       title="Videos de referencia"
       desc="Canales y playlists recomendados en español e inglés."
     />
@@ -89,6 +82,7 @@ import SectionHeading from "../components/SectionHeading.astro";
   <!-- Enlaces externos -->
   <section class="page-section" aria-labelledby="enlaces-heading">
     <SectionHeading
+      id="enlaces-heading"
       title="Enlaces de interés"
       desc="Recursos externos útiles."
     />

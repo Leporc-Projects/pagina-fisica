@@ -39,23 +39,26 @@ const getTypeLabel = (type: string) =>
   ]?.label ?? type;
 
 const groupedSchedule: Array<{
+  id: string;
   month: string;
   sessions: ScheduleEntry[];
 }> = [];
 
 for (const session of SCHEDULE) {
+  const id = `month-${session.date.slice(0, 7)}`;
   const month = capitalize(
     monthFormatter.format(parseDate(session.date))
   );
 
   const existingGroup = groupedSchedule.find(
-    (group) => group.month === month
+    (group) => group.id === id
   );
 
   if (existingGroup) {
     existingGroup.sessions.push(session);
   } else {
     groupedSchedule.push({
+      id,
       month,
       sessions: [session],
     });
@@ -86,7 +89,7 @@ const eventsCount = SCHEDULE.filter(
   <article class="course-subpage">
     <CoursePageHeader
       title="Cronograma"
-      description="Plan de clases, repasos, evaluaciones y eventos académicos del semestre 2026-2."
+      description={`Plan de clases, repasos, evaluaciones y eventos académicos del semestre ${COURSE.semester}.`}
     />
 
     <section
@@ -101,7 +104,7 @@ const eventsCount = SCHEDULE.filter(
         </h2>
 
         <p>
-          El curso está organizado en 34 sesiones. Las
+          El curso está organizado en {SCHEDULE.length} sesiones. Las
           modificaciones posteriores al cronograma se
           comunicarán mediante la sección de avisos.
         </p>
@@ -157,10 +160,10 @@ const eventsCount = SCHEDULE.filter(
         groupedSchedule.map((group) => (
           <section
             class="schedule-month"
-            aria-labelledby={`month-${group.month}`}
+            aria-labelledby={group.id}
           >
             <header class="schedule-month__header">
-              <h2 id={`month-${group.month}`}>
+              <h2 id={group.id}>
                 {group.month}
               </h2>
 

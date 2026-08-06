@@ -1,6 +1,7 @@
 ---
 // Cabecera y menú principal de pantalla completa.
 import { SITE, NAV } from "../data/site.js";
+import { COURSE } from "../data/course.js";
 
 const { pathname } = Astro.url;
 
@@ -201,7 +202,7 @@ const isCurrent = (href: string) => {
     </nav>
 
     <p class="menu-panel__footer">
-      {SITE.currentCourse} · Semestre 2026-2
+      {COURSE.name} · Semestre {COURSE.semester}
     </p>
   </section>
 </div>
