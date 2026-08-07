@@ -11,6 +11,7 @@ import {
   COURSE_NAV,
   EVALUATION,
   SCHEDULE,
+  UNITS,
 } from "../src/data/course.js";
 import { HOME_LINKS, NAV, SITE } from "../src/data/site.js";
 import { NOTICES } from "../src/data/notices.js";
@@ -21,6 +22,20 @@ import {
   THEME_STORAGE_KEY,
 } from "../src/data/theme.js";
 import { resolveBasePath } from "../src/utils/paths.js";
+import { ACADEMIC_UNITS } from "../src/data/physics/index.js";
+import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
+import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
+import {
+  EXERCISE_COGNITIVE_LEVELS,
+  EXERCISE_MODALITIES,
+  EXERCISE_REPRESENTATIONS,
+  EXERCISE_STATUSES,
+  EXERCISE_TYPES,
+  UNIT_1_EXERCISES,
+} from "../src/data/physics/unit-1/exercises.js";
+import { UNIT_1_FORMULAS } from "../src/data/physics/unit-1/formulas.js";
+import { UNIT_1 } from "../src/data/physics/unit-1/unit.js";
+import { UNIT_1_VISUALIZATIONS } from "../src/data/physics/unit-1/visualizations.js";
 
 const projectRoot = fileURLToPath(
   new URL("../", import.meta.url)
@@ -284,6 +299,11 @@ const dataInternalLinks = [
   ]),
   ...HOME_LINKS.map((item) => item.href),
   ...NOTICES.map((notice) => notice.href).filter(Boolean),
+  ...ACADEMIC_UNITS.flatMap((unit) => [
+    unit.route,
+    unit.practiceRoute,
+    ...unit.topics.map((topic) => topic.route),
+  ]),
 ];
 
 const internalLinks = [
@@ -509,6 +529,164 @@ check(
     themeSelectorSource.includes("localStorage.setItem") &&
     themeSelectorSource.includes('new CustomEvent("themechange"'),
   "El selector mantiene teclado, persistencia y respuesta al sistema."
+);
+
+// Contratos editoriales de contenido académico: estructura, taxonomía y rutas.
+check(
+  duplicates(ACADEMIC_UNITS.map((unit) => unit.number)).length === 0 &&
+    duplicates(ACADEMIC_UNITS.map((unit) => unit.slug)).length === 0,
+  "Las unidades académicas tienen números y slugs únicos."
+);
+
+check(
+  ACADEMIC_UNITS.every((academicUnit) =>
+    UNITS.some((courseUnit) => courseUnit.number === academicUnit.number)
+  ),
+  "Cada unidad académica desarrolla una unidad registrada en course.js."
+);
+
+const unit1TopicSlugs = UNIT_1.topics.map((topic) => topic.slug);
+const unit1TopicRoutes = UNIT_1.topics.map((topic) => topic.route);
+const unit1SectionIds = Object.values(UNIT_1_CONTENT)
+  .flatMap((topic) => topic.sections.map((section) => section.id));
+
+check(
+  duplicates(unit1TopicSlugs).length === 0 &&
+    duplicates(unit1TopicRoutes).length === 0,
+  "Los temas de Unidad 1 tienen slugs y rutas únicas."
+);
+
+check(
+  UNIT_1.topics.every((topic, index) => topic.order === index + 1),
+  "Los temas de Unidad 1 conservan un orden consecutivo."
+);
+
+check(
+  Object.keys(UNIT_1_CONTENT).sort().join("|") ===
+    [...unit1TopicSlugs].sort().join("|"),
+  "Cada tema de Unidad 1 tiene un único bloque de contenido."
+);
+
+check(
+  Object.values(UNIT_1_CONTENT).every((topic) =>
+    topic.sections.length > 0 &&
+    topic.sections.every((section) =>
+      section.essential?.length > 0 &&
+      section.understand?.length > 0 &&
+      section.deepen?.length > 0
+    )
+  ),
+  "Cada sección contiene Esencial, Comprende y Profundiza."
+);
+
+check(
+  UNIT_1.topics.find((topic) => topic.slug === "coordenadas-polares")
+    ?.priority === "extension",
+  "Coordenadas polares se conserva como ampliación de menor prioridad."
+);
+
+const referencedFormulaIds = Object.values(UNIT_1_CONTENT)
+  .flatMap((topic) => topic.sections)
+  .flatMap((section) => section.formulas ?? []);
+const referencedVisualizationIds = Object.values(UNIT_1_CONTENT)
+  .flatMap((topic) => topic.sections)
+  .flatMap((section) => section.visualizations ?? []);
+
+check(
+  referencedFormulaIds.every((id) => UNIT_1_FORMULAS[id]) &&
+    Object.entries(UNIT_1_FORMULAS).every(([id, item]) =>
+      item.id === id &&
+      item.mathml.includes("<math") &&
+      item.mathml.includes("<semantics>") &&
+      item.represents
+    ),
+  "Las fórmulas referenciadas existen y usan MathML con contexto."
+);
+
+check(
+  referencedVisualizationIds.every((id) => UNIT_1_VISUALIZATIONS[id]) &&
+    Object.entries(UNIT_1_VISUALIZATIONS).every(([id, item]) =>
+      item.id === id &&
+      ["cartesian", "diagram"].includes(item.kind) &&
+      item.explanation &&
+      item.props?.title &&
+      item.props?.description
+    ),
+  "Las visualizaciones tienen ID, explicación y descripción accesible."
+);
+
+check(
+  UNIT_1_EXERCISES.length >= 18 && UNIT_1_EXERCISES.length <= 24,
+  "El banco inicial contiene entre 18 y 24 ejercicios."
+);
+
+check(
+  duplicates(UNIT_1_EXERCISES.map((exercise) => exercise.id)).length === 0,
+  "Los ejercicios de Unidad 1 tienen IDs únicos."
+);
+
+const invalidExerciseTaxonomy = UNIT_1_EXERCISES.filter((exercise) =>
+  exercise.unit !== UNIT_1.number ||
+  !unit1TopicSlugs.includes(exercise.topic) ||
+  !UNIT_1_CONTENT[exercise.topic]?.sections
+    .some((section) => section.id === exercise.subtopic) ||
+  !exercise.modalities?.every((item) => EXERCISE_MODALITIES.includes(item)) ||
+  !EXERCISE_TYPES.includes(exercise.type) ||
+  !EXERCISE_REPRESENTATIONS.includes(exercise.representation) ||
+  !EXERCISE_COGNITIVE_LEVELS.includes(exercise.cognitiveLevel) ||
+  !EXERCISE_STATUSES.includes(exercise.status) ||
+  !Number.isInteger(exercise.difficulty) ||
+  exercise.difficulty < 1 ||
+  exercise.difficulty > 5
+);
+
+check(
+  invalidExerciseTaxonomy.length === 0,
+  invalidExerciseTaxonomy.length === 0
+    ? "La taxonomía y dificultad de los ejercicios son válidas."
+    : `Ejercicios con taxonomía inválida: ${invalidExerciseTaxonomy.map((item) => item.id).join(", ")}`
+);
+
+const invalidNumericalExercises = UNIT_1_EXERCISES.filter((exercise) =>
+  exercise.type === "numerical" &&
+  (!exercise.expectedUnit ||
+    !Number.isFinite(exercise.tolerance) ||
+    exercise.tolerance < 0)
+);
+
+check(
+  invalidNumericalExercises.length === 0,
+  invalidNumericalExercises.length === 0
+    ? "Los ejercicios numéricos declaran unidad y tolerancia."
+    : `Ejercicios numéricos incompletos: ${invalidNumericalExercises.map((item) => item.id).join(", ")}`
+);
+
+check(
+  UNIT_1_EXERCISES.every((exercise) =>
+    exercise.prompt &&
+    exercise.objectives?.length > 0 &&
+    exercise.solution?.length > 0 &&
+    exercise.version >= 1
+  ),
+  "Cada ejercicio tiene enunciado, objetivos, solución y versión."
+);
+
+const commonErrorIds = UNIT_1_COMMON_ERRORS.map((error) => error.id);
+check(
+  duplicates(commonErrorIds).length === 0 &&
+    UNIT_1_COMMON_ERRORS.every((error) =>
+      error.description &&
+      error.feedback &&
+      unit1SectionIds.includes(error.subtopic)
+    ),
+  "Los errores conceptuales tienen IDs únicos y subtemas existentes."
+);
+
+check(
+  UNIT_1_EXERCISES.every((exercise) =>
+    exercise.commonErrors.every((id) => commonErrorIds.includes(id))
+  ),
+  "Los ejercicios solo referencian errores conceptuales existentes."
 );
 
 // La biblioteca de gráficas conserva separadas matemática, SVG y presentación.
