@@ -75,6 +75,10 @@ export const COURSE_NAV = [
         label: "Evaluación y notas",
         href: "/fisica-basica-1/evaluacion",
     },
+    {
+        label: "Recursos",
+        href: "/fisica-basica-1/recursos",
+    },
 ];
 
 /**

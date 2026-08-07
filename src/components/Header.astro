@@ -12,11 +12,12 @@ const normalizePath = (path: string) =>
 
 const currentPath = normalizePath(pathname);
 
+const targetPathFor = (href: string) =>
+  normalizePath(withBase(href).split(/[?#]/, 1)[0]);
+
 // Una sección principal permanece activa también al visitar cualquiera de sus subrutas.
 const isCurrent = (href: string) => {
-  const targetPath = normalizePath(
-    withBase(href).split(/[?#]/, 1)[0]
-  );
+  const targetPath = targetPathFor(href);
 
   if (href === "/") return currentPath === targetPath;
   if (href.startsWith("/#")) return false;
@@ -26,6 +27,10 @@ const isCurrent = (href: string) => {
     currentPath.startsWith(`${targetPath}/`)
   );
 };
+
+// En el submenú solo la página exacta recibe aria-current.
+const isExactCurrent = (href: string) =>
+  currentPath === targetPathFor(href);
 ---
 
 <header class="site-header" role="banner">
@@ -170,7 +175,7 @@ const isCurrent = (href: string) => {
                                     class="submenu-link"
                                     href={withBase(child.href)}
                                     aria-current={
-                                      isCurrent(child.href)
+                                      isExactCurrent(child.href)
                                         ? "page"
                                         : undefined
                                     }

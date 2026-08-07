@@ -46,3 +46,25 @@ const currentPath = normalizePath(pathname);
     }
   </div>
 </nav>
+
+<script>
+  // En pantallas estrechas, revela la sección activa sin desplazar la página.
+  const revealCurrentCourseLink = () => {
+    document.querySelectorAll(".course-nav").forEach((nav) => {
+      if (!(nav instanceof HTMLElement)) return;
+
+      const current = nav.querySelector<HTMLElement>(
+        '[aria-current="page"]'
+      );
+      if (!current) return;
+
+      nav.scrollLeft = Math.max(
+        0,
+        current.offsetLeft -
+          (nav.clientWidth - current.offsetWidth) / 2
+      );
+    });
+  };
+
+  requestAnimationFrame(revealCurrentCourseLink);
+</script>

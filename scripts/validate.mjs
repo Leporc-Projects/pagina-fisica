@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  COURSE,
   COURSE_NAV,
   EVALUATION,
   SCHEDULE,
@@ -165,6 +166,33 @@ check(
   "COURSE_NAV no contiene rutas duplicadas."
 );
 
+check(
+  NAV.map((item) => item.label).join("|") ===
+    ["Inicio", COURSE.name, "Simulaciones", "Avisos"].join("|"),
+  "La navegación global contiene solo las cuatro secciones vigentes."
+);
+
+check(
+  COURSE_NAV.map((item) => item.label).join("|") ===
+    [
+      "Curso",
+      "Cronograma",
+      "Unidades y apuntes",
+      "Ejercicios y tutorías",
+      "Videos",
+      "Evaluación y notas",
+      "Recursos",
+    ].join("|") &&
+    COURSE_NAV.at(-1)?.href === "/fisica-basica-1/recursos",
+  "La navegación del curso incluye Recursos como última sección."
+);
+
+check(
+  HOME_LINKS.find((item) => item.label === "Recursos")?.href ===
+    "/fisica-basica-1/recursos",
+  "El acceso de Recursos en la portada apunta al curso."
+);
+
 const missingCourseRoutes = COURSE_NAV
   .map((item) => normalizeRoute(item.href))
   .filter((route) => !routes.has(route));
@@ -174,6 +202,11 @@ check(
   missingCourseRoutes.length === 0
     ? "Todas las rutas de COURSE_NAV existen en src/pages."
     : `Faltan rutas de COURSE_NAV: ${missingCourseRoutes.join(", ")}`
+);
+
+check(
+  routes.has("/recursos"),
+  "La ruta anterior de Recursos se conserva como compatibilidad."
 );
 
 check(

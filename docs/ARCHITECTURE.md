@@ -66,10 +66,10 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `Header.astro`: marca, navegación global y diálogo de menú. Su script mantiene el foco dentro del menú, permite cerrar con Escape y devuelve el foco al control que lo abrió.
 - `ThemeSelector.astro`: control reutilizable para elegir claro, oscuro o sistema. Usa radios nativos, sincroniza posibles instancias del control y emite el evento `themechange` para contenido interactivo futuro.
 - `Footer.astro`: identidad personal y declaración de independencia institucional.
-- `PageHeader.astro`: cabecera de páginas generales como Recursos o Avisos.
+- `PageHeader.astro`: cabecera de páginas generales como Avisos o Simulaciones.
 - `SectionHeading.astro`: encabezado `h2` reutilizable. Cuando la sección padre tiene `aria-labelledby`, debe recibir el mismo `id`.
 - `CoursePageHeader.astro`: cabecera de las páginas internas del curso y composición de `CourseNav`.
-- `CourseNav.astro`: navegación horizontal del curso basada exclusivamente en `COURSE_NAV`.
+- `CourseNav.astro`: navegación horizontal basada exclusivamente en `COURSE_NAV`; en pantallas estrechas revela la sección activa sin desplazar la página.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
@@ -95,7 +95,7 @@ Astro utiliza enrutamiento por archivos:
 | --- | --- |
 | `src/pages/index.astro` | `/` |
 | `src/pages/avisos.astro` | `/avisos` |
-| `src/pages/recursos.astro` | `/recursos` |
+| `src/pages/recursos.astro` | `/recursos` (redirección compatible) |
 | `src/pages/simulaciones.astro` | `/simulaciones` |
 | `src/pages/herramientas.astro` | `/herramientas` |
 | `src/pages/actividades.astro` | `/actividades` |
@@ -105,8 +105,13 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/ejercicios.astro` | `/fisica-basica-1/ejercicios` |
 | `src/pages/fisica-basica-1/videos.astro` | `/fisica-basica-1/videos` |
 | `src/pages/fisica-basica-1/evaluacion.astro` | `/fisica-basica-1/evaluacion` |
+| `src/pages/fisica-basica-1/recursos.astro` | `/fisica-basica-1/recursos` |
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
+
+Los recursos pertenecen al curso que los selecciona. Por eso la página real
+forma parte de `COURSE_NAV`; `/recursos` no mantiene contenido duplicado y
+solo produce una redirección estática base-aware para enlaces anteriores.
 
 ### Ruta base de publicación
 

@@ -57,8 +57,9 @@ Las rutas siguientes son rutas lógicas del proyecto. En GitHub Pages se publica
 - `/fisica-basica-1/ejercicios`: catálogo futuro de práctica y tutorías.
 - `/fisica-basica-1/videos`: biblioteca audiovisual por unidades.
 - `/fisica-basica-1/evaluacion`: evaluación oficial y política de privacidad.
+- `/fisica-basica-1/recursos`: guías, bibliografía y recursos externos del curso.
 - `/avisos`: archivo público de avisos.
-- `/recursos`: guías, bibliografía y recursos externos.
+- `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
 - `/simulaciones`: catálogo futuro de simulaciones.
 - `/herramientas`: espacio futuro para utilidades docentes locales.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
@@ -96,7 +97,7 @@ site: "https://leporc-projects.github.io",
 base: "/pagina-fisica",
 ```
 
-Las estructuras de datos conservan destinos legibles desde la raíz lógica, como `/recursos`. Los componentes convierten esos valores al `base` activo mediante `withBase()` de `src/utils/paths.js`, que usa `import.meta.env.BASE_URL`. No se debe escribir `/pagina-fisica` dentro de páginas o componentes.
+Las estructuras de datos conservan destinos legibles desde la raíz lógica, como `/fisica-basica-1/recursos`. Los componentes convierten esos valores al `base` activo mediante `withBase()` de `src/utils/paths.js`, que usa `import.meta.env.BASE_URL`. No se debe escribir `/pagina-fisica` dentro de páginas o componentes.
 
 Al añadir un enlace o recurso interno desde una plantilla Astro:
 
@@ -179,7 +180,7 @@ Los videos se registran en `src/data/videos.js` únicamente cuando exista una pu
 
 ### Recursos y bibliografía
 
-La bibliografía académica se mantiene en `src/data/course.js`. Los recursos externos deben ser públicos, verificables y pertinentes; nunca deben enlazar copias no autorizadas de materiales comerciales.
+La bibliografía académica se mantiene en `src/data/course.js` y sus recursos se publican dentro de la ruta del curso correspondiente. Los recursos externos deben ser públicos, verificables y pertinentes; nunca deben enlazar copias no autorizadas de materiales comerciales.
 
 ### Datos académicos
 

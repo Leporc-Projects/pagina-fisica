@@ -35,10 +35,6 @@ export const NAV = [
     href: "/simulaciones",
   },
   {
-    label: "Recursos",
-    href: "/recursos",
-  },
-  {
     label: "Avisos",
     href: "/avisos",
   },
@@ -71,7 +67,7 @@ export const HOME_LINKS = [
     number: "04",
     label: "Recursos",
     description: "Guías, referencias, videos y enlaces seleccionados.",
-    href: "/recursos",
+    href: "/fisica-basica-1/recursos",
   },
 ];
 
