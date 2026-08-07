@@ -38,7 +38,7 @@
   --status-event-bg: #f2f0f5;
   --status-event-text: #5e5769;
 
-  /* La marca oscura permanece estable en portada, cabecera, menú y footer. */
+  /* La marca oscura permanece estable en cabecera, menú y footer. */
   --brand-bg: #080b0d;
   --brand-surface: #0b0f12;
   --brand-surface-raised: #111a1f;
@@ -58,6 +58,24 @@
   --header-bg: rgb(11 15 18 / 0.97);
   --brand-glow-ring: rgb(42 200 238 / 0.04);
   --brand-glow: rgb(42 200 238 / 0.1);
+
+  /* El hero conserva su identidad, pero responde al tema mediante este contrato. */
+  --home-hero-bg: var(--bg);
+  --home-hero-surface: var(--surface);
+  --home-hero-text: var(--text);
+  --home-hero-text-soft: var(--text);
+  --home-hero-muted: var(--text-muted);
+  --home-hero-border: var(--border);
+  --home-hero-control-border: var(--border-strong);
+  --home-hero-mark-border: var(--border);
+  --home-hero-accent: var(--accent);
+  --home-hero-accent-secondary: var(--accent-secondary);
+  --home-hero-on-accent: var(--surface);
+  --home-hero-grid: var(--text-muted);
+  --home-hero-glow-ring: rgb(7 115 143 / 0.06);
+  --home-hero-glow: rgb(7 115 143 / 0.12);
+  --home-hero-orb-opacity: 0.08;
+  --home-hero-grid-opacity: 0.08;
 
   /* Lienzos futuros para fórmulas, gráficas, simulaciones y quizzes. */
   --content-canvas: #ffffff;
@@ -186,6 +204,23 @@
   --data-series-1: #47d5f4;
   --data-series-2: #65ef82;
   --data-series-3: #f3d58d;
+
+  --home-hero-bg: var(--brand-bg);
+  --home-hero-surface: var(--brand-surface-deep);
+  --home-hero-text: var(--brand-text);
+  --home-hero-text-soft: var(--brand-text-soft);
+  --home-hero-muted: var(--brand-muted);
+  --home-hero-border: var(--brand-border);
+  --home-hero-control-border: var(--brand-border-strong);
+  --home-hero-mark-border: var(--brand-border-strong);
+  --home-hero-accent: var(--brand-accent);
+  --home-hero-accent-secondary: var(--brand-accent-secondary);
+  --home-hero-on-accent: var(--brand-on-accent);
+  --home-hero-grid: var(--brand-grid);
+  --home-hero-glow-ring: var(--brand-glow-ring);
+  --home-hero-glow: var(--brand-glow);
+  --home-hero-orb-opacity: 0.12;
+  --home-hero-grid-opacity: 0.07;
 
   --shadow-sm:
     0 1px 2px rgb(0 0 0 / 0.28);
@@ -730,9 +765,9 @@ main {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border-bottom: 1px solid var(--brand-border);
-  background: var(--brand-bg);
-  color: var(--brand-text);
+  border-bottom: 1px solid var(--home-hero-border);
+  background: var(--home-hero-bg);
+  color: var(--home-hero-text);
   isolation: isolate;
 }
 
@@ -743,7 +778,7 @@ main {
   content: "";
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.12;
+  opacity: var(--home-hero-orb-opacity);
 }
 
 .landing::before {
@@ -751,7 +786,7 @@ main {
   height: 24rem;
   top: -8rem;
   left: -8rem;
-  background: var(--brand-accent-secondary);
+  background: var(--home-hero-accent-secondary);
 }
 
 .landing::after {
@@ -759,19 +794,19 @@ main {
   height: 28rem;
   right: -11rem;
   bottom: -12rem;
-  background: var(--brand-accent);
+  background: var(--home-hero-accent);
 }
 
 .landing-grid {
   position: absolute;
   inset: 0;
   z-index: -1;
-  opacity: 0.07;
+  opacity: var(--home-hero-grid-opacity);
   background-image:
-    linear-gradient(var(--brand-grid) 1px,
+    linear-gradient(var(--home-hero-grid) 1px,
       transparent 1px),
     linear-gradient(90deg,
-      var(--brand-grid) 1px,
+      var(--home-hero-grid) 1px,
       transparent 1px);
   background-size: 54px 54px;
   mask-image:
@@ -796,12 +831,12 @@ main {
   display: grid;
   place-items: center;
   margin-bottom: clamp(1.5rem, 4vw, 2.4rem);
-  border: 1px solid var(--brand-border-strong);
+  border: 1px solid var(--home-hero-mark-border);
   border-radius: 50%;
-  background: var(--brand-surface-deep);
+  background: var(--home-hero-surface);
   box-shadow:
-    0 0 0 0.35rem var(--brand-glow-ring),
-    0 0 4rem var(--brand-glow);
+    0 0 0 0.35rem var(--home-hero-glow-ring),
+    0 0 4rem var(--home-hero-glow);
 }
 
 .landing-mark img {
@@ -813,14 +848,14 @@ main {
 
 .landing h1 {
   margin-top: 0.7rem;
-  color: var(--brand-text);
+  color: var(--home-hero-text);
   font-size: clamp(2.7rem, 10vw, 6rem);
   letter-spacing: -0.055em;
 }
 
 .landing-teacher {
   margin-top: 0.65rem;
-  color: var(--brand-text-soft);
+  color: var(--home-hero-text-soft);
   font-size: clamp(1rem, 3vw, 1.3rem);
   font-weight: 550;
 }
@@ -828,7 +863,7 @@ main {
 .landing-tagline {
   max-width: 38rem;
   margin-top: 1rem;
-  color: var(--brand-muted);
+  color: var(--home-hero-muted);
   font-size: clamp(0.98rem, 2.5vw, 1.15rem);
 }
 
@@ -838,10 +873,10 @@ main {
   justify-content: center;
   gap: 0.8rem;
   margin-top: clamp(1.8rem, 5vw, 2.7rem);
-  border: 1px solid var(--brand-border-strong);
+  border: 1px solid var(--home-hero-control-border);
   border-radius: var(--radius-round);
   background: transparent;
-  color: var(--brand-text);
+  color: var(--home-hero-text);
   padding: 0.85rem 1.4rem;
   font-family: var(--font-mono);
   font-size: 0.78rem;
@@ -855,9 +890,13 @@ main {
 }
 
 .landing-menu-button:hover {
-  border-color: var(--brand-accent-secondary);
-  background: var(--brand-accent-secondary);
-  color: var(--brand-on-accent);
+  border-color: var(--home-hero-accent-secondary);
+  background: var(--home-hero-accent-secondary);
+  color: var(--home-hero-on-accent);
+}
+
+.landing .eyebrow {
+  color: var(--home-hero-accent-secondary);
 }
 
 .scroll-cue {
@@ -866,7 +905,7 @@ main {
   align-items: center;
   gap: 0.45rem;
   margin-top: clamp(2rem, 6vw, 3.5rem);
-  color: var(--brand-muted-low);
+  color: var(--home-hero-muted);
   font-family: var(--font-mono);
   font-size: 0.66rem;
   letter-spacing: 0.12em;
@@ -875,7 +914,7 @@ main {
 }
 
 .scroll-cue:hover {
-  color: var(--brand-accent);
+  color: var(--home-hero-accent);
 }
 
 /* Contenido del inicio */
