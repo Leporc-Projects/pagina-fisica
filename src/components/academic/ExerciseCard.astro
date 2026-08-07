@@ -1,0 +1,78 @@
+---
+// Muestra el enunciado y una solución progresiva; los metadatos editoriales
+// completos permanecen en el banco y no saturan la experiencia de estudio.
+interface Exercise {
+  id: string;
+  title: string;
+  prompt: string;
+  type: string;
+  difficulty: number;
+  estimatedMinutes: number;
+  hints: string[];
+  solution: Array<{ step: number; title: string; text: string }>;
+  objectives: string[];
+}
+
+interface Props {
+  exercise: Exercise;
+  number: number;
+}
+
+const { exercise, number } = Astro.props;
+const typeLabels = {
+  conceptual: "Conceptual",
+  numerical: "Numérico",
+  graphical: "Gráfico",
+  symbolic: "Simbólico",
+  estimation: "Estimación",
+  application: "Aplicación",
+  integrative: "Integrador",
+};
+---
+
+<article class="exercise-card" id={exercise.id} aria-labelledby={`${exercise.id}-title`}>
+  <header class="exercise-card__header">
+    <div>
+      <p class="academic-label">Ejercicio {String(number).padStart(2, "0")}</p>
+      <h3 id={`${exercise.id}-title`}>{exercise.title}</h3>
+    </div>
+
+    <dl class="exercise-card__meta">
+      <div>
+        <dt>Tipo</dt>
+        <dd>{typeLabels[exercise.type] ?? exercise.type}</dd>
+      </div>
+      <div>
+        <dt>Dificultad</dt>
+        <dd>{exercise.difficulty}/5</dd>
+      </div>
+      <div>
+        <dt>Tiempo</dt>
+        <dd>{exercise.estimatedMinutes} min</dd>
+      </div>
+    </dl>
+  </header>
+
+  <p class="exercise-card__prompt">{exercise.prompt}</p>
+
+  {exercise.hints.length > 0 && (
+    <details class="exercise-card__hint">
+      <summary>Solicitar una pista</summary>
+      <ul class="academic-bullet-list">
+        {exercise.hints.map((hint) => <li>{hint}</li>)}
+      </ul>
+    </details>
+  )}
+
+  <details class="exercise-card__solution">
+    <summary>Revisar solución</summary>
+    <ol>
+      {exercise.solution.map((item) => (
+        <li>
+          <strong>{item.title}</strong>
+          <p>{item.text}</p>
+        </li>
+      ))}
+    </ol>
+  </details>
+</article>

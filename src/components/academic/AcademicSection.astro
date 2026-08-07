@@ -1,0 +1,64 @@
+---
+// Organiza una idea por profundidad sin ocultar la explicación esencial.
+interface SectionContent {
+  id: string;
+  title: string;
+  essential: string[];
+  understand: string[];
+  deepen: string[];
+  explore?: string[];
+}
+
+interface Props {
+  section: SectionContent;
+}
+
+const { section } = Astro.props;
+---
+
+<section
+  class="academic-section"
+  id={section.id}
+  aria-labelledby={`${section.id}-title`}
+>
+  <header class="academic-section__header">
+    <p class="academic-label">Tema</p>
+    <h2 id={`${section.id}-title`}>{section.title}</h2>
+  </header>
+
+  <div class="academic-layer academic-layer--essential">
+    <h3><span>Esencial</span> Lo mínimo que debes conservar</h3>
+    {section.essential.map((paragraph) => <p>{paragraph}</p>)}
+  </div>
+
+  <div class="academic-layer academic-layer--understand">
+    <h3><span>Comprende</span> Interpreta y conecta</h3>
+    {section.understand.map((paragraph) => <p>{paragraph}</p>)}
+  </div>
+
+  <details class="academic-details academic-details--deepen">
+    <summary>
+      <span>Profundiza</span>
+      <strong>Formulación y condiciones</strong>
+    </summary>
+    <div class="academic-details__body">
+      {section.deepen.map((paragraph) => <p>{paragraph}</p>)}
+    </div>
+  </details>
+
+  {section.explore && (
+    <details class="academic-details academic-details--explore">
+      <summary>
+        <span>Explora</span>
+        <strong>Conexiones para continuar</strong>
+      </summary>
+      <div class="academic-details__body">
+        {section.explore.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+    </details>
+  )}
+
+  <div class="academic-section__resources">
+    <slot />
+  </div>
+</section>

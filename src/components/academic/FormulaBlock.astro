@@ -1,0 +1,100 @@
+---
+// Presentación única para MathML y sus condiciones. La fórmula se considera
+// contenido interno confiable; nunca debe aceptar HTML escrito por usuarios.
+interface VariableDefinition {
+  symbol: string;
+  meaning: string;
+  unit?: string;
+}
+
+interface Formula {
+  id: string;
+  label: string;
+  mathml: string;
+  represents: string;
+  variables: VariableDefinition[];
+  conditions: string[];
+  interpretation: string;
+  dimensions: string;
+  commonErrors: string[];
+  related: string[];
+}
+
+interface Props {
+  formula: Formula;
+}
+
+const { formula } = Astro.props;
+---
+
+<article class="formula-block" aria-labelledby={`${formula.id}-formula-title`}>
+  <header class="formula-block__header">
+    <p class="academic-label">Relación matemática</p>
+    <h3 id={`${formula.id}-formula-title`}>{formula.label}</h3>
+  </header>
+
+  <div class="formula-block__expression" set:html={formula.mathml}></div>
+
+  <div class="formula-block__meaning">
+    <strong>Representa</strong>
+    <p>{formula.represents}</p>
+  </div>
+
+  {formula.interpretation && (
+    <div class="formula-block__meaning">
+      <strong>Interpretación física</strong>
+      <p>{formula.interpretation}</p>
+    </div>
+  )}
+
+  <details class="academic-details formula-block__details">
+    <summary>
+      <span>Profundiza</span>
+      <strong>Variables, condiciones y comprobaciones</strong>
+    </summary>
+
+    <div class="academic-details__body">
+      {formula.variables.length > 0 && (
+        <section aria-labelledby={`${formula.id}-variables-title`}>
+          <h4 id={`${formula.id}-variables-title`}>Variables</h4>
+          <dl class="formula-variables">
+            {formula.variables.map((variable) => (
+              <div>
+                <dt>{variable.symbol}</dt>
+                <dd>
+                  {variable.meaning}
+                  {variable.unit ? `; unidad habitual: ${variable.unit}` : ""}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
+      {formula.conditions.length > 0 && (
+        <section aria-labelledby={`${formula.id}-conditions-title`}>
+          <h4 id={`${formula.id}-conditions-title`}>Condiciones de aplicación</h4>
+          <ul class="academic-bullet-list">
+            {formula.conditions.map((condition) => <li>{condition}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {formula.dimensions && (
+        <section aria-labelledby={`${formula.id}-dimensions-title`}>
+          <h4 id={`${formula.id}-dimensions-title`}>Comprobación dimensional</h4>
+          <p>{formula.dimensions}</p>
+        </section>
+      )}
+
+      {formula.commonErrors.length > 0 && (
+        <section aria-labelledby={`${formula.id}-errors-title`}>
+          <h4 id={`${formula.id}-errors-title`}>Errores que evita</h4>
+          <ul class="academic-bullet-list">
+            {formula.commonErrors.map((error) => <li>{error}</li>)}
+          </ul>
+        </section>
+      )}
+    </div>
+  </details>
+</article>

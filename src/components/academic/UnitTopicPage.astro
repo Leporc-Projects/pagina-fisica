@@ -1,0 +1,176 @@
+---
+// Composición común de las siete páginas: datos → capas → fórmulas/figuras → navegación.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CartesianChart from "../visualization/CartesianChart.astro";
+import AcademicDiagram from "../visualization/AcademicDiagram.astro";
+import AcademicSection from "./AcademicSection.astro";
+import CommonErrors from "./CommonErrors.astro";
+import ConceptCheck from "./ConceptCheck.astro";
+import FormulaBlock from "./FormulaBlock.astro";
+import UnitOneNav from "./UnitOneNav.astro";
+import { UNIT_1_CONTENT } from "../../data/physics/unit-1/content.js";
+import { getUnit1ErrorsByTopics } from "../../data/physics/unit-1/common-errors.js";
+import { getUnit1Formula } from "../../data/physics/unit-1/formulas.js";
+import { UNIT_1_VISUALIZATIONS } from "../../data/physics/unit-1/visualizations.js";
+import {
+  UNIT_1,
+  getUnit1Topic,
+  getUnit1TopicNeighbors,
+} from "../../data/physics/unit-1/unit.js";
+import { withBase } from "../../utils/paths.js";
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const topic = getUnit1Topic(slug);
+const content = UNIT_1_CONTENT[slug];
+
+if (!topic || !content) {
+  throw new Error(`No existe contenido registrado para el tema ${slug}.`);
+}
+
+const { previous, next } = getUnit1TopicNeighbors(slug);
+const errors = getUnit1ErrorsByTopics(content.errorTopics);
+let checkNumber = 0;
+---
+
+<BaseLayout
+  title={`${topic.title} · ${UNIT_1.shortTitle}`}
+  description={topic.summary}
+>
+  <article class="unit-topic-page">
+    <header class="unit-topic-hero">
+      <nav class="academic-breadcrumb" aria-label="Migas de pan">
+        <a href={withBase("/fisica-basica-1/unidades")}>Unidades</a>
+        <span aria-hidden="true">/</span>
+        <a href={withBase(UNIT_1.route)}>{UNIT_1.shortTitle}</a>
+      </nav>
+
+      <div class="unit-topic-hero__heading">
+        <p class="eyebrow eyebrow--dark">
+          {topic.priority === "extension"
+            ? "Ampliación · Profundización"
+            : `${UNIT_1.shortTitle} · Tema ${String(topic.order).padStart(2, "0")}`}
+        </p>
+        <h1>{topic.title}</h1>
+        <p>{content.introduction}</p>
+      </div>
+
+      {topic.priority === "extension" && (
+        <aside class="extension-notice">
+          <strong>Prioridad editorial</strong>
+          <p>
+            Este contenido amplía la formulación cartesiana. Se presenta con
+            menor prioridad visual que los temas desarrollados explícitamente
+            en las sesiones 2–6, sin afirmar condiciones sobre su evaluación.
+          </p>
+        </aside>
+      )}
+    </header>
+
+    <UnitOneNav activeSlug={slug} />
+
+    <div class="unit-reading-layout">
+      <aside class="unit-page-toc">
+        <p class="academic-label">En esta página</p>
+        <ol>
+          {content.sections.map((section, index) => (
+            <li>
+              <a href={`#${section.id}`}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                {section.title}
+              </a>
+            </li>
+          ))}
+          <li>
+            <a href="#common-errors">
+              <span>{String(content.sections.length + 1).padStart(2, "0")}</span>
+              Errores frecuentes
+            </a>
+          </li>
+        </ol>
+      </aside>
+
+      <div class="unit-topic-content">
+        {content.sections.map((section) => (
+          <AcademicSection section={section}>
+            {(section.formulas ?? []).map((formulaId) => {
+              const formula = getUnit1Formula(formulaId);
+              return formula ? <FormulaBlock formula={formula} /> : null;
+            })}
+
+            {(section.visualizations ?? []).map((visualizationId) => {
+              const visualization = UNIT_1_VISUALIZATIONS[visualizationId];
+              if (!visualization) return null;
+
+              return (
+                <div class="academic-figure-group">
+                  {visualization.relationLabel && (
+                    <p class="academic-figure-group__relation">
+                      {visualization.relationLabel}
+                    </p>
+                  )}
+
+                  {visualization.kind === "cartesian"
+                    ? <CartesianChart {...visualization.props} />
+                    : <AcademicDiagram {...visualization.props} />}
+
+                  <p class="academic-figure-group__caption">
+                    {visualization.explanation}
+                  </p>
+                </div>
+              );
+            })}
+
+            {(section.checks ?? []).map((check) => {
+              checkNumber += 1;
+              return <ConceptCheck check={check} index={checkNumber} />;
+            })}
+          </AcademicSection>
+        ))}
+
+        <div id="common-errors">
+          <CommonErrors errors={errors} />
+        </div>
+      </div>
+    </div>
+
+    <nav class="unit-topic-pagination" aria-label="Navegación anterior y siguiente">
+      {previous
+        ? <a href={withBase(previous.route)} rel="prev">
+            <span>Anterior</span>
+            <strong>{previous.shortTitle}</strong>
+          </a>
+        : <a href={withBase(UNIT_1.route)} rel="prev">
+            <span>Anterior</span>
+            <strong>Índice de la unidad</strong>
+          </a>}
+
+      {next
+        ? <a href={withBase(next.route)} rel="next">
+            <span>Siguiente</span>
+            <strong>{next.shortTitle}</strong>
+          </a>
+        : <a href={withBase(UNIT_1.practiceRoute)} rel="next">
+            <span>Continúa</span>
+            <strong>Práctica de la unidad</strong>
+          </a>}
+    </nav>
+
+    <aside class="unit-practice-cta">
+      <div>
+        <p class="academic-label">Práctica</p>
+        <h2>Conecta la teoría con ejercicios originales</h2>
+        <p>
+          El banco inicial conserva dificultad, objetivos, pistas, soluciones y
+          errores asociados como metadatos editoriales.
+        </p>
+      </div>
+      <a class="text-link" href={withBase(UNIT_1.practiceRoute)}>
+        Ir a los ejercicios de la Unidad 1
+      </a>
+    </aside>
+  </article>
+</BaseLayout>

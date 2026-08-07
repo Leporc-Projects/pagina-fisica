@@ -1,0 +1,38 @@
+---
+// Presenta retroalimentación editorial por ID estable sin convertirla en quiz.
+interface CommonError {
+  id: string;
+  topic: string;
+  subtopic: string;
+  description: string;
+  feedback: string;
+}
+
+interface Props {
+  errors: CommonError[];
+}
+
+const { errors } = Astro.props;
+---
+
+{errors.length > 0 && (
+  <section class="common-errors" aria-labelledby="common-errors-title">
+    <header>
+      <p class="academic-label">Revisión conceptual</p>
+      <h2 id="common-errors-title">Errores frecuentes</h2>
+      <p>
+        Cada advertencia incluye una forma concreta de revisar el razonamiento,
+        no solo una marca de respuesta incorrecta.
+      </p>
+    </header>
+
+    <div class="common-errors__list">
+      {errors.map((error) => (
+        <details id={error.id} class="common-error">
+          <summary>{error.description}</summary>
+          <p>{error.feedback}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+)}

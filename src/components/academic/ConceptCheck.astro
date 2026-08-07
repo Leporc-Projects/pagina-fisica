@@ -1,0 +1,31 @@
+---
+// Autocomprobación sin estado persistente: la respuesta se revela con HTML nativo.
+interface Check {
+  question: string;
+  options?: string[];
+  answer: string;
+}
+
+interface Props {
+  check: Check;
+  index: number;
+}
+
+const { check, index } = Astro.props;
+---
+
+<aside class="concept-check" aria-labelledby={`concept-check-${index}-title`}>
+  <p class="academic-label">Comprueba tu interpretación</p>
+  <h3 id={`concept-check-${index}-title`}>{check.question}</h3>
+
+  {check.options && (
+    <ol class="concept-check__options" type="A">
+      {check.options.map((option) => <li>{option}</li>)}
+    </ol>
+  )}
+
+  <details class="concept-check__answer">
+    <summary>Revelar respuesta razonada</summary>
+    <p>{check.answer}</p>
+  </details>
+</aside>
