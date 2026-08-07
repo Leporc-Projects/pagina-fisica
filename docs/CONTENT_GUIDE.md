@@ -84,6 +84,46 @@ Una modificación requiere:
 5. conservar números únicos y consecutivos;
 6. revisar curso, unidades, ejercicios y videos, porque todas esas páginas consumen `UNITS`.
 
+Cuando una unidad pase de catálogo a contenido desarrollado, debe tener su
+propio módulo bajo `src/data/physics/` y registrarse en
+`src/data/physics/index.js`. La Unidad 1 sirve como contrato de referencia:
+
+```text
+unit.js          rutas, orden, fuentes y prioridad editorial
+content.js       explicación organizada por tema y profundidad
+formulas.js      expresiones MathML y condiciones de uso
+visualizations.js datos físicos y descripciones de figuras
+common-errors.js errores reutilizables
+exercises.js     banco original y metadatos editoriales
+```
+
+Para añadir un tema a una unidad ya implementada:
+
+1. registrarlo en `unit.js` con `order`, `slug`, título, ruta y prioridad;
+2. crear su entrada en `content.js` usando el mismo `slug`;
+3. añadir una ruta Astro breve que delegue en la plantilla de la unidad;
+4. referenciar fórmulas, figuras y errores por sus identificadores existentes;
+5. crear un identificador nuevo solo cuando el contrato realmente sea distinto;
+6. ejecutar las validaciones para detectar referencias huérfanas, orden o rutas inválidas.
+
+No debe declararse una prioridad de evaluación, obligatoriedad o exclusión a
+partir de la ubicación visual. La clasificación `extension` solo comunica una
+menor prioridad expositiva dentro del sitio.
+
+## Profundidad progresiva del contenido
+
+Cada sección académica puede usar cuatro capas. No es obligatorio llenar las
+cuatro si la explicación no lo necesita:
+
+- `essential`: definiciones, convenciones y relaciones indispensables;
+- `understand`: interpretación física y conexiones entre representaciones;
+- `deepen`: condiciones del modelo, matices y desarrollo formal;
+- `explore`: ampliaciones opcionales claramente diferenciadas.
+
+Los bloques deben avanzar en comprensión, no repetir el mismo párrafo con más
+palabras. Las comprobaciones conceptuales se añaden en `checks` cuando ayudan a
+detectar una confusión concreta; no se usan para simular calificaciones.
+
 ## Añadir materiales propios
 
 Los apuntes y guías pueden incorporarse cuando sean propios, estén revisados y tengan una ubicación clara en el curso.
@@ -93,22 +133,63 @@ Los apuntes y guías pueden incorporarse cuando sean propios, estén revisados y
 - Los archivos públicos livianos pueden vivir en `public/` cuando exista autorización para publicarlos.
 - No se suben libros, capítulos escaneados, solucionarios comerciales ni materiales cuya licencia no permita redistribución.
 
-## Añadir ejercicios posteriormente
+## Añadir un ejercicio
 
-La página `/fisica-basica-1/ejercicios` es por ahora una hoja de ruta. No contiene bancos de preguntas.
+La Unidad 1 mantiene su banco en
+`src/data/physics/unit-1/exercises.js`. Los ejercicios son originales o parten
+de semillas expresamente aprobadas; no se copian bancos ni solucionarios
+comerciales. Cada registro usa un identificador estable y declara:
 
-Cuando existan ejercicios aprobados, primero debe definirse un contrato de datos estable, por ejemplo con:
+- ubicación: `unit`, `topic` y `subtopic`;
+- uso pedagógico: `modalities` (`review`, `practice`, `selfAssessment`,
+  `tutoring` o `quiz`);
+- forma: `type` y `representation`;
+- complejidad: `cognitiveLevel`, `difficulty`, prerrequisitos, objetivos y
+  tiempo estimado;
+- respuesta: tipo, valor esperado, unidad y tolerancia cuando sea numérica;
+- acompañamiento: pistas, solución por pasos, errores frecuentes y
+  retroalimentaciones aprobadas;
+- edición: `status`, `version` y si el ejercicio es parametrizable.
 
-- identificador único;
-- unidad;
-- tipo: diagnóstico, práctica guiada, ejercicio, reto o tutoría;
-- título y enunciado aprobados;
-- estado editorial;
-- solución, pistas y retroalimentaciones definidas por el docente.
+Los identificadores de tema, subtema y error deben existir en los archivos de
+la unidad. Un ejercicio numérico requiere unidad esperada y tolerancia; estos
+campos no deben inferirse en el navegador. Al modificar un enunciado o su
+respuesta se incrementa `version`, conservando el `id` si sigue siendo el mismo
+ejercicio conceptual.
 
-Si el catálogo crece, debe crearse un archivo como `src/data/exercises.js`. No se deben escribir siete copias manuales del mismo patrón dentro de la página.
+La página pública puede mostrar enunciado, pistas y solución. Campos como
+estado editorial, versión, nivel cognitivo o tolerancia pertenecen al contrato
+de autoría y no necesitan exponerse al estudiante. No deben añadirse intentos,
+notas, nombres ni historiales al banco.
 
-Las tutorías interactivas deben ser progresivas y deterministas. Las rutas de ayuda, tolerancias, respuestas y retroalimentaciones serán definidas por el equipo docente. Está prohibido integrar inteligencia artificial para generarlas, evaluarlas o modificarlas durante el uso.
+Las tutorías interactivas deben ser progresivas y deterministas. Las rutas de
+ayuda, tolerancias, respuestas y retroalimentaciones serán definidas por el
+equipo docente. Está prohibido integrar inteligencia artificial para
+generarlas, evaluarlas o modificarlas durante el uso.
+
+## Añadir una fórmula
+
+Las fórmulas de la Unidad 1 viven en `formulas.js` y se referencian desde el
+contenido por `id`. Cada registro debe incluir:
+
+- MathML nativo con la expresión, sin convertirla en imagen;
+- significado físico y definición de variables;
+- condiciones bajo las que el modelo es válido;
+- interpretación, dimensiones y errores frecuentes relacionados.
+
+`FormulaBlock.astro` inserta el MathML con `set:html` porque procede
+exclusivamente de módulos internos versionados. Nunca debe usarse ese flujo
+para contenido introducido por usuarios o recuperado de una fuente externa sin
+sanitización. Las ecuaciones deben revisarse semántica y dimensionalmente,
+además de comprobar su presentación en móvil y en ambos temas.
+
+## Registrar un error frecuente
+
+`common-errors.js` conserva confusiones reutilizables con un `id`, tema, título,
+explicación y corrección. El texto debe explicar por qué falla el razonamiento
+y cómo revisarlo; no debe etiquetar ni juzgar al estudiante. Contenidos y
+ejercicios enlazan esos identificadores para que una corrección conceptual no
+se duplique en varios archivos.
 
 ## Estados de contenido
 
@@ -147,10 +228,16 @@ estudiantes sin una decisión arquitectónica y de privacidad posterior.
 
 ## Añadir una gráfica o diagrama académico
 
-El contenido futuro consume
-`src/components/visualization/CartesianChart.astro`. La fuente académica debe
-entregar magnitudes físicas; el componente y `src/utils/chart.js` se encargan
-de transformarlas y recortarlas para SVG.
+El contenido académico consume
+`src/components/visualization/CartesianChart.astro` para gráficas y
+`AcademicDiagram.astro` para construcciones vectoriales o geométricas. La
+fuente académica debe entregar magnitudes físicas; los componentes y
+`src/utils/chart.js` se encargan de transformarlas y recortarlas para SVG.
+
+En la Unidad 1, los contratos de las figuras viven en
+`src/data/physics/unit-1/visualizations.js`. Una sección solo guarda el `id` de
+la figura que necesita. Así, datos físicos, transformación, geometría SVG y
+presentación visual permanecen en capas distintas.
 
 Ejemplo estrictamente estructural:
 
@@ -208,6 +295,20 @@ infraestructura. SVG preserva texto, nitidez y posibilidad de impresión. Canvas
 solo se evaluará para simulaciones densas o animadas cuya carga de elementos y
 frecuencia de actualización lo justifique técnicamente.
 
+## Metadatos públicos y editoriales
+
+No todo dato versionado debe mostrarse. Títulos, explicaciones, condiciones de
+las fórmulas, enunciados, pistas y soluciones aprobadas forman parte del
+contenido público. Estado, versión, taxonomía cognitiva, tolerancias internas y
+referencias de validación permiten mantener ese contenido y pueden permanecer
+editoriales. Esta separación facilita futuras herramientas sin convertir el
+sitio en un sistema de seguimiento estudiantil.
+
+La ruta `/dev/visualizaciones` contiene datos sintéticos para comprobar la
+infraestructura y no está enlazada en la navegación. Antes de publicar una
+versión estable debe decidirse expresamente si se excluye del build público o
+si se conserva como laboratorio técnico visible por URL.
+
 ## Privacidad y datos estudiantiles
 
 Está prohibido incorporar al repositorio o mostrar públicamente:
@@ -243,6 +344,7 @@ Los ejemplos de interfaz deben utilizar datos manifiestamente ficticios y no deb
 
 ```sh
 npm run validate
+npm run verify
 npm run build
 npm audit
 git diff --check

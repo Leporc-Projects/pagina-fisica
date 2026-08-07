@@ -31,6 +31,8 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `notices.js`: fuente única de avisos para la portada y `/avisos`.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
+- `physics/index.js`: registro de unidades que ya tienen implementación académica.
+- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios (`exercises.js`).
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -71,6 +73,11 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `CoursePageHeader.astro`: cabecera de las páginas internas del curso y composición de `CourseNav`.
 - `CourseNav.astro`: navegación horizontal basada exclusivamente en `COURSE_NAV`; en pantallas estrechas revela la sección activa sin desplazar la página.
 - `visualization/CartesianChart.astro`: traduce dominios, series y geometría física a un SVG cartesiano accesible y responsive.
+- `visualization/AcademicDiagram.astro`: compone diagramas vectoriales y geométricos con el mismo sistema de coordenadas físicas.
+- `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
+- `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
+- `academic/UnitOneNav.astro`: navegación local de la unidad alimentada por `UNIT_1.topics`.
+- `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas y ticks, muestrear funciones, recortar geometría y producir paths SVG.
 
@@ -109,12 +116,67 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/videos.astro` | `/fisica-basica-1/videos` |
 | `src/pages/fisica-basica-1/evaluacion.astro` | `/fisica-basica-1/evaluacion` |
 | `src/pages/fisica-basica-1/recursos.astro` | `/fisica-basica-1/recursos` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/index.astro` | `/fisica-basica-1/unidades/unidad-1` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/herramientas.astro` | `/fisica-basica-1/unidades/unidad-1/herramientas` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/vectores.astro` | `/fisica-basica-1/unidades/unidad-1/vectores` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/movimiento-1d.astro` | `/fisica-basica-1/unidades/unidad-1/movimiento-1d` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/ecuaciones-movimiento.astro` | `/fisica-basica-1/unidades/unidad-1/ecuaciones-movimiento` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/movimiento-2d.astro` | `/fisica-basica-1/unidades/unidad-1/movimiento-2d` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/circular-relativo.astro` | `/fisica-basica-1/unidades/unidad-1/circular-relativo` |
+| `src/pages/fisica-basica-1/unidades/unidad-1/coordenadas-polares.astro` | `/fisica-basica-1/unidades/unidad-1/coordenadas-polares` |
+| `src/pages/fisica-basica-1/ejercicios/unidad-1.astro` | `/fisica-basica-1/ejercicios/unidad-1` |
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
 
 Los recursos pertenecen al curso que los selecciona. Por eso la página real
 forma parte de `COURSE_NAV`; `/recursos` no mantiene contenido duplicado y
 solo produce una redirección estática base-aware para enlaces anteriores.
+
+### Arquitectura académica de la Unidad 1
+
+La implementación distingue los metadatos estables del curso, el contenido
+de cada unidad y su presentación:
+
+```text
+course.js (catálogo estable de siete unidades)
+   ↓
+physics/index.js → unit-1/unit.js (rutas, orden y prioridad)
+   ↓
+content.js ─┬─ formulas.js
+            ├─ visualizations.js
+            ├─ common-errors.js
+            └─ exercises.js
+   ↓
+componentes academic/* + visualization/*
+   ↓
+rutas Astro breves, estáticas y base-aware
+```
+
+Cada tema tiene una ruta explícita y delega su composición a
+`UnitTopicPage.astro`. Esta decisión permite que Astro detecte las páginas sin
+introducir una ruta dinámica y evita siete copias de la misma estructura. La
+plantilla busca las referencias declaradas por identificador; por eso una
+fórmula, figura o error puede reutilizarse sin duplicar su definición.
+
+El contenido se ofrece con profundidad progresiva:
+
+- `essential`: definición o relación mínima que debe quedar clara;
+- `understand`: interpretación y conexiones conceptuales;
+- `deepen`: condiciones, matices o desarrollo formal;
+- `explore`: extensión opcional que no debe confundirse con un requisito.
+
+Las coordenadas polares se registran además con prioridad `extension`. Esa
+marca controla su jerarquía editorial, pero no hace afirmaciones sobre
+evaluación. Las fuentes registradas en la unidad son el programa oficial
+0302270 y el programa clase a clase 2026-2; el contenido original del sitio no
+reproduce libros comerciales.
+
+El banco de ejercicios también separa responsabilidades. Enunciado, pistas y
+solución son contenido público aprobado. Estado, versión, nivel cognitivo,
+modalidades, tolerancia y referencias a errores son metadatos editoriales para
+filtrar, validar y evolucionar tutorías deterministas. `ExerciseCard.astro`
+decide qué parte es visible; ningún resultado ni progreso estudiantil se
+persiste.
 
 ### Ruta base de publicación
 
@@ -213,7 +275,7 @@ datos físicos (dominios, puntos, funciones, unidades)
 coordenadas físicas válidas
    ↓ createCartesianTransform()
 geometría SVG (paths, líneas, marcadores)
-   ↓ CartesianChart.astro
+   ↓ CartesianChart.astro o AcademicDiagram.astro
 presentación (tokens, trazos, responsive) — global.css
 ```
 
@@ -275,7 +337,9 @@ Para añadir una gráfica estática:
 
 La ruta `/dev/visualizaciones` usa datos sintéticos únicamente para revisar el
 contrato técnico. No forma parte de `NAV`, `HOME_LINKS` ni `COURSE_NAV` y no debe
-convertirse en una fuente de contenido académico.
+convertirse en una fuente de contenido académico. Antes de un despliegue
+estable debe revisarse si conviene excluir esta ruta del build público o
+conservarla expresamente como laboratorio técnico.
 
 Canvas se reserva para simulaciones con miles de elementos, animaciones de alta
 frecuencia o redibujado continuo donde el costo de muchos nodos SVG sea
@@ -316,6 +380,10 @@ Los contratos más importantes son:
 - uso de `localStorage` limitado al arranque y al selector de tema.
 - contrato SVG: transformación, recorte, hooks, tema, ausencia de Canvas y demo fuera de navegación;
 - ocho pruebas unitarias con `node:test` para dominios, escalas, ticks, inversión de y, discontinuidades, recorte y paths finitos.
+- contrato académico: siete temas ordenados, capas de profundidad admitidas, referencias existentes entre contenido, fórmulas, figuras y errores;
+- fórmulas MathML con significado, variables, condiciones, interpretación dimensional y errores asociados;
+- banco de entre 18 y 24 ejercicios con identificadores únicos, taxonomías válidas, unidad esperada y tolerancia para respuestas numéricas, solución y versión editorial;
+- figuras académicas con dominios válidos, coordenadas físicas finitas y descripción accesible.
 
 Comandos habituales:
 
