@@ -9,6 +9,7 @@ export const SITE = {
   tagline: "Física para comprender, practicar y conectar ideas.",
   description:
     "Sitio docente personal con materiales, ejercicios y recursos para el aprendizaje de la física.",
+  // Ruta lógica: BaseLayout, Header y la portada la resuelven con withBase().
   logoPath: "/images/leporc-projects.jpg",
   lang: "es",
   locale: "es-CO",
@@ -17,6 +18,7 @@ export const SITE = {
 /**
  * Navegación principal consumida por Header y por la validación de enlaces.
  * La rama del curso reutiliza COURSE_NAV para conservar un único contrato.
+ * Los destinos son rutas lógicas; Header aplica el BASE_URL al renderizarlos.
  */
 export const NAV = [
   {
@@ -42,7 +44,10 @@ export const NAV = [
   },
 ];
 
-/** Accesos editoriales de la portada; todos deben apuntar a rutas internas. */
+/**
+ * Accesos editoriales de la portada. Todos apuntan a rutas lógicas internas;
+ * index.astro añade el BASE_URL mediante withBase().
+ */
 export const HOME_LINKS = [
   {
     number: "01",

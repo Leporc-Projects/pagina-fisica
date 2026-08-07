@@ -1,5 +1,7 @@
 ---
 // NavCard.astro — Tarjeta de acceso rápido de navegación
+import { withBase } from "../utils/paths.js";
+
 interface Props {
   href:  string;
   icon:  string;
@@ -9,7 +11,7 @@ interface Props {
 const { href, icon, label, desc } = Astro.props;
 ---
 
-<a href={href} class="nav-card">
+<a href={withBase(href)} class="nav-card">
   <span class="nav-card-icon" aria-hidden="true">{icon}</span>
   <span class="nav-card-label">{label}</span>
   {desc && <span class="nav-card-desc">{desc}</span>}

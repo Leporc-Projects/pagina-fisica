@@ -11,13 +11,11 @@ El flujo principal es:
 ```text
 src/data
    ↓
-componentes Astro
-   ↓
-src/pages
+componentes y páginas + withBase(import.meta.env.BASE_URL)
    ↓
 BaseLayout + global.css
    ↓
-astro build → dist
+astro build → dist → GitHub Pages
 ```
 
 Esta separación evita escribir varias veces el mismo dato académico y permite cambiar contenido sin mezclarlo con la estructura visual.
@@ -32,6 +30,8 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `site.js`: identidad editorial, navegación global, accesos de portada y categorías generales de simulaciones.
 - `notices.js`: fuente única de avisos para la portada y `/avisos`.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
+
+Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
 Las fuentes académicas tienen una jerarquía explícita:
 
@@ -51,6 +51,8 @@ Los datos de navegación no deben contener destinos inexistentes. `npm run valid
 - elemento `main`;
 - carga de `global.css`.
 
+También resuelve el favicon con el `base` activo, del mismo modo que `Header` y la portada resuelven el logotipo.
+
 La propiedad `fullWidth` permite que la portada controle el ancho de sus propias secciones. Las demás páginas reciben automáticamente el contenedor editorial común.
 
 ### Componentes compartidos
@@ -61,6 +63,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `SectionHeading.astro`: encabezado `h2` reutilizable. Cuando la sección padre tiene `aria-labelledby`, debe recibir el mismo `id`.
 - `CoursePageHeader.astro`: cabecera de las páginas internas del curso y composición de `CourseNav`.
 - `CourseNav.astro`: navegación horizontal del curso basada exclusivamente en `COURSE_NAV`.
+- `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
@@ -98,6 +101,26 @@ Astro utiliza enrutamiento por archivos:
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
 
+### Ruta base de publicación
+
+`astro.config.mjs` configura la Project Page provisional:
+
+```js
+site: "https://leporc-projects.github.io",
+base: "/pagina-fisica",
+```
+
+`site` identifica el origen canónico y `base` indica que la aplicación no vive en la raíz del dominio. Por eso una ruta lógica como `/fisica-basica-1/videos` debe renderizarse como `/pagina-fisica/fisica-basica-1/videos`.
+
+La función `withBase()` realiza esa conversión al renderizar. Su núcleo puro, `resolveBasePath()`, permite comprobar el comportamiento desde `validate.mjs` sin simular el entorno de Astro. La regla de mantenimiento es:
+
+- guardar rutas internas en datos desde la raíz lógica;
+- llamar `withBase()` en todo `href` o `src` interno que Astro no gestione automáticamente;
+- conservar anclas como `#unidad-1` y enlaces externos como URL completas;
+- no escribir `/pagina-fisica` en componentes, páginas ni datos.
+
+Los imports CSS y los recursos generados por Astro reciben `base` durante el build. Los archivos servidos directamente desde `public/`, como el logotipo, deben pasar por `withBase()` cuando se referencian.
+
 ## Estilos
 
 `src/styles/global.css` contiene variables y sistemas visuales compartidos. Sus bloques principales son:
@@ -134,6 +157,8 @@ Los contratos más importantes son:
 - ausencia de sesiones, rutas, avisos o videos duplicados;
 - existencia de las rutas declaradas en `COURSE_NAV`;
 - enlaces internos principales;
+- funcionamiento del resolvedor con `/pagina-fisica`, anclas y URL externas;
+- ausencia de `href="/..."` y `src="/..."` literales en plantillas Astro;
 - existencia del recurso gráfico principal.
 
 Comandos habituales:
@@ -148,6 +173,26 @@ git diff --check
 
 `npm run verify` ejecuta primero la validación y después la compilación.
 
+## Flujo de despliegue
+
+`.github/workflows/deploy.yml` separa construcción y despliegue:
+
+```text
+push o workflow_dispatch
+   ↓
+npm ci → validate → build
+   ↓
+dist/ → artefacto github-pages
+   ↓
+entorno github-pages → URL pública
+```
+
+El trigger automático apunta provisionalmente a `feat/contenido-fisica-basica`. Cuando el trabajo se integre y la publicación deba salir de la rama estable, se cambia esa única entrada a `main`. El workflow usa permisos de lectura del repositorio, escritura de Pages e identificación OIDC para el despliegue; no necesita secretos propios.
+
+En desarrollo y `preview`, la página inicial está en `/pagina-fisica/`, igual que en producción. Esto hace que la prueba local cubra el mismo prefijo que GitHub Pages.
+
+Para migrar a un dominio personalizado se debe crear `public/CNAME`, cambiar `site`, retirar `base` y configurar DNS/HTTPS en GitHub. `withBase()` pasará a devolver las rutas lógicas sin prefijo, de modo que no se reescriben los componentes.
+
 ## Cómo añadir una página
 
 1. Determinar si es una página general o una subpágina del curso.
@@ -155,10 +200,11 @@ git diff --check
 3. Importar `BaseLayout`.
 4. Usar `PageHeader` para páginas generales o `CoursePageHeader` para páginas del curso.
 5. Importar los datos desde `src/data/`; no copiar arreglos académicos dentro de la página.
-6. Añadir IDs estables a encabezados referenciados por `aria-labelledby`.
-7. Reutilizar clases globales antes de crear estilos específicos.
-8. Si la página debe aparecer en navegación, actualizar `NAV`, `HOME_LINKS` o `COURSE_NAV` según corresponda.
-9. Ejecutar `npm run validate` y `npm run build`.
-10. Revisar escritorio y móvil antes de hacer commit.
+6. Resolver todo destino o recurso interno con `withBase()`; no añadir el prefijo de despliegue manualmente.
+7. Añadir IDs estables a encabezados referenciados por `aria-labelledby`.
+8. Reutilizar clases globales antes de crear estilos específicos.
+9. Si la página debe aparecer en navegación, actualizar `NAV`, `HOME_LINKS` o `COURSE_NAV` según corresponda.
+10. Ejecutar `npm run validate` y `npm run build`.
+11. Revisar escritorio y móvil antes de hacer commit.
 
 Las reglas para publicar contenido están en [CONTENT_GUIDE.md](./CONTENT_GUIDE.md).

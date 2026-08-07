@@ -33,7 +33,9 @@ Reglas:
 
 - `id` usa minúsculas, números y guiones; no debe cambiar después de publicarse.
 - `date` usa formato ISO `AAAA-MM-DD`.
-- `href` se omite cuando el aviso no necesita destino.
+- `href` se omite cuando el aviso no necesita destino. Una ruta interna se
+  guarda desde la raíz lógica, sin escribir `/pagina-fisica`; la página de
+  avisos añade el `base` activo mediante `withBase()`.
 - No se inventan cambios de clase, exámenes o eventos académicos.
 - Sí puede informarse honestamente que una página o material está en desarrollo.
 

@@ -1,6 +1,7 @@
 ---
 // Navegación compartida por todas las páginas internas del curso.
 import { COURSE, COURSE_NAV } from "../../data/course.js";
+import { withBase } from "../../utils/paths.js";
 
 const { pathname } = Astro.url;
 
@@ -24,13 +25,14 @@ const currentPath = normalizePath(pathname);
   <div class="course-nav__track">
     {
       COURSE_NAV.map((item, index) => {
+        const href = withBase(item.href);
         const isCurrent =
-          currentPath === normalizePath(item.href);
+          currentPath === normalizePath(href);
 
         return (
           <a
             class="course-nav__link"
-            href={item.href}
+            href={href}
             aria-current={isCurrent ? "page" : undefined}
           >
             <span class="course-nav__number">

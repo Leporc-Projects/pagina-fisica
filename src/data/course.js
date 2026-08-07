@@ -47,7 +47,8 @@ export const COURSE = {
 /**
  * Índice canónico de rutas internas del curso.
  * CourseNav y la navegación global comparten esta misma lista; validate.mjs
- * comprueba que no haya rutas duplicadas y que cada destino exista.
+ * comprueba que no haya rutas duplicadas y que cada destino exista. Se guardan
+ * rutas lógicas: los componentes incorporan el BASE_URL al renderizar.
  */
 export const COURSE_NAV = [
     {

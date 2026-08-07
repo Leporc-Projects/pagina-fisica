@@ -14,6 +14,7 @@ import {
 import { HOME_LINKS, NAV, SITE } from "../src/data/site.js";
 import { NOTICES } from "../src/data/notices.js";
 import { VIDEOS } from "../src/data/videos.js";
+import { resolveBasePath } from "../src/utils/paths.js";
 
 const projectRoot = fileURLToPath(
   new URL("../", import.meta.url)
@@ -137,15 +138,54 @@ check(
   "Los videos tienen identificadores únicos."
 );
 
+check(
+  resolveBasePath("/avisos", "/pagina-fisica/") ===
+    "/pagina-fisica/avisos" &&
+    resolveBasePath("/", "/pagina-fisica/") ===
+      "/pagina-fisica/" &&
+    resolveBasePath("/pagina-fisica/avisos", "/pagina-fisica/") ===
+      "/pagina-fisica/avisos" &&
+    resolveBasePath("#contenido", "/pagina-fisica/") ===
+      "#contenido" &&
+    resolveBasePath("https://example.com", "/pagina-fisica/") ===
+      "https://example.com",
+  "El resolvedor respeta la ruta base, las anclas y los enlaces externos."
+);
+
 // Los enlaces literales y los declarados en datos forman juntos el contrato navegable.
 const sourceFiles = walkFiles(path.join(projectRoot, "src"))
   .filter((file) => file.endsWith(".astro"));
 
-const literalInternalLinks = sourceFiles.flatMap((file) => {
+const sourceInternalLinks = sourceFiles.flatMap((file) => {
   const source = fs.readFileSync(file, "utf8");
-  return [...source.matchAll(/\bhref\s*=\s*["'](\/[^"']*)["']/g)]
-    .map((match) => match[1]);
+  const literalLinks = [
+    ...source.matchAll(/\bhref\s*=\s*["'](\/[^"']*)["']/g),
+  ].map((match) => match[1]);
+  const resolvedLinks = [
+    ...source.matchAll(/\bwithBase\(\s*["'](\/[^"']*)["']\s*\)/g),
+  ].map((match) => match[1]);
+
+  return [...literalLinks, ...resolvedLinks];
 });
+
+// Un atributo literal desde `/` omite `base` y se rompe en una Project Page.
+const unsafeRootAttributes = sourceFiles.flatMap((file) => {
+  const source = fs.readFileSync(file, "utf8");
+  return [
+    ...source.matchAll(
+      /\b(?:href|src)\s*=\s*(?:\{\s*)?["']\/(?!\/)[^"']*["'](?:\s*\})?/g
+    ),
+  ].map((match) =>
+    `${path.relative(projectRoot, file)}: ${match[0]}`
+  );
+});
+
+check(
+  unsafeRootAttributes.length === 0,
+  unsafeRootAttributes.length === 0
+    ? "Las plantillas no contienen href o src literales que omitan BASE_URL."
+    : `Atributos incompatibles con base: ${unsafeRootAttributes.join(", ")}`
+);
 
 const dataInternalLinks = [
   ...NAV.flatMap((item) => [
@@ -157,7 +197,7 @@ const dataInternalLinks = [
 ];
 
 const internalLinks = [
-  ...literalInternalLinks,
+  ...sourceInternalLinks,
   ...dataInternalLinks,
 ]
   .filter((href) => href.startsWith("/"))

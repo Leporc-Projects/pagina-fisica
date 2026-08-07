@@ -4,6 +4,8 @@ Sitio docente personal e independiente de César Barrero para organizar informac
 
 El primer curso desarrollado es Física Básica I. Los datos académicos estables provienen del programa oficial y el cronograma del semestre 2026-2 se organiza a partir del plan clase a clase.
 
+Publicación provisional: [https://leporc-projects.github.io/pagina-fisica/](https://leporc-projects.github.io/pagina-fisica/)
+
 ## Principios del proyecto
 
 - El sitio no publica datos personales ni calificaciones individuales de estudiantes.
@@ -24,6 +26,7 @@ El primer curso desarrollado es Física Básica I. Los datos académicos estable
 
 ```text
 pagina-fisica/
+├── .github/workflows/       Automatización de GitHub Pages
 ├── public/                 Archivos públicos e imágenes
 ├── scripts/                Validaciones internas sin dependencias
 ├── src/
@@ -31,7 +34,8 @@ pagina-fisica/
 │   ├── data/               Datos del curso, avisos y catálogos
 │   ├── layouts/            Estructura común de las páginas
 │   ├── pages/              Rutas generadas por Astro
-│   └── styles/             Sistema visual global
+│   ├── styles/             Sistema visual global
+│   └── utils/              Resolución compartida de rutas públicas
 ├── astro.config.mjs
 ├── package.json
 └── README.md
@@ -43,6 +47,8 @@ pagina-fisica/
 - [Guía para incorporar contenidos](docs/CONTENT_GUIDE.md)
 
 ## Rutas actuales
+
+Las rutas siguientes son rutas lógicas del proyecto. En GitHub Pages se publican bajo el prefijo `/pagina-fisica`; por ejemplo, `/avisos` se visita como `/pagina-fisica/avisos`.
 
 - `/`: portada y avisos recientes.
 - `/fisica-basica-1`: información general del curso.
@@ -59,11 +65,13 @@ pagina-fisica/
 
 ## Desarrollo local
 
-Después de instalar las dependencias declaradas en el proyecto:
+Después de instalar las dependencias declaradas en el proyecto con `npm ci`:
 
 ```sh
 npm run dev
 ```
+
+Con la configuración provisional activa, el sitio se sirve en `http://localhost:4321/pagina-fisica/`. Astro aplica el mismo `base` durante desarrollo y compilación, por lo que esta URL permite detectar problemas antes de publicar.
 
 La compilación estática se genera con:
 
@@ -71,9 +79,75 @@ La compilación estática se genera con:
 npm run build
 ```
 
+Para revisar localmente el resultado de `dist/`:
+
+```sh
+npm run preview
+```
+
+La vista previa también se abre bajo `/pagina-fisica/`.
+
+## Rutas internas y `base`
+
+`astro.config.mjs` define actualmente:
+
+```js
+site: "https://leporc-projects.github.io",
+base: "/pagina-fisica",
+```
+
+Las estructuras de datos conservan destinos legibles desde la raíz lógica, como `/recursos`. Los componentes convierten esos valores al `base` activo mediante `withBase()` de `src/utils/paths.js`, que usa `import.meta.env.BASE_URL`. No se debe escribir `/pagina-fisica` dentro de páginas o componentes.
+
+Al añadir un enlace o recurso interno desde una plantilla Astro:
+
+```astro
+---
+import { withBase } from "../utils/paths.js";
+---
+
+<a href={withBase("/avisos")}>Avisos</a>
+<img src={withBase(SITE.logoPath)} alt="" />
+```
+
+Las anclas (`#contenido`) y las URL externas no necesitan el prefijo. `withBase()` las conserva si se usa con ellas.
+
+## Despliegue en GitHub Pages
+
+`.github/workflows/deploy.yml` construye y publica el sitio con GitHub Actions. En cada push a `feat/contenido-fisica-basica`, o al ejecutarlo manualmente, el workflow:
+
+1. descarga el repositorio;
+2. prepara Node.js 24 y la caché de npm;
+3. configura GitHub Pages;
+4. ejecuta `npm ci`, `npm run validate` y `npm run build`;
+5. sube `dist/` como artefacto de Pages;
+6. despliega el artefacto en el entorno `github-pages`.
+
+Para habilitar la primera publicación, en GitHub hay que abrir **Settings → Pages → Build and deployment → Source** y seleccionar **GitHub Actions**. Después puede ejecutarse manualmente el workflow **Deploy to GitHub Pages** desde la pestaña **Actions**, o hacerse un nuevo push a la rama configurada.
+
+Cuando la rama de prueba esté terminada, cambiar únicamente el trigger de `.github/workflows/deploy.yml`:
+
+```yaml
+branches:
+  - main
+```
+
+Ese cambio no implica hacer merge automáticamente; solo determina qué rama dispara publicaciones posteriores.
+
+### Migración futura a un dominio personalizado
+
+Cuando exista un dominio aprobado:
+
+1. configurar sus registros DNS según GitHub Pages;
+2. crear `public/CNAME` con el nombre del dominio, sin protocolo;
+3. cambiar `site` en `astro.config.mjs` por la URL completa del dominio;
+4. eliminar `base: "/pagina-fisica"` de `astro.config.mjs`;
+5. registrar el dominio en **Settings → Pages** y activar HTTPS cuando esté disponible.
+
+Como los componentes dependen de `import.meta.env.BASE_URL`, no será necesario editar uno por uno los enlaces internos.
+
 ## Validación
 
-La validación interna comprueba la evaluación, el cronograma, los identificadores, las rutas y los enlaces internos principales:
+La validación interna comprueba la evaluación, el cronograma, los identificadores, las rutas, los enlaces internos principales y que las plantillas no introduzcan `href` o `src` literales incompatibles con `base`:
 
 ```sh
 npm run validate

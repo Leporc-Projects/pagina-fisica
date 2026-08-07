@@ -4,6 +4,7 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 import { SITE } from "../data/site.js";
+import { withBase } from "../utils/paths.js";
 
 interface Props {
   title: string;
@@ -33,7 +34,7 @@ const fullTitle =
     <meta name="theme-color" content="#0b0f12" />
 
     <!-- Usamos el logo como favicon provisional. -->
-    <link rel="icon" type="image/jpeg" href={SITE.logoPath} />
+    <link rel="icon" type="image/jpeg" href={withBase(SITE.logoPath)} />
   </head>
 
   <body>

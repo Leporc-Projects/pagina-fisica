@@ -8,6 +8,7 @@ import {
 } from "../data/site.js";
 import { COURSE } from "../data/course.js";
 import { getNoticesByDate } from "../data/notices.js";
+import { withBase } from "../utils/paths.js";
 
 // La portada limita la fuente compartida; /avisos conserva el archivo completo.
 const recentNotices = getNoticesByDate().slice(0, 3);
@@ -30,7 +31,7 @@ const recentNotices = getNoticesByDate().slice(0, 3);
     <div class="container landing-inner">
       <div class="landing-mark">
         <img
-          src={SITE.logoPath}
+          src={withBase(SITE.logoPath)}
           alt="Logotipo de Papilla's Physics"
           width="220"
           height="220"
@@ -109,7 +110,7 @@ const recentNotices = getNoticesByDate().slice(0, 3);
 
         <a
           class="text-link"
-          href="/fisica-basica-1"
+          href={withBase("/fisica-basica-1")}
         >
           Entrar al curso
           <span aria-hidden="true">→</span>
@@ -124,7 +125,7 @@ const recentNotices = getNoticesByDate().slice(0, 3);
           HOME_LINKS.map((item) => (
             <a
               class="directory-row"
-              href={item.href}
+              href={withBase(item.href)}
             >
               <span class="directory-number">
                 {item.number}
@@ -200,7 +201,7 @@ const recentNotices = getNoticesByDate().slice(0, 3);
           ))
         }
 
-        <a class="notice-list__more" href="/avisos">
+        <a class="notice-list__more" href={withBase("/avisos")}>
           Consultar todos los avisos
           <span aria-hidden="true">→</span>
         </a>

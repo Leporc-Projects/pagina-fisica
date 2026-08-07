@@ -2,17 +2,27 @@
 // Cabecera y menú principal de pantalla completa.
 import { SITE, NAV } from "../data/site.js";
 import { COURSE } from "../data/course.js";
+import { withBase } from "../utils/paths.js";
 
 const { pathname } = Astro.url;
 
+const normalizePath = (path: string) =>
+  path.length > 1 ? path.replace(/\/$/, "") : path;
+
+const currentPath = normalizePath(pathname);
+
 // Una sección principal permanece activa también al visitar cualquiera de sus subrutas.
 const isCurrent = (href: string) => {
-  if (href === "/") return pathname === "/";
+  const targetPath = normalizePath(
+    withBase(href).split(/[?#]/, 1)[0]
+  );
+
+  if (href === "/") return currentPath === targetPath;
   if (href.startsWith("/#")) return false;
 
   return (
-    pathname === href ||
-    pathname.startsWith(`${href}/`)
+    currentPath === targetPath ||
+    currentPath.startsWith(`${targetPath}/`)
   );
 };
 ---
@@ -21,12 +31,12 @@ const isCurrent = (href: string) => {
   <div class="container header-inner">
     <a
       class="site-brand"
-      href="/"
+      href={withBase("/")}
       aria-label={`${SITE.name}, página de inicio`}
     >
       <img
         class="site-brand__logo"
-        src={SITE.logoPath}
+        src={withBase(SITE.logoPath)}
         alt=""
         width="48"
         height="48"
@@ -153,7 +163,7 @@ const isCurrent = (href: string) => {
                                 : (
                                   <a
                                     class="submenu-link"
-                                    href={child.href}
+                                    href={withBase(child.href)}
                                     aria-current={
                                       isCurrent(child.href)
                                         ? "page"
@@ -177,7 +187,7 @@ const isCurrent = (href: string) => {
               <li class="menu-item">
                 <a
                   class="menu-link"
-                  href={item.href}
+                  href={withBase(item.href)}
                   aria-current={active ? "page" : undefined}
                 >
                   <span class="menu-index">
