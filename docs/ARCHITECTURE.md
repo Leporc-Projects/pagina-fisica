@@ -32,7 +32,7 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `physics/index.js`: registro de unidades que ya tienen implementación académica.
-- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios (`exercises.js`).
+- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios (`exercises.js`). `math-content.js` es una capa de presentación: asocia fragmentos literales ya aprobados con MathML sin modificar esas fuentes.
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -76,10 +76,14 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `visualization/AcademicDiagram.astro`: compone diagramas vectoriales y geométricos con el mismo sistema de coordenadas físicas.
 - `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
 - `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
-- `academic/UnitOneNav.astro`: navegación local de la unidad alimentada por `UNIT_1.topics`.
+- `academic/RichText.astro` e `InlineMath.astro`: convierten el contrato mixto texto/MathML en HTML estático; nunca interpretan entrada del navegador.
+- `academic/UnitLearningMap.astro`: índice visual reutilizable. Calcula la geometría desde el orden y cantidad de temas, pero conserva los enlaces en un `ol` navegable.
+- `academic/UnitOneNav.astro`: navegación local compacta alimentada por `UNIT_1.topics`; usa `details` nativo para evitar una segunda barra extensa durante la lectura.
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
+- `academic/ExerciseSequence.astro`: mejora progresivamente el banco completo para mostrar un ejercicio principal, selector, progreso y controles anterior/siguiente.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas y ticks, muestrear funciones, recortar geometría y producir paths SVG.
+- `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
@@ -146,6 +150,7 @@ content.js ─┬─ formulas.js
             ├─ visualizations.js
             ├─ common-errors.js
             └─ exercises.js
+                 ↓ math-content.js (presentación literal texto + MathML)
    ↓
 componentes academic/* + visualization/*
    ↓
@@ -165,6 +170,13 @@ El contenido se ofrece con profundidad progresiva:
 - `deepen`: condiciones, matices o desarrollo formal;
 - `explore`: extensión opcional que no debe confundirse con un requisito.
 
+`UnitTopicPage` deja visibles `essential` y `understand`. `deepen` y `explore`
+usan `details` nativo; así reducen la longitud percibida sin ocultar la base
+necesaria para comprender el tema. Al imprimir, CSS revela esos bloques. El
+índice lateral orienta la página, pero no es sticky: el único elemento
+contextual que sigue el scroll en escritorio es el resumen compacto de la
+unidad.
+
 Las coordenadas polares se registran además con prioridad `extension`. Esa
 marca controla su jerarquía editorial, pero no hace afirmaciones sobre
 evaluación. Las fuentes registradas en la unidad son el programa oficial
@@ -177,6 +189,44 @@ modalidades, tolerancia y referencias a errores son metadatos editoriales para
 filtrar, validar y evolucionar tutorías deterministas. `ExerciseCard.astro`
 decide qué parte es visible; ningún resultado ni progreso estudiantil se
 persiste.
+
+La página de práctica entrega los 22 registros a `ExerciseSequence`. Antes de
+ejecutarse JavaScript, todos permanecen en el HTML como una lista utilizable.
+La mejora vanilla marca el contenedor con `data-enhanced`, deja un solo
+ejercicio visible, actualiza `progress`, selector y botones, y escribe el ID
+estable en el hash. `Alt` + flecha izquierda/derecha ofrece un atajo cuando el
+foco está dentro de la secuencia. No evalúa respuestas, no usa `localStorage`
+ni recopila datos. Los atributos `data-exercise-topic`, `type` y `difficulty`
+preparan filtros futuros sin duplicar el banco.
+
+### Presentación matemática inline
+
+Las fórmulas principales continúan en `formulas.js`. Para expresiones dentro de
+párrafos, comprobaciones, pistas o soluciones se usa un contrato mixto:
+
+```text
+string académico aprobado
+   ↓ presentUnit1RichText() busca solo literales registrados
+segmentos { type: "text" } / { type: "math", mathml, label, tex }
+   ↓ RichText + InlineMath durante el build
+texto HTML + MathML nativo, sin parser ni JavaScript cliente
+```
+
+`math-content.js` no intenta deducir una gramática de cadenas como `v_0` o
+`sqrt(...)`. Cada fragmento se registra de forma explícita con constructores de
+`src/utils/mathml.js`, nombre accesible y anotación semántica. Esta restricción
+evita interpretaciones ambiguas y mantiene la revisión académica sobre cada
+expresión. `set:html` solo recibe MathML generado por módulos internos
+versionados; no debe usarse con entrada de usuarios.
+
+### Mapa de aprendizaje
+
+El índice de Unidad 1 pasa `UNIT_1.topics` a `UnitLearningMap`. El componente
+deriva los puntos del número y orden de temas, dibuja conexiones decorativas en
+SVG y posiciona encima enlaces HTML reales. El SVG no es la fuente de verdad ni
+duplica títulos o rutas. En móvil, el mismo `ol` abandona la geometría radial y
+se presenta como un camino vertical; en impresión se convierte en una lista.
+La API (`unitLabel`, `unitTitle`, `topics`) permite reutilizarlo en Unidades 2–7.
 
 ### Ruta base de publicación
 
@@ -210,7 +260,11 @@ Los imports CSS y los recursos generados por Astro reciben `base` durante el bui
 - visualizaciones SVG académicas y sus variantes responsive e imprimibles;
 - breakpoints responsive y reducción de movimiento.
 
-La navegación global y `CourseNav` son sticky. En pantallas estrechas, `CourseNav` conserva el ancho legible de sus enlaces y permite desplazamiento horizontal dentro del propio componente. Las secciones enlazables usan `scroll-margin-top` para que sus títulos no queden ocultos detrás de esas barras.
+La navegación global es sticky. `CourseNav` conserva acceso rápido con menor
+altura, permite desplazamiento horizontal y deja de ser sticky en pantallas
+estrechas. Dentro de una unidad, `UnitOneNav` muestra solo el contexto actual
+hasta que se abre; también deja de seguir el scroll en móvil. Las secciones
+enlazables usan `scroll-margin-top` para que sus títulos no queden ocultos.
 
 Antes de crear una clase nueva, conviene buscar si existe un patrón equivalente. Las variables de `:root` deben utilizarse en lugar de repetir colores, espacios o radios.
 
@@ -241,7 +295,7 @@ Los tokens se agrupan por intención:
 
 - contenido: `--bg`, `--surface`, `--surface-raised`, `--text`, `--text-muted`, `--border`, `--accent` y `--focus`;
 - estados: familias `--status-info-*`, `--status-success-*`, `--status-warning-*` y `--status-event-*`;
-- marca: familia `--brand-*`, estable en cabecera, menú, portada y footer;
+- marca: familia `--brand-*`, compartida por cabecera, menú, portada y footer;
 - contenido futuro: `--content-canvas`, `--formula-bg`, `--quiz-bg`, `--simulation-bg` y `--data-series-*`.
 
 Un componente nuevo debe consumir tokens semánticos, no decidir por sí mismo
@@ -257,6 +311,14 @@ tokens de lienzo previstos. Si necesitan recalcular colores en JavaScript,
 pueden escuchar `window` para el evento `themechange`; su detalle incluye la
 preferencia y el tema efectivo. Esto evita acoplar cada integración a la
 implementación del selector.
+
+Los dos temas comparten este contrato, no la misma personalidad cromática. En
+claro, marfil, grafito, terracota y cobre gobiernan acentos, estados y series de
+datos. En oscuro permanecen grafito, blanco cálido, cian y verde. Las reglas
+globales no convierten una paleta en la otra: cada bloque define sus valores y
+los componentes consumen la intención semántica. Las gráficas heredan
+`--data-series-*`, `--chart-*` y `--content-canvas`, por lo que no necesitan una
+variante de componente.
 
 ## Infraestructura de visualizaciones
 
@@ -361,6 +423,9 @@ Los contratos más importantes son:
 - `prefers-reduced-motion` reduce transiciones y desplazamiento suave.
 - el selector de tema conserva controles de radio navegables y una leyenda accesible;
 - texto principal, secundario, acentos, estados y foco se validan contra pares de contraste semánticos.
+- el mapa conserva orden DOM, enlaces reales y descripciones aunque su SVG sea decorativo;
+- la práctica anuncia la posición con `aria-live`, usa controles nativos y mueve el foco al título del ejercicio activado;
+- el MathML inline declara un nombre accesible y conserva texto alternativo semántico en cada expresión.
 
 ## Validaciones
 
@@ -382,7 +447,9 @@ Los contratos más importantes son:
 - ocho pruebas unitarias con `node:test` para dominios, escalas, ticks, inversión de y, discontinuidades, recorte y paths finitos.
 - contrato académico: siete temas ordenados, capas de profundidad admitidas, referencias existentes entre contenido, fórmulas, figuras y errores;
 - fórmulas MathML con significado, variables, condiciones, interpretación dimensional y errores asociados;
+- registro de MathML inline sin notación de teclado pendiente en el contenido visible;
 - banco de entre 18 y 24 ejercicios con identificadores únicos, taxonomías válidas, unidad esperada y tolerancia para respuestas numéricas, solución y versión editorial;
+- contratos de mapa, disclosure progresivo y secuencia de ejercicios sin persistencia ni dependencias nuevas;
 - figuras académicas con dominios válidos, coordenadas físicas finitas y descripción accesible.
 
 Comandos habituales:

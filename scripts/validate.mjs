@@ -34,6 +34,10 @@ import {
   UNIT_1_EXERCISES,
 } from "../src/data/physics/unit-1/exercises.js";
 import { UNIT_1_FORMULAS } from "../src/data/physics/unit-1/formulas.js";
+import {
+  presentUnit1RichText,
+  UNIT_1_INLINE_MATH_TOKENS,
+} from "../src/data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../src/data/physics/unit-1/unit.js";
 import { UNIT_1_VISUALIZATIONS } from "../src/data/physics/unit-1/visualizations.js";
 
@@ -447,6 +451,13 @@ const contrastPairs = [
   ["--status-event-text", "--status-event-bg", 4.5],
   ["--focus", "--bg", 3],
   ["--border-strong", "--bg", 3],
+  ["--text", "--surface", 4.5],
+  ["--text-muted", "--surface", 4.5],
+  ["--accent", "--surface", 4.5],
+  ["--focus", "--surface", 3],
+  ["--data-series-1", "--content-canvas", 3],
+  ["--data-series-2", "--content-canvas", 3],
+  ["--data-series-3", "--content-canvas", 3],
 ];
 
 const contrastFailures = [
@@ -492,6 +503,14 @@ check(
   contrastFailures.length === 0
     ? "Los pares semánticos principales cumplen contraste WCAG."
     : `Contraste insuficiente: ${contrastFailures.join(", ")}`
+);
+
+check(
+  lightTokens["--accent"] === "#94382f" &&
+    lightTokens["--accent-secondary"] === "#87501f" &&
+    darkTokens["--accent"] === "#47d5f4" &&
+    darkTokens["--accent-secondary"] === "#65ef82",
+  "Claro usa terracota/cobre y oscuro conserva su identidad cian/verde."
 );
 
 const allSourceFiles = walkFiles(path.join(projectRoot, "src"))
@@ -603,6 +622,79 @@ check(
   "Las fórmulas referenciadas existen y usan MathML con contexto."
 );
 
+const visibleAcademicStrings = [
+  ...Object.values(UNIT_1_CONTENT).flatMap((topic) =>
+    topic.sections.flatMap((section) => [
+      ...section.essential,
+      ...section.understand,
+      ...section.deepen,
+      ...(section.explore ?? []),
+      ...(section.checks ?? []).flatMap((item) => [
+        item.question,
+        ...(item.options ?? []),
+        item.answer,
+      ]),
+    ])
+  ),
+  ...UNIT_1_EXERCISES.flatMap((exercise) => [
+    exercise.prompt,
+    ...exercise.hints,
+    ...exercise.solution.map((item) => item.text),
+  ]),
+  ...UNIT_1_COMMON_ERRORS.flatMap((error) => [
+    error.description,
+    error.feedback,
+  ]),
+  ...Object.values(UNIT_1_FORMULAS).flatMap((item) => [
+    item.represents,
+    item.interpretation,
+    item.dimensions,
+    ...item.conditions,
+    ...item.commonErrors,
+    ...item.variables.flatMap((variable) => [
+      variable.symbol,
+      variable.meaning,
+      variable.unit ?? "",
+    ]),
+  ]),
+].filter(Boolean);
+
+const keyboardMathPattern = /(?:\b[A-Za-z]+_[A-Za-záéíóú0-9/]+|\bsqrt\s*\(|\^[{(]?\d)/;
+const unresolvedKeyboardMath = visibleAcademicStrings.filter((source) => {
+  const presentation = presentUnit1RichText(source);
+  const remainingText = typeof presentation === "string"
+    ? presentation
+    : presentation
+      .filter((segment) => segment.type === "text")
+      .map((segment) => segment.value)
+      .join("");
+  return keyboardMathPattern.test(remainingText);
+});
+
+check(
+  UNIT_1_INLINE_MATH_TOKENS.length > 0 &&
+    UNIT_1_INLINE_MATH_TOKENS.every((item) =>
+      item.literal &&
+      item.segment?.type === "math" &&
+      item.segment.mathml.includes('<math') &&
+      item.segment.mathml.includes('display="inline"') &&
+      item.segment.mathml.includes("<semantics>")
+    ) &&
+    unresolvedKeyboardMath.length === 0,
+  unresolvedKeyboardMath.length === 0
+    ? "El contenido mixto usa un registro estructurado de MathML inline."
+    : `Queda notación de teclado sin presentar: ${unresolvedKeyboardMath.join(" | ")}`
+);
+
+check(
+  Object.values(UNIT_1_VISUALIZATIONS).every((visualization) =>
+    (visualization.props?.vectors ?? []).every((item) =>
+      !item.label.includes("_") || (item.mathLabel && item.ariaLabel)
+    )
+  ),
+  "Las etiquetas SVG con subíndices tienen presentación y nombre accesible."
+);
+
 check(
   referencedVisualizationIds.every((id) => UNIT_1_VISUALIZATIONS[id]) &&
     Object.entries(UNIT_1_VISUALIZATIONS).every(([id, item]) =>
@@ -687,6 +779,71 @@ check(
     exercise.commonErrors.every((id) => commonErrorIds.includes(id))
   ),
   "Los ejercicios solo referencian errores conceptuales existentes."
+);
+
+// La UX académica debe seguir derivándose de los contratos, no de copias visuales.
+const learningMapSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/UnitLearningMap.astro"),
+  "utf8"
+);
+const unitIndexSource = fs.readFileSync(
+  path.join(
+    projectRoot,
+    "src/pages/fisica-basica-1/unidades/unidad-1/index.astro"
+  ),
+  "utf8"
+);
+
+check(
+  learningMapSource.includes("topics.map") &&
+    learningMapSource.includes("<ol") &&
+    learningMapSource.includes("<svg") &&
+    learningMapSource.includes("withBase(topic.route)") &&
+    UNIT_1.topics.every((topic) =>
+      !learningMapSource.includes(topic.route)
+    ) &&
+    unitIndexSource.includes("topics={UNIT_1.topics}"),
+  "El mapa deriva nodos y rutas de UNIT_1.topics sin duplicarlos."
+);
+
+const topicPageSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/UnitTopicPage.astro"),
+  "utf8"
+);
+const academicSectionSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/AcademicSection.astro"),
+  "utf8"
+);
+
+check(
+  topicPageSource.includes("present={presentUnit1RichText}") &&
+    academicSectionSource.includes("academic-layer--essential") &&
+    academicSectionSource.includes("academic-layer--understand") &&
+    academicSectionSource.includes("<details") &&
+    globalCss.includes("details:not([open])>*:not(summary)") &&
+    globalCss.includes("@media (prefers-reduced-motion: reduce)"),
+  "La lectura mantiene lo esencial visible y revela disclosures al imprimir."
+);
+
+const exerciseSequenceSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/ExerciseSequence.astro"),
+  "utf8"
+);
+const exerciseSequenceScript = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/exercise-sequence.js"),
+  "utf8"
+);
+
+check(
+  exerciseSequenceSource.includes("exercises.map") &&
+    exerciseSequenceSource.includes("<progress") &&
+    exerciseSequenceSource.includes("<noscript") &&
+    exerciseSequenceScript.includes("window.location.hash") &&
+    exerciseSequenceScript.includes("history.pushState") &&
+    exerciseSequenceScript.includes('event.altKey') &&
+    exerciseSequenceScript.includes("progress.textContent") &&
+    !exerciseSequenceScript.includes("localStorage"),
+  "La práctica secuencial conserva fallback, hash, teclado y progreso sin persistencia."
 );
 
 // La biblioteca de gráficas conserva separadas matemática, SVG y presentación.

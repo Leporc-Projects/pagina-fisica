@@ -95,6 +95,7 @@ formulas.js      expresiones MathML y condiciones de uso
 visualizations.js datos físicos y descripciones de figuras
 common-errors.js errores reutilizables
 exercises.js     banco original y metadatos editoriales
+math-content.js  presentación literal de expresiones inline con MathML
 ```
 
 Para añadir un tema a una unidad ya implementada:
@@ -105,6 +106,10 @@ Para añadir un tema a una unidad ya implementada:
 4. referenciar fórmulas, figuras y errores por sus identificadores existentes;
 5. crear un identificador nuevo solo cuando el contrato realmente sea distinto;
 6. ejecutar las validaciones para detectar referencias huérfanas, orden o rutas inválidas.
+
+El índice visual recibe `topics` directamente: no se añaden nodos, posiciones
+ni conexiones manuales a `UnitLearningMap.astro`. Un tema nuevo con orden y
+ruta válidos entra tanto al mapa de escritorio como al camino móvil.
 
 No debe declararse una prioridad de evaluación, obligatoriedad o exclusión a
 partir de la ubicación visual. La clasificación `extension` solo comunica una
@@ -123,6 +128,11 @@ cuatro si la explicación no lo necesita:
 Los bloques deben avanzar en comprensión, no repetir el mismo párrafo con más
 palabras. Las comprobaciones conceptuales se añaden en `checks` cuando ayudan a
 detectar una confusión concreta; no se usan para simular calificaciones.
+
+`Esencial` y `Comprende` deben poder leerse sin abrir controles. `Profundiza` y
+`Explora` admiten disclosure nativo cuando son capas genuinamente opcionales.
+No se debe mover una definición, condición indispensable o instrucción
+necesaria a un bloque cerrado solo para acortar visualmente la página.
 
 ## Añadir materiales propios
 
@@ -162,6 +172,14 @@ estado editorial, versión, nivel cognitivo o tolerancia pertenecen al contrato
 de autoría y no necesitan exponerse al estudiante. No deben añadirse intentos,
 notas, nombres ni historiales al banco.
 
+La práctica de Unidad 1 consume el arreglo completo mediante
+`ExerciseSequence.astro`. El orden del banco determina `N de M`, el selector y
+los controles; no se mantiene una segunda lista para la interfaz. El hash usa
+el `id` estable para volver a un ejercicio y el HTML conserva todos los
+registros como fallback. Añadir un ejercicio al arreglo basta para incorporarlo
+a la secuencia después de validar su taxonomía. No se debe guardar progreso,
+respuestas o filtros en el navegador en esta etapa.
+
 Las tutorías interactivas deben ser progresivas y deterministas. Las rutas de
 ayuda, tolerancias, respuestas y retroalimentaciones serán definidas por el
 equipo docente. Está prohibido integrar inteligencia artificial para
@@ -182,6 +200,23 @@ exclusivamente de módulos internos versionados. Nunca debe usarse ese flujo
 para contenido introducido por usuarios o recuperado de una fuente externa sin
 sanitización. Las ecuaciones deben revisarse semántica y dimensionalmente,
 además de comprobar su presentación en móvil y en ambos temas.
+
+### Matemáticas dentro de texto
+
+Una expresión incrustada en un párrafo, pista, solución o comprobación no debe
+publicarse con notación de teclado como `v_0`, `8^4` o `sqrt(...)`. La Unidad 1
+registra cada literal aprobado en `math-content.js` mediante los constructores
+de `src/utils/mathml.js`. El registro aporta:
+
+- el fragmento exacto que aparece en la fuente;
+- un nombre comprensible para tecnología de asistencia;
+- una anotación TeX como representación semántica, no como entrada a un parser;
+- el árbol MathML construido con `mi`, `mn`, `sub`, `sup`, `frac`, `sqrt` y demás utilidades pequeñas.
+
+No se añade una regla genérica para interpretar guiones bajos, exponentes o
+paréntesis. Si aparece una expresión nueva, se registra de forma explícita y se
+revisa junto con su significado. `RichText.astro` la renderiza durante el
+build; no añade MathJax, KaTeX ni JavaScript cliente.
 
 ## Registrar un error frecuente
 
@@ -206,6 +241,11 @@ debe escribir colores directos: debe usar los tokens documentados en
 `global.css`, como `--surface`, `--text`, `--text-muted`, `--border` y
 `--accent`. Los estados conservan texto o iconografía además del color para
 que su significado no dependa de la percepción cromática.
+
+El claro usa una identidad marfil/grafito con acento terracota y secundario
+cobre; el oscuro conserva grafito, blanco cálido, cian y verde. No se debe
+elegir un color pensando que tendrá el mismo valor en ambos temas: se elige el
+token por su función y se comprueba contraste sobre la superficie real.
 
 Para formatos que se incorporarán después:
 
