@@ -14,6 +14,11 @@ import {
 import { HOME_LINKS, NAV, SITE } from "../src/data/site.js";
 import { NOTICES } from "../src/data/notices.js";
 import { VIDEOS } from "../src/data/videos.js";
+import {
+  THEME_COLORS,
+  THEME_PREFERENCES,
+  THEME_STORAGE_KEY,
+} from "../src/data/theme.js";
 import { resolveBasePath } from "../src/utils/paths.js";
 
 const projectRoot = fileURLToPath(
@@ -49,6 +54,54 @@ const walkFiles = (directory) =>
         ? walkFiles(target)
         : [target];
     });
+
+// Extrae un bloque plano de CSS para validar tokens sin incorporar un parser.
+const extractCssBlock = (source, selector) => {
+  const start = source.indexOf(`${selector} {`);
+  if (start === -1) return "";
+
+  const contentStart = source.indexOf("{", start) + 1;
+  const end = source.indexOf("\n}", contentStart);
+  return end === -1 ? "" : source.slice(contentStart, end);
+};
+
+const cssHexTokens = (block) =>
+  Object.fromEntries(
+    [...block.matchAll(/(--[a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/gi)]
+      .map((match) => [match[1], match[2]])
+  );
+
+// WCAG compara luminancias relativas; 4.5:1 cubre texto normal y 3:1 foco.
+const relativeLuminance = (hex) => {
+  const channels = hex
+    .slice(1)
+    .match(/.{2}/g)
+    .map((channel) => Number.parseInt(channel, 16) / 255)
+    .map((channel) =>
+      channel <= 0.04045
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4
+    );
+
+  return (
+    0.2126 * channels[0] +
+    0.7152 * channels[1] +
+    0.0722 * channels[2]
+  );
+};
+
+const contrastRatio = (first, second) => {
+  const lighter = Math.max(
+    relativeLuminance(first),
+    relativeLuminance(second)
+  );
+  const darker = Math.min(
+    relativeLuminance(first),
+    relativeLuminance(second)
+  );
+
+  return (lighter + 0.05) / (darker + 0.05);
+};
 
 // Unifica rutas con slash final, query o hash antes de compararlas.
 const normalizeRoute = (route) => {
@@ -225,6 +278,176 @@ const logoFile = path.join(
 check(
   fs.existsSync(logoFile),
   "El recurso gráfico principal existe en public."
+);
+
+// El tema es un contrato transversal: datos, arranque temprano, control y CSS.
+const themeValues = THEME_PREFERENCES.map((option) => option.value);
+check(
+  themeValues.join(",") === "light,dark,system" &&
+    duplicates(themeValues).length === 0,
+  "Las preferencias de tema son claro, oscuro y sistema."
+);
+
+check(
+  THEME_STORAGE_KEY === "papillas-physics:theme",
+  "La preferencia visual utiliza una clave local estable."
+);
+
+const globalCssFile = path.join(projectRoot, "src/styles/global.css");
+const globalCss = fs.readFileSync(globalCssFile, "utf8");
+const lightThemeBlock = extractCssBlock(globalCss, ":root");
+const darkThemeBlock = extractCssBlock(
+  globalCss,
+  ':root[data-theme="dark"]'
+);
+const lightTokens = cssHexTokens(lightThemeBlock);
+const darkTokens = {
+  ...lightTokens,
+  ...cssHexTokens(darkThemeBlock),
+};
+
+const requiredThemeTokens = [
+  "--bg",
+  "--surface-subtle",
+  "--surface",
+  "--surface-raised",
+  "--text",
+  "--text-muted",
+  "--border",
+  "--border-strong",
+  "--accent",
+  "--accent-secondary",
+  "--focus",
+  "--content-canvas",
+  "--formula-bg",
+  "--quiz-bg",
+  "--simulation-bg",
+];
+
+check(
+  requiredThemeTokens.every((token) => lightThemeBlock.includes(`${token}:`)),
+  "El tema claro define todos los tokens semánticos requeridos."
+);
+
+check(
+  requiredThemeTokens.every((token) => darkThemeBlock.includes(`${token}:`)),
+  "El tema oscuro redefine todos los tokens semánticos requeridos."
+);
+
+const colorTokenBlocksRemoved = globalCss
+  .replace(`:root {${lightThemeBlock}\n}`, "")
+  .replace(`:root[data-theme="dark"] {${darkThemeBlock}\n}`, "");
+
+check(
+  !/(?:#[0-9a-f]{3,8}\b|\brgba?\s*\()/i.test(colorTokenBlocksRemoved),
+  "Los componentes CSS consumen tokens en lugar de colores literales."
+);
+
+check(
+  !/(?:^|[\s,{])\.dark(?:[\s.:#\[\]>+~]|$)/m.test(globalCss),
+  "El tema no depende de reglas individuales con la clase .dark."
+);
+
+check(
+  lightTokens["--bg"] === THEME_COLORS.light &&
+    darkTokens["--bg"] === THEME_COLORS.dark,
+  "theme-color coincide con el fondo efectivo de cada tema."
+);
+
+const contrastPairs = [
+  ["--text", "--bg", 4.5],
+  ["--text-muted", "--bg", 4.5],
+  ["--accent", "--bg", 4.5],
+  ["--accent-secondary", "--bg", 4.5],
+  ["--nav-active-text", "--nav-active-bg", 4.5],
+  ["--status-info-text", "--status-info-bg", 4.5],
+  ["--status-success-text", "--status-success-bg", 4.5],
+  ["--status-warning-text", "--status-warning-bg", 4.5],
+  ["--status-event-text", "--status-event-bg", 4.5],
+  ["--focus", "--bg", 3],
+  ["--border-strong", "--bg", 3],
+];
+
+const contrastFailures = [
+  ["claro", lightTokens],
+  ["oscuro", darkTokens],
+].flatMap(([theme, tokens]) =>
+  contrastPairs
+    .filter(([foreground, background, minimum]) =>
+      !tokens[foreground] ||
+      !tokens[background] ||
+      contrastRatio(tokens[foreground], tokens[background]) < minimum
+    )
+    .map(([foreground, background, minimum]) =>
+      `${theme}: ${foreground} sobre ${background} (< ${minimum}:1)`
+    )
+);
+
+const brandContrastPairs = [
+  ["--brand-text", "--brand-surface", 4.5],
+  ["--brand-muted", "--brand-surface", 4.5],
+  ["--brand-accent", "--brand-surface", 4.5],
+  ["--brand-accent-secondary", "--brand-surface", 4.5],
+  ["--brand-border-strong", "--brand-surface", 3],
+];
+
+contrastFailures.push(
+  ...brandContrastPairs
+    .filter(([foreground, background, minimum]) =>
+      !lightTokens[foreground] ||
+      !lightTokens[background] ||
+      contrastRatio(
+        lightTokens[foreground],
+        lightTokens[background]
+      ) < minimum
+    )
+    .map(([foreground, background, minimum]) =>
+      `marca: ${foreground} sobre ${background} (< ${minimum}:1)`
+    )
+);
+
+check(
+  contrastFailures.length === 0,
+  contrastFailures.length === 0
+    ? "Los pares semánticos principales cumplen contraste WCAG."
+    : `Contraste insuficiente: ${contrastFailures.join(", ")}`
+);
+
+const allSourceFiles = walkFiles(path.join(projectRoot, "src"))
+  .filter((file) => /\.(?:astro|js|css)$/.test(file));
+const localStorageFiles = allSourceFiles
+  .filter((file) => fs.readFileSync(file, "utf8").includes("localStorage"))
+  .map((file) => path.relative(projectRoot, file));
+
+check(
+  localStorageFiles.length === 2 &&
+    localStorageFiles.includes("src/layouts/BaseLayout.astro") &&
+    localStorageFiles.includes("src/components/ThemeSelector.astro"),
+  "localStorage se limita al arranque y al selector del tema."
+);
+
+const baseLayoutSource = fs.readFileSync(
+  path.join(projectRoot, "src/layouts/BaseLayout.astro"),
+  "utf8"
+);
+const themeSelectorSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/ThemeSelector.astro"),
+  "utf8"
+);
+
+check(
+  baseLayoutSource.includes("is:inline") &&
+    baseLayoutSource.includes("prefers-color-scheme: dark") &&
+    baseLayoutSource.includes("localStorage.getItem"),
+  "El layout aplica la preferencia antes del primer render."
+);
+
+check(
+  themeSelectorSource.includes('type="radio"') &&
+    themeSelectorSource.includes('systemTheme.addEventListener("change"') &&
+    themeSelectorSource.includes("localStorage.setItem") &&
+    themeSelectorSource.includes('new CustomEvent("themechange"'),
+  "El selector mantiene teclado, persistencia y respuesta al sistema."
 );
 
 if (failures.length > 0) {

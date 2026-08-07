@@ -9,11 +9,11 @@ Papilla's Physics es un sitio estático construido con Astro. No tiene backend, 
 El flujo principal es:
 
 ```text
-src/data
+src/data (contenido + contrato de tema)
    ↓
 componentes y páginas + withBase(import.meta.env.BASE_URL)
    ↓
-BaseLayout + global.css
+BaseLayout + ThemeSelector + global.css
    ↓
 astro build → dist → GitHub Pages
 ```
@@ -30,6 +30,7 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `site.js`: identidad editorial, navegación global, accesos de portada y categorías generales de simulaciones.
 - `notices.js`: fuente única de avisos para la portada y `/avisos`.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
+- `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -51,6 +52,11 @@ Los datos de navegación no deben contener destinos inexistentes. `npm run valid
 - elemento `main`;
 - carga de `global.css`.
 
+Antes de cargar los estilos, el layout ejecuta un script inline mínimo que
+resuelve la preferencia de tema. Ese orden es intencional: permite escribir
+`data-theme` en el elemento `html` antes del primer render y evita un destello
+claro cuando corresponde mostrar el tema oscuro.
+
 También resuelve el favicon con el `base` activo, del mismo modo que `Header` y la portada resuelven el logotipo.
 
 La propiedad `fullWidth` permite que la portada controle el ancho de sus propias secciones. Las demás páginas reciben automáticamente el contenedor editorial común.
@@ -58,6 +64,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 ### Componentes compartidos
 
 - `Header.astro`: marca, navegación global y diálogo de menú. Su script mantiene el foco dentro del menú, permite cerrar con Escape y devuelve el foco al control que lo abrió.
+- `ThemeSelector.astro`: control reutilizable para elegir claro, oscuro o sistema. Usa radios nativos, sincroniza posibles instancias del control y emite el evento `themechange` para contenido interactivo futuro.
 - `Footer.astro`: identidad personal y declaración de independencia institucional.
 - `PageHeader.astro`: cabecera de páginas generales como Recursos o Avisos.
 - `SectionHeading.astro`: encabezado `h2` reutilizable. Cuando la sección padre tiene `aria-labelledby`, debe recibir el mismo `id`.
@@ -136,6 +143,50 @@ La navegación global y `CourseNav` son sticky. En pantallas estrechas, `CourseN
 
 Antes de crear una clase nueva, conviene buscar si existe un patrón equivalente. Las variables de `:root` deben utilizarse en lugar de repetir colores, espacios o radios.
 
+### Sistema global de temas
+
+El sistema diferencia la preferencia guardada del tema efectivo:
+
+```text
+light  ───────────────→ data-theme="light"
+dark   ───────────────→ data-theme="dark"
+system ─→ prefers-color-scheme ─→ light o dark
+```
+
+La única configuración persistente es
+`papillas-physics:theme`, almacenada en `localStorage` con uno de los valores
+`light`, `dark` o `system`. No se guardan navegación, contenido académico,
+respuestas ni información estudiantil. Si el navegador bloquea el
+almacenamiento, la aplicación continúa en modo sistema.
+
+Las responsabilidades se reparten así:
+
+- `src/data/theme.js` mantiene el contrato compartido y evita que el layout y el selector diverjan.
+- `BaseLayout.astro` lee la preferencia temprano, calcula el tema efectivo y actualiza también `color-scheme` y `theme-color`.
+- `ThemeSelector.astro` persiste únicamente cambios explícitos, escucha cambios del sistema cuando la preferencia es `system` y sincroniza otras pestañas mediante el evento `storage`.
+- `global.css` define los valores claros en `:root` y redefine únicamente los tokens dependientes del tema en `:root[data-theme="dark"]`.
+
+Los tokens se agrupan por intención:
+
+- contenido: `--bg`, `--surface`, `--surface-raised`, `--text`, `--text-muted`, `--border`, `--accent` y `--focus`;
+- estados: familias `--status-info-*`, `--status-success-*`, `--status-warning-*` y `--status-event-*`;
+- marca: familia `--brand-*`, estable en cabecera, menú, portada y footer;
+- contenido futuro: `--content-canvas`, `--formula-bg`, `--quiz-bg`, `--simulation-bg` y `--data-series-*`.
+
+Un componente nuevo debe consumir tokens semánticos, no decidir por sí mismo
+si el tema es claro u oscuro. Por ejemplo, una tarjeta usa
+`background: var(--surface)` y `color: var(--text)`. Solo se justifica un
+selector `data-theme` cuando cambia el tratamiento de un recurso y no solo su
+color; los diagramas raster que realmente admitan inversión pueden declarar
+`data-theme-adaptive="invert"`. El logotipo y las imágenes editoriales no se
+invierten automáticamente.
+
+Las fórmulas, gráficas, simulaciones y quizzes deben dibujarse sobre los
+tokens de lienzo previstos. Si necesitan recalcular colores en JavaScript,
+pueden escuchar `window` para el evento `themechange`; su detalle incluye la
+preferencia y el tema efectivo. Esto evita acoplar cada integración a la
+implementación del selector.
+
 ## Accesibilidad
 
 Los contratos más importantes son:
@@ -147,6 +198,8 @@ Los contratos más importantes son:
 - el foco visible no debe eliminarse;
 - los estados no dependen solamente del color;
 - `prefers-reduced-motion` reduce transiciones y desplazamiento suave.
+- el selector de tema conserva controles de radio navegables y una leyenda accesible;
+- texto principal, secundario, acentos, estados y foco se validan contra pares de contraste semánticos.
 
 ## Validaciones
 
@@ -160,6 +213,10 @@ Los contratos más importantes son:
 - funcionamiento del resolvedor con `/pagina-fisica`, anclas y URL externas;
 - ausencia de `href="/..."` y `src="/..."` literales en plantillas Astro;
 - existencia del recurso gráfico principal.
+- existencia de los tres modos y de los tokens semánticos en ambos temas;
+- ausencia de colores literales fuera de los bloques de tokens;
+- contraste WCAG de texto, acentos, estados y foco;
+- uso de `localStorage` limitado al arranque y al selector de tema.
 
 Comandos habituales:
 
@@ -203,8 +260,9 @@ Para migrar a un dominio personalizado se debe crear `public/CNAME`, cambiar `si
 6. Resolver todo destino o recurso interno con `withBase()`; no añadir el prefijo de despliegue manualmente.
 7. Añadir IDs estables a encabezados referenciados por `aria-labelledby`.
 8. Reutilizar clases globales antes de crear estilos específicos.
-9. Si la página debe aparecer en navegación, actualizar `NAV`, `HOME_LINKS` o `COURSE_NAV` según corresponda.
-10. Ejecutar `npm run validate` y `npm run build`.
-11. Revisar escritorio y móvil antes de hacer commit.
+9. Comprobar que todas las superficies, textos, estados y focos consuman tokens semánticos y funcionen en claro y oscuro.
+10. Si la página debe aparecer en navegación, actualizar `NAV`, `HOME_LINKS` o `COURSE_NAV` según corresponda.
+11. Ejecutar `npm run validate` y `npm run build`.
+12. Revisar ambos temas en escritorio y móvil antes de hacer commit.
 
 Las reglas para publicar contenido están en [CONTENT_GUIDE.md](./CONTENT_GUIDE.md).

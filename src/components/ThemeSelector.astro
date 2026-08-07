@@ -1,0 +1,167 @@
+---
+// Selector reutilizable: radios nativos conservan teclado y semántica sin JavaScript.
+import {
+  THEME_PREFERENCES,
+  THEME_STORAGE_KEY,
+  THEME_COLORS,
+} from "../data/theme.js";
+
+interface Props {
+  id?: string;
+}
+
+const { id = "theme-selector" } = Astro.props;
+---
+
+<fieldset class="theme-selector" data-theme-selector>
+  <legend class="sr-only">Preferencia de tema</legend>
+
+  <div class="theme-selector__options">
+    {
+      THEME_PREFERENCES.map((option) => (
+        <label
+          class="theme-selector__option"
+          title={`Tema ${option.label.toLocaleLowerCase("es")}`}
+        >
+          <input
+            type="radio"
+            name={id}
+            value={option.value}
+            data-theme-option
+          />
+
+          <span class="theme-selector__visual">
+            {
+              option.value === "light" && (
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="3.5"></circle>
+                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                </svg>
+              )
+            }
+
+            {
+              option.value === "dark" && (
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"></path>
+                </svg>
+              )
+            }
+
+            {
+              option.value === "system" && (
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+                  <path d="M8 21h8M12 17v4"></path>
+                </svg>
+              )
+            }
+
+            <span class="sr-only">{option.label}</span>
+          </span>
+        </label>
+      ))
+    }
+  </div>
+</fieldset>
+
+<script>
+  import {
+    THEME_PREFERENCES,
+    THEME_STORAGE_KEY,
+    THEME_COLORS,
+  } from "../data/theme.js";
+
+  type ThemePreference = "light" | "dark" | "system";
+  type EffectiveTheme = "light" | "dark";
+
+  const root = document.documentElement;
+  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+  const allowedPreferences = new Set(
+    THEME_PREFERENCES.map((option) => option.value)
+  );
+
+  const isThemePreference = (value: unknown): value is ThemePreference =>
+    typeof value === "string" && allowedPreferences.has(value);
+
+  const getEffectiveTheme = (
+    preference: ThemePreference
+  ): EffectiveTheme =>
+    preference === "system"
+      ? systemTheme.matches ? "dark" : "light"
+      : preference;
+
+  // Mantiene sincronizados todos los selectores si el componente se reutiliza.
+  const syncControls = (preference: ThemePreference) => {
+    document
+      .querySelectorAll<HTMLInputElement>("[data-theme-option]")
+      .forEach((control) => {
+        control.checked = control.value === preference;
+      });
+  };
+
+  const applyPreference = (
+    preference: ThemePreference,
+    announce = false
+  ) => {
+    const effectiveTheme = getEffectiveTheme(preference);
+    root.dataset.theme = effectiveTheme;
+    root.dataset.themePreference = preference;
+    root.style.colorScheme = effectiveTheme;
+    syncControls(preference);
+
+    const themeColor = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]'
+    );
+
+    if (themeColor) {
+      themeColor.content = THEME_COLORS[effectiveTheme];
+    }
+
+    // Gráficas o simulaciones futuras pueden escuchar este contrato sin leer el DOM.
+    window.dispatchEvent(
+      new CustomEvent("themechange", {
+        detail: { preference, effectiveTheme, announce },
+      })
+    );
+  };
+
+  const initialPreference = isThemePreference(
+    root.dataset.themePreference
+  )
+    ? root.dataset.themePreference
+    : "system";
+
+  applyPreference(initialPreference);
+
+  document
+    .querySelectorAll<HTMLInputElement>("[data-theme-option]")
+    .forEach((control) => {
+      control.addEventListener("change", () => {
+        if (!control.checked || !isThemePreference(control.value)) return;
+
+        try {
+          localStorage.setItem(THEME_STORAGE_KEY, control.value);
+        } catch {
+          // El tema sigue funcionando aunque el navegador bloquee almacenamiento local.
+        }
+
+        applyPreference(control.value, true);
+      });
+    });
+
+  systemTheme.addEventListener("change", () => {
+    if (root.dataset.themePreference === "system") {
+      applyPreference("system");
+    }
+  });
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== THEME_STORAGE_KEY) return;
+    const preference = event.newValue ?? "system";
+
+    if (isThemePreference(preference)) {
+      applyPreference(preference, true);
+    }
+  });
+</script>

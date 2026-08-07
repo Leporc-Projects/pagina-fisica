@@ -118,6 +118,33 @@ Las tutorías interactivas deben ser progresivas y deterministas. Las rutas de a
 
 Un estado no debe anunciar disponibilidad si faltan el archivo, enlace o revisión académica correspondiente.
 
+## Contenido compatible con ambos temas
+
+Todo material nuevo debe revisarse en claro y oscuro. El contenido HTML no
+debe escribir colores directos: debe usar los tokens documentados en
+`global.css`, como `--surface`, `--text`, `--text-muted`, `--border` y
+`--accent`. Los estados conservan texto o iconografía además del color para
+que su significado no dependa de la percepción cromática.
+
+Para formatos que se incorporarán después:
+
+- fórmulas y demostraciones usan `--formula-bg`;
+- gráficas usan `--content-canvas` y las series `--data-series-*`;
+- simulaciones usan `--simulation-bg`;
+- quizzes y ejercicios interactivos usan `--quiz-bg` y las familias de estado semánticas;
+- SVG propios deben preferir `currentColor` o variables CSS cuando necesiten adaptarse.
+
+Una imagen raster no se invierte de forma global porque puede contener
+fotografías, códigos de color académicos o una identidad visual propia. Solo
+un diagrama preparado y verificado para esa transformación puede declarar
+`data-theme-adaptive="invert"`. Las imágenes complejas pueden ofrecer en el
+futuro variantes claras y oscuras sin cambiar el contrato de los componentes.
+
+El sistema de tema persiste exclusivamente la configuración visual
+`papillas-physics:theme`. Ningún quiz, diagnóstico, ejercicio, simulación o
+tutoría debe reutilizar `localStorage` para guardar respuestas o datos de
+estudiantes sin una decisión arquitectónica y de privacidad posterior.
+
 ## Privacidad y datos estudiantiles
 
 Está prohibido incorporar al repositorio o mostrar públicamente:
@@ -148,7 +175,8 @@ Los ejemplos de interfaz deben utilizar datos manifiestamente ficticios y no deb
 3. Revisar licencias y derechos de autor.
 4. Confirmar que los estados editoriales sean honestos.
 5. Comprobar enlaces y rutas.
-6. Ejecutar:
+6. Revisar legibilidad, estados y foco en tema claro y oscuro.
+7. Ejecutar:
 
 ```sh
 npm run validate

@@ -5,6 +5,11 @@ import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 import { SITE } from "../data/site.js";
 import { withBase } from "../utils/paths.js";
+import {
+  THEME_COLORS,
+  THEME_PREFERENCES,
+  THEME_STORAGE_KEY,
+} from "../data/theme.js";
 
 interface Props {
   title: string;
@@ -20,6 +25,11 @@ const {
 
 const fullTitle =
   title === "Inicio" ? SITE.name : `${title} · ${SITE.name}`;
+
+const themeValues = THEME_PREFERENCES.map((option) => option.value);
+const lightThemeColor = THEME_COLORS.light;
+const darkThemeColor = THEME_COLORS.dark;
+const themeStorageKey = THEME_STORAGE_KEY;
 ---
 
 <!doctype html>
@@ -31,7 +41,49 @@ const fullTitle =
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0f12" />
+    <meta name="theme-color" content={lightThemeColor} />
+
+    <!-- Se ejecuta antes de cargar estilos para evitar mostrar el tema equivocado. -->
+    <script
+      is:inline
+      define:vars={{
+        themeValues,
+        themeStorageKey,
+        lightThemeColor,
+        darkThemeColor,
+      }}
+    >
+      (() => {
+        let preference = "system";
+
+        try {
+          const storedPreference = localStorage.getItem(themeStorageKey);
+          if (themeValues.includes(storedPreference)) {
+            preference = storedPreference;
+          }
+        } catch {
+          // El modo sistema es el fallback cuando localStorage no está disponible.
+        }
+
+        const systemIsDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        const effectiveTheme = preference === "system"
+          ? systemIsDark ? "dark" : "light"
+          : preference;
+
+        document.documentElement.dataset.theme = effectiveTheme;
+        document.documentElement.dataset.themePreference = preference;
+        document.documentElement.style.colorScheme = effectiveTheme;
+
+        const themeColor = document.querySelector('meta[name="theme-color"]');
+        if (themeColor) {
+          themeColor.content = effectiveTheme === "dark"
+            ? darkThemeColor
+            : lightThemeColor;
+        }
+      })();
+    </script>
 
     <!-- Usamos el logo como favicon provisional. -->
     <link rel="icon" type="image/jpeg" href={withBase(SITE.logoPath)} />
