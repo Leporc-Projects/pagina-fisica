@@ -1,34 +1,21 @@
 // Fórmulas de la Unidad 1 expresadas con MathML nativo. FormulaBlock consume
 // este contrato y muestra significado, hipótesis y comprobaciones editoriales.
-
-const escapeHtml = (value) => String(value)
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;");
-
-const mi = (value) => `<mi>${value}</mi>`;
-const mn = (value) => `<mn>${value}</mn>`;
-const mo = (value) => `<mo>${value}</mo>`;
-const row = (...values) => `<mrow>${values.join("")}</mrow>`;
-const sub = (base, index) => `<msub>${base}${index}</msub>`;
-const sup = (base, exponent) => `<msup>${base}${exponent}</msup>`;
-const frac = (numerator, denominator) =>
-  `<mfrac>${numerator}${denominator}</mfrac>`;
-const sqrt = (value) => `<msqrt>${value}</msqrt>`;
-const integral = (lower, upper) =>
-  `<msubsup><mo>∫</mo>${lower}${upper}</msubsup>`;
-const vector = (value) => `<mover>${mi(value)}<mo>→</mo></mover>`;
-const unitVector = (value) => `<mover>${mi(value)}<mo>^</mo></mover>`;
-
-const blockMath = (label, tex, body) => `
-  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="${escapeHtml(label)}">
-    <semantics>
-      ${body}
-      <annotation encoding="application/x-tex">${escapeHtml(tex)}</annotation>
-    </semantics>
-  </math>
-`;
+import {
+  blockMath,
+  frac,
+  integral,
+  mi,
+  mn,
+  mo,
+  mover,
+  mspace,
+  row,
+  sqrt,
+  sub,
+  sup,
+  unitVector,
+  vector,
+} from "../../../utils/mathml.js";
 
 const formula = ({
   id,
@@ -417,14 +404,5 @@ export const UNIT_1_FORMULAS = {
     related: ["polar-velocity", "centripetal-acceleration"],
   }),
 };
-
-// Helpers locales declarados al final para mantener legibles las expresiones.
-function mspace() {
-  return '<mspace width="1em"></mspace>';
-}
-
-function mover(base, accent) {
-  return `<mover>${base}${accent}</mover>`;
-}
 
 export const getUnit1Formula = (id) => UNIT_1_FORMULAS[id];

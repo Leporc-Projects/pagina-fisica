@@ -16,12 +16,20 @@ interface Point {
   y: number;
 }
 
+interface DiagramMathLabel {
+  base: string;
+  sub?: string;
+  suffix?: string;
+}
+
 interface VectorSpec {
   start: Point;
   end: Point;
   label: string;
   style?: DiagramStyle;
   lineStyle?: "solid" | "dashed" | "dotted";
+  mathLabel?: DiagramMathLabel;
+  ariaLabel?: string;
 }
 
 interface SegmentSpec {
@@ -264,7 +272,7 @@ const preparedAnnotations = annotations
           y2={vector.svgEnd.y}
           marker-end={`url(#${markerId(vector.style)})`}
           role="img"
-          aria-label={vector.label}
+          aria-label={vector.ariaLabel ?? vector.label}
         />
       ))}
       {preparedPoints.map((point) => (
@@ -285,7 +293,17 @@ const preparedAnnotations = annotations
           x={(vector.svgStart.x + vector.svgEnd.x) / 2 + 1}
           y={(vector.svgStart.y + vector.svgEnd.y) / 2 - 1}
           data-diagram-style={vector.style}
-        >{vector.label}</text>
+        >
+          {vector.mathLabel
+            ? <Fragment>
+                <tspan class="academic-diagram__math-base">{vector.mathLabel.base}</tspan>
+                {vector.mathLabel.sub && (
+                  <tspan class="academic-diagram__math-sub">{vector.mathLabel.sub}</tspan>
+                )}
+                {vector.mathLabel.suffix && <tspan>{vector.mathLabel.suffix}</tspan>}
+              </Fragment>
+            : vector.label}
+        </text>
       ))}
       {preparedSegments.map((segment) => (
         segment.label

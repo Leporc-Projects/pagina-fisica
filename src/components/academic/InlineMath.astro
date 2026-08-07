@@ -1,0 +1,12 @@
+---
+// Presenta MathML inline construido en módulos editoriales internos. El HTML
+// nunca procede de entradas del usuario ni de datos remotos.
+interface Props {
+  mathml: string;
+}
+
+const { mathml } = Astro.props;
+---
+
+<span class="inline-math" set:html={mathml}></span>
+

@@ -1,5 +1,9 @@
 ---
 // Presenta retroalimentación editorial por ID estable sin convertirla en quiz.
+import RichText from "./RichText.astro";
+
+type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
+
 interface CommonError {
   id: string;
   topic: string;
@@ -10,9 +14,10 @@ interface CommonError {
 
 interface Props {
   errors: CommonError[];
+  present?: (value: string) => RichContent;
 }
 
-const { errors } = Astro.props;
+const { errors, present = (value) => value } = Astro.props;
 ---
 
 {errors.length > 0 && (
@@ -29,8 +34,8 @@ const { errors } = Astro.props;
     <div class="common-errors__list">
       {errors.map((error) => (
         <details id={error.id} class="common-error">
-          <summary>{error.description}</summary>
-          <p>{error.feedback}</p>
+          <summary><RichText content={present(error.description)} /></summary>
+          <p><RichText content={present(error.feedback)} /></p>
         </details>
       ))}
     </div>

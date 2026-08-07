@@ -1,6 +1,10 @@
 ---
 // Muestra el enunciado y una solución progresiva; los metadatos editoriales
 // completos permanecen en el banco y no saturan la experiencia de estudio.
+import RichText from "./RichText.astro";
+
+type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
+
 interface Exercise {
   id: string;
   title: string;
@@ -16,9 +20,16 @@ interface Exercise {
 interface Props {
   exercise: Exercise;
   number: number;
+  total?: number;
+  present?: (value: string) => RichContent;
 }
 
-const { exercise, number } = Astro.props;
+const {
+  exercise,
+  number,
+  total,
+  present = (value) => value,
+} = Astro.props;
 const typeLabels = {
   conceptual: "Conceptual",
   numerical: "Numérico",
@@ -33,8 +44,10 @@ const typeLabels = {
 <article class="exercise-card" id={exercise.id} aria-labelledby={`${exercise.id}-title`}>
   <header class="exercise-card__header">
     <div>
-      <p class="academic-label">Ejercicio {String(number).padStart(2, "0")}</p>
-      <h3 id={`${exercise.id}-title`}>{exercise.title}</h3>
+      <p class="academic-label">
+        Ejercicio {String(number).padStart(2, "0")}{total ? ` de ${total}` : ""}
+      </p>
+      <h3 id={`${exercise.id}-title`} tabindex="-1">{exercise.title}</h3>
     </div>
 
     <dl class="exercise-card__meta">
@@ -53,13 +66,13 @@ const typeLabels = {
     </dl>
   </header>
 
-  <p class="exercise-card__prompt">{exercise.prompt}</p>
+  <p class="exercise-card__prompt"><RichText content={present(exercise.prompt)} /></p>
 
   {exercise.hints.length > 0 && (
     <details class="exercise-card__hint">
       <summary>Solicitar una pista</summary>
       <ul class="academic-bullet-list">
-        {exercise.hints.map((hint) => <li>{hint}</li>)}
+        {exercise.hints.map((hint) => <li><RichText content={present(hint)} /></li>)}
       </ul>
     </details>
   )}
@@ -70,7 +83,7 @@ const typeLabels = {
       {exercise.solution.map((item) => (
         <li>
           <strong>{item.title}</strong>
-          <p>{item.text}</p>
+          <p><RichText content={present(item.text)} /></p>
         </li>
       ))}
     </ol>

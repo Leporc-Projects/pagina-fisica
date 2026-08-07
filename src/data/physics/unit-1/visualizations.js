@@ -29,8 +29,8 @@ export const UNIT_1_VISUALIZATIONS = {
       yDomain: [-0.6, 3.4],
       vectors: [
         { start: { x: 0, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "A", style: "primary" },
-        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "Aₓ", style: "secondary" },
-        { start: { x: 3.2, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "Aᵧ", style: "tertiary" },
+        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "Aₓ", mathLabel: { base: "A", sub: "x" }, ariaLabel: "componente x de A", style: "secondary" },
+        { start: { x: 3.2, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "Aᵧ", mathLabel: { base: "A", sub: "y" }, ariaLabel: "componente y de A", style: "tertiary" },
       ],
       segments: [
         { start: { x: -0.35, y: 0 }, end: { x: 3.8, y: 0 }, style: "reference", lineStyle: "solid" },
@@ -76,7 +76,7 @@ export const UNIT_1_VISUALIZATIONS = {
       vectors: [
         { start: { x: 0, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "A", style: "primary" },
         { start: { x: 0, y: 0 }, end: { x: 4.3, y: 0 }, label: "B", style: "secondary" },
-        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "proy_B A", style: "tertiary" },
+        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "proy_B A", mathLabel: { base: "proy", sub: "B", suffix: " A" }, ariaLabel: "proyección de A sobre B", style: "tertiary" },
       ],
       segments: [
         { start: { x: 3.2, y: 0 }, end: { x: 3.2, y: 2.4 }, style: "reference", lineStyle: "dashed" },
@@ -241,7 +241,7 @@ export const UNIT_1_VISUALIZATIONS = {
           label: "v tangente",
           style: "primary",
         },
-        { start: circularPoint, end: { x: 0, y: 0 }, label: "a_r", style: "secondary" },
+        { start: circularPoint, end: { x: 0, y: 0 }, label: "a_r", mathLabel: { base: "a", sub: "r" }, ariaLabel: "aceleración radial", style: "secondary" },
       ],
       points: [{ ...circularPoint, label: "partícula", style: "tertiary" }, { x: 0, y: 0, label: "centro", style: "reference" }],
     },
@@ -259,9 +259,9 @@ export const UNIT_1_VISUALIZATIONS = {
       xDomain: [-0.6, 5.2],
       yDomain: [-0.8, 3.8],
       vectors: [
-        { start: { x: 0, y: 0 }, end: { x: 2.3, y: 0.8 }, label: "v_A/B", style: "primary" },
-        { start: { x: 2.3, y: 0.8 }, end: { x: 4.2, y: 2.8 }, label: "v_B/C", style: "secondary" },
-        { start: { x: 0, y: 0 }, end: { x: 4.2, y: 2.8 }, label: "v_A/C", style: "tertiary", lineStyle: "dashed" },
+        { start: { x: 0, y: 0 }, end: { x: 2.3, y: 0.8 }, label: "v_A/B", mathLabel: { base: "v", sub: "A/B" }, ariaLabel: "velocidad de A respecto a B", style: "primary" },
+        { start: { x: 2.3, y: 0.8 }, end: { x: 4.2, y: 2.8 }, label: "v_B/C", mathLabel: { base: "v", sub: "B/C" }, ariaLabel: "velocidad de B respecto a C", style: "secondary" },
+        { start: { x: 0, y: 0 }, end: { x: 4.2, y: 2.8 }, label: "v_A/C", mathLabel: { base: "v", sub: "A/C" }, ariaLabel: "velocidad de A respecto a C", style: "tertiary", lineStyle: "dashed" },
       ],
     },
   },

@@ -1,5 +1,9 @@
 ---
 // Organiza una idea por profundidad sin ocultar la explicación esencial.
+import RichText from "./RichText.astro";
+
+type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
+
 interface SectionContent {
   id: string;
   title: string;
@@ -11,9 +15,11 @@ interface SectionContent {
 
 interface Props {
   section: SectionContent;
+  index?: number;
+  present?: (value: string) => RichContent;
 }
 
-const { section } = Astro.props;
+const { section, index, present = (value) => value } = Astro.props;
 ---
 
 <section
@@ -22,18 +28,20 @@ const { section } = Astro.props;
   aria-labelledby={`${section.id}-title`}
 >
   <header class="academic-section__header">
-    <p class="academic-label">Tema</p>
+    <p class="academic-label">
+      {index ? `Concepto ${String(index).padStart(2, "0")}` : "Concepto"}
+    </p>
     <h2 id={`${section.id}-title`}>{section.title}</h2>
   </header>
 
   <div class="academic-layer academic-layer--essential">
     <h3><span>Esencial</span> Lo mínimo que debes conservar</h3>
-    {section.essential.map((paragraph) => <p>{paragraph}</p>)}
+    {section.essential.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
   </div>
 
   <div class="academic-layer academic-layer--understand">
     <h3><span>Comprende</span> Interpreta y conecta</h3>
-    {section.understand.map((paragraph) => <p>{paragraph}</p>)}
+    {section.understand.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
   </div>
 
   <details class="academic-details academic-details--deepen">
@@ -42,7 +50,7 @@ const { section } = Astro.props;
       <strong>Formulación y condiciones</strong>
     </summary>
     <div class="academic-details__body">
-      {section.deepen.map((paragraph) => <p>{paragraph}</p>)}
+      {section.deepen.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
     </div>
   </details>
 
@@ -53,7 +61,7 @@ const { section } = Astro.props;
         <strong>Conexiones para continuar</strong>
       </summary>
       <div class="academic-details__body">
-        {section.explore.map((paragraph) => <p>{paragraph}</p>)}
+        {section.explore.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
       </div>
     </details>
   )}

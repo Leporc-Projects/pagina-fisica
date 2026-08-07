@@ -1,6 +1,10 @@
 ---
 // Presentación única para MathML y sus condiciones. La fórmula se considera
 // contenido interno confiable; nunca debe aceptar HTML escrito por usuarios.
+import RichText from "./RichText.astro";
+
+type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
+
 interface VariableDefinition {
   symbol: string;
   meaning: string;
@@ -22,9 +26,10 @@ interface Formula {
 
 interface Props {
   formula: Formula;
+  present?: (value: string) => RichContent;
 }
 
-const { formula } = Astro.props;
+const { formula, present = (value) => value } = Astro.props;
 ---
 
 <article class="formula-block" aria-labelledby={`${formula.id}-formula-title`}>
@@ -37,13 +42,13 @@ const { formula } = Astro.props;
 
   <div class="formula-block__meaning">
     <strong>Representa</strong>
-    <p>{formula.represents}</p>
+    <p><RichText content={present(formula.represents)} /></p>
   </div>
 
   {formula.interpretation && (
     <div class="formula-block__meaning">
       <strong>Interpretación física</strong>
-      <p>{formula.interpretation}</p>
+      <p><RichText content={present(formula.interpretation)} /></p>
     </div>
   )}
 
@@ -60,10 +65,12 @@ const { formula } = Astro.props;
           <dl class="formula-variables">
             {formula.variables.map((variable) => (
               <div>
-                <dt>{variable.symbol}</dt>
+                <dt><RichText content={present(variable.symbol)} /></dt>
                 <dd>
-                  {variable.meaning}
-                  {variable.unit ? `; unidad habitual: ${variable.unit}` : ""}
+                  <RichText content={present(variable.meaning)} />
+                  {variable.unit && (
+                    <Fragment>; unidad habitual: <RichText content={present(variable.unit)} /></Fragment>
+                  )}
                 </dd>
               </div>
             ))}
@@ -75,7 +82,7 @@ const { formula } = Astro.props;
         <section aria-labelledby={`${formula.id}-conditions-title`}>
           <h4 id={`${formula.id}-conditions-title`}>Condiciones de aplicación</h4>
           <ul class="academic-bullet-list">
-            {formula.conditions.map((condition) => <li>{condition}</li>)}
+            {formula.conditions.map((condition) => <li><RichText content={present(condition)} /></li>)}
           </ul>
         </section>
       )}
@@ -83,7 +90,7 @@ const { formula } = Astro.props;
       {formula.dimensions && (
         <section aria-labelledby={`${formula.id}-dimensions-title`}>
           <h4 id={`${formula.id}-dimensions-title`}>Comprobación dimensional</h4>
-          <p>{formula.dimensions}</p>
+          <p><RichText content={present(formula.dimensions)} /></p>
         </section>
       )}
 
@@ -91,7 +98,7 @@ const { formula } = Astro.props;
         <section aria-labelledby={`${formula.id}-errors-title`}>
           <h4 id={`${formula.id}-errors-title`}>Errores que evita</h4>
           <ul class="academic-bullet-list">
-            {formula.commonErrors.map((error) => <li>{error}</li>)}
+            {formula.commonErrors.map((error) => <li><RichText content={present(error)} /></li>)}
           </ul>
         </section>
       )}

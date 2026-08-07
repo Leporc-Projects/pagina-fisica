@@ -7,10 +7,12 @@ import AcademicSection from "./AcademicSection.astro";
 import CommonErrors from "./CommonErrors.astro";
 import ConceptCheck from "./ConceptCheck.astro";
 import FormulaBlock from "./FormulaBlock.astro";
+import RichText from "./RichText.astro";
 import UnitOneNav from "./UnitOneNav.astro";
 import { UNIT_1_CONTENT } from "../../data/physics/unit-1/content.js";
 import { getUnit1ErrorsByTopics } from "../../data/physics/unit-1/common-errors.js";
 import { getUnit1Formula } from "../../data/physics/unit-1/formulas.js";
+import { presentUnit1RichText } from "../../data/physics/unit-1/math-content.js";
 import { UNIT_1_VISUALIZATIONS } from "../../data/physics/unit-1/visualizations.js";
 import {
   UNIT_1,
@@ -94,11 +96,17 @@ let checkNumber = 0;
       </aside>
 
       <div class="unit-topic-content">
-        {content.sections.map((section) => (
-          <AcademicSection section={section}>
+        {content.sections.map((section, sectionIndex) => (
+          <AcademicSection
+            section={section}
+            index={sectionIndex + 1}
+            present={presentUnit1RichText}
+          >
             {(section.formulas ?? []).map((formulaId) => {
               const formula = getUnit1Formula(formulaId);
-              return formula ? <FormulaBlock formula={formula} /> : null;
+              return formula
+                ? <FormulaBlock formula={formula} present={presentUnit1RichText} />
+                : null;
             })}
 
             {(section.visualizations ?? []).map((visualizationId) => {
@@ -109,7 +117,7 @@ let checkNumber = 0;
                 <div class="academic-figure-group">
                   {visualization.relationLabel && (
                     <p class="academic-figure-group__relation">
-                      {visualization.relationLabel}
+                      <RichText content={presentUnit1RichText(visualization.relationLabel)} />
                     </p>
                   )}
 
@@ -118,7 +126,7 @@ let checkNumber = 0;
                     : <AcademicDiagram {...visualization.props} />}
 
                   <p class="academic-figure-group__caption">
-                    {visualization.explanation}
+                    <RichText content={presentUnit1RichText(visualization.explanation)} />
                   </p>
                 </div>
               );
@@ -126,13 +134,19 @@ let checkNumber = 0;
 
             {(section.checks ?? []).map((check) => {
               checkNumber += 1;
-              return <ConceptCheck check={check} index={checkNumber} />;
+              return (
+                <ConceptCheck
+                  check={check}
+                  index={checkNumber}
+                  present={presentUnit1RichText}
+                />
+              );
             })}
           </AcademicSection>
         ))}
 
         <div id="common-errors">
-          <CommonErrors errors={errors} />
+          <CommonErrors errors={errors} present={presentUnit1RichText} />
         </div>
       </div>
     </div>

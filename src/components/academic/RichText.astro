@@ -1,0 +1,33 @@
+---
+// Render estático de contenido mixto. Recibe texto o segmentos estructurados;
+// no analiza sintaxis matemática ni añade JavaScript al navegador.
+import InlineMath from "./InlineMath.astro";
+
+interface TextSegment {
+  type: "text";
+  value: string;
+}
+
+interface MathSegment {
+  type: "math";
+  mathml: string;
+}
+
+interface Props {
+  content: string | Array<TextSegment | MathSegment>;
+}
+
+const { content } = Astro.props;
+const segments = typeof content === "string"
+  ? [{ type: "text", value: content }]
+  : content;
+---
+
+<Fragment>
+  {segments.map((segment) =>
+    segment.type === "math"
+      ? <InlineMath mathml={segment.mathml} />
+      : segment.value
+  )}
+</Fragment>
+
