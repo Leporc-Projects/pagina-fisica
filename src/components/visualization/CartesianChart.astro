@@ -1,0 +1,531 @@
+---
+// Renderizador declarativo: recibe magnitudes físicas y produce SVG accesible.
+// Escalado, muestreo y recorte permanecen en utilidades puras comprobables.
+import {
+  assertDomain,
+  clipSegmentToDomain,
+  createAreaPolygons,
+  createCartesianTransform,
+  createClippedSegments,
+  createLinearTicks,
+  getVisiblePoints,
+  polygonsToSvgPath,
+  sampleFunction,
+  segmentsToSvgPath,
+} from "../../utils/chart.js";
+
+type Domain = [number, number];
+
+interface DataPoint {
+  x: number;
+  y: number;
+}
+
+interface AxisConfig {
+  domain: Domain;
+  label: string;
+  unit?: string;
+  ticks?: number | number[];
+  format?: (value: number) => string;
+}
+
+type SeriesMode = "line" | "points" | "line-points" | "area";
+type Marker = "circle" | "square" | "diamond" | "triangle" | "none";
+type LineStyle = "solid" | "dashed" | "dotted";
+
+interface SeriesConfig {
+  id: string;
+  label: string;
+  description?: string;
+  points: Array<DataPoint | null>;
+  mode?: SeriesMode;
+  marker?: Marker;
+  lineStyle?: LineStyle;
+  baseline?: number;
+}
+
+interface FunctionSeriesConfig extends Omit<SeriesConfig, "points"> {
+  evaluate: (x: number) => number;
+  domain?: Domain;
+  samples?: number;
+}
+
+interface ReferenceLine {
+  axis: "x" | "y";
+  value: number;
+  label?: string;
+}
+
+interface VectorConfig {
+  start: DataPoint;
+  end: DataPoint;
+  label?: string;
+}
+
+interface AnnotationConfig extends DataPoint {
+  label: string;
+  offset?: { x: number; y: number };
+}
+
+interface Props {
+  id: string;
+  title: string;
+  description: string;
+  xAxis: AxisConfig;
+  yAxis: AxisConfig;
+  series?: SeriesConfig[];
+  functions?: FunctionSeriesConfig[];
+  references?: ReferenceLine[];
+  vectors?: VectorConfig[];
+  annotations?: AnnotationConfig[];
+  grid?: boolean | "x" | "y" | "both";
+  legend?: boolean;
+  aspectRatio?: number;
+}
+
+const {
+  id,
+  title,
+  description,
+  xAxis,
+  yAxis,
+  series = [],
+  functions = [],
+  references = [],
+  vectors = [],
+  annotations = [],
+  grid = true,
+  legend = true,
+  aspectRatio = 0.64,
+} = Astro.props;
+
+if (!/^[a-z][a-z0-9-]*$/.test(id)) {
+  throw new Error(
+    "CartesianChart requiere un id estable en minúsculas y con guiones."
+  );
+}
+
+if (!Number.isFinite(aspectRatio) || aspectRatio < 0.5 || aspectRatio > 1) {
+  throw new RangeError("aspectRatio debe estar entre 0.5 y 1.");
+}
+
+const xDomain = assertDomain(xAxis.domain, "xAxis.domain");
+const yDomain = assertDomain(yAxis.domain, "yAxis.domain");
+const viewBoxWidth = 100;
+const viewBoxHeight = viewBoxWidth * aspectRatio;
+
+// Márgenes en unidades del viewBox: la geometría no depende del tamaño CSS final.
+const plot = {
+  left: 14,
+  top: 6,
+  width: 81,
+  height: viewBoxHeight - 20,
+};
+const transform = createCartesianTransform({ xDomain, yDomain, plot });
+const domains = { xDomain, yDomain };
+const titleId = `${id}-title`;
+const descriptionId = `${id}-description`;
+const clipId = `${id}-plot-clip`;
+const arrowId = `${id}-arrow`;
+
+// Nueve combinaciones retrasan la repetición exacta cuando hay muchas curvas.
+const defaultVisualPatterns: Array<{
+  lineStyle: LineStyle;
+  marker: Marker;
+}> = [
+  { lineStyle: "solid", marker: "circle" },
+  { lineStyle: "solid", marker: "square" },
+  { lineStyle: "solid", marker: "diamond" },
+  { lineStyle: "dashed", marker: "triangle" },
+  { lineStyle: "dashed", marker: "circle" },
+  { lineStyle: "dashed", marker: "square" },
+  { lineStyle: "dotted", marker: "diamond" },
+  { lineStyle: "dotted", marker: "triangle" },
+  { lineStyle: "dotted", marker: "circle" },
+];
+
+const sampledFunctions = functions.map((config) => {
+  const { evaluate, domain = xDomain, samples, ...seriesConfig } = config;
+  return {
+    ...seriesConfig,
+    points: sampleFunction({ evaluate, domain, samples }),
+  };
+});
+
+const configuredSeries = [...series, ...sampledFunctions].map(
+  (item, index) => {
+    const mode = item.mode ?? "line";
+    const slot = index % 3 + 1;
+    const visualPattern = defaultVisualPatterns[
+      index % defaultVisualPatterns.length
+    ];
+    const segments = createClippedSegments(item.points, domains);
+    const baseline = item.baseline ?? yDomain[0];
+    const areaPolygons = mode === "area"
+      ? createAreaPolygons(item.points, baseline, domains)
+      : [];
+
+    return {
+      ...item,
+      mode,
+      slot,
+      lineStyle: item.lineStyle ?? visualPattern.lineStyle,
+      marker: mode === "points" || mode === "line-points"
+        ? item.marker ?? visualPattern.marker
+        : "none",
+      linePath: segmentsToSvgPath(segments, transform),
+      areaPath: polygonsToSvgPath(areaPolygons, transform),
+      visiblePoints: getVisiblePoints(item.points, transform)
+        .map((point) => ({ ...point, svg: transform.point(point) })),
+    };
+  }
+);
+
+const seriesIds = configuredSeries.map((item) => item.id);
+if (
+  seriesIds.some((seriesId) => !/^[a-z][a-z0-9-]*$/.test(seriesId)) ||
+  new Set(seriesIds).size !== seriesIds.length
+) {
+  throw new Error(
+    "Cada serie requiere un id único en minúsculas y con guiones."
+  );
+}
+
+const resolveTicks = (axis: AxisConfig) => {
+  const values = Array.isArray(axis.ticks)
+    ? axis.ticks
+    : createLinearTicks(axis.domain, axis.ticks ?? 6);
+  return values.filter(
+    (value) =>
+      Number.isFinite(value) &&
+      value >= axis.domain[0] &&
+      value <= axis.domain[1]
+  );
+};
+
+const defaultTickFormat = (value: number) =>
+  new Intl.NumberFormat("es-CO", {
+    maximumFractionDigits: 3,
+  }).format(value);
+const formatTick = (axis: AxisConfig, value: number) =>
+  (axis.format ?? defaultTickFormat)(value);
+const axisLabel = (axis: AxisConfig) =>
+  axis.unit ? `${axis.label} (${axis.unit})` : axis.label;
+const xTicks = resolveTicks(xAxis);
+const yTicks = resolveTicks(yAxis);
+const showXGrid = grid === true || grid === "both" || grid === "x";
+const showYGrid = grid === true || grid === "both" || grid === "y";
+const xAxisY = yDomain[0] <= 0 && yDomain[1] >= 0
+  ? transform.y(0)
+  : plot.top + plot.height;
+const yAxisX = xDomain[0] <= 0 && xDomain[1] >= 0
+  ? transform.x(0)
+  : plot.left;
+
+const visibleReferences = references
+  .filter((reference) =>
+    reference.axis === "x"
+      ? reference.value >= xDomain[0] && reference.value <= xDomain[1]
+      : reference.value >= yDomain[0] && reference.value <= yDomain[1]
+  )
+  .map((reference) => ({
+    ...reference,
+    position: reference.axis === "x"
+      ? transform.x(reference.value)
+      : transform.y(reference.value),
+  }));
+
+const visibleVectors = vectors
+  .map((vector) => ({
+    ...vector,
+    clipped: clipSegmentToDomain(vector.start, vector.end, domains),
+  }))
+  .filter((vector) => vector.clipped)
+  .map((vector) => ({
+    ...vector,
+    svgStart: transform.point(vector.clipped![0]),
+    svgEnd: transform.point(vector.clipped![1]),
+  }));
+
+const visibleAnnotations = annotations
+  .filter(transform.isVisible)
+  .map((annotation) => ({
+    ...annotation,
+    svg: transform.point(annotation),
+    offset: annotation.offset ?? { x: 1.4, y: -1.4 },
+  }));
+---
+
+<figure
+  class="academic-chart theme-canvas"
+  data-chart-id={id}
+  data-x-min={xDomain[0]}
+  data-x-max={xDomain[1]}
+  data-y-min={yDomain[0]}
+  data-y-max={yDomain[1]}
+>
+  <!--
+    El viewBox conserva una geometría estable y deja que CSS determine el ancho.
+    Los data-* exponen el contrato mínimo para controles vanilla futuros.
+  -->
+  <svg
+    class="academic-chart__svg"
+    viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+    preserveAspectRatio="xMidYMid meet"
+    role="img"
+    aria-labelledby={`${titleId} ${descriptionId}`}
+    data-plot-left={plot.left}
+    data-plot-top={plot.top}
+    data-plot-width={plot.width}
+    data-plot-height={plot.height}
+  >
+    <title id={titleId}>{title}</title>
+    <desc id={descriptionId}>{description}</desc>
+
+    <defs>
+      <clipPath id={clipId}>
+        <rect
+          x={plot.left}
+          y={plot.top}
+          width={plot.width}
+          height={plot.height}
+        />
+      </clipPath>
+      <marker
+        id={arrowId}
+        viewBox="0 0 10 10"
+        refX="8"
+        refY="5"
+        markerWidth="4"
+        markerHeight="4"
+        orient="auto-start-reverse"
+      >
+        <path class="academic-chart__arrowhead" d="M 0 0 L 10 5 L 0 10 Z" />
+      </marker>
+    </defs>
+
+    <rect
+      class="academic-chart__plot"
+      x={plot.left}
+      y={plot.top}
+      width={plot.width}
+      height={plot.height}
+    />
+
+    <!-- Cuadrícula y referencias se calculan con la misma transformación que los datos. -->
+    <g class="academic-chart__grid" aria-hidden="true" clip-path={`url(#${clipId})`}>
+      {showXGrid && xTicks.map((tick) => (
+        <line
+          x1={transform.x(tick)}
+          y1={plot.top}
+          x2={transform.x(tick)}
+          y2={plot.top + plot.height}
+        />
+      ))}
+      {showYGrid && yTicks.map((tick) => (
+        <line
+          x1={plot.left}
+          y1={transform.y(tick)}
+          x2={plot.left + plot.width}
+          y2={transform.y(tick)}
+        />
+      ))}
+    </g>
+
+    <g class="academic-chart__references" clip-path={`url(#${clipId})`}>
+      {visibleReferences.map((reference) => (
+        reference.axis === "x"
+          ? <line
+              x1={reference.position}
+              y1={plot.top}
+              x2={reference.position}
+              y2={plot.top + plot.height}
+            />
+          : <line
+              x1={plot.left}
+              y1={reference.position}
+              x2={plot.left + plot.width}
+              y2={reference.position}
+            />
+      ))}
+    </g>
+
+    <!-- Las áreas quedan debajo de curvas, puntos, vectores y anotaciones. -->
+    <g clip-path={`url(#${clipId})`}>
+      {configuredSeries.map((item) => (
+        item.mode === "area" && item.areaPath
+          ? <path
+              class="academic-chart__area"
+              data-series-slot={item.slot}
+              data-series-id={item.id}
+              d={item.areaPath}
+            />
+          : null
+      ))}
+    </g>
+
+    <!-- Ejes: pueden cruzar el origen físico, pero los ticks permanecen en los bordes. -->
+    <g class="academic-chart__axes" aria-hidden="true">
+      <line
+        x1={plot.left}
+        y1={xAxisY}
+        x2={plot.left + plot.width}
+        y2={xAxisY}
+      />
+      <line
+        x1={yAxisX}
+        y1={plot.top}
+        x2={yAxisX}
+        y2={plot.top + plot.height}
+      />
+    </g>
+
+    <g class="academic-chart__ticks" aria-hidden="true">
+      {xTicks.map((tick) => (
+        <g>
+          <line
+            x1={transform.x(tick)}
+            y1={plot.top + plot.height}
+            x2={transform.x(tick)}
+            y2={plot.top + plot.height + 1}
+          />
+          <text
+            x={transform.x(tick)}
+            y={plot.top + plot.height + 4}
+            text-anchor="middle"
+          >
+            {formatTick(xAxis, tick)}
+          </text>
+        </g>
+      ))}
+      {yTicks.map((tick) => (
+        <g>
+          <line
+            x1={plot.left - 1}
+            y1={transform.y(tick)}
+            x2={plot.left}
+            y2={transform.y(tick)}
+          />
+          <text
+            x={plot.left - 1.7}
+            y={transform.y(tick)}
+            text-anchor="end"
+            dominant-baseline="middle"
+          >
+            {formatTick(yAxis, tick)}
+          </text>
+        </g>
+      ))}
+      <text
+        class="academic-chart__axis-label"
+        x={plot.left + plot.width / 2}
+        y={viewBoxHeight - 1.8}
+        text-anchor="middle"
+      >
+        {axisLabel(xAxis)}
+      </text>
+      <text
+        class="academic-chart__axis-label"
+        x={2.5}
+        y={plot.top + plot.height / 2}
+        text-anchor="middle"
+        transform={`rotate(-90 2.5 ${plot.top + plot.height / 2})`}
+      >
+        {axisLabel(yAxis)}
+      </text>
+    </g>
+
+    <!-- Cada serie conserva id, etiqueta y patrón visual además de su color. -->
+    <g clip-path={`url(#${clipId})`}>
+      {configuredSeries.map((item) => (
+        <g
+          class="academic-chart__series"
+          data-series-id={item.id}
+          data-series-slot={item.slot}
+          data-line-style={item.lineStyle}
+          role="group"
+          aria-label={item.description
+            ? `${item.label}. ${item.description}`
+            : item.label}
+        >
+          {(item.mode === "line" || item.mode === "line-points" || item.mode === "area") && item.linePath
+            ? <path class="academic-chart__line" d={item.linePath} />
+            : null}
+
+          {(item.mode === "points" || item.mode === "line-points") && item.marker !== "none" &&
+            item.visiblePoints.map((point) => (
+              item.marker === "circle"
+                ? <circle class="academic-chart__marker" cx={point.svg.x} cy={point.svg.y} r="0.9" />
+                : item.marker === "square"
+                  ? <rect class="academic-chart__marker" x={point.svg.x - 0.85} y={point.svg.y - 0.85} width="1.7" height="1.7" />
+                  : item.marker === "diamond"
+                    ? <rect class="academic-chart__marker" x={point.svg.x - 0.78} y={point.svg.y - 0.78} width="1.56" height="1.56" transform={`rotate(45 ${point.svg.x} ${point.svg.y})`} />
+                    : <path class="academic-chart__marker" d={`M ${point.svg.x} ${point.svg.y - 1} L ${point.svg.x + 0.95} ${point.svg.y + 0.75} L ${point.svg.x - 0.95} ${point.svg.y + 0.75} Z`} />
+            ))}
+        </g>
+      ))}
+    </g>
+
+    <g class="academic-chart__vectors" clip-path={`url(#${clipId})`}>
+      {visibleVectors.map((vector) => (
+        <g
+          role={vector.label ? "img" : undefined}
+          aria-label={vector.label}
+        >
+          <line
+            x1={vector.svgStart.x}
+            y1={vector.svgStart.y}
+            x2={vector.svgEnd.x}
+            y2={vector.svgEnd.y}
+            marker-end={`url(#${arrowId})`}
+          />
+        </g>
+      ))}
+    </g>
+
+    <g class="academic-chart__annotation-layer">
+      {visibleReferences.map((reference) => (
+        reference.label
+          ? <text
+              x={reference.axis === "x" ? reference.position + 1 : plot.left + 1}
+              y={reference.axis === "x" ? plot.top + 3 : reference.position - 1}
+            >{reference.label}</text>
+          : null
+      ))}
+      {visibleVectors.map((vector) => (
+        vector.label
+          ? <text
+              x={(vector.svgStart.x + vector.svgEnd.x) / 2 + 1}
+              y={(vector.svgStart.y + vector.svgEnd.y) / 2 - 1}
+            >{vector.label}</text>
+          : null
+      ))}
+      {visibleAnnotations.map((annotation) => (
+        <g>
+          <circle cx={annotation.svg.x} cy={annotation.svg.y} r="0.45" />
+          <text
+            x={annotation.svg.x + annotation.offset.x}
+            y={annotation.svg.y + annotation.offset.y}
+          >{annotation.label}</text>
+        </g>
+      ))}
+    </g>
+  </svg>
+
+  {legend && configuredSeries.length > 0 && (
+    <ul class="academic-chart__legend" aria-label="Leyenda de la gráfica">
+      {configuredSeries.map((item) => (
+        <li>
+          <span
+            class="academic-chart__legend-sample"
+            data-series-slot={item.slot}
+            data-line-style={item.lineStyle}
+            data-marker={item.marker}
+            aria-hidden="true"
+          ></span>
+          <span>{item.label}</span>
+        </li>
+      ))}
+    </ul>
+  )}
+</figure>

@@ -13,7 +13,7 @@ src/data (contenido + contrato de tema)
    ↓
 componentes y páginas + withBase(import.meta.env.BASE_URL)
    ↓
-BaseLayout + ThemeSelector + global.css
+BaseLayout + ThemeSelector + visualizaciones SVG + global.css
    ↓
 astro build → dist → GitHub Pages
 ```
@@ -70,7 +70,9 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `SectionHeading.astro`: encabezado `h2` reutilizable. Cuando la sección padre tiene `aria-labelledby`, debe recibir el mismo `id`.
 - `CoursePageHeader.astro`: cabecera de las páginas internas del curso y composición de `CourseNav`.
 - `CourseNav.astro`: navegación horizontal basada exclusivamente en `COURSE_NAV`; en pantallas estrechas revela la sección activa sin desplazar la página.
+- `visualization/CartesianChart.astro`: traduce dominios, series y geometría física a un SVG cartesiano accesible y responsive.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
+- `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas y ticks, muestrear funciones, recortar geometría y producir paths SVG.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
@@ -99,6 +101,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/simulaciones.astro` | `/simulaciones` |
 | `src/pages/herramientas.astro` | `/herramientas` |
 | `src/pages/actividades.astro` | `/actividades` |
+| `src/pages/dev/visualizaciones.astro` | `/dev/visualizaciones` (laboratorio interno, no enlazado) |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
 | `src/pages/fisica-basica-1/cronograma.astro` | `/fisica-basica-1/cronograma` |
 | `src/pages/fisica-basica-1/unidades.astro` | `/fisica-basica-1/unidades` |
@@ -142,6 +145,7 @@ Los imports CSS y los recursos generados por Astro reciben `base` durante el bui
 - páginas generales y estados editoriales;
 - estructura interna del curso;
 - cronograma y unidades;
+- visualizaciones SVG académicas y sus variantes responsive e imprimibles;
 - breakpoints responsive y reducción de movimiento.
 
 La navegación global y `CourseNav` son sticky. En pantallas estrechas, `CourseNav` conserva el ancho legible de sus enlaces y permite desplazamiento horizontal dentro del propio componente. Las secciones enlazables usan `scroll-margin-top` para que sus títulos no queden ocultos detrás de esas barras.
@@ -192,6 +196,93 @@ pueden escuchar `window` para el evento `themechange`; su detalle incluye la
 preferencia y el tema efectivo. Esto evita acoplar cada integración a la
 implementación del selector.
 
+## Infraestructura de visualizaciones
+
+La infraestructura propia prioriza SVG porque las gráficas académicas suelen
+tener un número moderado de elementos semánticos: ejes, curvas, puntos,
+vectores y etiquetas. SVG conserva esos elementos en el DOM, escala mediante
+`viewBox`, permanece nítido al imprimir y permite describir la figura con
+`title`, `desc` y texto real. Una gráfica estática se renderiza durante el
+build de Astro y no añade JavaScript al navegador.
+
+La separación principal es:
+
+```text
+datos físicos (dominios, puntos, funciones, unidades)
+   ↓ validación, muestreo y recorte — src/utils/chart.js
+coordenadas físicas válidas
+   ↓ createCartesianTransform()
+geometría SVG (paths, líneas, marcadores)
+   ↓ CartesianChart.astro
+presentación (tokens, trazos, responsive) — global.css
+```
+
+Un punto `{ x: 2, y: -1 }` siempre representa el dato físico. Ninguna fuente de
+contenido debe convertirlo previamente a una posición de pantalla. El
+transformador mapea el dominio x al ancho útil del SVG e invierte el dominio y
+porque SVG crece hacia abajo. Las líneas y áreas se recortan todavía en el
+espacio físico; solo después se genera el atributo `d` del path.
+
+### API de `CartesianChart`
+
+| Prop | Contrato |
+| --- | --- |
+| `id` | Identificador único de la figura, en minúsculas y con guiones. Genera referencias ARIA, `clipPath` y hooks estables. |
+| `title`, `description` | Nombre y explicación accesibles del contenido real de la gráfica. Son obligatorios. |
+| `xAxis`, `yAxis` | Dominio creciente, etiqueta, unidad opcional, cantidad o lista explícita de ticks y formateador opcional. |
+| `series` | Series de puntos físicos. Admiten `line`, `points`, `line-points` o `area`, marcador, patrón de línea y línea base. Un valor `null` separa ramas. |
+| `functions` | Funciones evaluadas durante el build, con dominio y número de muestras opcionales. Los resultados no finitos crean cortes. |
+| `references` | Líneas verticales u horizontales expresadas mediante un valor físico y una etiqueta opcional. |
+| `vectors` | Pares `start`/`end` en coordenadas físicas y etiqueta opcional. |
+| `annotations` | Punto físico, texto y desplazamiento visual opcional en unidades del `viewBox`. |
+| `grid`, `legend` | Activan cuadrícula por eje y leyenda textual. La leyenda no depende solo del color: conserva nombre, patrón y marcador. |
+| `aspectRatio` | Relación alto/ancho del `viewBox`, limitada a valores útiles entre `0.5` y `1`. |
+
+Los estilos consumen `--chart-*` y `--data-series-*`. Esos tokens se definen
+para claro y oscuro junto al sistema visual general. Una visualización nueva no
+debe consultar `data-theme`, escribir colores directos ni duplicar reglas para
+cada tema. El color no es la única señal: el ciclo por defecto también cambia
+patrón de línea y forma del marcador.
+
+### Interacción y gráficas sincronizadas
+
+El componente actual es deliberadamente estático. El elemento `figure`, el SVG
+y cada serie exponen `data-chart-id`, dominios, área útil y `data-series-id`.
+Cuando un control externo sea necesario, un módulo vanilla podrá:
+
+1. conservar el estado en magnitudes físicas;
+2. importar las mismas utilidades de `src/utils/chart.js`;
+3. recalcular solamente la geometría afectada;
+4. localizar el path o marcador mediante los hooks `data-*`;
+5. actualizar atributos SVG sin reescribir ejes ni estilos.
+
+Dos gráficas sincronizadas compartirán el valor físico del cursor o del control,
+pero cada una aplicará su propia transformación. Los controles deben ser HTML
+nativo siempre que sea posible, conservar etiqueta visible o accesible y
+responder a teclado. Esta interacción no debe guardar respuestas o datos en
+`localStorage`; la única persistencia vigente sigue siendo la preferencia de
+tema.
+
+Para añadir una gráfica estática:
+
+1. importar `CartesianChart.astro` en la página académica aprobada;
+2. definir dominios, ejes y series con magnitudes y unidades verificadas;
+3. asignar `id` únicos a gráfica y series;
+4. redactar `title` y `description` que expliquen la información, no la decoración;
+5. elegir patrones o marcadores que mantengan distinguibles las series;
+6. comprobar valores límite, discontinuidades, claro/oscuro y ancho móvil;
+7. ejecutar `npm run validate` y `npm run build`.
+
+La ruta `/dev/visualizaciones` usa datos sintéticos únicamente para revisar el
+contrato técnico. No forma parte de `NAV`, `HOME_LINKS` ni `COURSE_NAV` y no debe
+convertirse en una fuente de contenido académico.
+
+Canvas se reserva para simulaciones con miles de elementos, animaciones de alta
+frecuencia o redibujado continuo donde el costo de muchos nodos SVG sea
+significativo. Incluso en ese caso, controles, explicación y alternativa
+accesible seguirán fuera del lienzo. Una curva, diagrama vectorial o gráfica
+imprimible de complejidad moderada debe continuar en SVG.
+
 ## Accesibilidad
 
 Los contratos más importantes son:
@@ -202,6 +293,7 @@ Los contratos más importantes son:
 - el menú mantiene un ciclo de foco y responde a Escape;
 - el foco visible no debe eliminarse;
 - los estados no dependen solamente del color;
+- las gráficas tienen `title` y `desc`, leyendas textuales y series diferenciadas por patrón o marcador;
 - `prefers-reduced-motion` reduce transiciones y desplazamiento suave.
 - el selector de tema conserva controles de radio navegables y una leyenda accesible;
 - texto principal, secundario, acentos, estados y foco se validan contra pares de contraste semánticos.
@@ -222,6 +314,8 @@ Los contratos más importantes son:
 - ausencia de colores literales fuera de los bloques de tokens;
 - contraste WCAG de texto, acentos, estados y foco;
 - uso de `localStorage` limitado al arranque y al selector de tema.
+- contrato SVG: transformación, recorte, hooks, tema, ausencia de Canvas y demo fuera de navegación;
+- ocho pruebas unitarias con `node:test` para dominios, escalas, ticks, inversión de y, discontinuidades, recorte y paths finitos.
 
 Comandos habituales:
 

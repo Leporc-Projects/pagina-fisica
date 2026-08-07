@@ -145,6 +145,69 @@ El sistema de tema persiste exclusivamente la configuración visual
 tutoría debe reutilizar `localStorage` para guardar respuestas o datos de
 estudiantes sin una decisión arquitectónica y de privacidad posterior.
 
+## Añadir una gráfica o diagrama académico
+
+El contenido futuro consume
+`src/components/visualization/CartesianChart.astro`. La fuente académica debe
+entregar magnitudes físicas; el componente y `src/utils/chart.js` se encargan
+de transformarlas y recortarlas para SVG.
+
+Ejemplo estrictamente estructural:
+
+```astro
+---
+import CartesianChart from "../../components/visualization/CartesianChart.astro";
+
+const points = [
+  { x: 0, y: 1 },
+  { x: 1, y: 2 },
+  { x: 2, y: 1.5 },
+];
+---
+
+<CartesianChart
+  id="identificador-de-la-figura"
+  title="Título académico aprobado"
+  description="Descripción de la relación que debe interpretar el lector."
+  xAxis={{ domain: [0, 2], label: "Magnitud x", unit: "unidad" }}
+  yAxis={{ domain: [0, 3], label: "Magnitud y", unit: "unidad" }}
+  series={[{
+    id: "serie-principal",
+    label: "Nombre de la serie",
+    points,
+    mode: "line-points",
+  }]}
+/>
+```
+
+El ejemplo muestra la API, no propone contenido para ninguna unidad. Antes de
+publicar una gráfica real:
+
+- verificar fuente, dominio, unidades, convención de signos y precisión;
+- conservar los puntos, vectores y referencias en coordenadas físicas;
+- usar `null` para separar ramas que no deben unirse;
+- redactar `title` y `description` con significado académico;
+- dar nombre textual a todas las series;
+- no escribir coordenadas SVG, tamaños de pantalla ni colores en los datos;
+- no usar el color como única diferencia entre curvas;
+- revisar claro, oscuro, impresión y móvil;
+- no incluir datos reales de estudiantes en series, etiquetas o anotaciones.
+
+Las funciones suministradas mediante `functions` se muestrean durante el build.
+Para datos experimentales o discretos debe preferirse `series`. Una línea de
+referencia, vector o anotación se registra en su prop específica para conservar
+su semántica y permitir estilos o accesibilidad coherentes.
+
+Una interacción posterior debe usar controles HTML etiquetados y JavaScript
+vanilla. El control conserva valores físicos y reutiliza las utilidades de
+transformación; no debe almacenar respuestas, diagnósticos ni progreso. Si dos
+gráficas se sincronizan, comparten el valor físico y no una posición SVG.
+
+No se aceptan capturas raster de gráficas que puedan generarse con esta
+infraestructura. SVG preserva texto, nitidez y posibilidad de impresión. Canvas
+solo se evaluará para simulaciones densas o animadas cuya carga de elementos y
+frecuencia de actualización lo justifique técnicamente.
+
 ## Privacidad y datos estudiantiles
 
 Está prohibido incorporar al repositorio o mostrar públicamente:

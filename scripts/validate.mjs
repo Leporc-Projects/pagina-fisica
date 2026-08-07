@@ -375,6 +375,14 @@ const requiredThemeTokens = [
   "--formula-bg",
   "--quiz-bg",
   "--simulation-bg",
+  "--chart-bg",
+  "--chart-grid",
+  "--chart-axis",
+  "--chart-label",
+  "--chart-reference",
+  "--chart-vector",
+  "--chart-annotation-halo",
+  "--chart-area-opacity",
 ];
 
 check(
@@ -501,6 +509,88 @@ check(
     themeSelectorSource.includes("localStorage.setItem") &&
     themeSelectorSource.includes('new CustomEvent("themechange"'),
   "El selector mantiene teclado, persistencia y respuesta al sistema."
+);
+
+// La biblioteca de gráficas conserva separadas matemática, SVG y presentación.
+const chartUtilityFile = path.join(projectRoot, "src/utils/chart.js");
+const chartComponentFile = path.join(
+  projectRoot,
+  "src/components/visualization/CartesianChart.astro"
+);
+const chartDemoRoute = "/dev/visualizaciones";
+const chartUtilitySource = fs.existsSync(chartUtilityFile)
+  ? fs.readFileSync(chartUtilityFile, "utf8")
+  : "";
+const chartComponentSource = fs.existsSync(chartComponentFile)
+  ? fs.readFileSync(chartComponentFile, "utf8")
+  : "";
+
+check(
+  chartUtilitySource.includes("createCartesianTransform") &&
+    chartUtilitySource.includes("clipSegmentToDomain") &&
+    chartUtilitySource.includes("segmentsToSvgPath"),
+  "La capa matemática expone transformación, recorte y geometría SVG."
+);
+
+check(
+  chartComponentSource.includes("<svg") &&
+    chartComponentSource.includes("viewBox=") &&
+    chartComponentSource.includes('role="img"') &&
+    chartComponentSource.includes("<title") &&
+    chartComponentSource.includes("<desc") &&
+    chartComponentSource.includes("clipPath") &&
+    !chartComponentSource.includes("<canvas"),
+  "CartesianChart genera SVG responsive, descrito y recortado."
+);
+
+check(
+  chartComponentSource.includes("data-chart-id") &&
+    chartComponentSource.includes("data-series-id") &&
+    chartComponentSource.includes("data-x-min") &&
+    chartComponentSource.includes("data-plot-width"),
+  "Las gráficas exponen hooks estables para controles y sincronización futuros."
+);
+
+const chartSvgCssBlock = extractCssBlock(globalCss, ".academic-chart__svg");
+const chartFigureCssBlock = extractCssBlock(globalCss, ".academic-chart");
+
+check(
+  chartSvgCssBlock.includes("width: 100%;") &&
+    chartSvgCssBlock.includes("height: auto;") &&
+    chartSvgCssBlock.includes("overflow: hidden;") &&
+    chartFigureCssBlock.includes("overflow: clip;") &&
+    globalCss.includes("var(--data-series-1)") &&
+    globalCss.includes("var(--chart-bg)"),
+  "La presentación SVG es responsive, recortada y consume tokens temáticos."
+);
+
+const publicNavigationRoutes = [
+  ...NAV.flatMap((item) => [
+    item.href,
+    ...(item.children ?? []).map((child) => child.href),
+  ]),
+  ...COURSE_NAV.map((item) => item.href),
+  ...HOME_LINKS.map((item) => item.href),
+];
+
+check(
+  routes.has(chartDemoRoute) &&
+    !publicNavigationRoutes.some((route) => route.startsWith("/dev")),
+  "El laboratorio de visualizaciones existe sin entrar en la navegación pública."
+);
+
+const packageData = JSON.parse(
+  fs.readFileSync(path.join(projectRoot, "package.json"), "utf8")
+);
+const packageNames = [
+  ...Object.keys(packageData.dependencies ?? {}),
+  ...Object.keys(packageData.devDependencies ?? {}),
+];
+const chartLibraries = ["chart.js", "plotly.js", "d3", "echarts", "highcharts"];
+
+check(
+  chartLibraries.every((library) => !packageNames.includes(library)),
+  "La infraestructura de gráficas no incorpora dependencias de visualización."
 );
 
 if (failures.length > 0) {
