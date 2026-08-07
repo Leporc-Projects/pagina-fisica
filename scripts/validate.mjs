@@ -188,9 +188,13 @@ check(
 );
 
 check(
-  HOME_LINKS.find((item) => item.label === "Recursos")?.href ===
-    "/fisica-basica-1/recursos",
-  "El acceso de Recursos en la portada apunta al curso."
+  HOME_LINKS.map((item) => `${item.number}|${item.label}|${item.href}`)
+    .join("\n") ===
+    [
+      `01|${COURSE.name}|/fisica-basica-1`,
+      "02|Simulaciones|/simulaciones",
+    ].join("\n"),
+  "La portada destaca solo el curso y Simulaciones."
 );
 
 const missingCourseRoutes = COURSE_NAV

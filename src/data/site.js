@@ -53,21 +53,9 @@ export const HOME_LINKS = [
   },
   {
     number: "02",
-    label: "Ejercicios",
-    description: "Práctica conceptual y resolución progresiva de problemas.",
-    href: "/fisica-basica-1/ejercicios",
-  },
-  {
-    number: "03",
     label: "Simulaciones",
     description: "Experiencias interactivas para explorar modelos físicos.",
     href: "/simulaciones",
-  },
-  {
-    number: "04",
-    label: "Recursos",
-    description: "Guías, referencias, videos y enlaces seleccionados.",
-    href: "/fisica-basica-1/recursos",
   },
 ];
 
