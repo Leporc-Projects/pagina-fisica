@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../../../../layouts/BaseLayout.astro";
-import UnitOneNav from "../../../../components/academic/UnitOneNav.astro";
+import UnitLearningMap from "../../../../components/academic/UnitLearningMap.astro";
 import { UNIT_1 } from "../../../../data/physics/unit-1/unit.js";
 import { UNIT_1_EXERCISES } from "../../../../data/physics/unit-1/exercises.js";
 import { withBase } from "../../../../utils/paths.js";
@@ -37,7 +37,11 @@ import { withBase } from "../../../../utils/paths.js";
       </dl>
     </header>
 
-    <UnitOneNav activeSlug="index" />
+    <UnitLearningMap
+      unitLabel={UNIT_1.shortTitle}
+      unitTitle={UNIT_1.title}
+      topics={UNIT_1.topics}
+    />
 
     <section class="unit-study-guide" aria-labelledby="study-guide-title">
       <div>
@@ -56,35 +60,6 @@ import { withBase } from "../../../../utils/paths.js";
         <li><strong>Profundiza</strong><span>Derivaciones, condiciones y rigor.</span></li>
         <li><strong>Explora</strong><span>Ampliaciones para continuar.</span></li>
       </ol>
-    </section>
-
-    <section class="unit-topic-directory" aria-labelledby="topic-directory-title">
-      <header>
-        <p class="academic-label">Recorrido</p>
-        <h2 id="topic-directory-title">Temas de la unidad</h2>
-      </header>
-
-      <div class="unit-topic-directory__list">
-        {UNIT_1.topics.map((topic) => (
-          <a
-            class:list={[
-              "unit-topic-directory__row",
-              topic.priority === "extension" && "unit-topic-directory__row--extension",
-            ]}
-            href={withBase(topic.route)}
-          >
-            <span>{String(topic.order).padStart(2, "0")}</span>
-            <div>
-              <p class="academic-label">
-                {topic.priority === "extension" ? "Ampliación" : "Contenido central"}
-              </p>
-              <h3>{topic.title}</h3>
-              <p>{topic.summary}</p>
-            </div>
-            <span aria-hidden="true">→</span>
-          </a>
-        ))}
-      </div>
     </section>
 
     <section class="unit-source-note" aria-labelledby="unit-source-title">

@@ -1,15 +1,15 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import ExerciseCard from "../../../components/academic/ExerciseCard.astro";
+import ExerciseSequence from "../../../components/academic/ExerciseSequence.astro";
 import UnitOneNav from "../../../components/academic/UnitOneNav.astro";
 import { UNIT_1_EXERCISES } from "../../../data/physics/unit-1/exercises.js";
+import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
 import { withBase } from "../../../utils/paths.js";
 
 const publishedExercises = UNIT_1_EXERCISES.filter(
   (exercise) => exercise.status === "published"
 );
-let exerciseNumber = 0;
 ---
 
 <BaseLayout
@@ -44,55 +44,11 @@ let exerciseNumber = 0;
 
     <UnitOneNav />
 
-    <nav class="practice-topic-index" aria-label="Temas del banco de ejercicios">
-      {UNIT_1.topics.map((topic) => {
-        const count = publishedExercises.filter(
-          (exercise) => exercise.topic === topic.slug
-        ).length;
-        if (count === 0) return null;
-
-        return (
-          <a href={`#practica-${topic.slug}`}>
-            <span>{count}</span>
-            {topic.shortTitle}
-          </a>
-        );
-      })}
-    </nav>
-
-    <div class="practice-groups">
-      {UNIT_1.topics.map((topic) => {
-        const exercises = publishedExercises.filter(
-          (exercise) => exercise.topic === topic.slug
-        );
-        if (exercises.length === 0) return null;
-
-        return (
-          <section
-            class="practice-group"
-            id={`practica-${topic.slug}`}
-            aria-labelledby={`practica-${topic.slug}-title`}
-          >
-            <header class="practice-group__header">
-              <div>
-                <p class="academic-label">
-                  {topic.priority === "extension" ? "Ampliación" : "Tema"}
-                </p>
-                <h2 id={`practica-${topic.slug}-title`}>{topic.title}</h2>
-              </div>
-              <a class="text-link" href={withBase(topic.route)}>Repasar teoría</a>
-            </header>
-
-            <div class="exercise-list">
-              {exercises.map((exercise) => {
-                exerciseNumber += 1;
-                return <ExerciseCard exercise={exercise} number={exerciseNumber} />;
-              })}
-            </div>
-          </section>
-        );
-      })}
-    </div>
+    <ExerciseSequence
+      exercises={publishedExercises}
+      topics={UNIT_1.topics}
+      present={presentUnit1RichText}
+    />
 
     <aside class="editorial-metadata-note">
       <p class="academic-label">Metadatos editoriales</p>

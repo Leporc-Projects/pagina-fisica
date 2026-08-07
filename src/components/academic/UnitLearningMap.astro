@@ -1,0 +1,92 @@
+---
+// Mapa reutilizable de una unidad. Las posiciones se derivan del número y orden
+// de temas; el DOM conserva una secuencia lineal útil para teclado y lectores.
+import { withBase } from "../../utils/paths.js";
+
+interface Topic {
+  order: number;
+  slug: string;
+  title: string;
+  shortTitle: string;
+  route: string;
+  priority?: string;
+  summary: string;
+}
+
+interface Props {
+  unitLabel: string;
+  unitTitle: string;
+  topics: Topic[];
+}
+
+const { unitLabel, unitTitle, topics } = Astro.props;
+const center = { x: 50, y: 50 };
+const startAngle = -145;
+const sweep = topics.length > 1 ? 290 / (topics.length - 1) : 0;
+
+const points = topics.map((topic, index) => {
+  const angle = (startAngle + sweep * index) * Math.PI / 180;
+  return {
+    topic,
+    x: center.x + Math.cos(angle) * 40,
+    y: center.y + Math.sin(angle) * 34,
+  };
+});
+
+const routePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
+---
+
+<nav class="learning-map" aria-labelledby="learning-map-title">
+  <header class="learning-map__header">
+    <p class="academic-label">Mapa de aprendizaje</p>
+    <h2 id="learning-map-title">Un recorrido conectado</h2>
+    <p>
+      Cada nodo abre un tema. La secuencia propone una ruta de lectura, pero
+      puedes entrar directamente al concepto que necesitas revisar.
+    </p>
+  </header>
+
+  <div class="learning-map__canvas">
+    <svg
+      class="learning-map__connections"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <polyline class="learning-map__route" points={routePoints} />
+      {points.map(({ x, y }) => (
+        <line class="learning-map__spoke" x1={center.x} y1={center.y} x2={x} y2={y} />
+      ))}
+      <circle class="learning-map__core-ring" cx={center.x} cy={center.y} r="11" />
+    </svg>
+
+    <div class="learning-map__core">
+      <span>{unitLabel}</span>
+      <strong>{unitTitle}</strong>
+    </div>
+
+    <ol class="learning-map__nodes">
+      {points.map(({ topic, x, y }) => (
+        <li
+          class:list={[
+            "learning-map__node",
+            topic.priority === "extension" && "learning-map__node--extension",
+          ]}
+          style={`--map-x: ${x}%; --map-y: ${y}%;`}
+        >
+          <a href={withBase(topic.route)} aria-describedby={`map-summary-${topic.slug}`}>
+            <span class="learning-map__number">
+              {String(topic.order).padStart(2, "0")}
+            </span>
+            <strong>{topic.shortTitle}</strong>
+            {topic.priority === "extension" && <small>Ampliación</small>}
+            <span class="sr-only" id={`map-summary-${topic.slug}`}>
+              {topic.title}. {topic.summary}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+</nav>
+
