@@ -32,7 +32,7 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `physics/index.js`: registro de unidades que ya tienen implementación académica.
-- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios (`exercises.js`). `math-content.js` es una capa de presentación: asocia fragmentos literales ya aprobados con MathML sin modificar esas fuentes.
+- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios (`exercises.js`). `math-content.js` es una capa de presentación: asocia fragmentos literales registrados con MathML sin modificar esas fuentes.
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -73,17 +73,19 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `CoursePageHeader.astro`: cabecera de las páginas internas del curso y composición de `CourseNav`.
 - `CourseNav.astro`: navegación horizontal basada exclusivamente en `COURSE_NAV`; en pantallas estrechas revela la sección activa sin desplazar la página.
 - `visualization/CartesianChart.astro`: traduce dominios, series y geometría física a un SVG cartesiano accesible y responsive.
-- `visualization/AcademicDiagram.astro`: compone diagramas vectoriales y geométricos con el mismo sistema de coordenadas físicas.
+- `visualization/AcademicDiagram.astro`: compone diagramas vectoriales y geométricos con escala física isotrópica y etiquetas posicionables.
+- `visualization/AcademicVisualization.astro`: resuelve una entrada del registro central como gráfica o diagrama para que temas y ejercicios no dupliquen SVG.
 - `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
 - `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
 - `academic/RichText.astro` e `InlineMath.astro`: convierten el contrato mixto texto/MathML en HTML estático; nunca interpretan entrada del navegador.
 - `academic/UnitLearningMap.astro`: índice visual reutilizable. Calcula la geometría desde el orden y cantidad de temas, pero conserva los enlaces en un `ol` navegable.
 - `academic/UnitOneNav.astro`: navegación local compacta alimentada por `UNIT_1.topics`; usa `details` nativo para evitar una segunda barra extensa durante la lectura.
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
-- `academic/ExerciseSequence.astro`: mejora progresivamente el banco completo para mostrar un ejercicio principal, selector, progreso y controles anterior/siguiente.
+- `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
-- `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas y ticks, muestrear funciones, recortar geometría y producir paths SVG.
-- `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
+- `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
+- `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
+- `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, delimitadores semánticos, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
@@ -184,20 +186,32 @@ evaluación. Las fuentes registradas en la unidad son el programa oficial
 reproduce libros comerciales.
 
 El banco de ejercicios también separa responsabilidades. Enunciado, pistas y
-solución son contenido público aprobado. Estado, versión, nivel cognitivo,
+solución son contenido público sujeto al estado editorial. Estado, versión, nivel cognitivo,
 modalidades, tolerancia y referencias a errores son metadatos editoriales para
 filtrar, validar y evolucionar tutorías deterministas. `ExerciseCard.astro`
 decide qué parte es visible; ningún resultado ni progreso estudiantil se
 persiste.
 
-La página de práctica entrega los 22 registros a `ExerciseSequence`. Antes de
-ejecutarse JavaScript, todos permanecen en el HTML como una lista utilizable.
-La mejora vanilla marca el contenedor con `data-enhanced`, deja un solo
-ejercicio visible, actualiza `progress`, selector y botones, y escribe el ID
-estable en el hash. `Alt` + flecha izquierda/derecha ofrece un atajo cuando el
-foco está dentro de la secuencia. No evalúa respuestas, no usa `localStorage`
-ni recopila datos. Los atributos `data-exercise-topic`, `type` y `difficulty`
-preparan filtros futuros sin duplicar el banco.
+`status` describe el flujo de revisión académica: `draft` es trabajo incompleto,
+`review` está listo para revisión de César y `published` significa aprobación
+docente final. El banco actual permanece en `review`. `purpose` separa
+`learning` de un futuro banco `measurement`; `exposure` distingue `public` y
+`restricted`. La página solo consume ejercicios públicos de aprendizaje que no
+estén en borrador. Todavía no existe un banco de medición.
+
+Un ejercicio puede declarar `visualizationId`. `OpenPractice` lo resuelve contra
+`UNIT_1_VISUALIZATIONS` y entrega el mismo registro a
+`AcademicVisualization`; `exercises.js` nunca contiene copias de SVG. Las
+representaciones `graphical` y `visual` se validan contra una figura existente.
+
+Antes de ejecutarse JavaScript, todos los ejercicios públicos permanecen en el
+HTML como una lista utilizable. La mejora vanilla selecciona hasta cinco con
+`selectExerciseBatch`, procura variedad y mantiene un `Set` de IDs vistos solo
+durante la sesión de página. Los filtros de tema, dificultad y tipo vuelven a
+calcular la tanda; si hay menos de cinco, muestra los disponibles sin repetir.
+La interfaz escribe el ID estable en el hash y admite `Alt` + flecha
+izquierda/derecha. No muestra el tamaño total del banco, no evalúa respuestas,
+no usa `localStorage` y no recopila datos.
 
 ### Presentación matemática inline
 
@@ -205,7 +219,7 @@ Las fórmulas principales continúan en `formulas.js`. Para expresiones dentro d
 párrafos, comprobaciones, pistas o soluciones se usa un contrato mixto:
 
 ```text
-string académico aprobado
+string académico registrado
    ↓ presentUnit1RichText() busca solo literales registrados
 segmentos { type: "text" } / { type: "math", mathml, label, tex }
    ↓ RichText + InlineMath durante el build
@@ -218,6 +232,28 @@ texto HTML + MathML nativo, sin parser ni JavaScript cliente
 evita interpretaciones ambiguas y mantiene la revisión académica sobre cada
 expresión. `set:html` solo recibe MathML generado por módulos internos
 versionados; no debe usarse con entrada de usuarios.
+
+Magnitud, valor absoluto y norma se construyen con `magnitude()`,
+`absoluteValue()` y `norm()`. Estas utilidades generan pares de operadores
+MathML con atributos `fence`, `stretchy`, `symmetric` y `form`; no se deben
+recrear barras con dos llamadas sueltas a `mo("|")` ni compensarlas mediante
+márgenes CSS específicos de una fórmula.
+
+### Escalas de figuras académicas
+
+`CartesianChart` usa `createCartesianTransform`: los dominios de x e y ocupan
+el área de trazado de forma independiente. Esta flexibilidad es correcta para
+gráficas como x(t), v(t) o a(t), donde una unidad horizontal no tiene que medir
+lo mismo que una vertical.
+
+`AcademicDiagram` usa por defecto `createIsotropicTransform`: toma la menor
+escala disponible, centra el área física y deja letterboxing en el eje
+sobrante. Así una unidad física en x ocupa lo mismo que una en y y una
+circunferencia no se convierte en elipse. `scaleMode: "stretch"` queda
+disponible solo para diagramas no geométricos que justifiquen explícitamente la
+distorsión. `labelOffset`, `labelAnchor` y `labelPosition` permiten separar
+etiquetas sin alterar las coordenadas físicas; el componente limita su ancla al
+área visible.
 
 ### Mapa de aprendizaje
 

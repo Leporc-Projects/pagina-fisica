@@ -159,7 +159,8 @@ comerciales. Cada registro usa un identificador estable y declara:
 - respuesta: tipo, valor esperado, unidad y tolerancia cuando sea numérica;
 - acompañamiento: pistas, solución por pasos, errores frecuentes y
   retroalimentaciones aprobadas;
-- edición: `status`, `version` y si el ejercicio es parametrizable.
+- edición: `status`, `version`, `purpose`, `exposure` y si el ejercicio es parametrizable;
+- figura opcional: `visualizationId`, que debe existir en el registro central.
 
 Los identificadores de tema, subtema y error deben existir en los archivos de
 la unidad. Un ejercicio numérico requiere unidad esperada y tolerancia; estos
@@ -172,13 +173,27 @@ estado editorial, versión, nivel cognitivo o tolerancia pertenecen al contrato
 de autoría y no necesitan exponerse al estudiante. No deben añadirse intentos,
 notas, nombres ni historiales al banco.
 
-La práctica de Unidad 1 consume el arreglo completo mediante
-`ExerciseSequence.astro`. El orden del banco determina `N de M`, el selector y
-los controles; no se mantiene una segunda lista para la interfaz. El hash usa
-el `id` estable para volver a un ejercicio y el HTML conserva todos los
-registros como fallback. Añadir un ejercicio al arreglo basta para incorporarlo
-a la secuencia después de validar su taxonomía. No se debe guardar progreso,
-respuestas o filtros en el navegador en esta etapa.
+El feedback admite `correct`, `incorrect` y un mapa `commonErrors` para mensajes
+asociados a errores identificados. El fallback debe ser neutral porque una
+actividad puede ser conceptual, gráfica o numérica. Esta estructura no implica
+un motor adaptativo ni autoriza generar retroalimentación durante el uso.
+
+La práctica de Unidad 1 consume el banco público de aprendizaje mediante
+`OpenPractice.astro`. JavaScript selecciona una tanda de hasta cinco ejercicios
+con variedad razonable y permite filtrar por tema, dificultad y tipo. El hash
+usa el `id` estable para volver a un ejercicio y el HTML conserva todos los
+registros como fallback. Un `Set` de IDs vistos reduce repeticiones mientras la
+página permanece abierta; se descarta al recargar. No se muestra `N de M` del
+banco, no existe una meta de finalización y no se guardan progreso, respuestas,
+historial ni filtros.
+
+Para un ejercicio cuya interpretación depende de una figura:
+
+1. registrar datos físicos y descripción accesible en `visualizations.js`;
+2. asignar su `id` a `visualizationId` en el ejercicio;
+3. marcar `requiresVisualization: true` cuando la intención no pueda cumplirse sin la figura;
+4. no copiar SVG, dominios ni series dentro de `exercises.js`;
+5. comprobar que la figura no revele mediante etiquetas aquello que se pide deducir.
 
 Las tutorías interactivas deben ser progresivas y deterministas. Las rutas de
 ayuda, tolerancias, respuestas y retroalimentaciones serán definidas por el
@@ -205,7 +220,7 @@ además de comprobar su presentación en móvil y en ambos temas.
 
 Una expresión incrustada en un párrafo, pista, solución o comprobación no debe
 publicarse con notación de teclado como `v_0`, `8^4` o `sqrt(...)`. La Unidad 1
-registra cada literal aprobado en `math-content.js` mediante los constructores
+registra cada literal editorial en `math-content.js` mediante los constructores
 de `src/utils/mathml.js`. El registro aporta:
 
 - el fragmento exacto que aparece en la fuente;
@@ -218,6 +233,11 @@ paréntesis. Si aparece una expresión nueva, se registra de forma explícita y 
 revisa junto con su significado. `RichText.astro` la renderiza durante el
 build; no añade MathJax, KaTeX ni JavaScript cliente.
 
+Las barras de magnitud, valor absoluto o norma se crean con las abstracciones
+de `mathml.js`. No se escriben como operadores verticales independientes ni se
+ajustan con CSS para un caso concreto: los delimitadores semánticos deben poder
+envolver vectores con flecha, subíndices, potencias y contenido compuesto.
+
 ## Registrar un error frecuente
 
 `common-errors.js` conserva confusiones reutilizables con un `id`, tema, título,
@@ -227,6 +247,25 @@ ejercicios enlazan esos identificadores para que una corrección conceptual no
 se duplique en varios archivos.
 
 ## Estados de contenido
+
+El contenido académico usa un flujo editorial independiente:
+
+```text
+draft → review → published
+```
+
+- `draft`: el registro está incompleto y no debe entrar a la práctica pública;
+- `review`: está preparado para revisión, pero no tiene aprobación académica final;
+- `published`: César Barrero aprobó académicamente esa versión.
+
+Todo ejercicio nuevo comienza en `review` salvo que todavía esté incompleto, en
+cuyo caso comienza en `draft`. No se debe usar `published` como sinónimo de
+“compila” o “es visible técnicamente”. `purpose: "learning"` identifica el
+banco de aprendizaje; `purpose: "measurement"` queda reservado para un banco
+futuro. `exposure: "public"` permite exposición y `restricted` la impide. Esta
+clasificación no debe mostrarse necesariamente al estudiante.
+
+Los estados generales de recursos continúan siendo:
 
 - `en-preparacion`: existe la estructura, pero el material aún no es utilizable.
 - `proximamente`: existe una decisión de publicación, pero todavía no se ofrece el recurso.
@@ -273,6 +312,18 @@ El contenido académico consume
 `AcademicDiagram.astro` para construcciones vectoriales o geométricas. La
 fuente académica debe entregar magnitudes físicas; los componentes y
 `src/utils/chart.js` se encargan de transformarlas y recortarlas para SVG.
+
+Usar `CartesianChart` cuando x e y son ejes científicos independientes: por
+ejemplo tiempo frente a posición. Usar `AcademicDiagram` cuando la geometría es
+parte del significado: vectores, ángulos, circunferencias o trayectorias en un
+plano físico. El segundo usa escala isotrópica por defecto, centra el área útil
+y conserva una unidad física con el mismo tamaño en ambos ejes. No se debe
+activar `scaleMode: "stretch"` en una figura cuya forma sea evidencia física.
+
+Las etiquetas pueden declarar `labelOffset`, `labelAnchor` y `labelPosition`.
+Estos valores desplazan únicamente la presentación del texto en unidades del
+`viewBox`; nunca modifican el vector, punto o trayectoria física. Deben usarse
+con moderación y revisarse en claro, oscuro y tamaños estrechos.
 
 En la Unidad 1, los contratos de las figuras viven en
 `src/data/physics/unit-1/visualizations.js`. Una sección solo guarda el `id` de
