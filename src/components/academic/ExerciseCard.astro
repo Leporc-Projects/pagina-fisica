@@ -2,6 +2,7 @@
 // Muestra el enunciado y una solución progresiva; los metadatos editoriales
 // completos permanecen en el banco y no saturan la experiencia de estudio.
 import RichText from "./RichText.astro";
+import AcademicVisualization from "../visualization/AcademicVisualization.astro";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -19,15 +20,13 @@ interface Exercise {
 
 interface Props {
   exercise: Exercise;
-  number: number;
-  total?: number;
+  visualization?: any;
   present?: (value: string) => RichContent;
 }
 
 const {
   exercise,
-  number,
-  total,
+  visualization,
   present = (value) => value,
 } = Astro.props;
 const typeLabels = {
@@ -45,7 +44,7 @@ const typeLabels = {
   <header class="exercise-card__header">
     <div>
       <p class="academic-label">
-        Ejercicio {String(number).padStart(2, "0")}{total ? ` de ${total}` : ""}
+        Ejercicio para explorar
       </p>
       <h3 id={`${exercise.id}-title`} tabindex="-1">{exercise.title}</h3>
     </div>
@@ -67,6 +66,15 @@ const typeLabels = {
   </header>
 
   <p class="exercise-card__prompt"><RichText content={present(exercise.prompt)} /></p>
+
+  {visualization && (
+    <div class="exercise-card__visualization">
+      <AcademicVisualization
+        visualization={visualization}
+        present={present}
+      />
+    </div>
+  )}
 
   {exercise.hints.length > 0 && (
     <details class="exercise-card__hint">

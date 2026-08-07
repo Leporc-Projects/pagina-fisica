@@ -27,6 +27,27 @@ export const integral = (lower, upper) =>
 export const vector = (value) => mover(mi(value), mo("→"));
 export const unitVector = (value) => mover(mi(value), mo("^"));
 
+// Los delimitadores declaran su función a MathML para que el navegador calcule
+// una pareja simétrica alrededor de contenido simple o compuesto. Los espacios
+// pertenecen al operador, no a una corrección CSS ligada a una fórmula concreta.
+const fenceOperator = (value, form) => {
+  const prefix = form === "prefix";
+  return `<mo fence="true" stretchy="true" symmetric="true" form="${form}" lspace="${prefix ? "0" : "0.14em"}" rspace="${prefix ? "0.14em" : "0"}">${escapeMathText(value)}</mo>`;
+};
+
+export const fenced = (
+  value,
+  { open = "(", close = ")" } = {}
+) => row(
+  fenceOperator(open, "prefix"),
+  value,
+  fenceOperator(close, "postfix")
+);
+
+export const magnitude = (value) => fenced(value, { open: "|", close: "|" });
+export const absoluteValue = (value) => fenced(value, { open: "|", close: "|" });
+export const norm = (value) => fenced(value, { open: "‖", close: "‖" });
+
 const mathDocument = ({ label, tex, body, display }) => `
   <math xmlns="http://www.w3.org/1998/Math/MathML" display="${display}" aria-label="${escapeMathText(label)}">
     <semantics>
@@ -52,4 +73,3 @@ export const mathSegment = ({ label, tex, body }) => ({
   tex,
   mathml: inlineMath(label, tex, body),
 });
-

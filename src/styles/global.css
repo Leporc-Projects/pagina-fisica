@@ -2796,8 +2796,15 @@ main {
 .unit-landing,
 .unit-topic-page,
 .unit-practice-page {
+  min-width: 0;
   display: grid;
   gap: clamp(2.5rem, 7vw, 5rem);
+}
+
+.unit-landing>*,
+.unit-topic-page>*,
+.unit-practice-page>* {
+  min-width: 0;
 }
 
 .unit-landing__hero,
@@ -3373,12 +3380,14 @@ main {
    corta se corte internamente; el contenedor de bloque gestiona las largas. */
 .inline-math {
   display: inline-flex;
-  max-width: 100%;
+  max-width: calc(100% - 0.16em);
+  overflow-x: auto;
   align-items: baseline;
   margin-inline: 0.08em;
   color: currentColor;
   vertical-align: -0.08em;
   white-space: nowrap;
+  scrollbar-width: thin;
 }
 
 .inline-math math {
@@ -3614,6 +3623,17 @@ main {
   vector-effect: non-scaling-stroke;
 }
 
+.academic-diagram__grid line {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.academic-diagram__grid .academic-diagram__axis {
+  stroke: var(--chart-axis);
+  stroke-width: 1.5;
+}
+
 .academic-diagram [data-diagram-style="primary"] {
   --diagram-color: var(--data-series-1);
 }
@@ -3684,9 +3704,9 @@ main {
   baseline-shift: sub;
 }
 
-/* El banco completo permanece en HTML; data-enhanced solo cambia qué ejercicio
-   está visible y conserva impresión/fallback sin depender del script. */
-.exercise-sequence {
+/* Práctica abierta: el banco completo permanece en HTML; data-enhanced limita
+   la vista a una tanda local sin convertirla en progreso global. */
+.open-practice {
   scroll-margin-top: calc(var(--header-h) + 1rem);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -3695,7 +3715,7 @@ main {
   box-shadow: var(--shadow-sm);
 }
 
-.exercise-sequence__header {
+.open-practice__header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 2rem;
@@ -3704,66 +3724,48 @@ main {
   padding-bottom: 1.25rem;
 }
 
-.exercise-sequence__header h2 {
+.open-practice__header h2 {
   margin-top: 0.35rem;
   font-size: clamp(1.7rem, 4vw, 2.6rem);
 }
 
-.exercise-sequence__position {
-  min-width: min(16rem, 35vw);
-  display: grid;
-  gap: 0.5rem;
+.open-practice__header>div>p:last-child {
+  max-width: 44rem;
+  margin-top: 0.6rem;
+  color: var(--text-muted);
 }
 
-.exercise-sequence__position p {
+.open-practice__status {
+  max-width: 14rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   text-align: right;
 }
 
-.exercise-sequence progress {
-  width: 100%;
-  height: 0.4rem;
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-round);
-  background: var(--surface-subtle);
-  color: var(--accent);
-  accent-color: var(--accent);
-}
-
-.exercise-sequence progress::-webkit-progress-bar {
-  background: var(--surface-subtle);
-}
-
-.exercise-sequence progress::-webkit-progress-value {
-  background: var(--accent);
-}
-
-.exercise-sequence progress::-moz-progress-bar {
-  background: var(--accent);
-}
-
-.exercise-sequence__picker {
-  display: none;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 1rem;
-  align-items: center;
-  margin-top: 1.25rem;
-}
-
-.exercise-sequence[data-enhanced="true"] .exercise-sequence__picker {
+.open-practice__filters {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.25rem;
 }
 
-.exercise-sequence__picker label {
+.open-practice__filters label {
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.open-practice__filters span {
   color: var(--text-muted);
   font-size: var(--text-sm);
   font-weight: 700;
 }
 
-.exercise-sequence__picker select {
+.open-practice__filters select {
+  width: 100%;
   min-width: 0;
   min-height: 2.75rem;
   border: 1px solid var(--border);
@@ -3774,7 +3776,45 @@ main {
   font: inherit;
 }
 
-.exercise-sequence__slides {
+.open-practice__batch-nav {
+  display: none;
+  min-height: 2.7rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.open-practice[data-enhanced="true"] .open-practice__batch-nav {
+  display: flex;
+}
+
+.open-practice__batch-nav button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+
+.open-practice__batch-nav button:hover,
+.open-practice__batch-nav button:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+.open-practice__batch-nav button[aria-current="step"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.open-practice__slides {
   min-height: 30rem;
 }
 
@@ -3793,6 +3833,7 @@ main {
 }
 
 .exercise-card {
+  scroll-margin-top: calc(var(--header-h) + 5rem);
   padding-block: clamp(1.25rem, 4vw, 2.2rem);
 }
 
@@ -3833,6 +3874,11 @@ main {
   line-height: 1.6;
 }
 
+.exercise-card__visualization {
+  max-width: 58rem;
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+
 .exercise-card__hint,
 .exercise-card__solution {
   max-width: 52rem;
@@ -3841,7 +3887,7 @@ main {
   padding-left: 1rem;
 }
 
-.exercise-sequence__controls {
+.open-practice__controls {
   display: none;
   grid-template-columns: 1fr auto 1fr;
   gap: 1rem;
@@ -3850,11 +3896,11 @@ main {
   padding-top: 1.25rem;
 }
 
-.exercise-sequence[data-enhanced="true"] .exercise-sequence__controls {
+.open-practice[data-enhanced="true"] .open-practice__controls {
   display: grid;
 }
 
-.exercise-sequence__controls button {
+.open-practice__controls button {
   min-height: 2.9rem;
   display: inline-flex;
   align-items: center;
@@ -3874,36 +3920,41 @@ main {
     color var(--transition-fast);
 }
 
-.exercise-sequence__controls button:last-child {
+.open-practice__controls>button:last-child {
   justify-self: end;
 }
 
-.exercise-sequence__controls button:hover:not(:disabled),
-.exercise-sequence__controls button:focus-visible {
+.open-practice__controls button:hover:not(:disabled),
+.open-practice__controls button:focus-visible {
   border-color: var(--accent);
   background: var(--surface-hover);
   color: var(--accent-hover);
 }
 
-.exercise-sequence__controls button:disabled {
+.open-practice__controls button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
 
-.exercise-sequence__controls p {
+.open-practice__continue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: center;
+}
+
+.open-practice__controls .button-link {
+  min-height: 2.2rem;
+  border: 0;
+  border-radius: 0;
   color: var(--text-muted);
+  padding-inline: 0.3rem;
   font-size: var(--text-xs);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
-.exercise-sequence__controls kbd {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-subtle);
-  padding: 0.1rem 0.3rem;
-  font-family: var(--font-mono);
-}
-
-.exercise-sequence__fallback {
+.open-practice__fallback {
   margin-top: 1rem;
   color: var(--text-muted);
 }
@@ -4124,28 +4175,27 @@ main {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .exercise-sequence__header,
-  .exercise-sequence__picker,
-  .exercise-sequence__controls {
+  .open-practice__header,
+  .open-practice__filters,
+  .open-practice__controls {
     grid-template-columns: 1fr;
   }
 
-  .exercise-sequence__position {
-    min-width: 0;
-  }
-
-  .exercise-sequence__position p {
+  .open-practice__status {
+    max-width: none;
     text-align: left;
   }
 
-  .exercise-sequence__controls button,
-  .exercise-sequence__controls button:last-child {
+  .open-practice__controls>button,
+  .open-practice__controls>button:last-child {
     width: 100%;
     justify-self: stretch;
   }
 
-  .exercise-sequence__controls p {
-    display: none;
+  .open-practice__continue {
+    order: 3;
+    border-top: 1px solid var(--border);
+    padding-top: 0.8rem;
   }
 
   .publication-row__action {
@@ -4163,9 +4213,10 @@ main {
   }
 
   .learning-map__connections,
-  .exercise-sequence__controls,
-  .exercise-sequence__picker,
-  .exercise-sequence__position {
+  .open-practice__controls,
+  .open-practice__filters,
+  .open-practice__batch-nav,
+  .open-practice__status {
     display: none !important;
   }
 
@@ -4194,7 +4245,7 @@ main {
     box-shadow: none;
   }
 
-  .exercise-sequence__slides {
+  .open-practice__slides {
     min-height: 0;
   }
 

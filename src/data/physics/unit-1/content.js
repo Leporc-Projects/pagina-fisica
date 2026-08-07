@@ -1,4 +1,4 @@
-// Contenido conceptual aprobado para la Unidad 1. Las páginas lo presentan con
+// Contenido conceptual en revisión para la Unidad 1. Las páginas lo presentan con
 // profundidad progresiva sin duplicar texto ni convertir cada capa en una ruta.
 
 export const UNIT_1_CONTENT = {
@@ -139,7 +139,7 @@ export const UNIT_1_CONTENT = {
         visualizations: ["vector-sum"],
       },
       {
-        id: "productos-vectoriales",
+        id: "producto-escalar-y-vectorial",
         title: "Producto escalar y producto vectorial",
         essential: [
           "El producto escalar A·B es un número que mide cuánto apunta un vector en la dirección del otro. Es cero cuando los vectores no nulos son perpendiculares.",

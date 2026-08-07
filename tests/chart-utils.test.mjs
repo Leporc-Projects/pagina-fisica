@@ -8,6 +8,7 @@ import {
   createAreaPolygons,
   createCartesianTransform,
   createClippedSegments,
+  createIsotropicTransform,
   createLinearScale,
   createLinearTicks,
   sampleFunction,
@@ -19,6 +20,26 @@ test("valida dominios físicos crecientes", () => {
   assert.throws(() => assertDomain([2, 2]), RangeError);
   assert.throws(() => assertDomain([3, -2]), RangeError);
   assert.throws(() => assertDomain([0, Number.NaN]), RangeError);
+});
+
+test("mantiene una escala física isotrópica y centra el letterboxing", () => {
+  const transform = createIsotropicTransform({
+    xDomain: [-4, 4],
+    yDomain: [-2, 2],
+    plot: { left: 10, top: 5, width: 80, height: 60 },
+  });
+  const origin = transform.point({ x: 0, y: 0 });
+  const unitX = transform.point({ x: 1, y: 0 });
+  const unitY = transform.point({ x: 0, y: 1 });
+
+  assert.equal(Math.abs(unitX.x - origin.x), Math.abs(unitY.y - origin.y));
+  assert.deepEqual(transform.plot, {
+    left: 10,
+    top: 15,
+    width: 80,
+    height: 40,
+  });
+  assert.equal(transform.scale, 10);
 });
 
 test("transforma extremos físicos al plot SVG e invierte el eje y", () => {

@@ -1,0 +1,47 @@
+---
+// Punto único de render para el registro de visualizaciones. Páginas temáticas
+// y ejercicios reciben la misma especificación sin duplicar SVG ni decisiones.
+import AcademicDiagram from "./AcademicDiagram.astro";
+import CartesianChart from "./CartesianChart.astro";
+import RichText from "../academic/RichText.astro";
+
+type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
+
+interface Visualization {
+  id: string;
+  kind: "cartesian" | "diagram";
+  relationLabel?: string;
+  explanation?: string;
+  props: Record<string, unknown>;
+}
+
+interface Props {
+  visualization: Visualization;
+  present?: (value: string) => RichContent;
+  showExplanation?: boolean;
+}
+
+const {
+  visualization,
+  present = (value) => value,
+  showExplanation = true,
+} = Astro.props;
+---
+
+<div class="academic-figure-group" data-visualization-id={visualization.id}>
+  {visualization.relationLabel && (
+    <p class="academic-figure-group__relation">
+      <RichText content={present(visualization.relationLabel)} />
+    </p>
+  )}
+
+  {visualization.kind === "cartesian"
+    ? <CartesianChart {...visualization.props} />
+    : <AcademicDiagram {...visualization.props} />}
+
+  {showExplanation && visualization.explanation && (
+    <p class="academic-figure-group__caption">
+      <RichText content={present(visualization.explanation)} />
+    </p>
+  )}
+</div>

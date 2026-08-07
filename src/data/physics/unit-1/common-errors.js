@@ -54,7 +54,7 @@ export const UNIT_1_COMMON_ERRORS = [
   {
     id: "vector-cross-commutative",
     topic: "vectores",
-    subtopic: "productos-vectoriales",
+    subtopic: "producto-escalar-y-vectorial",
     description: "Tratar el producto vectorial como conmutativo.",
     feedback: "Invertir el orden invierte el sentido: B×A = −(A×B).",
   },

@@ -113,6 +113,46 @@ export const createCartesianTransform = ({
 };
 
 /**
+ * Conserva la misma escala en ambos ejes para geometría física. El área útil se
+ * centra dentro del plot solicitado y deja letterboxing en el eje sobrante;
+ * CartesianChart continúa usando escalas independientes mediante la función
+ * anterior porque una gráfica x(t) no exige igualdad visual entre sus unidades.
+ */
+export const createIsotropicTransform = ({
+  xDomain,
+  yDomain,
+  plot,
+}) => {
+  const checkedXDomain = assertDomain(xDomain, "xDomain");
+  const checkedYDomain = assertDomain(yDomain, "yDomain");
+  const checkedPlot = assertPlot(plot);
+  const xSpan = checkedXDomain[1] - checkedXDomain[0];
+  const ySpan = checkedYDomain[1] - checkedYDomain[0];
+  const scale = Math.min(
+    checkedPlot.width / xSpan,
+    checkedPlot.height / ySpan
+  );
+  const width = xSpan * scale;
+  const height = ySpan * scale;
+  const isotropicPlot = {
+    left: checkedPlot.left + (checkedPlot.width - width) / 2,
+    top: checkedPlot.top + (checkedPlot.height - height) / 2,
+    width,
+    height,
+  };
+
+  return {
+    ...createCartesianTransform({
+      xDomain: checkedXDomain,
+      yDomain: checkedYDomain,
+      plot: isotropicPlot,
+    }),
+    scale,
+    requestedPlot: checkedPlot,
+  };
+};
+
+/**
  * Produce ticks lineales previsibles. Si una disciplina necesita ticks no
  * uniformes, el componente acepta después una lista explícita de valores.
  */

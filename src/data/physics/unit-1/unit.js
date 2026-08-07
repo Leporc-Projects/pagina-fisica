@@ -9,7 +9,7 @@ export const UNIT_1 = {
   title: "Vectores y cinemática",
   shortTitle: "Unidad 1",
   chapters: "Capítulos 1, 2 y 3",
-  status: "published",
+  status: "review",
   route: unitRoute,
   practiceRoute: "/fisica-basica-1/ejercicios/unidad-1",
   description:

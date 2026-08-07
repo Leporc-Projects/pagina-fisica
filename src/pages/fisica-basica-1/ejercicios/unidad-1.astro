@@ -1,14 +1,18 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import ExerciseSequence from "../../../components/academic/ExerciseSequence.astro";
+import OpenPractice from "../../../components/academic/OpenPractice.astro";
 import UnitOneNav from "../../../components/academic/UnitOneNav.astro";
 import { UNIT_1_EXERCISES } from "../../../data/physics/unit-1/exercises.js";
 import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
+import { UNIT_1_VISUALIZATIONS } from "../../../data/physics/unit-1/visualizations.js";
 import { withBase } from "../../../utils/paths.js";
 
-const publishedExercises = UNIT_1_EXERCISES.filter(
-  (exercise) => exercise.status === "published"
+const publicLearningExercises = UNIT_1_EXERCISES.filter(
+  (exercise) =>
+    exercise.status !== "draft" &&
+    exercise.purpose === "learning" &&
+    exercise.exposure === "public"
 );
 ---
 
@@ -28,13 +32,13 @@ const publishedExercises = UNIT_1_EXERCISES.filter(
         <p class="eyebrow eyebrow--dark">Práctica · {UNIT_1.shortTitle}</p>
         <h1>Ejercicios de vectores y cinemática</h1>
         <p>
-          Banco inicial pequeño y original para probar la arquitectura editorial.
-          No es todavía un motor evaluativo ni conserva respuestas.
+          Banco original para practicar de forma abierta. No es un motor
+          evaluativo ni conserva respuestas o actividad personal.
         </p>
       </div>
 
       <aside class="practice-policy">
-        <strong>{publishedExercises.length} ejercicios publicados</strong>
+        <strong>Práctica sin seguimiento personal</strong>
         <p>
           Las pistas y soluciones se revelan con controles nativos. No se usa
           inteligencia artificial, backend, seguimiento ni almacenamiento local.
@@ -44,9 +48,10 @@ const publishedExercises = UNIT_1_EXERCISES.filter(
 
     <UnitOneNav />
 
-    <ExerciseSequence
-      exercises={publishedExercises}
+    <OpenPractice
+      exercises={publicLearningExercises}
       topics={UNIT_1.topics}
+      visualizations={UNIT_1_VISUALIZATIONS}
       present={presentUnit1RichText}
     />
 

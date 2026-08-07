@@ -27,7 +27,9 @@ import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
 import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
 import {
   EXERCISE_COGNITIVE_LEVELS,
+  EXERCISE_EXPOSURES,
   EXERCISE_MODALITIES,
+  EXERCISE_PURPOSES,
   EXERCISE_REPRESENTATIONS,
   EXERCISE_STATUSES,
   EXERCISE_TYPES,
@@ -609,7 +611,10 @@ const referencedFormulaIds = Object.values(UNIT_1_CONTENT)
   .flatMap((section) => section.formulas ?? []);
 const referencedVisualizationIds = Object.values(UNIT_1_CONTENT)
   .flatMap((topic) => topic.sections)
-  .flatMap((section) => section.visualizations ?? []);
+  .flatMap((section) => section.visualizations ?? [])
+  .concat(
+    UNIT_1_EXERCISES.map((exercise) => exercise.visualizationId).filter(Boolean)
+  );
 
 check(
   referencedFormulaIds.every((id) => UNIT_1_FORMULAS[id]) &&
@@ -620,6 +625,23 @@ check(
       item.represents
     ),
   "Las fórmulas referenciadas existen y usan MathML con contexto."
+);
+
+const mathUtilitySource = fs.readFileSync(
+  path.join(projectRoot, "src/utils/mathml.js"),
+  "utf8"
+);
+const crossProductMathml = UNIT_1_FORMULAS["cross-product"].mathml;
+
+check(
+  ["magnitude", "absoluteValue", "norm"].every((name) =>
+    mathUtilitySource.includes(`export const ${name}`)
+  ) &&
+    crossProductMathml.includes('fence="true"') &&
+    crossProductMathml.includes('stretchy="true"') &&
+    crossProductMathml.includes('form="prefix"') &&
+    crossProductMathml.includes('form="postfix"'),
+  "MathML usa delimitadores semánticos reutilizables para magnitud, valor absoluto y norma."
 );
 
 const visibleAcademicStrings = [
@@ -707,9 +729,25 @@ check(
   "Las visualizaciones tienen ID, explicación y descripción accesible."
 );
 
+const hasOnlyFiniteVisualNumbers = (value, visited = new WeakSet()) => {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (!value || typeof value !== "object") return true;
+  if (visited.has(value)) return true;
+  visited.add(value);
+  return Object.values(value).every((item) => hasOnlyFiniteVisualNumbers(item, visited));
+};
+
 check(
-  UNIT_1_EXERCISES.length >= 18 && UNIT_1_EXERCISES.length <= 24,
-  "El banco inicial contiene entre 18 y 24 ejercicios."
+  Object.values(UNIT_1_VISUALIZATIONS).every((visualization) =>
+    hasOnlyFiniteVisualNumbers(visualization)
+  ),
+  "Las especificaciones SVG no contienen NaN ni Infinity."
+);
+
+check(
+  UNIT_1_EXERCISES.length === 34 &&
+    UNIT_1_EXERCISES.filter((exercise) => exercise.id.startsWith("u1-visual-")).length === 12,
+  "El banco contiene los 22 ejercicios auditados y 12 ejercicios visuales nuevos."
 );
 
 check(
@@ -727,9 +765,20 @@ const invalidExerciseTaxonomy = UNIT_1_EXERCISES.filter((exercise) =>
   !EXERCISE_REPRESENTATIONS.includes(exercise.representation) ||
   !EXERCISE_COGNITIVE_LEVELS.includes(exercise.cognitiveLevel) ||
   !EXERCISE_STATUSES.includes(exercise.status) ||
+  !EXERCISE_PURPOSES.includes(exercise.purpose) ||
+  !EXERCISE_EXPOSURES.includes(exercise.exposure) ||
   !Number.isInteger(exercise.difficulty) ||
   exercise.difficulty < 1 ||
   exercise.difficulty > 5
+);
+
+check(
+  UNIT_1.status === "review" &&
+    UNIT_1_EXERCISES.every((exercise) => exercise.status === "review") &&
+    UNIT_1_EXERCISES.every((exercise) =>
+      exercise.purpose === "learning" && exercise.exposure === "public"
+    ),
+  "La Unidad 1 sigue en revisión y el banco actual es público de aprendizaje."
 );
 
 check(
@@ -761,6 +810,32 @@ check(
     exercise.version >= 1
   ),
   "Cada ejercicio tiene enunciado, objetivos, solución y versión."
+);
+
+check(
+  UNIT_1_EXERCISES.every((exercise) =>
+    exercise.feedback?.correct &&
+    exercise.feedback?.incorrect &&
+    exercise.feedback?.commonErrors &&
+    typeof exercise.feedback.commonErrors === "object" &&
+    Object.keys(exercise.feedback.commonErrors).every((id) =>
+      exercise.commonErrors.includes(id)
+    )
+  ),
+  "El feedback admite respuesta correcta, incorrecta y errores específicos."
+);
+
+const invalidExerciseVisualizations = UNIT_1_EXERCISES.filter((exercise) => {
+  const figureRequired = exercise.requiresVisualization === true ||
+    ["graphical", "visual"].includes(exercise.representation);
+  return figureRequired && !UNIT_1_VISUALIZATIONS[exercise.visualizationId];
+});
+
+check(
+  invalidExerciseVisualizations.length === 0,
+  invalidExerciseVisualizations.length === 0
+    ? "Los ejercicios gráficos y visuales resuelven una figura del registro central."
+    : `Ejercicios sin visualización válida: ${invalidExerciseVisualizations.map((item) => item.id).join(", ")}`
 );
 
 const commonErrorIds = UNIT_1_COMMON_ERRORS.map((error) => error.id);
@@ -825,25 +900,30 @@ check(
   "La lectura mantiene lo esencial visible y revela disclosures al imprimir."
 );
 
-const exerciseSequenceSource = fs.readFileSync(
-  path.join(projectRoot, "src/components/academic/ExerciseSequence.astro"),
+const openPracticeSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/OpenPractice.astro"),
   "utf8"
 );
-const exerciseSequenceScript = fs.readFileSync(
-  path.join(projectRoot, "src/scripts/exercise-sequence.js"),
+const openPracticeScript = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/open-practice.js"),
   "utf8"
 );
 
 check(
-  exerciseSequenceSource.includes("exercises.map") &&
-    exerciseSequenceSource.includes("<progress") &&
-    exerciseSequenceSource.includes("<noscript") &&
-    exerciseSequenceScript.includes("window.location.hash") &&
-    exerciseSequenceScript.includes("history.pushState") &&
-    exerciseSequenceScript.includes('event.altKey') &&
-    exerciseSequenceScript.includes("progress.textContent") &&
-    !exerciseSequenceScript.includes("localStorage"),
-  "La práctica secuencial conserva fallback, hash, teclado y progreso sin persistencia."
+  openPracticeSource.includes("exercises.map") &&
+    openPracticeSource.includes("data-practice-new-batch") &&
+    openPracticeSource.includes("data-practice-filter") &&
+    openPracticeSource.includes("<noscript") &&
+    !openPracticeSource.includes("<progress") &&
+    openPracticeScript.includes("selectExerciseBatch") &&
+    openPracticeScript.includes("window.location.hash") &&
+    openPracticeScript.includes("history.pushState") &&
+    openPracticeScript.includes('event.altKey') &&
+    openPracticeScript.includes("new Set") &&
+    !openPracticeScript.includes("localStorage") &&
+    !openPracticeSource.includes(" de 34") &&
+    !openPracticeSource.includes("porcentaje"),
+  "Práctica abierta usa tandas, filtros, hash y sesión efímera sin progreso global."
 );
 
 // La biblioteca de gráficas conserva separadas matemática, SVG y presentación.
@@ -862,9 +942,26 @@ const chartComponentSource = fs.existsSync(chartComponentFile)
 
 check(
   chartUtilitySource.includes("createCartesianTransform") &&
+    chartUtilitySource.includes("createIsotropicTransform") &&
     chartUtilitySource.includes("clipSegmentToDomain") &&
     chartUtilitySource.includes("segmentsToSvgPath"),
   "La capa matemática expone transformación, recorte y geometría SVG."
+);
+
+const diagramComponentSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/visualization/AcademicDiagram.astro"),
+  "utf8"
+);
+
+check(
+  diagramComponentSource.includes('scaleMode = "isotropic"') &&
+    diagramComponentSource.includes("createIsotropicTransform") &&
+    diagramComponentSource.includes("labelOffset") &&
+    diagramComponentSource.includes("labelAnchor") &&
+    diagramComponentSource.includes("keepLabelVisible") &&
+    chartComponentSource.includes("createCartesianTransform") &&
+    !chartComponentSource.includes("createIsotropicTransform"),
+  "Diagramas físicos usan escala isotrópica y las gráficas conservan escalas independientes."
 );
 
 check(

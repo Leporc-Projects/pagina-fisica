@@ -1,13 +1,11 @@
 ---
 // Composición común de las siete páginas: datos → capas → fórmulas/figuras → navegación.
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import CartesianChart from "../visualization/CartesianChart.astro";
-import AcademicDiagram from "../visualization/AcademicDiagram.astro";
+import AcademicVisualization from "../visualization/AcademicVisualization.astro";
 import AcademicSection from "./AcademicSection.astro";
 import CommonErrors from "./CommonErrors.astro";
 import ConceptCheck from "./ConceptCheck.astro";
 import FormulaBlock from "./FormulaBlock.astro";
-import RichText from "./RichText.astro";
 import UnitOneNav from "./UnitOneNav.astro";
 import { UNIT_1_CONTENT } from "../../data/physics/unit-1/content.js";
 import { getUnit1ErrorsByTopics } from "../../data/physics/unit-1/common-errors.js";
@@ -113,23 +111,10 @@ let checkNumber = 0;
               const visualization = UNIT_1_VISUALIZATIONS[visualizationId];
               if (!visualization) return null;
 
-              return (
-                <div class="academic-figure-group">
-                  {visualization.relationLabel && (
-                    <p class="academic-figure-group__relation">
-                      <RichText content={presentUnit1RichText(visualization.relationLabel)} />
-                    </p>
-                  )}
-
-                  {visualization.kind === "cartesian"
-                    ? <CartesianChart {...visualization.props} />
-                    : <AcademicDiagram {...visualization.props} />}
-
-                  <p class="academic-figure-group__caption">
-                    <RichText content={presentUnit1RichText(visualization.explanation)} />
-                  </p>
-                </div>
-              );
+              return <AcademicVisualization
+                visualization={visualization}
+                present={presentUnit1RichText}
+              />;
             })}
 
             {(section.checks ?? []).map((check) => {

@@ -2,13 +2,16 @@
 // fuentes académicas y sustituye únicamente fragmentos declarados de forma
 // explícita por MathML estructurado durante el build.
 import {
+  absoluteValue,
   frac,
   integral,
+  magnitude,
   mathSegment,
   mi,
   mn,
   mo,
   mover,
+  mspace,
   mtext,
   row,
   sqrt,
@@ -45,6 +48,57 @@ const unitFraction = (numerator, denominator, exponent = null) =>
 // Los tokens largos se procesan primero. No existe una gramática implícita:
 // cada expresión visible que requiere tipografía matemática está declarada.
 export const UNIT_1_INLINE_MATH_TOKENS = [
+  token(
+    "a(t) = (2,0 m/s³)t",
+    "a de t igual a dos coma cero metros por segundo cúbico por t",
+    "a(t)=(2.0\\,\\mathrm{m/s^3})t",
+    row(
+      functionOf("a", "t"), mo("="), mo("("), mn("2,0"), mspace("0.25em"),
+      unitFraction("m", "s", "3"), mo(")"), mi("t")
+    )
+  ),
+  token(
+    "v(0) = 3,0 m/s",
+    "v de cero igual a tres coma cero metros por segundo",
+    "v(0)=3.0\\,\\mathrm{m/s}",
+    row(
+      functionOf("v", "0"), mo("="), mn("3,0"), mspace("0.25em"),
+      unitFraction("m", "s")
+    )
+  ),
+  token(
+    "v(t) = 3,0 m/s + (1,0 m/s³)t²",
+    "v de t igual a tres coma cero metros por segundo más uno coma cero metros por segundo cúbico por t al cuadrado",
+    "v(t)=3.0\\,\\mathrm{m/s}+(1.0\\,\\mathrm{m/s^3})t^2",
+    row(
+      functionOf("v", "t"), mo("="), mn("3,0"), mspace("0.25em"), unitFraction("m", "s"),
+      mo("+"), mo("("), mn("1,0"), mspace("0.25em"), unitFraction("m", "s", "3"), mo(")"),
+      sup(mi("t"), mn("2"))
+    )
+  ),
+  token(
+    "r(t) = [(2,0 m/s)t]i + [(1,0 m/s²)t² − 1,0 m]j",
+    "vector r de t igual a dos coma cero metros por segundo por t en i más uno coma cero metros por segundo cuadrado por t cuadrado menos uno coma cero metros en j",
+    "\\vec r(t)=[(2.0\\,\\mathrm{m/s})t]\\hat i+[(1.0\\,\\mathrm{m/s^2})t^2-1.0\\,\\mathrm m]\\hat j",
+    row(
+      vector("r"), mo("("), mi("t"), mo(")"), mo("="), mo("["), mo("("), mn("2,0"), mspace("0.25em"),
+      unitFraction("m", "s"), mo(")"), mi("t"), mo("]"), unitVector("i"), mo("+"),
+      mo("["), mo("("), mn("1,0"), mspace("0.25em"), unitFraction("m", "s", "2"), mo(")"),
+      sup(mi("t"), mn("2")), mo("−"), mn("1,0"), mtext(" m"), mo("]"), unitVector("j")
+    )
+  ),
+  token(
+    "r(t) = [(2,0 m/s)t]i + [(4,0 m/s)t − (1,0 m/s²)t²]j",
+    "vector r de t igual a dos coma cero metros por segundo por t en i más cuatro coma cero metros por segundo por t menos uno coma cero metros por segundo cuadrado por t cuadrado en j",
+    "\\vec r(t)=[(2.0\\,\\mathrm{m/s})t]\\hat i+[(4.0\\,\\mathrm{m/s})t-(1.0\\,\\mathrm{m/s^2})t^2]\\hat j",
+    row(
+      vector("r"), mo("("), mi("t"), mo(")"), mo("="), mo("["), mo("("), mn("2,0"), mspace("0.25em"),
+      unitFraction("m", "s"), mo(")"), mi("t"), mo("]"), unitVector("i"), mo("+"),
+      mo("["), mo("("), mn("4,0"), mspace("0.25em"), unitFraction("m", "s"), mo(")"), mi("t"), mo("−"),
+      mo("("), mn("1,0"), mspace("0.25em"), unitFraction("m", "s", "2"), mo(")"),
+      sup(mi("t"), mn("2")), mo("]"), unitVector("j")
+    )
+  ),
   token(
     "x = vt + at",
     "x igual a v por t más a por t",
@@ -299,19 +353,14 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     )
   ),
   token(
-    "v(t) = v(0)+∫₀ᵗ2τ dτ",
-    "velocidad de t igual a velocidad de cero más integral desde cero hasta t de dos tau diferencial de tau",
-    "v(t)=v(0)+\\int_0^t2\\tau\\,d\\tau",
+    "v(t) = v(0)+∫₀ᵗ(2,0 m/s³)τ dτ",
+    "velocidad de t igual a velocidad de cero más integral desde cero hasta t de dos coma cero metros por segundo cúbico por tau diferencial de tau",
+    "v(t)=v(0)+\\int_0^t(2.0\\,\\mathrm{m/s^3})\\tau\\,d\\tau",
     row(
       functionOf("v", "t"), mo("="), functionOf("v", "0"), mo("+"),
-      integral(mn("0"), mi("t")), mn("2"), mi("τ"), mi("dτ")
+      integral(mn("0"), mi("t")), mo("("), mn("2,0"), mspace("0.25em"),
+      unitFraction("m", "s", "3"), mo(")"), mi("τ"), mi("dτ")
     )
-  ),
-  token(
-    "∫₀ᵗ2τ dτ = t²",
-    "integral desde cero hasta t de dos tau diferencial de tau igual a t al cuadrado",
-    "\\int_0^t2\\tau\\,d\\tau=t^2",
-    row(integral(mn("0"), mi("t")), mn("2"), mi("τ"), mi("dτ"), mo("="), sup(mi("t"), mn("2")))
   ),
   token(
     "x = x₀+v₀t+½at²",
@@ -369,15 +418,19 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "magnitud de A más B al cuadrado menos magnitud de A menos B al cuadrado",
     "|A+B|^2-|A-B|^2",
     row(
-      sup(row(mo("|"), vector("A"), mo("+"), vector("B"), mo("|")), mn("2")), mo("−"),
-      sup(row(mo("|"), vector("A"), mo("−"), vector("B"), mo("|")), mn("2"))
+      sup(magnitude(row(vector("A"), mo("+"), vector("B"))), mn("2")), mo("−"),
+      sup(magnitude(row(vector("A"), mo("−"), vector("B"))), mn("2"))
     )
   ),
   token(
     "|A+B| = |A−B|",
     "magnitud de A más B igual a magnitud de A menos B",
     "|A+B|=|A-B|",
-    row(mo("|"), vector("A"), mo("+"), vector("B"), mo("|"), mo("="), mo("|"), vector("A"), mo("−"), vector("B"), mo("|"))
+    row(
+      magnitude(row(vector("A"), mo("+"), vector("B"))),
+      mo("="),
+      magnitude(row(vector("A"), mo("−"), vector("B")))
+    )
   ),
   token(
     "Aₓ = A cos θ y Aᵧ = A sin θ",
@@ -420,6 +473,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "\\dot r=\\ddot r=\\ddot\\theta=0",
     row(mover(mi("r"), mo("˙")), mo("="), mover(mi("r"), mo("¨")), mo("="), mover(mi("θ"), mo("¨")), mo("="), mn("0"))
   ),
+  token("m/s³", "metros por segundo al cubo", "\\mathrm{m/s^3}", unitFraction("m", "s", "3")),
   token("m/s²", "metros por segundo al cuadrado", "\\mathrm{m/s^2}", unitFraction("m", "s", "2")),
   token("km/h", "kilómetros por hora", "\\mathrm{km/h}", unitFraction("km", "h")),
   token("m/s", "metros por segundo", "\\mathrm{m/s}", unitFraction("m", "s")),
@@ -441,7 +495,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
   token("v²", "v al cuadrado", "v^2", sup(mi("v"), mn("2"))),
   token("ω²", "omega al cuadrado", "\\omega^2", sup(mi("ω"), mn("2"))),
   token("½", "un medio", "1/2", frac(mn("1"), mn("2"))),
-  token("|v|", "magnitud de v", "|v|", row(mo("|"), mi("v"), mo("|"))),
+  token("|v|", "magnitud de v", "|v|", absoluteValue(mi("v"))),
   token("A·B", "A producto punto B", "\\vec A\\cdot\\vec B", row(vector("A"), mo("·"), vector("B"))),
   token("A×B", "A producto cruz B", "\\vec A\\times\\vec B", row(vector("A"), mo("×"), vector("B"))),
   token("B×A", "B producto cruz A", "\\vec B\\times\\vec A", row(vector("B"), mo("×"), vector("A"))),

@@ -4,6 +4,7 @@ import {
   blockMath,
   frac,
   integral,
+  magnitude,
   mi,
   mn,
   mo,
@@ -119,7 +120,10 @@ export const UNIT_1_FORMULAS = {
     id: "cross-product",
     label: "Magnitud del producto vectorial de dos vectores",
     tex: "|\\vec A\\times\\vec B|=AB\\sin\\theta",
-    body: row(mo("|"), vector("A"), mo("×"), vector("B"), mo("|"), mo("="), mi("A"), mi("B"), mi("sin"), mi("θ")),
+    body: row(
+      magnitude(row(vector("A"), mo("×"), vector("B"))),
+      mo("="), mi("A"), mi("B"), mi("sin"), mi("θ")
+    ),
     represents: "La magnitud del vector perpendicular a A y B.",
     variables: [{ symbol: "θ", meaning: "ángulo menor entre A y B" }],
     conditions: ["La dirección se completa con la regla de la mano derecha."],
