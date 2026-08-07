@@ -1,0 +1,122 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import UnitOneNav from "../../../../components/academic/UnitOneNav.astro";
+import { UNIT_1 } from "../../../../data/physics/unit-1/unit.js";
+import { UNIT_1_EXERCISES } from "../../../../data/physics/unit-1/exercises.js";
+import { withBase } from "../../../../utils/paths.js";
+---
+
+<BaseLayout title={`${UNIT_1.shortTitle} · ${UNIT_1.title}`} description={UNIT_1.description}>
+  <article class="unit-landing">
+    <header class="unit-landing__hero">
+      <nav class="academic-breadcrumb" aria-label="Migas de pan">
+        <a href={withBase("/fisica-basica-1/unidades")}>Unidades y apuntes</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{UNIT_1.shortTitle}</span>
+      </nav>
+
+      <div>
+        <p class="eyebrow eyebrow--dark">{UNIT_1.shortTitle} · {UNIT_1.chapters}</p>
+        <h1>{UNIT_1.title}</h1>
+        <p>{UNIT_1.description}</p>
+      </div>
+
+      <dl class="unit-landing__facts">
+        <div>
+          <dt>Temas</dt>
+          <dd>{UNIT_1.topics.length}</dd>
+        </div>
+        <div>
+          <dt>Ejercicios iniciales</dt>
+          <dd>{UNIT_1_EXERCISES.length}</dd>
+        </div>
+        <div>
+          <dt>Estado</dt>
+          <dd>Primera versión</dd>
+        </div>
+      </dl>
+    </header>
+
+    <UnitOneNav activeSlug="index" />
+
+    <section class="unit-study-guide" aria-labelledby="study-guide-title">
+      <div>
+        <p class="academic-label">Profundidad progresiva</p>
+        <h2 id="study-guide-title">Lee primero lo esencial</h2>
+        <p>
+          No necesitas elegir un modo. La definición mínima y su interpretación
+          están visibles; los desarrollos rigurosos y ampliaciones pueden abrirse
+          cuando aporten a tu objetivo de estudio.
+        </p>
+      </div>
+
+      <ol>
+        <li><strong>Esencial</strong><span>Idea mínima correcta y autocontenida.</span></li>
+        <li><strong>Comprende</strong><span>Interpretación física y conexiones.</span></li>
+        <li><strong>Profundiza</strong><span>Derivaciones, condiciones y rigor.</span></li>
+        <li><strong>Explora</strong><span>Ampliaciones para continuar.</span></li>
+      </ol>
+    </section>
+
+    <section class="unit-topic-directory" aria-labelledby="topic-directory-title">
+      <header>
+        <p class="academic-label">Recorrido</p>
+        <h2 id="topic-directory-title">Temas de la unidad</h2>
+      </header>
+
+      <div class="unit-topic-directory__list">
+        {UNIT_1.topics.map((topic) => (
+          <a
+            class:list={[
+              "unit-topic-directory__row",
+              topic.priority === "extension" && "unit-topic-directory__row--extension",
+            ]}
+            href={withBase(topic.route)}
+          >
+            <span>{String(topic.order).padStart(2, "0")}</span>
+            <div>
+              <p class="academic-label">
+                {topic.priority === "extension" ? "Ampliación" : "Contenido central"}
+              </p>
+              <h3>{topic.title}</h3>
+              <p>{topic.summary}</p>
+            </div>
+            <span aria-hidden="true">→</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="unit-source-note" aria-labelledby="unit-source-title">
+      <div>
+        <p class="academic-label">Alcance académico</p>
+        <h2 id="unit-source-title">Fuentes y modelos</h2>
+      </div>
+      <div>
+        <p>
+          El programa oficial gobierna el alcance curricular estable y el plan
+          2026-2 organiza el orden y la profundidad del semestre. Los ejemplos,
+          ejercicios y diagramas de esta implementación son originales.
+        </p>
+        <p>
+          Las ecuaciones se presentan con sus condiciones de aplicación. Una
+          relación matemática no sustituye la elección explícita del modelo.
+        </p>
+      </div>
+    </section>
+
+    <aside class="unit-practice-cta">
+      <div>
+        <p class="academic-label">Banco inicial</p>
+        <h2>{UNIT_1_EXERCISES.length} ejercicios para comprobar la arquitectura</h2>
+        <p>
+          Incluyen práctica conceptual, numérica, simbólica, gráfica y de
+          estimación, con dificultad y retroalimentación editorial.
+        </p>
+      </div>
+      <a class="text-link" href={withBase(UNIT_1.practiceRoute)}>
+        Abrir práctica de la Unidad 1
+      </a>
+    </aside>
+  </article>
+</BaseLayout>

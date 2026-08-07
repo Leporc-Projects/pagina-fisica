@@ -3,6 +3,9 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { COURSE, UNITS } from "../../data/course.js";
+import { UNIT_1_EXERCISES } from "../../data/physics/unit-1/exercises.js";
+import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { withBase } from "../../utils/paths.js";
 
 const materialTypes = [
   "Diagnósticos",
@@ -72,7 +75,7 @@ const materialTypes = [
         </div>
 
         <p>
-          Todas las categorías permanecen en preparación hasta que exista material propio y aprobado.
+          La Unidad 1 ofrece un banco inicial aprobado. Las demás categorías permanecen en preparación.
         </p>
       </header>
 
@@ -100,9 +103,18 @@ const materialTypes = [
                 </ul>
               </div>
 
-              <span class="status-label status-label--preparing">
-                En preparación
-              </span>
+              {unit.number === UNIT_1.number
+                ? <div class="publication-row__action">
+                    <span class="status-label status-label--featured">
+                      {UNIT_1_EXERCISES.length} ejercicios
+                    </span>
+                    <a class="text-link" href={withBase(UNIT_1.practiceRoute)}>
+                      Abrir práctica
+                    </a>
+                  </div>
+                : <span class="status-label status-label--preparing">
+                    En preparación
+                  </span>}
             </article>
           ))
         }

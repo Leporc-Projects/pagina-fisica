@@ -6,6 +6,8 @@ import {
   COURSE,
   UNITS,
 } from "../../data/course.js";
+import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { withBase } from "../../utils/paths.js";
 ---
 
 <BaseLayout
@@ -114,17 +116,28 @@ import {
                   Materiales
                 </p>
 
-                <h3>Contenido en preparación</h3>
-
-                <p>
-                  Este espacio reunirá apuntes, guías,
-                  problemas seleccionados y recursos
-                  propios de la unidad.
-                </p>
-
-                <span class="unit-materials__status">
-                  Próximamente
-                </span>
+                {unit.number === UNIT_1.number
+                  ? <>
+                      <h3>Primera versión disponible</h3>
+                      <p>
+                        Contenido por temas, fórmulas con condiciones,
+                        visualizaciones SVG y práctica inicial.
+                      </p>
+                      <a class="text-link" href={withBase(UNIT_1.route)}>
+                        Abrir {UNIT_1.shortTitle}
+                      </a>
+                    </>
+                  : <>
+                      <h3>Contenido en preparación</h3>
+                      <p>
+                        Este espacio reunirá apuntes, guías,
+                        problemas seleccionados y recursos
+                        propios de la unidad.
+                      </p>
+                      <span class="unit-materials__status">
+                        Próximamente
+                      </span>
+                    </>}
               </aside>
             </div>
           </section>
