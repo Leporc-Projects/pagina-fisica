@@ -31,6 +31,7 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `notices.js`: fuente única de avisos para la portada y `/avisos`.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
+- `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
 - `physics/index.js`: registro de unidades que ya tienen implementación académica.
 - `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios (`exercises.js`). `math-content.js` es una capa de presentación: asocia fragmentos literales registrados con MathML sin modificar esas fuentes.
 
@@ -82,10 +83,13 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `academic/UnitOneNav.astro`: navegación local compacta alimentada por `UNIT_1.topics`; usa `details` nativo para evitar una segunda barra extensa durante la lectura.
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
 - `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
+- `participation/`: selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
 - `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, delimitadores semánticos, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
+- `src/utils/participation.js`: núcleo puro para crear, validar y serializar una respuesta. No conoce formularios ni nodos del DOM y es la única fuente para TXT, JSON y CSV.
+- `src/scripts/participation.js`: adaptación pequeña entre formularios y contrato. Conserva una sola respuesta en memoria, controla la previsualización, descarga archivos, copia texto y abre la impresión nativa.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
@@ -121,6 +125,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/videos.astro` | `/fisica-basica-1/videos` |
 | `src/pages/fisica-basica-1/evaluacion.astro` | `/fisica-basica-1/evaluacion` |
 | `src/pages/fisica-basica-1/recursos.astro` | `/fisica-basica-1/recursos` |
+| `src/pages/fisica-basica-1/participa.astro` | `/fisica-basica-1/participa` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/index.astro` | `/fisica-basica-1/unidades/unidad-1` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/herramientas.astro` | `/fisica-basica-1/unidades/unidad-1/herramientas` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/vectores.astro` | `/fisica-basica-1/unidades/unidad-1/vectores` |
@@ -136,6 +141,66 @@ Astro utiliza enrutamiento por archivos:
 Los recursos pertenecen al curso que los selecciona. Por eso la página real
 forma parte de `COURSE_NAV`; `/recursos` no mantiene contenido duplicado y
 solo produce una redirección estática base-aware para enlaces anteriores.
+
+`Participa` también pertenece a `COURSE_NAV`, pero declara
+`includeInGlobalMenu: false`. `CourseNav` presenta la lista completa dentro de
+Física Básica I y `site.js` filtra esa entrada al construir el submenú global.
+Así la ruta permanece en el contexto del curso y no aparece en portada ni como
+sección general del sitio.
+
+### Participación y exportación local
+
+La participación aplica mejora progresiva sobre tres formularios HTML
+independientes. Elegir una actividad revela únicamente su formulario; preparar
+una respuesta crea un solo objeto en memoria y oculta los controles durante la
+previsualización. Editar vuelve al formulario sin almacenar una copia.
+
+```text
+campos del formulario activo
+   ↓ src/scripts/participation.js
+createParticipationResponse()
+   ↓ valida esquema, enums, requeridos, tema, ID y fecha
+objeto único de respuesta en memoria
+   ├─ participationSummary() → previsualización
+   ├─ toParticipationText() → copiar / TXT
+   ├─ toParticipationJSON() → JSON completo
+   ├─ toParticipationCSV() → fila tabular UTF-8
+   └─ CSS @media print + window.print() → impresión / Guardar como PDF
+```
+
+El contrato público `1.0.0` contiene `schemaVersion`, `responseId`,
+`activityType`, contexto de curso/unidad/tema, `createdAt`, `purpose`,
+`collection`, `privacy`, `submissionTarget` y `payload`. `createdAt` se conserva
+en ISO 8601 y solo se presenta con el locale del navegador; no se registra la
+zona horaria como campo. `responseId` representa 128 bits generados con
+`crypto.getRandomValues()` y solo identifica el archivo, sin IP, user-agent ni
+datos del dispositivo.
+
+Los propósitos de participación son `learning`, `feedback` y `contribution`.
+No incluyen `research` ni `measurement`. `collection` es únicamente `local`,
+`privacy` es `anonymous` y `submissionTarget` permanece `null`. Un adaptador de
+entrega futuro deberá recibir el mismo objeto después de definir propósito,
+consentimiento y flujo docente; no debe reescribir el contrato desde el DOM.
+
+Las propuestas estudiantiles poseen un subcontrato propio con fuente
+`student`, estado `unreviewed`, identificador de ejercicio académico nulo y
+dificultad editorial nula. La dificultad opcional se guarda como
+`studentDifficultyEstimate` con su propia escala. Por tanto, ninguna propuesta
+entra en `UNIT_1_EXERCISES` ni hereda la dificultad oficial por el hecho de ser
+preparada o exportada.
+
+El CSV escribe siempre las mismas columnas y una fila, encierra todos los
+campos entre comillas, duplica comillas internas y conserva comas, saltos de
+línea, Unicode y textos largos. Incluye columnas específicas por actividad y
+`payload_json` para preservar el contenido completo al combinar archivos
+posteriormente. El prefijo BOM facilita que lectores tabulares reconozcan UTF-8.
+
+La impresión elimina cabecera, navegación, formularios, botones y decoración;
+conserva marca, tipo, tema, respuesta, campos presentes, ID y fecha. No existe
+una biblioteca de PDF: “Imprimir / PDF” abre la capacidad nativa del navegador.
+
+La documentación de minimización, categorías de datos y conexión futura está
+en [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
 
 ### Arquitectura académica de la Unidad 1
 
@@ -468,6 +533,7 @@ Los contratos más importantes son:
 - sesiones consecutivas y fechas ordenadas;
 - ausencia de sesiones, rutas, avisos o videos duplicados;
 - existencia de las rutas declaradas en `COURSE_NAV`;
+- tres modos de participación, temas reales, contrato local/anónimo y ausencia de `research` o `measurement` públicos;
 - enlaces internos principales;
 - funcionamiento del resolvedor con `/pagina-fisica`, anclas y URL externas;
 - ausencia de `href="/..."` y `src="/..."` literales en plantillas Astro;
@@ -481,7 +547,8 @@ Los contratos más importantes son:
 - contrato académico: siete temas ordenados, capas de profundidad admitidas, referencias existentes entre contenido, fórmulas, figuras y errores;
 - fórmulas MathML con significado, variables, condiciones, interpretación dimensional y errores asociados;
 - registro de MathML inline sin notación de teclado pendiente en el contenido visible;
-- banco de entre 18 y 24 ejercicios con identificadores únicos, taxonomías válidas, unidad esperada y tolerancia para respuestas numéricas, solución y versión editorial;
+- banco vigente de 34 ejercicios con identificadores únicos, taxonomías válidas, unidad esperada y tolerancia para respuestas numéricas, solución y versión editorial;
+- doce pruebas de participación para esquema, IDs, requeridos, enums, opcionales y serialización TXT/JSON/CSV con Unicode y saltos de línea;
 - contratos de mapa, disclosure progresivo y secuencia de ejercicios sin persistencia ni dependencias nuevas;
 - figuras académicas con dominios válidos, coordenadas físicas finitas y descripción accesible.
 

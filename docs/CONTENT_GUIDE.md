@@ -200,6 +200,50 @@ ayuda, tolerancias, respuestas y retroalimentaciones serán definidas por el
 equipo docente. Está prohibido integrar inteligencia artificial para
 generarlas, evaluarlas o modificarlas durante el uso.
 
+## Participación y propuestas estudiantiles
+
+`/fisica-basica-1/participa` permite preparar localmente una dificultad, una
+propuesta o una mejora. Los temas visibles deben proceder de `UNIT_1.topics` y
+las opciones de interfaz viven en `src/data/participation.js`; no se copian
+listas temáticas dentro de los formularios.
+
+Reglas editoriales:
+
+- no pedir nombre, correo, documento, ID institucional, grupo ni nota;
+- no añadir campos sobre dispositivo, navegador, tiempo, clics, edición o uso;
+- no guardar respuestas en cookies, `localStorage` ni servicios externos;
+- no presentar “enviado” cuando el resultado solo está preparado en memoria;
+- no añadir `research` o `measurement` como propósito de una respuesta pública;
+- no usar estrellas, puntuaciones de satisfacción ni recompensas;
+- conservar los campos opcionales como opcionales también en el contrato;
+- alimentar toda representación desde el mismo objeto validado.
+
+Una propuesta estudiantil no es un ejercicio. Su flujo editorial futuro es:
+
+```text
+propuesta estudiantil
+   → revisión docente
+   → corrección, si corresponde
+   → aprobación explícita
+   → creación separada de un ejercicio académico
+```
+
+Preparar, copiar o exportar una propuesta no avanza ese flujo. Solo después de
+aprobación docente puede crearse manualmente un registro nuevo conforme al
+contrato de `UNIT_1_EXERCISES`. La estimación de dificultad estudiantil nunca se
+copia a `difficulty`; el equipo editorial debe asignar su propia dificultad en
+la revisión académica.
+
+Para añadir una actividad pública se debe ampliar explícitamente el enum, su
+propósito, normalización, validación, resumen y columnas CSV. También requiere
+pruebas de requeridos, opcionales, Unicode y serialización. No se añade un modo
+mediante condicionales sueltos en el DOM.
+
+Un mecanismo futuro de envío se conectará en la frontera que hoy ocupa
+`submissionTarget: null`, después de definir privacidad, consentimiento y flujo
+docente. No se debe introducir un proveedor o endpoint desde los componentes.
+Ver [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
+
 ## Añadir una fórmula
 
 Las fórmulas de la Unidad 1 viven en `formulas.js` y se referencian desde el
@@ -410,7 +454,14 @@ Está prohibido incorporar al repositorio o mostrar públicamente:
 - archivos reales usados para consolidar evaluaciones;
 - capturas de plataformas académicas con información identificable.
 
-Las futuras herramientas de evaluación procesarán archivos localmente en el navegador, no enviarán datos a servidores y no conservarán información al cerrar o recargar la página.
+La participación actual y las futuras herramientas de evaluación procesan o
+procesarán datos localmente en el navegador, no envían respuestas a servidores
+y no conservan información al cerrar o recargar la página. La única persistencia
+vigente es la preferencia visual, que no debe mezclarse con datos estudiantiles.
+
+Las categorías, límites y decisiones pendientes se documentan en
+[DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md). Ese documento es una guía técnica
+y editorial interna, no una política legal.
 
 Los ejemplos de interfaz deben utilizar datos manifiestamente ficticios y no deben parecer registros reales. Cuando un ejemplo no sea necesario, es preferible omitirlo.
 
