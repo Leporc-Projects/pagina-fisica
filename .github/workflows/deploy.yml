@@ -3,8 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      # Al terminar la rama de prueba, sustituir esta línea por `- main`.
-      - feat/contenido-fisica-basica
+      - main
   workflow_dispatch:
 
 permissions:

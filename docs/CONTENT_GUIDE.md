@@ -395,10 +395,9 @@ referencias de validación permiten mantener ese contenido y pueden permanecer
 editoriales. Esta separación facilita futuras herramientas sin convertir el
 sitio en un sistema de seguimiento estudiantil.
 
-La ruta `/dev/visualizaciones` contiene datos sintéticos para comprobar la
-infraestructura y no está enlazada en la navegación. Antes de publicar una
-versión estable debe decidirse expresamente si se excluye del build público o
-si se conserva como laboratorio técnico visible por URL.
+No hay una ruta pública de desarrollo para visualizaciones. Los datos
+sintéticos de comprobación no se publican; la infraestructura se valida con la
+batería automatizada del proyecto.
 
 ## Privacidad y datos estudiantiles
 

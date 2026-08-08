@@ -114,7 +114,7 @@ Las anclas (`#contenido`) y las URL externas no necesitan el prefijo. `withBase(
 
 ## Despliegue en GitHub Pages
 
-`.github/workflows/deploy.yml` construye y publica el sitio con GitHub Actions. En cada push a `feat/contenido-fisica-basica`, o al ejecutarlo manualmente, el workflow:
+`.github/workflows/deploy.yml` construye y publica el sitio con GitHub Actions. En cada push a `main`, o al ejecutarlo manualmente, el workflow:
 
 1. descarga el repositorio;
 2. prepara Node.js 24 y la caché de npm;
@@ -123,16 +123,7 @@ Las anclas (`#contenido`) y las URL externas no necesitan el prefijo. `withBase(
 5. sube `dist/` como artefacto de Pages;
 6. despliega el artefacto en el entorno `github-pages`.
 
-Para habilitar la primera publicación, en GitHub hay que abrir **Settings → Pages → Build and deployment → Source** y seleccionar **GitHub Actions**. Después puede ejecutarse manualmente el workflow **Deploy to GitHub Pages** desde la pestaña **Actions**, o hacerse un nuevo push a la rama configurada.
-
-Cuando la rama de prueba esté terminada, cambiar únicamente el trigger de `.github/workflows/deploy.yml`:
-
-```yaml
-branches:
-  - main
-```
-
-Ese cambio no implica hacer merge automáticamente; solo determina qué rama dispara publicaciones posteriores.
+Para habilitar la primera publicación, en GitHub hay que abrir **Settings → Pages → Build and deployment → Source** y seleccionar **GitHub Actions**. Después puede ejecutarse manualmente el workflow **Deploy to GitHub Pages** desde la pestaña **Actions**, o hacerse un nuevo push a `main`.
 
 ### Migración futura a un dominio personalizado
 

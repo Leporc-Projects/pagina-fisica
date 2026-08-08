@@ -932,7 +932,6 @@ const chartComponentFile = path.join(
   projectRoot,
   "src/components/visualization/CartesianChart.astro"
 );
-const chartDemoRoute = "/dev/visualizaciones";
 const chartUtilitySource = fs.existsSync(chartUtilityFile)
   ? fs.readFileSync(chartUtilityFile, "utf8")
   : "";
@@ -1006,9 +1005,9 @@ const publicNavigationRoutes = [
 ];
 
 check(
-  routes.has(chartDemoRoute) &&
+  !routes.has("/dev/visualizaciones") &&
     !publicNavigationRoutes.some((route) => route.startsWith("/dev")),
-  "El laboratorio de visualizaciones existe sin entrar en la navegación pública."
+  "No se publica ninguna ruta de desarrollo de visualizaciones."
 );
 
 const packageData = JSON.parse(

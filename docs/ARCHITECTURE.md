@@ -114,7 +114,6 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/simulaciones.astro` | `/simulaciones` |
 | `src/pages/herramientas.astro` | `/herramientas` |
 | `src/pages/actividades.astro` | `/actividades` |
-| `src/pages/dev/visualizaciones.astro` | `/dev/visualizaciones` (laboratorio interno, no enlazado) |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
 | `src/pages/fisica-basica-1/cronograma.astro` | `/fisica-basica-1/cronograma` |
 | `src/pages/fisica-basica-1/unidades.astro` | `/fisica-basica-1/unidades` |
@@ -433,11 +432,9 @@ Para añadir una gráfica estática:
 6. comprobar valores límite, discontinuidades, claro/oscuro y ancho móvil;
 7. ejecutar `npm run validate` y `npm run build`.
 
-La ruta `/dev/visualizaciones` usa datos sintéticos únicamente para revisar el
-contrato técnico. No forma parte de `NAV`, `HOME_LINKS` ni `COURSE_NAV` y no debe
-convertirse en una fuente de contenido académico. Antes de un despliegue
-estable debe revisarse si conviene excluir esta ruta del build público o
-conservarla expresamente como laboratorio técnico.
+No se publica una ruta de desarrollo para visualizaciones. El contrato técnico
+de la infraestructura SVG se comprueba mediante `npm run validate` y los tests
+unitarios, sin exponer datos sintéticos en el sitio estable.
 
 Canvas se reserva para simulaciones con miles de elementos, animaciones de alta
 frecuencia o redibujado continuo donde el costo de muchos nodos SVG sea
@@ -514,7 +511,9 @@ dist/ → artefacto github-pages
 entorno github-pages → URL pública
 ```
 
-El trigger automático apunta provisionalmente a `feat/contenido-fisica-basica`. Cuando el trabajo se integre y la publicación deba salir de la rama estable, se cambia esa única entrada a `main`. El workflow usa permisos de lectura del repositorio, escritura de Pages e identificación OIDC para el despliegue; no necesita secretos propios.
+El trigger automático apunta a `main`. El workflow usa permisos de lectura del
+repositorio, escritura de Pages e identificación OIDC para el despliegue; no
+necesita secretos propios.
 
 En desarrollo y `preview`, la página inicial está en `/pagina-fisica/`, igual que en producción. Esto hace que la prueba local cubra el mismo prefijo que GitHub Pages.
 
