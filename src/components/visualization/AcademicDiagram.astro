@@ -21,6 +21,7 @@ interface DiagramMathLabel {
   base: string;
   sub?: string;
   suffix?: string;
+  baseRole?: "identifier" | "operator";
 }
 
 interface VectorSpec {
@@ -132,16 +133,50 @@ const transform = scaleMode === "isotropic"
 const plot = transform.plot;
 const domains = { xDomain, yDomain };
 const clipId = `${id}-diagram-clip`;
-const titleId = `${id}-title`;
 const descriptionId = `${id}-description`;
 const styles: DiagramStyle[] = ["primary", "secondary", "tertiary", "reference"];
 const markerId = (style: DiagramStyle) => `${id}-arrow-${style}`;
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
-const keepLabelVisible = (point: Point) => ({
-  x: clamp(point.x, plot.left + 1.5, plot.left + plot.width - 1.5),
-  y: clamp(point.y, plot.top + 2.5, plot.top + plot.height - 1.5),
-});
+const estimateLabelWidth = (
+  label = "",
+  mathLabel?: DiagramMathLabel
+) => {
+  const content = mathLabel
+    ? `${mathLabel.base}${mathLabel.sub ?? ""}${mathLabel.suffix ?? ""}`
+    : label;
+
+  return clamp(
+    Math.max(2.4, [...content].length * 1.45),
+    2.4,
+    plot.width - 3
+  );
+};
+
+const keepLabelVisible = (
+  point: Point,
+  label = "",
+  anchor: "start" | "middle" | "end" = "start",
+  mathLabel?: DiagramMathLabel
+) => {
+  const padding = 1.2;
+  const width = estimateLabelWidth(label, mathLabel);
+  const minimumX = anchor === "end"
+    ? plot.left + padding + width
+    : anchor === "middle"
+      ? plot.left + padding + width / 2
+      : plot.left + padding;
+  const maximumX = anchor === "start"
+    ? plot.left + plot.width - padding - width
+    : anchor === "middle"
+      ? plot.left + plot.width - padding - width / 2
+      : plot.left + plot.width - padding;
+
+  return {
+    x: clamp(point.x, minimumX, maximumX),
+    y: clamp(point.y, plot.top + 2.4, plot.top + plot.height - 1.4),
+  };
+};
 const resolveLabelPoint = (
   start: Point,
   end: Point,
@@ -178,7 +213,7 @@ const preparedVectors = vectors
       labelSvg: keepLabelVisible({
         x: labelBase.x + offset.x,
         y: labelBase.y + offset.y,
-      }),
+      }, vector.label, vector.labelAnchor ?? "start", vector.mathLabel),
     };
   });
 
@@ -208,7 +243,7 @@ const preparedSegments = segments
       labelSvg: keepLabelVisible({
         x: labelBase.x + offset.x,
         y: labelBase.y + offset.y,
-      }),
+      }, segment.label, segment.labelAnchor ?? "start"),
     };
   });
 
@@ -248,7 +283,7 @@ const preparedPoints = points
       labelSvg: keepLabelVisible({
         x: point.svg.x + offset.x,
         y: point.svg.y + offset.y,
-      }),
+      }, point.label, point.labelAnchor ?? "start"),
     };
   });
 
@@ -265,7 +300,7 @@ const preparedAnnotations = annotations
     labelSvg: keepLabelVisible({
       x: annotation.svg.x + annotation.offset.x,
       y: annotation.svg.y + annotation.offset.y,
-    }),
+    }, annotation.label, annotation.labelAnchor),
   }));
 
 const gridX = (grid?.x ?? [])
@@ -282,14 +317,14 @@ const gridY = (grid?.y ?? [])
     viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
     preserveAspectRatio="xMidYMid meet"
     role="img"
-    aria-labelledby={`${titleId} ${descriptionId}`}
+    aria-label={title}
+    aria-describedby={descriptionId}
     data-x-min={xDomain[0]}
     data-x-max={xDomain[1]}
     data-y-min={yDomain[0]}
     data-y-max={yDomain[1]}
     data-scale-mode={scaleMode}
   >
-    <title id={titleId}>{title}</title>
     <desc id={descriptionId}>{description}</desc>
 
     <defs>
@@ -427,11 +462,21 @@ const gridY = (grid?.y ?? [])
         >
           {vector.mathLabel
             ? <Fragment>
-                <tspan class="academic-diagram__math-base">{vector.mathLabel.base}</tspan>
+                <tspan
+                  class:list={{
+                    "academic-diagram__math-base": true,
+                    "academic-diagram__math-operator":
+                      vector.mathLabel.baseRole === "operator",
+                  }}
+                >{vector.mathLabel.base}</tspan>
                 {vector.mathLabel.sub && (
                   <tspan class="academic-diagram__math-sub">{vector.mathLabel.sub}</tspan>
                 )}
-                {vector.mathLabel.suffix && <tspan>{vector.mathLabel.suffix}</tspan>}
+                {vector.mathLabel.suffix && (
+                  <tspan class="academic-diagram__math-suffix" dx="0.35">
+                    {vector.mathLabel.suffix}
+                  </tspan>
+                )}
               </Fragment>
             : vector.label}
         </text>

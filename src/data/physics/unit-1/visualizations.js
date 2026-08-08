@@ -79,7 +79,7 @@ export const UNIT_1_VISUALIZATIONS = {
       vectors: [
         { start: { x: 0, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "A", style: "primary" },
         { start: { x: 0, y: 0 }, end: { x: 4.3, y: 0 }, label: "B", style: "secondary", labelPosition: "end", labelOffset: { x: -1.2, y: 2.4 }, labelAnchor: "end" },
-        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "proy_B A", mathLabel: { base: "proy", sub: "B", suffix: " A" }, ariaLabel: "proyección de A sobre B", style: "tertiary", labelOffset: { x: 0, y: -2 }, labelAnchor: "middle" },
+        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "proy_B A", mathLabel: { base: "proy", sub: "B", suffix: "A", baseRole: "operator" }, ariaLabel: "proyección de A sobre B", style: "tertiary", labelOffset: { x: 0, y: -2.4 }, labelAnchor: "middle" },
       ],
       segments: [
         { start: { x: 3.2, y: 0 }, end: { x: 3.2, y: 2.4 }, style: "reference", lineStyle: "dashed" },

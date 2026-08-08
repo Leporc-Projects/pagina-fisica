@@ -1019,14 +1019,25 @@ check(
 );
 
 check(
+  diagramComponentSource.includes('role="img"') &&
+    diagramComponentSource.includes("aria-label={title}") &&
+    diagramComponentSource.includes("aria-describedby={descriptionId}") &&
+    diagramComponentSource.includes("<desc") &&
+    !diagramComponentSource.includes("<title"),
+  "Los diagramas conservan nombre y descripción accesibles sin tooltip nativo."
+);
+
+check(
   chartComponentSource.includes("<svg") &&
     chartComponentSource.includes("viewBox=") &&
     chartComponentSource.includes('role="img"') &&
-    chartComponentSource.includes("<title") &&
+    chartComponentSource.includes("aria-label={title}") &&
+    chartComponentSource.includes("aria-describedby={descriptionId}") &&
+    !chartComponentSource.includes("<title") &&
     chartComponentSource.includes("<desc") &&
     chartComponentSource.includes("clipPath") &&
     !chartComponentSource.includes("<canvas"),
-  "CartesianChart genera SVG responsive, descrito y recortado."
+  "CartesianChart genera SVG responsive, descrito y recortado sin tooltip nativo."
 );
 
 check(

@@ -123,7 +123,6 @@ const plot = {
 };
 const transform = createCartesianTransform({ xDomain, yDomain, plot });
 const domains = { xDomain, yDomain };
-const titleId = `${id}-title`;
 const descriptionId = `${id}-description`;
 const clipId = `${id}-plot-clip`;
 const arrowId = `${id}-arrow`;
@@ -273,13 +272,13 @@ const visibleAnnotations = annotations
     viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
     preserveAspectRatio="xMidYMid meet"
     role="img"
-    aria-labelledby={`${titleId} ${descriptionId}`}
+    aria-label={title}
+    aria-describedby={descriptionId}
     data-plot-left={plot.left}
     data-plot-top={plot.top}
     data-plot-width={plot.width}
     data-plot-height={plot.height}
   >
-    <title id={titleId}>{title}</title>
     <desc id={descriptionId}>{description}</desc>
 
     <defs>

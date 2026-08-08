@@ -517,7 +517,7 @@ Los contratos más importantes son:
 - el menú mantiene un ciclo de foco y responde a Escape;
 - el foco visible no debe eliminarse;
 - los estados no dependen solamente del color;
-- las gráficas tienen `title` y `desc`, leyendas textuales y series diferenciadas por patrón o marcador;
+- las gráficas y diagramas usan `role="img"`, `aria-label` y `desc` asociado para conservar nombre y descripción sin activar tooltips nativos; las series se diferencian también por patrón o marcador;
 - `prefers-reduced-motion` reduce transiciones y desplazamiento suave.
 - el selector de tema conserva controles de radio navegables y una leyenda accesible;
 - texto principal, secundario, acentos, estados y foco se validan contra pares de contraste semánticos.

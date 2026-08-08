@@ -1623,7 +1623,7 @@ main {
   paint-order: stroke;
   stroke: var(--chart-annotation-halo);
   stroke-linejoin: round;
-  stroke-width: 3;
+  stroke-width: 1.35;
 }
 
 .academic-chart__annotation-layer circle {
@@ -3688,7 +3688,7 @@ main {
   paint-order: stroke;
   stroke: var(--chart-annotation-halo);
   stroke-linejoin: round;
-  stroke-width: 3;
+  stroke-width: 1.4;
 }
 
 .academic-diagram__labels text[data-diagram-style] {
@@ -3697,6 +3697,11 @@ main {
 
 .academic-diagram__math-base {
   font-style: italic;
+}
+
+.academic-diagram__math-operator {
+  font-style: normal;
+  letter-spacing: 0.03em;
 }
 
 .academic-diagram__math-sub {
@@ -4163,6 +4168,7 @@ main {
 
   .academic-diagram__labels text {
     font-size: 3.2px;
+    stroke-width: 1.7;
   }
 
   .unit-topic-pagination a+a {

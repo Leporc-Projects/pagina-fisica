@@ -9,6 +9,7 @@ Esta guía describe cómo incorporar contenido sin romper las fuentes académica
 - No asumir que el programa oficial y el plan clase a clase organizan los temas de forma equivalente.
 - No publicar contacto, oficina, horario de atención ni información del profesor del taller.
 - No incorporar todavía el cronograma del taller sin una decisión académica explícita.
+- La interfaz pública no muestra etiquetas de novedad, versiones de desarrollo ni estados internos. Los estados visibles describen disponibilidad o acciones reales del usuario.
 
 ## Añadir un aviso
 

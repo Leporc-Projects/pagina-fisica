@@ -33,6 +33,20 @@ test("el banco reúne 22 ejercicios auditados y 12 ejercicios visuales nuevos", 
   );
 });
 
+test("la proyección conserva notación matemática clara y una descripción accesible", () => {
+  const projection = UNIT_1_VISUALIZATIONS["dot-projection"].props.vectors
+    .find((vector) => vector.ariaLabel === "proyección de A sobre B");
+
+  assert.deepEqual(projection.mathLabel, {
+    base: "proy",
+    sub: "B",
+    suffix: "A",
+    baseRole: "operator",
+  });
+  assert.deepEqual(projection.labelOffset, { x: 0, y: -2.4 });
+  assert.equal(projection.labelAnchor, "middle");
+});
+
 test("VIS-01 conserva pendientes, reposo, desplazamiento y distancia", () => {
   const points = pointsFor("vis-position-segments");
   assert.deepEqual(points.map((point, index) => index === 0
