@@ -28,7 +28,9 @@ export const NAV = [
   {
     label: COURSE.name,
     href: "/fisica-basica-1",
-    children: COURSE_NAV,
+    children: COURSE_NAV.filter(
+      (item) => item.includeInGlobalMenu !== false
+    ),
   },
   {
     label: "Simulaciones",

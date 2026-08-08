@@ -1,0 +1,50 @@
+---
+import TopicSelect from "./TopicSelect.astro";
+import {
+  HELPFULNESS_OPTIONS,
+  IMPROVEMENT_AREAS,
+} from "../../data/participation.js";
+---
+
+<section
+  class="participation-panel"
+  id="activity-panel-improvement-feedback"
+  data-activity-panel="improvement-feedback"
+  hidden
+>
+  <div class="participation-panel__heading">
+    <p class="participation-kicker">Feedback de la página</p>
+    <h2>Ayúdanos a mejorar</h2>
+    <p>Señala el cambio concreto que haría una explicación o la experiencia más útil.</p>
+  </div>
+
+  <form data-activity-form="improvement-feedback">
+    <div class="participation-form-grid">
+      <TopicSelect id="feedback-topic" />
+
+      <div class="participation-field">
+        <label for="improvement-area">Aspecto por mejorar</label>
+        <select id="improvement-area" name="area" required>
+          <option value="">Selecciona un aspecto</option>
+          {IMPROVEMENT_AREAS.map(([value, label]) => <option value={value}>{label}</option>)}
+        </select>
+      </div>
+    </div>
+
+    <div class="participation-field">
+      <label for="improvement-text">¿Qué cambiarías o mejorarías?</label>
+      <textarea id="improvement-text" name="improvement" rows="7" required></textarea>
+    </div>
+
+    <fieldset class="participation-field participation-field--options">
+      <legend>Valoración ligera <span>Opcional</span></legend>
+      <div class="participation-radio-list participation-radio-list--short">
+        {HELPFULNESS_OPTIONS.map(([value, label]) => (
+          <label><input type="radio" name="helpfulness" value={value} /> <span>{label}</span></label>
+        ))}
+      </div>
+    </fieldset>
+
+    <button class="participation-primary" type="submit">Preparar respuesta</button>
+  </form>
+</section>

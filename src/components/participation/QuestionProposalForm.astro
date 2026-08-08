@@ -1,0 +1,70 @@
+---
+import TopicSelect from "./TopicSelect.astro";
+import {
+  PROPOSAL_TYPES,
+  STUDENT_DIFFICULTY_ESTIMATES,
+} from "../../data/participation.js";
+---
+
+<section
+  class="participation-panel"
+  id="activity-panel-student-question-proposal"
+  data-activity-panel="student-question-proposal"
+  hidden
+>
+  <div class="participation-panel__heading">
+    <p class="participation-kicker">Construcción de problemas</p>
+    <h2>Propón una pregunta o problema</h2>
+    <p>La propuesta quedará marcada como trabajo estudiantil sin revisar. No entrará al banco académico automáticamente.</p>
+  </div>
+
+  <form data-activity-form="student-question-proposal">
+    <div class="participation-form-grid">
+      <TopicSelect id="proposal-topic" />
+
+      <div class="participation-field">
+        <label for="proposal-type">Tipo de propuesta</label>
+        <select id="proposal-type" name="proposalType" required>
+          <option value="">Selecciona un tipo</option>
+          {PROPOSAL_TYPES.map(([value, label]) => <option value={value}>{label}</option>)}
+        </select>
+      </div>
+    </div>
+
+    <div class="participation-field">
+      <label for="proposal-statement">Enunciado propuesto</label>
+      <textarea id="proposal-statement" name="statement" rows="7" required></textarea>
+    </div>
+
+    <div class="participation-field">
+      <label for="proposal-concept">¿Qué crees que evalúa o qué concepto intenta poner a prueba?</label>
+      <textarea id="proposal-concept" name="intendedConcept" rows="4" required></textarea>
+    </div>
+
+    <details class="participation-optionals">
+      <summary>Añadir detalles opcionales</summary>
+      <div class="participation-optionals__body">
+        <div class="participation-field">
+          <label for="proposal-answer">Respuesta esperada <span>Opcional</span></label>
+          <textarea id="proposal-answer" name="expectedAnswer" rows="4"></textarea>
+        </div>
+
+        <div class="participation-field">
+          <label for="proposal-explanation">Explicación de la respuesta <span>Opcional</span></label>
+          <textarea id="proposal-explanation" name="answerExplanation" rows="5"></textarea>
+        </div>
+
+        <div class="participation-field">
+          <label for="proposal-difficulty">Dificultad que estimas <span>Opcional</span></label>
+          <select id="proposal-difficulty" name="studentDifficultyEstimate">
+            <option value="">Sin estimación</option>
+            {STUDENT_DIFFICULTY_ESTIMATES.map(([value, label]) => <option value={value}>{label}</option>)}
+          </select>
+          <small>Es tu estimación, no la dificultad editorial oficial del banco.</small>
+        </div>
+      </div>
+    </details>
+
+    <button class="participation-primary" type="submit">Preparar respuesta</button>
+  </form>
+</section>

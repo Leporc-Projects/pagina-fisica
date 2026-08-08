@@ -1,0 +1,43 @@
+---
+import TopicSelect from "./TopicSelect.astro";
+import { SUPPORT_OPTIONS } from "../../data/participation.js";
+---
+
+<section
+  class="participation-panel"
+  id="activity-panel-concept-difficulty"
+  data-activity-panel="concept-difficulty"
+  hidden
+>
+  <div class="participation-panel__heading">
+    <p class="participation-kicker">Reflexión de aprendizaje</p>
+    <h2>¿Qué te quedó menos claro?</h2>
+    <p>No necesitas tener la pregunta perfectamente formulada. Describe el punto donde perdiste el hilo.</p>
+  </div>
+
+  <form data-activity-form="concept-difficulty">
+    <TopicSelect id="concept-topic" />
+
+    <div class="participation-field">
+      <label for="unclear-point">¿Qué te quedó menos claro?</label>
+      <textarea
+        id="unclear-point"
+        name="unclearPoint"
+        rows="6"
+        required
+        placeholder="Por ejemplo: no logro conectar la pendiente de la gráfica con la velocidad..."
+      ></textarea>
+    </div>
+
+    <fieldset class="participation-field participation-field--options">
+      <legend>¿Qué ayudaría a entenderlo mejor? <span>Opcional</span></legend>
+      <div class="participation-radio-list">
+        {SUPPORT_OPTIONS.map(([value, label]) => (
+          <label><input type="radio" name="helpfulSupport" value={value} /> <span>{label}</span></label>
+        ))}
+      </div>
+    </fieldset>
+
+    <button class="participation-primary" type="submit">Preparar respuesta</button>
+  </form>
+</section>

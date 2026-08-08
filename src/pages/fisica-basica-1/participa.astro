@@ -1,0 +1,48 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
+import ParticipationChooser from "../../components/participation/ParticipationChooser.astro";
+import ConceptDifficultyForm from "../../components/participation/ConceptDifficultyForm.astro";
+import QuestionProposalForm from "../../components/participation/QuestionProposalForm.astro";
+import FeedbackForm from "../../components/participation/FeedbackForm.astro";
+import ResponsePreview from "../../components/participation/ResponsePreview.astro";
+import { COURSE } from "../../data/course.js";
+import "../../styles/participation.css";
+---
+
+<BaseLayout
+  title={`Participa · ${COURSE.name}`}
+  description="Herramientas locales para expresar dificultades, proponer preguntas y mejorar Física Básica I."
+>
+  <article class="course-subpage participation-shell" data-participation-app>
+    <CoursePageHeader
+      title="Participa"
+      description="Expresa una dificultad, construye una pregunta o sugiere una mejora. Tú decides si copias o exportas la respuesta."
+    />
+
+    <section class="participation-intro" aria-labelledby="participation-local-title">
+      <div>
+        <p class="participation-kicker">Local y anónimo</p>
+        <h2 id="participation-local-title">Tu texto permanece contigo</h2>
+      </div>
+      <div>
+        <p><strong>Esta versión no envía ni guarda tu respuesta automáticamente.</strong></p>
+        <p>No pide nombre, correo, identificación, grupo ni nota. Evita incluir datos personales en el texto. La respuesta solo existe en memoria mientras esta página está abierta.</p>
+      </div>
+    </section>
+
+    <div class="participation-workspace">
+      <ParticipationChooser />
+      <ConceptDifficultyForm />
+      <QuestionProposalForm />
+      <FeedbackForm />
+      <ResponsePreview />
+    </div>
+
+    <p class="participation-status" aria-live="polite" aria-atomic="true" data-participation-status></p>
+  </article>
+</BaseLayout>
+
+<script>
+  import "../../scripts/participation.js";
+</script>

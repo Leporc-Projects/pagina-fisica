@@ -46,9 +46,10 @@ export const COURSE = {
 
 /**
  * Índice canónico de rutas internas del curso.
- * CourseNav y la navegación global comparten esta misma lista; validate.mjs
- * comprueba que no haya rutas duplicadas y que cada destino exista. Se guardan
- * rutas lógicas: los componentes incorporan el BASE_URL al renderizar.
+ * CourseNav consume la lista completa y la navegación global puede omitir
+ * entradas marcadas para permanecer dentro del curso. validate.mjs comprueba
+ * que no haya rutas duplicadas y que cada destino exista. Se guardan rutas
+ * lógicas: los componentes incorporan el BASE_URL al renderizar.
  */
 export const COURSE_NAV = [
     {
@@ -78,6 +79,12 @@ export const COURSE_NAV = [
     {
         label: "Recursos",
         href: "/fisica-basica-1/recursos",
+    },
+    {
+        label: "Participa",
+        href: "/fisica-basica-1/participa",
+        // Es propia del curso, pero no forma parte del menú global del sitio.
+        includeInGlobalMenu: false,
     },
 ];
 

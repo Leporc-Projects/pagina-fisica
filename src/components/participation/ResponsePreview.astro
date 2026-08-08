@@ -1,0 +1,45 @@
+---
+import ExportActions from "./ExportActions.astro";
+---
+
+<section class="response-preview" data-response-preview hidden aria-labelledby="response-preview-title">
+  <header class="response-preview__header">
+    <div>
+      <p class="participation-kicker">Respuesta preparada</p>
+      <h2 id="response-preview-title" tabindex="-1">Tu respuesta está lista para revisar</h2>
+    </div>
+    <button class="response-preview__edit" type="button" data-edit-response>Editar</button>
+  </header>
+
+  <p class="response-preview__brand">Papilla's Physics</p>
+
+  <dl class="response-preview__facts">
+    <div><dt>Tipo</dt><dd data-preview-type></dd></div>
+    <div><dt>Tema</dt><dd data-preview-topic></dd></div>
+  </dl>
+
+  <div class="response-preview__answer">
+    <h3>Respuesta</h3>
+    <p data-preview-response></p>
+  </div>
+
+  <dl class="response-preview__details" data-preview-details hidden></dl>
+
+  <section class="response-preview__optional" aria-labelledby="preview-optional-title">
+    <h3 id="preview-optional-title">Campos opcionales incluidos</h3>
+    <dl data-preview-optional></dl>
+    <p data-preview-no-optional>Ninguno.</p>
+  </section>
+
+  <dl class="response-preview__metadata">
+    <div><dt>ID de respuesta</dt><dd data-preview-id></dd></div>
+    <div><dt>Fecha</dt><dd data-preview-date></dd></div>
+  </dl>
+
+  <div class="response-preview__local-note">
+    <strong>Permanece en este navegador.</strong>
+    <p>Esta versión no envía ni guarda tu respuesta automáticamente. Copia o exporta el archivo antes de cerrar o recargar la página.</p>
+  </div>
+
+  <ExportActions />
+</section>

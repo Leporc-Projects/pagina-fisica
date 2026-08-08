@@ -1,0 +1,30 @@
+---
+import { ACTIVITY_OPTIONS } from "../../data/participation.js";
+---
+
+<fieldset class="participation-chooser" data-activity-chooser>
+  <legend>Elige una actividad</legend>
+  <p>Verás únicamente los campos que necesitas para esa opción.</p>
+
+  <div class="participation-chooser__options">
+    {
+      ACTIVITY_OPTIONS.map((option, index) => (
+        <label class="participation-choice">
+          <input
+            type="radio"
+            name="participation-activity"
+            value={option.value}
+            aria-controls={`activity-panel-${option.value}`}
+            data-activity-choice
+          />
+          <span class="participation-choice__index">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <strong>{option.label}</strong>
+          <span>{option.description}</span>
+          <small>Seleccionar</small>
+        </label>
+      ))
+    }
+  </div>
+</fieldset>

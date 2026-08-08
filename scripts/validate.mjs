@@ -42,6 +42,15 @@ import {
 } from "../src/data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../src/data/physics/unit-1/unit.js";
 import { UNIT_1_VISUALIZATIONS } from "../src/data/physics/unit-1/visualizations.js";
+import {
+  ACTIVITY_TYPES,
+  PARTICIPATION_TOPICS,
+} from "../src/data/participation.js";
+import {
+  PARTICIPATION_PURPOSES,
+  createParticipationResponse,
+  validateParticipationResponse,
+} from "../src/utils/participation.js";
 
 const projectRoot = fileURLToPath(
   new URL("../", import.meta.url)
@@ -203,9 +212,55 @@ check(
       "Videos",
       "Evaluación y notas",
       "Recursos",
+      "Participa",
     ].join("|") &&
-    COURSE_NAV.at(-1)?.href === "/fisica-basica-1/recursos",
-  "La navegación del curso incluye Recursos como última sección."
+    COURSE_NAV.at(-1)?.href === "/fisica-basica-1/participa" &&
+    COURSE_NAV.at(-1)?.includeInGlobalMenu === false,
+  "La navegación interna incluye Participa y la excluye del menú global."
+);
+
+check(
+  !NAV.flatMap((item) => item.children ?? [])
+    .some((item) => item.href === "/fisica-basica-1/participa"),
+  "Participa no aparece en la navegación global."
+);
+
+check(
+  ACTIVITY_TYPES.join(",") === [
+    "concept-difficulty",
+    "student-question-proposal",
+    "improvement-feedback",
+  ].join(","),
+  "Participación ofrece exactamente los tres modos iniciales."
+);
+
+check(
+  PARTICIPATION_TOPICS.map((topic) => topic.slug).join(",") ===
+    UNIT_1.topics.map((topic) => topic.slug).join(","),
+  "Participación deriva sus temas de la Unidad 1 real."
+);
+
+const validationParticipationResponse = createParticipationResponse({
+  activityType: "concept-difficulty",
+  topicSlug: UNIT_1.topics[0].slug,
+  payload: { unclearPoint: "Respuesta determinista de validación." },
+}, {
+  responseId: "resp_00112233445566778899aabbccddeeff",
+  createdAt: "2026-08-08T00:00:00.000Z",
+});
+
+check(
+  validateParticipationResponse(validationParticipationResponse).valid &&
+    validationParticipationResponse.collection === "local" &&
+    validationParticipationResponse.privacy === "anonymous" &&
+    validationParticipationResponse.submissionTarget === null,
+  "El contrato de participación es local, anónimo y no tiene destino de envío."
+);
+
+check(
+  !PARTICIPATION_PURPOSES.includes("research") &&
+    !PARTICIPATION_PURPOSES.includes("measurement"),
+  "Participación mantiene research y measurement fuera del flujo público."
 );
 
 check(

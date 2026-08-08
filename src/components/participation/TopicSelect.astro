@@ -1,0 +1,17 @@
+---
+import { PARTICIPATION_TOPICS } from "../../data/participation.js";
+
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<div class="participation-field">
+  <label for={id}>Tema de la Unidad 1</label>
+  <select id={id} name="topicSlug" required>
+    <option value="">Selecciona un tema</option>
+    {PARTICIPATION_TOPICS.map((topic) => <option value={topic.slug}>{topic.title}</option>)}
+  </select>
+</div>
