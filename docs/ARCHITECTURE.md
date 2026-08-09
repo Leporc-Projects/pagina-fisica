@@ -33,7 +33,7 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
 - `physics/index.js`: registro de unidades que ya tienen implementación académica.
-- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios (`exercises.js`). `math-content.js` es una capa de presentación: asocia fragmentos literales registrados con MathML sin modificar esas fuentes.
+- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios fijos (`exercises.js` y `additional-exercises.js`). `families.js` contiene generadores parametrizados auditables, `teacher-questions.json` conserva borradores importados y `bank.js` compone esas fuentes sin confundirlas. `math-content.js` es una capa de presentación: asocia fragmentos literales registrados con MathML sin modificar esas fuentes.
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -83,11 +83,15 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `academic/UnitOneNav.astro`: navegación local compacta alimentada por `UNIT_1.topics`; usa `details` nativo para evitar una segunda barra extensa durante la lectura.
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
 - `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
+- `bank/QuestionBankEditor.astro`: formulario docente local para previsualizar preguntas fijas y preparar un paquete JSON de borradores; no modifica el banco público.
 - `participation/`: selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
 - `review/`: importación accesible, agregados descriptivos, listado paginado, revisión de propuestas, incidencias y exportación de una sesión docente local. La ruta de la herramienta los compone sin incorporar lógica de contratos.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
+- `src/utils/exercise-families.js`: valida familias, genera parámetros con aleatoriedad criptográfica, evita combinaciones recientes en memoria y materializa una instancia determinista.
+- `src/utils/bonus-audit.js`: audita candidatos por slot y simula diversidad de tandas sin modificar blueprints.
+- `src/utils/question-pack.js`: contrato versionado, normalización y validación compartida por el editor y el importador del repositorio.
 - `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, delimitadores semánticos, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
 - `src/utils/participation.js`: núcleo puro para crear, validar y serializar una respuesta. No conoce formularios ni nodos del DOM y es la única fuente para TXT, JSON y CSV.
 - `src/scripts/participation.js`: adaptación pequeña entre formularios y contrato. Conserva una sola respuesta en memoria, controla la previsualización, descarga archivos, copia texto y abre la impresión nativa.
@@ -140,6 +144,8 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/ejercicios/unidad-1.astro` | `/fisica-basica-1/ejercicios/unidad-1` |
 | `src/pages/fisica-basica-1/bonos/index.astro` | `/fisica-basica-1/bonos` |
 | `src/pages/fisica-basica-1/bonos/[slug].astro` | `/fisica-basica-1/bonos/<slug>` |
+| `src/pages/fisica-basica-1/herramientas/revision.astro` | `/fisica-basica-1/herramientas/revision` |
+| `src/pages/fisica-basica-1/herramientas/banco.astro` | `/fisica-basica-1/herramientas/banco` |
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
 
@@ -243,8 +249,10 @@ requiriendo corrección y aprobación explícitas.
 
 Los duplicados producen una advertencia, registran todos los nombres de archivo
 y aportan una sola instancia a los agregados. Un archivo inválido no bloquea
-los demás. Los intentos de Bonos se reconocen por esquema, ID, Bono y versión,
-pero solo se listan; el Centro no consolida calificaciones ni infiere dominio.
+los demás. Los intentos de Bonos se reconocen por esquema, ID, Bono y versión.
+El Centro distingue copias anónimas e identificadas, muestra el correo
+únicamente cuando existe y permite filtrar o buscar ese dato; no consolida por
+estudiante, calificaciones ni infiere dominio.
 Todos los conteos son descriptivos y no constituyen diagnóstico, puntuación de
 satisfacción, analítica, clasificación automática ni investigación.
 
@@ -268,9 +276,9 @@ cantidad, tiempo, política de feedback y blueprint. La ruta dinámica
 y solo incluye el pool elegible de sus temas.
 
 ```text
-definición del Bono + pool público elegible
+definición del Bono + ítems fijos + familias públicas elegibles
    ↓ selectBonusQuestions() satisface ranuras sin repetir IDs
-selección y orden de opciones concretos
+selección + materialización determinista + orden de opciones concretos
    ↓ createBonusAttempt()
 objeto único de intento en memoria
    ↓ respuestas locales
@@ -285,7 +293,10 @@ Una ranura puede filtrar `topic`, `subtopic`, `type`, `representation` y
 `difficulty`. El selector usa `crypto.getRandomValues()`, backtracking y orden
 aleatorio de candidatos: satisface primero el blueprint y registra los IDs
 exactos; no depende de `Math.random()` ni promete reconstrucción por semilla.
-`validate.mjs` comprueba que cada blueprint puede resolverse con el banco.
+`validate.mjs` comprueba que cada blueprint puede resolverse y que cada ranura
+alcanza su mínimo editorial de candidatos. Las pruebas simulan 100 intentos por
+Bono para observar combinaciones y frecuencias sin convertirlas en analítica de
+uso.
 
 La auto-corrección requiere `bonusEligible: true` y `interaction`. Los tipos
 vigentes son `singleChoice`, `number` y `multiNumber`. Un `answer.kind: "text"`
@@ -300,12 +311,15 @@ conserva `pointsEarned`, `pointsPossible`, `percentage`, desglose por tema y
 recomendaciones limitadas a lo observado en la tanda. No produce categorías de
 aprobación, niveles ni estimaciones globales de dominio.
 
-El contrato de intento `1.0.0` incluye `attemptId` aleatorio de 128 bits,
+El contrato de intento `1.1.0` incluye `attemptId` aleatorio de 128 bits,
 versiones del Bono y de los ejercicios, timestamps ISO, orden, orden de
-opciones, snapshot de título/enunciado, respuestas, corrección, puntos,
-resumen y privacidad local/anónima. No registra tiempos por pregunta,
-navegación, dispositivo ni identidad. Un nuevo intento reemplaza el anterior
-en memoria.
+opciones, snapshot de título/enunciado/respuesta esperada, parámetros y versión
+de familia cuando corresponde, respuestas, corrección, puntos, resumen y
+privacidad local. El modo inicial es `identity: { mode: "anonymous" }`. Tras
+finalizar, “Preparar entrega” puede producir una copia separada con
+`institutionalEmail`; el intento formativo original sigue anónimo. No registra
+tiempos por pregunta, navegación ni dispositivo. Un nuevo intento reemplaza el
+anterior en memoria. El validador mantiene compatibilidad de lectura con `1.0.0`.
 
 JSON conserva el contrato completo, TXT ofrece el reporte legible y CSV genera
 una fila por pregunta. El serializador CSV compartido con Participa duplica
@@ -313,6 +327,37 @@ comillas, preserva saltos de línea y Unicode, añade BOM y neutraliza en campos
 de entrada los prefijos `=`, `+`, `-` y `@` para reducir formula injection al
 abrir una hoja de cálculo. Los archivos siguen siendo editables: no son una
 prueba de autenticidad, firma ni certificación.
+
+### Banco fijo, familias y autoría docente
+
+`UNIT_1_EXERCISES` contiene únicamente ítems fijos. Las familias de
+`UNIT_1_EXERCISE_FAMILIES` son definiciones de código revisadas con
+`generateParameters()` y `build()`; nunca se guardan como copias estáticas ni se
+editan desde el navegador. `UNIT_1_BANK_ITEMS` es la composición explícita que
+consumen Práctica y Bonos.
+
+Una instancia parametrizada recibe un ID derivado de su familia y de los
+parámetros, pero la interfaz no presenta el `familyId`. En Práctica se genera al
+entrar en una tanda. En Bono se materializa antes de crear el intento, y el
+snapshot conserva enunciado, respuesta, parámetros, versión e ID de instancia;
+la corrección y las exportaciones nunca regeneran la pregunta.
+
+`/fisica-basica-1/herramientas/banco` no es administración ni tiene
+autenticación ficticia. Previsualiza `singleChoice`, `number` y `multiNumber`,
+mantiene borradores en memoria y exporta `papillas-question-pack-*.json` con
+esquema versionado, `authorSource: "teacher"` y `status: "draft"`. Contenido
+con `requiresEditorialMath: true` queda fuera de Bonos hasta composición y
+revisión editorial.
+
+El comando `npm run import:questions -- ruta/paquete.json` acepta solo JSON,
+valida IDs, temas, respuestas y duplicados, y combina los borradores en
+`teacher-questions.json`. No ejecuta el archivo, no publica y no cambia el
+estado a `review` o `published`. El flujo sigue siendo:
+
+```text
+editor local → paquete docente JSON → importador del repositorio
+             → borrador separado → revisión/corrección → aprobación/publicación
+```
 
 ### Arquitectura académica de la Unidad 1
 
@@ -375,7 +420,9 @@ separación impide asumir que todo ejercicio público puede puntuarse.
 
 `status` describe el flujo de revisión académica: `draft` es trabajo incompleto,
 `review` está listo para revisión de César y `published` significa aprobación
-docente final. El banco actual permanece en `review`. `purpose` separa
+docente final. Los ítems editoriales actuales permanecen en `review`; los
+paquetes docentes importados permanecen en `draft` hasta una decisión
+explícita. `purpose` separa
 `learning` de un futuro banco `measurement`; `exposure` distingue `public` y
 `restricted`. La página solo consume ejercicios públicos de aprendizaje que no
 estén en borrador. Todavía no existe un banco de medición.
@@ -385,8 +432,9 @@ Un ejercicio puede declarar `visualizationId`. `OpenPractice` lo resuelve contra
 `AcademicVisualization`; `exercises.js` nunca contiene copias de SVG. Las
 representaciones `graphical` y `visual` se validan contra una figura existente.
 
-Antes de ejecutarse JavaScript, todos los ejercicios públicos permanecen en el
-HTML como una lista utilizable. La mejora vanilla selecciona hasta cinco con
+Antes de ejecutarse JavaScript, todos los ejercicios fijos públicos permanecen
+en el HTML como una lista utilizable. Las instancias parametrizadas requieren
+la mejora vanilla, que selecciona hasta cinco con
 `selectExerciseBatch`, procura variedad y mantiene un `Set` de IDs vistos solo
 durante la sesión de página. Los filtros de tema, dificultad y tipo vuelven a
 calcular la tanda; si hay menos de cinco, muestra los disponibles sin repetir.
@@ -664,7 +712,7 @@ Los contratos más importantes son:
 - contrato académico: siete temas ordenados, capas de profundidad admitidas, referencias existentes entre contenido, fórmulas, figuras y errores;
 - fórmulas MathML con significado, variables, condiciones, interpretación dimensional y errores asociados;
 - registro de MathML inline sin notación de teclado pendiente en el contenido visible;
-- banco vigente de 34 ejercicios con identificadores únicos, taxonomías válidas, unidad esperada y tolerancia para respuestas numéricas, solución y versión editorial;
+- banco vigente de 55 ejercicios fijos y 15 familias parametrizadas con identificadores únicos, taxonomías válidas, unidad esperada, tolerancia, solución y versión editorial;
 - doce pruebas de participación para esquema, IDs, requeridos, enums, opcionales y serialización TXT/JSON/CSV con Unicode y saltos de línea;
 - contratos de mapa, disclosure progresivo y secuencia de ejercicios sin persistencia ni dependencias nuevas;
 - figuras académicas con dominios válidos, coordenadas físicas finitas y descripción accesible.

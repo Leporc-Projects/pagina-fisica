@@ -12,10 +12,12 @@ memoria de la pestaña. Prepararla no transmite ni guarda nada. Solo una acción
 explícita del estudiante puede copiar el texto, descargar TXT/JSON/CSV o abrir
 el diálogo de impresión para guardar un PDF.
 
-Los Bonos también operan únicamente en memoria. Crean un intento local,
-calculan el resultado en el navegador y permiten copiar o exportar después de
-finalizar. Recargar o cerrar elimina el intento; no existe historial local ni
-asociación con una persona.
+Los Bonos también operan únicamente en memoria. Crean un intento local y
+anónimo, calculan el resultado en el navegador y permiten copiar o exportar
+después de finalizar. Solo si el estudiante elige “Preparar entrega” se crea
+una copia separada con el correo institucional escrito en ese momento. El sitio
+no la envía ni la persiste. Recargar o cerrar elimina ambos objetos; no existe
+historial local.
 
 El Centro de revisión docente lee los JSON que una persona selecciona desde su
 equipo. La selección no carga archivos a Papilla's Physics ni a un tercero: se
@@ -65,9 +67,10 @@ Un intento puede contener:
 - respuesta, corrección y puntos por pregunta;
 - resultado total, porcentaje y desglose por tema de la tanda;
 - subtemas que podría convenir repasar a partir de errores observados;
-- `collection: local` e `identity: anonymous`.
+- `collection: local` e identidad anónima por defecto;
+- para una copia de entrega opcional, `identity: { mode: "institutionalEmail", email }` y fecha local de preparación.
 
-No contiene identidad, IP, user-agent, pantalla, zona horaria independiente,
+El intento anónimo no contiene identidad, IP, user-agent, pantalla, zona horaria independiente,
 tiempo por pregunta, clics, scroll ni fingerprint. `startedAt` y `completedAt`
 describen el intento, pero no se interpretan como indicador pedagógico.
 
@@ -97,7 +100,8 @@ dispositivo, ruta local, IP, user-agent ni huella. Tampoco registra tiempo de
 revisión, clics, navegación o tamaño de pantalla.
 
 El reconocimiento básico de un intento de Bono comprueba su contrato, Bono y
-versión, y permite consultar su resultado. No crea una planilla de notas, no
+versión, y permite consultar su resultado. Distingue anónimo/identificado,
+muestra el correo solo cuando existe y permite filtrarlo, pero no crea una planilla de notas, no
 vincula intentos entre sí y no estima dominio individual o grupal.
 
 ## Categorías y propósitos
@@ -124,7 +128,24 @@ participación.
 - Pseudónimo: un código estable permite vincular registros entre sí o con una
   tabla separada, aunque el nombre no aparezca. El sitio no lo implementa.
 - Identificado: el registro contiene o puede asociarse directamente con nombre,
-  correo, documento u otro identificador personal. El sitio no lo implementa.
+  correo, documento u otro identificador personal. Solo la copia opcional de
+  entrega de un Bono implementa esta categoría mediante correo institucional.
+
+El correo es un dato personal y se usa exclusivamente para identificar el
+archivo que el estudiante decide preparar para entrega. Vive en memoria, entra
+en TXT/JSON/CSV/PDF identificados y no se usa para analítica, medición,
+investigación, perfiles o seguimiento. `acceptedDomains` es configuración
+editorial opcional: vacío significa validar solo sintaxis, no asumir un dominio.
+Un canal que ya autentique al estudiante podrá desactivar el correo incrustado.
+
+## Paquetes de autoría docente
+
+El Editor de banco conserva en memoria enunciados, respuestas y metadatos
+académicos escritos por el docente. El paquete exportado no pide ni incluye
+nombre o correo del autor; registra solo `authorSource: teacher`, ID del paquete,
+fecha y preguntas en borrador. El importador del repositorio procesa JSON como
+datos, no código. Esta autoría académica es distinta de datos estudiantiles y no
+convierte el editor en un servicio remoto.
 
 Un ID aleatorio por respuesta no vuelve pseudónima la respuesta porque no se
 reutiliza como identidad ni existe una tabla de correspondencia. Esta condición

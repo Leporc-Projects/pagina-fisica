@@ -146,8 +146,10 @@ Los apuntes y guías pueden incorporarse cuando sean propios, estén revisados y
 
 ## Añadir un ejercicio
 
-La Unidad 1 mantiene su banco en
-`src/data/physics/unit-1/exercises.js`. Los ejercicios son originales o parten
+La Unidad 1 mantiene los ítems fijos en `exercises.js` y
+`additional-exercises.js`, las familias parametrizadas en `families.js` y los
+borradores importados en `teacher-questions.json`. `bank.js` compone esas
+fuentes para los consumidores. Los ejercicios son originales o parten
 de semillas expresamente aprobadas; no se copian bancos ni solucionarios
 comerciales. Cada registro usa un identificador estable y declara:
 
@@ -175,6 +177,13 @@ se debe comprobar que el banco público de aprendizaje puede satisfacer todas
 las ranuras sin repetir ejercicios. No se añaden distractores o ejercicios
 solo para completar una cuota técnica.
 
+Una familia parametrizada es código editorial, no una plantilla de texto con
+`eval`. Debe declarar restricciones, generar parámetros finitos y derivar de
+ellos una instancia determinista. Sus fórmulas, signos, redondeo, unidades y
+tolerancias requieren tests con cientos de generaciones. Práctica puede
+materializarla al seleccionar una tanda; Bono debe guardar la instancia exacta
+en su snapshot antes de mostrarla. Ningún exportador vuelve a generar valores.
+
 Los identificadores de tema, subtema y error deben existir en los archivos de
 la unidad. Un ejercicio numérico requiere unidad esperada y tolerancia; estos
 campos no deben inferirse en el navegador. Al modificar un enunciado o su
@@ -191,14 +200,36 @@ asociados a errores identificados. El fallback debe ser neutral porque una
 actividad puede ser conceptual, gráfica o numérica. Esta estructura no implica
 un motor adaptativo ni autoriza generar retroalimentación durante el uso.
 
-La práctica de Unidad 1 consume el banco público de aprendizaje mediante
+La práctica de Unidad 1 consume ítems fijos e instancias parametrizadas mediante
 `OpenPractice.astro`. JavaScript selecciona una tanda de hasta cinco ejercicios
 con variedad razonable y permite filtrar por tema, dificultad y tipo. El hash
 usa el `id` estable para volver a un ejercicio y el HTML conserva todos los
-registros como fallback. Un `Set` de IDs vistos reduce repeticiones mientras la
+ítems fijos como fallback. Sets de IDs y combinaciones reducen repeticiones mientras la
 página permanece abierta; se descarta al recargar. No se muestra `N de M` del
 banco, no existe una meta de finalización y no se guardan progreso, respuestas,
 historial ni filtros.
+
+### Autoría docente mediante paquetes
+
+El Editor de banco crea solo preguntas fijas `singleChoice`, `number` o
+`multiNumber`. Genera el ID provisional, muestra una previsualización y exporta
+un paquete JSON versionado. No debe simular autenticación, modificar el sitio ni
+presentar un borrador como publicado. La dificultad introducida aquí sí es
+editorial porque procede de autoría/revisión docente; nunca se toma de
+`studentDifficultyEstimate`.
+
+Todo paquete usa `authorSource: "teacher"` y `status: "draft"`. Si
+`requiresEditorialMath` es verdadero, `bonusEligible` debe ser falso hasta que
+se compongan y revisen MathML o figuras. Para incorporarlo se ejecuta:
+
+```sh
+npm run import:questions -- ruta/al/paquete.json
+```
+
+El importador solo lee JSON, rechaza IDs repetidos, temas o respuestas inválidas
+y escribe en el archivo docente separado. Después se revisan contenido,
+notación, dificultad, errores frecuentes y estado mediante un cambio normal del
+repositorio. Nunca se ejecuta JS suministrado ni se publica automáticamente.
 
 Para un ejercicio cuya interpretación depende de una figura:
 
@@ -292,7 +323,8 @@ dificultad editorial oficial.
 Los resúmenes muestran conteos observables por actividad, tema u opción. No se
 redactan diagnósticos, índices de satisfacción, perfiles, inferencias causales
 ni conclusiones sobre todo el grupo. Los intentos de Bonos se consultan como
-archivos anónimos individuales; no se usan para consolidar notas.
+archivos individuales anónimos o identificados; el correo solo se muestra si el
+archivo lo contiene y no se usa para consolidar notas o vincular intentos.
 
 ## Añadir una fórmula
 
@@ -352,8 +384,9 @@ draft → review → published
 - `review`: está preparado para revisión, pero no tiene aprobación académica final;
 - `published`: César Barrero aprobó académicamente esa versión.
 
-Todo ejercicio nuevo comienza en `review` salvo que todavía esté incompleto, en
-cuyo caso comienza en `draft`. No se debe usar `published` como sinónimo de
+Un ejercicio añadido directamente por el equipo editorial comienza en `review`
+si está completo; un paquete del editor docente comienza siempre en `draft`.
+No se debe usar `published` como sinónimo de
 “compila” o “es visible técnicamente”. `purpose: "learning"` identifica el
 banco de aprendizaje; `purpose: "measurement"` queda reservado para un banco
 futuro. `exposure: "public"` permite exposición y `restricted` la impide. Esta
