@@ -1,0 +1,213 @@
+---
+import BonusQuestion from "./BonusQuestion.astro";
+import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+
+type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
+
+interface Props {
+  bonus: any;
+  exercises: any[];
+  visualizations: Record<string, any>;
+  present?: (value: string) => RichContent;
+}
+
+const {
+  bonus,
+  exercises,
+  visualizations,
+  present = (value) => value,
+} = Astro.props;
+const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
+const clientExercises = exercises.map((exercise) => ({
+  id: exercise.id,
+  version: exercise.version,
+  title: exercise.title,
+  prompt: exercise.prompt,
+  topic: exercise.topic,
+  subtopic: exercise.subtopic,
+  type: exercise.type,
+  representation: exercise.representation,
+  difficulty: exercise.difficulty,
+  modalities: exercise.modalities,
+  purpose: exercise.purpose,
+  exposure: exercise.exposure,
+  bonusEligible: exercise.bonusEligible,
+  answer: exercise.answer,
+  tolerance: exercise.tolerance,
+  interaction: exercise.interaction,
+  feedback: exercise.feedback,
+}));
+const serializedData = JSON.stringify({ bonus, exercises: clientExercises })
+  .replaceAll("<", "\\u003c")
+  .replaceAll(">", "\\u003e")
+  .replaceAll("&", "\\u0026");
+---
+
+<section class="bonus-app" data-bonus-app aria-labelledby="bonus-app-title">
+  <script type="application/json" data-bonus-data set:html={serializedData}></script>
+
+  <div class="bonus-introduction" data-bonus-introduction>
+    <div>
+      <p class="academic-label">Antes de comenzar</p>
+      <h2 id="bonus-app-title">Una tanda corta, sin cronómetro</h2>
+      <p>
+        Responde una pregunta a la vez y revisa la tanda antes de finalizar.
+        El intento permanece únicamente mientras esta página está abierta.
+      </p>
+    </div>
+
+    <dl class="bonus-introduction__facts">
+      <div>
+        <dt>Preguntas</dt>
+        <dd>{bonus.questionCount}</dd>
+      </div>
+      <div>
+        <dt>Tiempo orientativo</dt>
+        <dd>{bonus.estimatedMinutes} min</dd>
+      </div>
+      <div>
+        <dt>Retroalimentación</dt>
+        <dd>Al finalizar</dd>
+      </div>
+    </dl>
+
+    <button type="button" class="bonus-primary" data-bonus-start>
+      Iniciar Bono
+    </button>
+  </div>
+
+  <div class="bonus-session" data-bonus-session hidden>
+    <header class="bonus-session__header">
+      <div>
+        <p class="academic-label">Intento local</p>
+        <h2 data-session-title>Responde con calma</h2>
+      </div>
+      <p class="bonus-session__progress" data-bonus-progress></p>
+    </header>
+
+    <nav class="bonus-question-nav" aria-label="Preguntas del Bono" data-question-nav></nav>
+
+    <div class="bonus-question-stage" data-question-stage>
+      {exercises.map((exercise) => (
+        <BonusQuestion
+          exercise={exercise}
+          topicTitle={topicMap.get(exercise.topic)?.shortTitle ?? exercise.topic}
+          visualization={exercise.visualizationId
+            ? visualizations[exercise.visualizationId]
+            : undefined}
+          present={present}
+        />
+      ))}
+    </div>
+
+    <nav class="bonus-session__controls" aria-label="Navegación del intento">
+      <button type="button" data-question-previous>
+        <span aria-hidden="true">←</span> Anterior
+      </button>
+      <button type="button" class="bonus-review-button" data-bonus-review>
+        Revisar intento
+      </button>
+      <button type="button" data-question-next>
+        Siguiente <span aria-hidden="true">→</span>
+      </button>
+    </nav>
+
+    <button type="button" class="bonus-back-result" data-back-to-result hidden>
+      Volver al resultado
+    </button>
+  </div>
+
+  <section class="bonus-review" data-bonus-review-panel hidden aria-labelledby="bonus-review-title">
+    <header>
+      <p class="academic-label">Revisión</p>
+      <h2 id="bonus-review-title">Comprueba tus respuestas</h2>
+      <p data-review-summary></p>
+    </header>
+
+    <ol class="bonus-review__list" data-review-list></ol>
+
+    <div class="bonus-review__actions">
+      <button type="button" data-review-return>Volver a las preguntas</button>
+      <button type="button" class="bonus-primary" data-finish-attempt>
+        Finalizar intento
+      </button>
+    </div>
+
+    <div class="bonus-unanswered-confirmation" data-unanswered-confirmation hidden>
+      <p data-unanswered-message></p>
+      <div>
+        <button type="button" data-unanswered-return>Volver a revisar</button>
+        <button type="button" class="bonus-primary" data-finish-anyway>
+          Finalizar de todos modos
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="bonus-result" data-bonus-result hidden aria-labelledby="bonus-result-title">
+    <div class="bonus-print-brand" aria-hidden="true">
+      <strong>Papilla's Physics</strong>
+      <span>Física Básica I</span>
+    </div>
+
+    <header class="bonus-result__header">
+      <div>
+        <p class="academic-label">Resultado del Bono</p>
+        <h2 id="bonus-result-title" tabindex="-1">Resultado de este intento</h2>
+        <p class="bonus-result__score" data-result-score></p>
+      </div>
+      <dl class="bonus-result__meta">
+        <div>
+          <dt>Bono</dt>
+          <dd>{bonus.title}</dd>
+        </div>
+        <div>
+          <dt>ID del intento</dt>
+          <dd data-result-id></dd>
+        </div>
+        <div>
+          <dt>Fecha</dt>
+          <dd data-result-date></dd>
+        </div>
+      </dl>
+    </header>
+
+    <p class="bonus-result__scope">
+      Este resultado describe únicamente las preguntas de esta tanda y no
+      constituye por sí solo una medición completa de tu dominio del tema.
+    </p>
+
+    <div class="bonus-result__grid">
+      <section aria-labelledby="result-topics-title">
+        <h3 id="result-topics-title">Resultado por tema en esta tanda</h3>
+        <dl class="bonus-topic-results" data-result-topics></dl>
+      </section>
+
+      <section aria-labelledby="result-review-title">
+        <h3 id="result-review-title">Qué podría convenirte repasar</h3>
+        <div data-result-recommendations></div>
+      </section>
+    </div>
+
+    <div class="bonus-result__actions" data-export-actions>
+      <button type="button" data-review-answers>Revisar respuestas</button>
+      <button type="button" data-bonus-export="copy">Copiar resumen</button>
+      <button type="button" data-bonus-export="txt">TXT</button>
+      <button type="button" data-bonus-export="json">JSON</button>
+      <button type="button" data-bonus-export="csv">CSV</button>
+      <button type="button" data-bonus-export="print">Imprimir / PDF</button>
+      <button type="button" class="bonus-primary" data-another-attempt>Otro intento</button>
+    </div>
+
+    <p class="bonus-result__local-note">
+      Este resultado se calculó localmente y no se envió ni se registró automáticamente.
+    </p>
+  </section>
+
+  <p class="bonus-status" data-bonus-status aria-live="polite"></p>
+</section>
+
+<script>
+  import { initializeBonus } from "../../scripts/bonus.js";
+  initializeBonus();
+</script>

@@ -1,0 +1,155 @@
+---
+import RichText from "../academic/RichText.astro";
+import AcademicVisualization from "../visualization/AcademicVisualization.astro";
+
+type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
+
+interface Props {
+  exercise: any;
+  topicTitle: string;
+  visualization?: any;
+  present?: (value: string) => RichContent;
+}
+
+const {
+  exercise,
+  topicTitle,
+  visualization,
+  present = (value) => value,
+} = Astro.props;
+const interaction = exercise.interaction;
+---
+
+<article
+  class="bonus-question"
+  data-bonus-question
+  data-exercise-id={exercise.id}
+  hidden
+  aria-labelledby={`${exercise.id}-bonus-title`}
+>
+  <header class="bonus-question__header">
+    <div>
+      <p class="bonus-question__counter" data-question-counter>Pregunta</p>
+      <h2 id={`${exercise.id}-bonus-title`} tabindex="-1">{exercise.title}</h2>
+    </div>
+    <p class="bonus-question__topic">{topicTitle}</p>
+  </header>
+
+  <div class="bonus-question__content">
+    <p class="bonus-question__prompt">
+      <RichText content={present(exercise.prompt)} />
+    </p>
+
+    {visualization && (
+      <div class="bonus-question__visualization">
+        <AcademicVisualization
+          visualization={visualization}
+          present={present}
+          showExplanation={false}
+        />
+      </div>
+    )}
+  </div>
+
+  {interaction.kind === "singleChoice" && (
+    <fieldset class="bonus-question__interaction bonus-question__choice">
+      <legend>Elige una respuesta</legend>
+      <div class="bonus-choice-list" data-bonus-options>
+        {interaction.options.map((option) => (
+          <label class="bonus-choice" data-option-id={option.id}>
+            <input
+              type="radio"
+              name={`response-${exercise.id}`}
+              value={option.id}
+              data-bonus-response
+            />
+            <span class="bonus-choice__marker" aria-hidden="true"></span>
+            <span><RichText content={present(option.content)} /></span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )}
+
+  {interaction.kind === "number" && (
+    <div class="bonus-question__interaction bonus-number-field">
+      <label for={`${exercise.id}-value`}>{interaction.field.label}</label>
+      <div class="bonus-number-field__control">
+        <input
+          id={`${exercise.id}-value`}
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          spellcheck="false"
+          data-bonus-response
+          data-field-id={interaction.field.id}
+          aria-describedby={`${exercise.id}-value-help ${exercise.id}-value-error`}
+        />
+        {interaction.field.unit && <span>{interaction.field.unit}</span>}
+      </div>
+      <small id={`${exercise.id}-value-help`}>Puedes usar coma, punto, notación científica o una fracción simple.</small>
+      <small class="bonus-field-error" id={`${exercise.id}-value-error`} data-field-error></small>
+    </div>
+  )}
+
+  {interaction.kind === "multiNumber" && (
+    <fieldset class="bonus-question__interaction bonus-multi-number">
+      <legend>Completa cada valor</legend>
+      <div class="bonus-multi-number__fields">
+        {interaction.fields.map((field) => (
+          <div class="bonus-number-field">
+            <label for={`${exercise.id}-${field.id}`}>{field.label}</label>
+            <div class="bonus-number-field__control">
+              <input
+                id={`${exercise.id}-${field.id}`}
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                spellcheck="false"
+                data-bonus-response
+                data-field-id={field.id}
+                aria-describedby={`${exercise.id}-${field.id}-error`}
+              />
+              {field.unit && <span>{field.unit}</span>}
+            </div>
+            <small
+              class="bonus-field-error"
+              id={`${exercise.id}-${field.id}-error`}
+              data-field-error
+            ></small>
+          </div>
+        ))}
+      </div>
+      <small>Puedes usar coma, punto, notación científica o una fracción simple.</small>
+    </fieldset>
+  )}
+
+  <section class="bonus-question__feedback" data-question-feedback hidden aria-live="polite">
+    <p class="bonus-question__feedback-status" data-feedback-status></p>
+    <dl>
+      <div>
+        <dt>Tu respuesta</dt>
+        <dd data-feedback-response></dd>
+      </div>
+      <div>
+        <dt>Respuesta esperada</dt>
+        <dd data-feedback-expected></dd>
+      </div>
+    </dl>
+    <p data-feedback-message></p>
+
+    {exercise.solution.length > 0 && (
+      <details class="bonus-question__solution" data-feedback-solution>
+        <summary>Revisar solución</summary>
+        <ol>
+          {exercise.solution.map((item) => (
+            <li>
+              <strong>{item.title}</strong>
+              <p><RichText content={present(item.text)} /></p>
+            </li>
+          ))}
+        </ol>
+      </details>
+    )}
+  </section>
+</article>

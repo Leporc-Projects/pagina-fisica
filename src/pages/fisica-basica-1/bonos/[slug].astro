@@ -1,0 +1,64 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import BonusAttempt from "../../../components/bonus/BonusAttempt.astro";
+import { UNIT_1_BONUSES } from "../../../data/physics/unit-1/bonuses.js";
+import { UNIT_1_EXERCISES } from "../../../data/physics/unit-1/exercises.js";
+import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
+import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
+import { UNIT_1_VISUALIZATIONS } from "../../../data/physics/unit-1/visualizations.js";
+import { eligiblePoolForBonus } from "../../../utils/bonus.js";
+import { withBase } from "../../../utils/paths.js";
+import "../../../styles/bonus.css";
+
+export function getStaticPaths() {
+  return UNIT_1_BONUSES.map((bonus) => ({
+    params: { slug: bonus.slug },
+    props: {
+      bonus,
+      exercises: eligiblePoolForBonus(bonus, UNIT_1_EXERCISES),
+    },
+  }));
+}
+
+const { bonus, exercises } = Astro.props;
+const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
+---
+
+<BaseLayout title={`${bonus.title} · Física Básica I`} description={bonus.description}>
+  <article class="bonus-page">
+    <header class="bonus-page__hero">
+      <nav class="academic-breadcrumb" aria-label="Migas de pan">
+        <a href={withBase("/fisica-basica-1/bonos")}>Bonos</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{bonus.shortTitle}</span>
+      </nav>
+
+      <div class="bonus-page__heading">
+        <p class="eyebrow eyebrow--dark">Bono · {UNIT_1.shortTitle}</p>
+        <h1>{bonus.title}</h1>
+        <p>{bonus.description}</p>
+      </div>
+
+      <ul class="bonus-page__topics" aria-label="Temas de este Bono">
+        {bonus.topics.map((topic) => (
+          <li>{topicMap.get(topic)?.shortTitle ?? topic}</li>
+        ))}
+      </ul>
+
+      <aside class="bonus-page__policy">
+        <strong>Resultado local y anónimo</strong>
+        <p>
+          El resultado se calcula en tu navegador y no se envía ni se registra
+          automáticamente. No se solicita información personal.
+        </p>
+      </aside>
+    </header>
+
+    <BonusAttempt
+      bonus={bonus}
+      exercises={exercises}
+      visualizations={UNIT_1_VISUALIZATIONS}
+      present={presentUnit1RichText}
+    />
+  </article>
+</BaseLayout>

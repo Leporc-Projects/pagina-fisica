@@ -1,0 +1,62 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../../components/course/CoursePageHeader.astro";
+import BonusCatalogCard from "../../../components/bonus/BonusCatalogCard.astro";
+import { COURSE } from "../../../data/course.js";
+import { UNIT_1_BONUSES } from "../../../data/physics/unit-1/bonuses.js";
+import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
+import { withBase } from "../../../utils/paths.js";
+import "../../../styles/bonus.css";
+---
+
+<BaseLayout
+  title={`Bonos · ${COURSE.name}`}
+  description={`Actividades breves de autodiagnóstico y preparación para ${COURSE.name}.`}
+>
+  <article class="course-subpage bonus-catalog-page">
+    <CoursePageHeader
+      title="Bonos"
+      description="Actividades cortas para comprobar cómo vas, identificar qué conviene repasar y prepararte para las evaluaciones del curso."
+    />
+
+    <section class="bonus-purpose" aria-labelledby="bonus-purpose-title">
+      <div>
+        <p class="academic-label">Preparación y autodiagnóstico</p>
+        <h2 id="bonus-purpose-title">Un resultado para orientar la siguiente práctica</h2>
+      </div>
+      <div>
+        <p>
+          El resultado se calcula en tu navegador y no se envía ni se registra
+          automáticamente. No se solicita nombre, correo ni identificación.
+        </p>
+        <p>
+          Cuando el profesor indique que un Bono se tendrá en cuenta como
+          complemento de una evaluación, lo comunicará explícitamente.
+        </p>
+      </div>
+    </section>
+
+    <section class="bonus-catalog" aria-labelledby="unit-1-bonuses-title">
+      <header class="bonus-catalog__header">
+        <div>
+          <p class="academic-label">{UNIT_1.shortTitle}</p>
+          <h2 id="unit-1-bonuses-title">{UNIT_1.title}</h2>
+        </div>
+        <p>Elige el recorrido que mejor corresponda a lo que quieres revisar.</p>
+      </header>
+
+      <div class="bonus-catalog__grid">
+        {UNIT_1_BONUSES.map((bonus) => <BonusCatalogCard bonus={bonus} />)}
+      </div>
+    </section>
+
+    <aside class="bonus-catalog__practice-link">
+      <div>
+        <p class="academic-label">Práctica abierta</p>
+        <h2>¿Prefieres explorar sin resultado?</h2>
+        <p>El banco abierto mantiene pistas y soluciones disponibles sin crear un intento.</p>
+      </div>
+      <a class="text-link" href={withBase(UNIT_1.practiceRoute)}>Abrir práctica de Unidad 1</a>
+    </aside>
+  </article>
+</BaseLayout>

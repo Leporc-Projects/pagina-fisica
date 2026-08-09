@@ -3,6 +3,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { COURSE, EVALUATION } from "../../data/course.js";
+import { withBase } from "../../utils/paths.js";
 
 const totalPercentage = EVALUATION.reduce(
   (total, item) => total + item.percentage,
@@ -45,6 +46,24 @@ const totalPercentage = EVALUATION.reduce(
             </article>
           ))
         }
+      </div>
+    </section>
+
+    <section class="course-section course-section--split" aria-labelledby="evaluation-bonuses-title">
+      <div>
+        <p class="course-section__index">Actividades complementarias</p>
+        <h2 id="evaluation-bonuses-title">Bonos</h2>
+      </div>
+      <div class="course-section__body">
+        <p class="course-lead">
+          Los Bonos ayudan a prepararse y no sustituyen los cuatro exámenes ni
+          el taller. Un resultado no modifica automáticamente ninguna calificación.
+        </p>
+        <p>
+          Si un Bono se utiliza como complemento de una evaluación, el profesor
+          comunicará explícitamente cómo se tendrá en cuenta.
+        </p>
+        <a class="text-link" href={withBase("/fisica-basica-1/bonos")}>Abrir Bonos</a>
       </div>
     </section>
 

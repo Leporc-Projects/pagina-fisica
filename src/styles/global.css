@@ -77,10 +77,10 @@
   --home-hero-orb-opacity: 0.08;
   --home-hero-grid-opacity: 0.08;
 
-  /* Lienzos futuros para fórmulas, gráficas, simulaciones y quizzes. */
+  /* Lienzos para fórmulas, gráficas, simulaciones y Bonos. */
   --content-canvas: #fffaf6;
   --formula-bg: #eee4da;
-  --quiz-bg: #fffaf6;
+  --bonus-bg: #fffaf6;
   --simulation-bg: #fffaf6;
   --data-series-1: #94382f;
   --data-series-2: #87501f;
@@ -218,7 +218,7 @@
 
   --content-canvas: #0d1215;
   --formula-bg: #11171b;
-  --quiz-bg: #11171b;
+  --bonus-bg: #11171b;
   --simulation-bg: #0d1215;
   --data-series-1: #47d5f4;
   --data-series-2: #65ef82;
@@ -2972,6 +2972,12 @@ main {
   align-items: start;
   border-top: 2px solid var(--border-strong);
   padding-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.unit-practice-cta__links {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-3);
 }
 
 .unit-study-guide h2,

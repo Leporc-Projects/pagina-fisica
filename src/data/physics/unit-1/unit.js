@@ -12,6 +12,7 @@ export const UNIT_1 = {
   status: "review",
   route: unitRoute,
   practiceRoute: "/fisica-basica-1/ejercicios/unidad-1",
+  bonusRoute: "/fisica-basica-1/bonos",
   description:
     "Herramientas de medición, álgebra vectorial y descripción del movimiento en una, dos y tres dimensiones.",
   sourceScope: {

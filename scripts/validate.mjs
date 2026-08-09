@@ -15,6 +15,7 @@ import {
 } from "../src/data/course.js";
 import { HOME_LINKS, NAV, SITE } from "../src/data/site.js";
 import { NOTICES } from "../src/data/notices.js";
+import { BONUSES } from "../src/data/bonuses/index.js";
 import { VIDEOS } from "../src/data/videos.js";
 import {
   THEME_COLORS,
@@ -28,6 +29,7 @@ import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.j
 import {
   EXERCISE_COGNITIVE_LEVELS,
   EXERCISE_EXPOSURES,
+  EXERCISE_INTERACTION_KINDS,
   EXERCISE_MODALITIES,
   EXERCISE_PURPOSES,
   EXERCISE_REPRESENTATIONS,
@@ -46,6 +48,11 @@ import {
   ACTIVITY_TYPES,
   PARTICIPATION_TOPICS,
 } from "../src/data/participation.js";
+import {
+  BONUS_FEEDBACK_POLICIES,
+  canSatisfyBonusBlueprint,
+  eligiblePoolForBonus,
+} from "../src/utils/bonus.js";
 import {
   PARTICIPATION_PURPOSES,
   createParticipationResponse,
@@ -209,6 +216,7 @@ check(
       "Cronograma",
       "Unidades y apuntes",
       "Ejercicios y tutorías",
+      "Bonos",
       "Videos",
       "Evaluación y notas",
       "Recursos",
@@ -454,7 +462,7 @@ const requiredThemeTokens = [
   "--home-hero-grid-opacity",
   "--content-canvas",
   "--formula-bg",
-  "--quiz-bg",
+  "--bonus-bg",
   "--simulation-bg",
   "--chart-bg",
   "--chart-grid",
@@ -878,6 +886,201 @@ check(
     )
   ),
   "El feedback admite respuesta correcta, incorrecta y errores específicos."
+);
+
+const bonusIds = BONUSES.map((bonus) => bonus.id);
+const bonusSlugs = BONUSES.map((bonus) => bonus.slug);
+const allUnit1Subtopics = Object.values(UNIT_1_CONTENT)
+  .flatMap((content) => content.sections.map((section) => section.id));
+const invalidBonusDefinitions = BONUSES.filter((bonus) => {
+  const blueprintCount = bonus.blueprint?.reduce(
+    (total, slot) => total + slot.count,
+    0
+  );
+  const criteriaAreValid = bonus.blueprint?.every((slot) =>
+    /^[a-z0-9-]+$/.test(slot.id) &&
+    Number.isInteger(slot.count) &&
+    slot.count > 0 &&
+    (slot.criteria.topic ?? []).every((topic) => bonus.topics.includes(topic)) &&
+    (slot.criteria.subtopic ?? []).every((subtopic) => allUnit1Subtopics.includes(subtopic)) &&
+    (slot.criteria.type ?? []).every((type) => EXERCISE_TYPES.includes(type)) &&
+    (slot.criteria.representation ?? []).every((representation) =>
+      EXERCISE_REPRESENTATIONS.includes(representation)
+    ) &&
+    (slot.criteria.difficulty ?? []).every((difficulty) =>
+      Number.isInteger(difficulty) && difficulty >= 1 && difficulty <= 5
+    )
+  );
+
+  return !/^[a-z0-9-]+$/.test(bonus.id) ||
+    !/^[a-z0-9-]+$/.test(bonus.slug) ||
+    !Number.isInteger(bonus.version) ||
+    bonus.version < 1 ||
+    bonus.unit !== UNIT_1.number ||
+    bonus.modality !== "bonus" ||
+    bonus.purpose !== "learning" ||
+    bonus.exposure !== "public" ||
+    !BONUS_FEEDBACK_POLICIES.includes(bonus.feedbackPolicy) ||
+    bonus.status !== "published" ||
+    !bonus.title ||
+    !bonus.description ||
+    !Number.isInteger(bonus.questionCount) ||
+    bonus.questionCount <= 0 ||
+    !Number.isInteger(bonus.estimatedMinutes) ||
+    bonus.estimatedMinutes <= 0 ||
+    bonus.topics.some((topic) => !unit1TopicSlugs.includes(topic)) ||
+    bonus.topics.includes("coordenadas-polares") ||
+    blueprintCount !== bonus.questionCount ||
+    !criteriaAreValid;
+});
+
+check(
+  BONUSES.length === 4 &&
+    duplicates(bonusIds).length === 0 &&
+    duplicates(bonusSlugs).length === 0 &&
+    invalidBonusDefinitions.length === 0,
+  "Los cuatro Bonos tienen IDs, slugs, versiones, temas y blueprints válidos."
+);
+
+const validInteractionContent = (content) =>
+  typeof content === "string"
+    ? content.trim() !== ""
+    : Array.isArray(content) && content.length > 0;
+const invalidBonusInteractions = UNIT_1_EXERCISES.filter((exercise) => {
+  if (!exercise.bonusEligible) return exercise.interaction !== null;
+  const interaction = exercise.interaction;
+  if (!interaction || !EXERCISE_INTERACTION_KINDS.includes(interaction.kind)) return true;
+  if (!exercise.modalities.includes("bonus")) return true;
+
+  if (interaction.kind === "singleChoice") {
+    const optionIds = interaction.options?.map((option) => option.id) ?? [];
+    return exercise.answer.kind !== "text" ||
+      optionIds.length < 2 ||
+      duplicates(optionIds).length > 0 ||
+      !interaction.options.every((option) =>
+        /^[a-z0-9-]+$/.test(option.id) && validInteractionContent(option.content)
+      ) ||
+      optionIds.filter((id) => id === interaction.correctOptionId).length !== 1;
+  }
+
+  if (interaction.kind === "number") {
+    return exercise.answer.kind !== "number" ||
+      !interaction.field?.id ||
+      !interaction.field?.label;
+  }
+
+  const fieldIds = interaction.fields?.map((field) => field.id) ?? [];
+  return exercise.answer.kind !== "values" ||
+    fieldIds.length !== exercise.answer.values.length ||
+    duplicates(fieldIds).length > 0 ||
+    !interaction.fields.every((field) => field.id && field.label);
+});
+
+check(
+  invalidBonusInteractions.length === 0 &&
+    UNIT_1_EXERCISES
+      .filter((exercise) => ["number", "values"].includes(exercise.answer.kind))
+      .every((exercise) => exercise.bonusEligible),
+  "Los ejercicios elegibles declaran interacciones compatibles y todos los resultados numéricos claros son auto-calificables."
+);
+
+const approvedSingleChoiceIds = [
+  "u1-units-dimension-sum",
+  "u1-vectors-equal-magnitude",
+  "u1-kinematics-negative-position",
+  "u1-kinematics-signs-speed",
+  "u1-freefall-top",
+  "u1-projectile-top-velocity",
+  "u1-circular-constant-speed",
+];
+const bonusEligibleExercises = UNIT_1_EXERCISES.filter(
+  (exercise) => exercise.bonusEligible
+);
+
+check(
+  bonusEligibleExercises.length === 26 &&
+    bonusEligibleExercises
+      .filter((exercise) => exercise.interaction.kind === "singleChoice")
+      .map((exercise) => exercise.id)
+      .join("|") === approvedSingleChoiceIds.join("|"),
+  "El banco expone 26 preguntas auto-calificables y solo las siete opciones conceptuales aprobadas."
+);
+
+check(
+  BONUSES.every((bonus) => canSatisfyBonusBlueprint(bonus, UNIT_1_EXERCISES)),
+  "Cada blueprint de Bonos puede satisfacerse sin repetir ejercicios."
+);
+
+check(
+  BONUSES.every((bonus) =>
+    eligiblePoolForBonus(bonus, UNIT_1_EXERCISES).every((exercise) =>
+      exercise.purpose === "learning" &&
+      exercise.exposure === "public" &&
+      exercise.bonusEligible === true
+    )
+  ),
+  "Ningún ejercicio measurement o restricted puede entrar a un Bono público."
+);
+
+const bonusUtilitySource = fs.readFileSync(
+  path.join(projectRoot, "src/utils/bonus.js"),
+  "utf8"
+);
+const bonusScriptSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/bonus.js"),
+  "utf8"
+);
+const bonusAttemptSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/bonus/BonusAttempt.astro"),
+  "utf8"
+);
+const bonusQuestionSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/bonus/BonusQuestion.astro"),
+  "utf8"
+);
+const bonusRouteSource = fs.readFileSync(
+  path.join(projectRoot, "src/pages/fisica-basica-1/bonos/[slug].astro"),
+  "utf8"
+);
+const bonusStyleSource = fs.readFileSync(
+  path.join(projectRoot, "src/styles/bonus.css"),
+  "utf8"
+);
+
+check(
+  bonusUtilitySource.includes("cryptoApi.getRandomValues") &&
+    !bonusUtilitySource.includes("Math.random") &&
+    !bonusUtilitySource.includes("eval(") &&
+    !bonusUtilitySource.includes("Function("),
+  "Bonos usa aleatoriedad criptográfica y no evalúa contenido como código."
+);
+
+check(
+  !bonusScriptSource.includes("localStorage") &&
+    !bonusScriptSource.includes("indexedDB") &&
+    !bonusScriptSource.includes("beforeunload") &&
+    !bonusScriptSource.includes("innerHTML") &&
+    bonusScriptSource.includes("window.print()") &&
+    bonusAttemptSource.includes('aria-live="polite"'),
+  "El intento permanece en memoria, evita bloqueos de salida y anuncia acciones accesiblemente."
+);
+
+check(
+  bonusQuestionSource.includes("<fieldset") &&
+    bonusQuestionSource.includes("<legend") &&
+    bonusQuestionSource.includes('inputmode="decimal"') &&
+    bonusQuestionSource.includes("data-field-error") &&
+    bonusRouteSource.includes("getStaticPaths") &&
+    bonusRouteSource.includes("eligiblePoolForBonus"),
+  "Las interacciones tienen semántica accesible y cada ruta carga solo su pool elegible."
+);
+
+check(
+  bonusStyleSource.includes("@media screen") &&
+    bonusStyleSource.includes(".bonus-app [hidden]") &&
+    bonusStyleSource.includes("display: none !important") &&
+    bonusStyleSource.includes("@media print"),
+  "Los paneles ocultos no compiten con display en pantalla y la impresión conserva su flujo propio."
 );
 
 const invalidExerciseVisualizations = UNIT_1_EXERCISES.filter((exercise) => {
