@@ -326,6 +326,33 @@ ni conclusiones sobre todo el grupo. Los intentos de Bonos se consultan como
 archivos individuales anónimos o identificados; el correo solo se muestra si el
 archivo lo contiene y no se usa para consolidar notas o vincular intentos.
 
+### Organizar resultados docentes
+
+El Organizador de resultados recibe tablas genéricas: no se redacta lógica que
+dependa de una posición fija o de que el archivo proceda de Google Forms o
+Microsoft Forms. Cada fuente debe mostrar y permitir cambiar hoja, fila de
+encabezado, columnas, escala y política de duplicados. Una sugerencia de
+mapping ayuda a empezar, pero nunca sustituye la revisión docente.
+
+Reglas editoriales y de datos:
+
+- conservar el valor original y su referencia de archivo/fila;
+- no corregir correos, completar dominios, fusionar identidades ni añadir
+  desconocidos al listado;
+- no llamar “nota oficial” a un resultado o promedio descriptivo;
+- no convertir un número a porcentaje sin máximo conocido;
+- tratar `missing` como estado; solo una política explícita puede usar cero en
+  el promedio descriptivo;
+- no aplicar Bonos a examen o taller sin una regla académica posterior;
+- escribir cualquier texto importado como texto seguro en CSV/XLSX;
+- utilizar únicamente listados y resultados manifiestamente sintéticos en
+  pruebas, capturas y documentación del repositorio.
+
+La corrección se realiza sobre el archivo o el mapping. No se añade una tabla
+editable que permita reemplazar notas sin trazabilidad. Si en otro bloque se
+introducen ponderaciones, escala 0–5 o correcciones manuales, deben ser
+decisiones explícitas, auditables y seguir separadas de la nota oficial.
+
 ## Añadir una fórmula
 
 Las fórmulas de la Unidad 1 viven en `formulas.js` y se referencian desde el
@@ -537,9 +564,9 @@ Está prohibido incorporar al repositorio o mostrar públicamente:
 - archivos reales usados para consolidar evaluaciones;
 - capturas de plataformas académicas con información identificable.
 
-La participación actual y las futuras herramientas de evaluación procesan o
-procesarán datos localmente en el navegador, no envían respuestas a servidores
-y no conservan información al cerrar o recargar la página. La única persistencia
+La participación y las herramientas docentes actuales procesan datos
+localmente en el navegador, no envían respuestas a servidores y no conservan
+información al cerrar o recargar la página. La única persistencia
 vigente es la preferencia visual, que no debe mezclarse con datos estudiantiles.
 
 Las categorías, límites y decisiones pendientes se documentan en

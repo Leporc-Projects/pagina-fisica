@@ -86,6 +86,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `bank/QuestionBankEditor.astro`: formulario docente local para previsualizar preguntas fijas y preparar un paquete JSON de borradores; no modifica el banco público.
 - `participation/`: selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
 - `review/`: importación accesible, agregados descriptivos, listado paginado, revisión de propuestas, incidencias y exportación de una sesión docente local. La ruta de la herramienta los compone sin incorporar lógica de contratos.
+- `results/`: importación del listado, configuración de fuentes, resumen, incidencias, consolidado y exportaciones del Organizador de resultados. Cada componente representa una etapa visible; el estado y los cálculos permanecen fuera de Astro y del DOM.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
@@ -97,6 +98,10 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `src/scripts/participation.js`: adaptación pequeña entre formularios y contrato. Conserva una sola respuesta en memoria, controla la previsualización, descarga archivos, copia texto y abre la impresión nativa.
 - `src/utils/review.js`: valida cada JSON contra los contratos públicos vigentes, deduplica, agrega y serializa sin conocer el DOM. Conserva el objeto importado separado de la revisión docente.
 - `src/scripts/review-center.js`: adaptación cliente para File API, filtros, paginación, notas locales, descargas e impresión; no usa red ni almacenamiento del navegador.
+- `src/utils/results-csv.js`: parser CSV determinista con BOM, comillas, celdas multilínea y CRLF/LF; no separa filas o campos con `split()`.
+- `src/utils/results-organizer.js`: normaliza roster, correo, puntuaciones y timestamps; crea incidencias, aplica políticas explícitas, concilia y consolida sin conocer el DOM.
+- `src/utils/results-export.js`: proyecta un único consolidado hacia XLSX, tres CSV, TXT e impresión. Neutraliza prefijos de fórmulas en texto importado.
+- `src/scripts/results-organizer.js`: mantiene la sesión en memoria, conecta File API y controles, y carga el adaptador XLSX solo al leer o exportar un libro.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
@@ -146,6 +151,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/bonos/[slug].astro` | `/fisica-basica-1/bonos/<slug>` |
 | `src/pages/fisica-basica-1/herramientas/revision.astro` | `/fisica-basica-1/herramientas/revision` |
 | `src/pages/fisica-basica-1/herramientas/banco.astro` | `/fisica-basica-1/herramientas/banco` |
+| `src/pages/fisica-basica-1/herramientas/notas.astro` | `/fisica-basica-1/herramientas/notas` |
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
 
@@ -260,6 +266,67 @@ El límite es 5 MB por archivo y las listas abiertas se paginan para mantener un
 comportamiento razonable con cientos de archivos. Limpiar la sesión requiere
 confirmación y elimina de memoria los archivos y notas de la pestaña. Las
 salidas son editables, no están firmadas y no autentican su contenido.
+
+### Organizador docente de resultados
+
+`/fisica-basica-1/herramientas/notas` concilia un listado con fuentes tabulares
+y resultados identificados de Bonos. Es una herramienta local sin
+autenticación, backend, persistencia ni conexión a proveedores. No sustituye
+el sistema institucional ni modifica los cinco componentes oficiales de
+evaluación.
+
+La fuente de verdad es un objeto JavaScript de sesión. El DOM solo representa
+su estado:
+
+```text
+archivos y hojas sin modificar
+   ↓ mapping visible y editable
+roster + submissions normalizados (raw conservado)
+   ↓ conciliación por correo institucional normalizado
+matched / unknown / invalid / anonymous / missing
+   ↓ política explícita de duplicados y faltantes
+consolidado trazable + resumen descriptivo
+   ├─ XLSX: Consolidado / Incidencias / Resumen
+   ├─ CSV UTF-8 con BOM por cada tabla
+   ├─ TXT de resumen
+   └─ vista de impresión / Guardar como PDF
+```
+
+El correo se normaliza con Unicode NFKC, `trim` y minúsculas. No se eliminan
+puntos o aliases `+`, no se inventa un dominio y siempre se conserva
+`rawEmail`. Una identidad duplicada en el roster no se fusiona. Un correo
+desconocido no crea un estudiante. `missing` es un estado y no equivale a cero.
+
+Cada puntuación separa `rawScore`, `earnedPoints`, `possiblePoints` y
+`percentage`. Una fracción puede aportar su máximo; una fuente también puede
+usar una columna o un máximo fijo configurado. Un número sin máximo conserva
+su valor crudo y no se convierte a 0–5, 0–10 o porcentaje. Conflictos de
+escala, rangos y valores no finitos producen incidencias, no correcciones.
+
+Las políticas de duplicados son revisión pendiente, primero, último, mayor y
+promedio. Primero/último exigen timestamps válidos; mayor/promedio exigen
+porcentajes o una escala explícitamente comparable. La política y todas las
+submissions originales permanecen en el detalle. Para el promedio descriptivo,
+los faltantes quedan sin resolver por defecto; excluirlos o tratarlos como cero
+requiere una decisión visible. No existen ponderaciones ni conversión a escala
+0–5 en este bloque.
+
+Los JSON de Bonos se validan con su contrato público. El organizador consume el
+`summary` canónico y comprueba su consistencia con la suma de preguntas sin
+recalificar pregunta por pregunta. Un intento anónimo se reconoce, pero no se
+concilia.
+
+`read-excel-file@9.3.4` y `write-excel-file@4.1.1` son dependencias MIT
+específicas para OOXML. El adaptador `results-xlsx-browser.js` usa `import()`;
+Vite produce chunks separados que solo referencia el script de esta ruta. La
+lectura obtiene valores de celda y no ejecuta macros ni fórmulas como código.
+La escritura usa tipos explícitos; cualquier string importado que comience por
+`=`, `+`, `-` o `@` se neutraliza antes de salir a XLSX o CSV.
+
+Los límites vigentes son 15 MB por archivo, 10 000 filas, 250 columnas y seis
+filas de preview. CSV y XLSX son entradas tabulares; `.xls` muestra una
+instrucción para guardar como `.xlsx` o `.csv`. No se incorpora ningún archivo
+real de estudiantes al repositorio.
 
 ### Bonos y autodiagnóstico local
 
@@ -716,6 +783,7 @@ Los contratos más importantes son:
 - doce pruebas de participación para esquema, IDs, requeridos, enums, opcionales y serialización TXT/JSON/CSV con Unicode y saltos de línea;
 - contratos de mapa, disclosure progresivo y secuencia de ejercicios sin persistencia ni dependencias nuevas;
 - figuras académicas con dominios válidos, coordenadas físicas finitas y descripción accesible.
+- Organizador de resultados: CSV robusto, correo y puntuaciones estrictos, incidencias, conciliación, políticas de duplicados/faltantes, consolidación y XLSX de tres hojas; los fixtures son sintéticos.
 
 Comandos habituales:
 

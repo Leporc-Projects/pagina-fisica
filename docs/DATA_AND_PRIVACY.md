@@ -25,6 +25,13 @@ validan y presentan en la memoria de esa pestaña. Sus filtros, notas y estados
 de revisión tampoco persisten. La acción “Limpiar sesión” requiere confirmación
 y descarta ese estado en memoria.
 
+El Organizador de resultados puede procesar localmente un roster con nombre,
+correo institucional, identificación y grupo, además de archivos CSV/XLSX y
+Bonos JSON. Esos datos permanecen en la memoria de la pestaña: no se escriben
+en `localStorage` o IndexedDB, no se envían por red y desaparecen al recargar,
+cerrar o confirmar “Limpiar sesión”. Solo una exportación iniciada por el
+docente crea archivos en su equipo.
+
 La configuración visual claro/oscuro/sistema es la única preferencia persistida
 por el sitio. Usa `localStorage` bajo `papillas-physics:theme` y no contiene
 respuestas, contenido escrito, progreso ni identidad. No debe reutilizarse esa
@@ -104,6 +111,38 @@ versión, y permite consultar su resultado. Distingue anónimo/identificado,
 muestra el correo solo cuando existe y permite filtrarlo, pero no crea una planilla de notas, no
 vincula intentos entre sí y no estima dominio individual o grupal.
 
+## Datos de una sesión del Organizador
+
+La sesión puede contener:
+
+- filas originales del roster y sus mappings;
+- nombre, correo institucional, identificación y grupo si el docente los cargó;
+- archivos fuente, hoja y fila de encabezado;
+- valor original y normalizado de correo, score y timestamp;
+- máximo configurado y porcentaje calculado cuando la escala es conocida;
+- intentos de Bono identificados o anónimos y sus resúmenes validados;
+- incidencias, políticas de duplicados/faltantes y valores resueltos;
+- consolidado y estadísticas descriptivas por fuente.
+
+El email normalizado es una llave de conciliación, no un identificador para
+tracking. Se conserva `rawEmail`; no se eliminan puntos o aliases, no se
+autocorrigen errores y no se recopila IP, user-agent, dispositivo, pantalla,
+clics, scroll o tiempo en página. Los desconocidos no se incorporan al roster y
+dos filas del roster con el mismo correo no se fusionan.
+
+El flujo mantiene datos originales, normalizados, resoluciones y consolidado
+como capas separadas. `missing` no significa cero y una escala desconocida no
+se infiere. Los promedios, media, mediana, mínimo y máximo son descripciones de
+porcentajes válidos; no son inferencia estadística, diagnóstico ni nota
+oficial. La herramienta no modifica Examen 1–4 o Taller y no aplica Bonos a una
+calificación.
+
+El XLSX y los CSV pueden contener información identificable. El docente decide
+descargarlos y es responsable de guardarlos en un lugar adecuado. Los textos
+importados se neutralizan contra formula injection, pero los archivos siguen
+siendo editables y no ofrecen autenticidad, firma, cifrado o control de acceso.
+No se exporta ni reimporta una sesión completa en JSON en este bloque.
+
 ## Categorías y propósitos
 
 Las categorías deben permanecer separadas:
@@ -128,15 +167,17 @@ participación.
 - Pseudónimo: un código estable permite vincular registros entre sí o con una
   tabla separada, aunque el nombre no aparezca. El sitio no lo implementa.
 - Identificado: el registro contiene o puede asociarse directamente con nombre,
-  correo, documento u otro identificador personal. Solo la copia opcional de
-  entrega de un Bono implementa esta categoría mediante correo institucional.
+  correo, documento u otro identificador personal. La copia opcional de entrega
+  de un Bono y una sesión local del Organizador pueden pertenecer a esta
+  categoría.
 
-El correo es un dato personal y se usa exclusivamente para identificar el
-archivo que el estudiante decide preparar para entrega. Vive en memoria, entra
-en TXT/JSON/CSV/PDF identificados y no se usa para analítica, medición,
-investigación, perfiles o seguimiento. `acceptedDomains` es configuración
-editorial opcional: vacío significa validar solo sintaxis, no asumir un dominio.
-Un canal que ya autentique al estudiante podrá desactivar el correo incrustado.
+El correo es un dato personal. En Bonos identifica el archivo que el estudiante
+decide preparar para entrega; en el Organizador es la llave explícita para
+conciliar roster y resultados. Vive en memoria, puede entrar en exportaciones
+identificadas y no se usa para analítica, medición, investigación, perfiles o
+seguimiento. `acceptedDomains` es configuración editorial opcional de Bonos:
+vacío significa validar solo sintaxis, no asumir un dominio. Un canal que ya
+autentique al estudiante podrá desactivar el correo incrustado.
 
 ## Paquetes de autoría docente
 
