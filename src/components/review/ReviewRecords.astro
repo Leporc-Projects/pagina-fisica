@@ -4,14 +4,32 @@
       <p class="academic-label">Consulta</p>
       <h2 id="review-bonuses-title">Intentos de Bonos reconocidos</h2>
     </div>
-    <p>El ID del intento identifica el archivo, no a un estudiante.</p>
+    <p>El ID identifica el intento; una copia preparada para entrega puede incluir correo.</p>
   </header>
+  <form class="review-filters review-bonus-filters" data-review-bonus-filters>
+    <label>
+      Identidad
+      <select name="identityMode">
+        <option value="">Todos los intentos</option>
+        <option value="anonymous">Anónimos</option>
+        <option value="institutionalEmail">Identificados</option>
+      </select>
+    </label>
+    <label>
+      Buscar correo
+      <input type="search" name="email" autocomplete="off" />
+    </label>
+    <button type="button" class="review-button review-button--quiet" data-review-bonus-reset>Restablecer filtros</button>
+  </form>
+  <p class="review-list-summary" data-review-bonus-summary></p>
   <div class="review-table-wrap">
     <table>
       <thead>
         <tr>
           <th scope="col">Archivo</th>
           <th scope="col">Bono</th>
+          <th scope="col">Identidad</th>
+          <th scope="col">Correo institucional</th>
           <th scope="col">Resultado</th>
           <th scope="col">Fecha</th>
         </tr>
@@ -47,4 +65,3 @@
     <button type="button" data-review-incident-next>Siguiente</button>
   </nav>
 </section>
-

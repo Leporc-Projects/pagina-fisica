@@ -44,6 +44,8 @@ import {
 } from "../src/data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../src/data/physics/unit-1/unit.js";
 import { UNIT_1_VISUALIZATIONS } from "../src/data/physics/unit-1/visualizations.js";
+import { UNIT_1_EXERCISE_FAMILIES } from "../src/data/physics/unit-1/families.js";
+import { UNIT_1_BANK_ITEMS } from "../src/data/physics/unit-1/bank.js";
 import {
   ACTIVITY_TYPES,
   PARTICIPATION_TOPICS,
@@ -70,6 +72,8 @@ import {
   createReviewSession,
   validateImportedDocument,
 } from "../src/utils/review.js";
+import { auditAllBonusBlueprints } from "../src/utils/bonus-audit.js";
+import { validateFamilyDefinition } from "../src/utils/exercise-families.js";
 
 const projectRoot = fileURLToPath(
   new URL("../", import.meta.url)
@@ -878,9 +882,21 @@ check(
 );
 
 check(
-  UNIT_1_EXERCISES.length === 34 &&
+  UNIT_1_EXERCISES.filter((exercise) => exercise.authorSource !== "teacher").length === 55 &&
+    UNIT_1_EXERCISES.filter((exercise) => exercise.id.startsWith("u1-extra-")).length === 21 &&
     UNIT_1_EXERCISES.filter((exercise) => exercise.id.startsWith("u1-visual-")).length === 12,
-  "El banco contiene los 22 ejercicios auditados y 12 ejercicios visuales nuevos."
+  "El banco fijo contiene 55 ejercicios, incluidos 21 originales del bloque y las 12 visualizaciones centrales."
+);
+
+check(
+  UNIT_1_EXERCISE_FAMILIES.length === 15 &&
+    UNIT_1_EXERCISE_FAMILIES.every((family) =>
+      validateFamilyDefinition(family).valid &&
+      unit1TopicSlugs.includes(family.topic) &&
+      UNIT_1_CONTENT[family.topic]?.sections.some((section) => section.id === family.subtopic)
+    ) &&
+    duplicates(UNIT_1_BANK_ITEMS.map((item) => item.id)).length === 0,
+  "Las 15 familias parametrizadas son válidas y permanecen separadas de los ítems fijos."
 );
 
 check(
@@ -907,7 +923,10 @@ const invalidExerciseTaxonomy = UNIT_1_EXERCISES.filter((exercise) =>
 
 check(
   UNIT_1.status === "review" &&
-    UNIT_1_EXERCISES.every((exercise) => exercise.status === "review") &&
+    UNIT_1_EXERCISES.every((exercise) =>
+      exercise.status === "review" ||
+      (exercise.authorSource === "teacher" && exercise.status === "draft")
+    ) &&
     UNIT_1_EXERCISES.every((exercise) =>
       exercise.purpose === "learning" && exercise.exposure === "public"
     ),
@@ -1017,7 +1036,9 @@ const validInteractionContent = (content) =>
     ? content.trim() !== ""
     : Array.isArray(content) && content.length > 0;
 const invalidBonusInteractions = UNIT_1_EXERCISES.filter((exercise) => {
-  if (!exercise.bonusEligible) return exercise.interaction !== null;
+  if (!exercise.bonusEligible) {
+    return exercise.status !== "draft" && exercise.interaction !== null;
+  }
   const interaction = exercise.interaction;
   if (!interaction || !EXERCISE_INTERACTION_KINDS.includes(interaction.kind)) return true;
   if (!exercise.modalities.includes("bonus")) return true;
@@ -1049,41 +1070,42 @@ const invalidBonusInteractions = UNIT_1_EXERCISES.filter((exercise) => {
 check(
   invalidBonusInteractions.length === 0 &&
     UNIT_1_EXERCISES
-      .filter((exercise) => ["number", "values"].includes(exercise.answer.kind))
+      .filter((exercise) =>
+        exercise.status !== "draft" &&
+        ["number", "values"].includes(exercise.answer.kind)
+      )
       .every((exercise) => exercise.bonusEligible),
   "Los ejercicios elegibles declaran interacciones compatibles y todos los resultados numéricos claros son auto-calificables."
 );
 
-const approvedSingleChoiceIds = [
-  "u1-units-dimension-sum",
-  "u1-vectors-equal-magnitude",
-  "u1-kinematics-negative-position",
-  "u1-kinematics-signs-speed",
-  "u1-freefall-top",
-  "u1-projectile-top-velocity",
-  "u1-circular-constant-speed",
-];
 const bonusEligibleExercises = UNIT_1_EXERCISES.filter(
-  (exercise) => exercise.bonusEligible
+  (exercise) => exercise.authorSource !== "teacher" && exercise.bonusEligible
 );
 
 check(
-  bonusEligibleExercises.length === 26 &&
-    bonusEligibleExercises
-      .filter((exercise) => exercise.interaction.kind === "singleChoice")
-      .map((exercise) => exercise.id)
-      .join("|") === approvedSingleChoiceIds.join("|"),
-  "El banco expone 26 preguntas auto-calificables y solo las siete opciones conceptuales aprobadas."
+  bonusEligibleExercises.length === 47 &&
+    bonusEligibleExercises.every((exercise) =>
+      EXERCISE_INTERACTION_KINDS.includes(exercise.interaction.kind)
+    ),
+  "El banco fijo expone 47 preguntas auto-calificables con interacciones aprobadas."
 );
 
 check(
-  BONUSES.every((bonus) => canSatisfyBonusBlueprint(bonus, UNIT_1_EXERCISES)),
+  BONUSES.every((bonus) => canSatisfyBonusBlueprint(bonus, UNIT_1_BANK_ITEMS)),
   "Cada blueprint de Bonos puede satisfacerse sin repetir ejercicios."
+);
+
+const bonusBlueprintAudits = auditAllBonusBlueprints(BONUSES, UNIT_1_BANK_ITEMS);
+check(
+  bonusBlueprintAudits.every((audit) =>
+    audit.errors.length === 0 && audit.warnings.length === 0
+  ),
+  "Cada slot de Bono alcanza el objetivo editorial de candidatos."
 );
 
 check(
   BONUSES.every((bonus) =>
-    eligiblePoolForBonus(bonus, UNIT_1_EXERCISES).every((exercise) =>
+    eligiblePoolForBonus(bonus, UNIT_1_BANK_ITEMS).every((exercise) =>
       exercise.purpose === "learning" &&
       exercise.exposure === "public" &&
       exercise.bonusEligible === true

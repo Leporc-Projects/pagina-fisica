@@ -8,6 +8,7 @@ import {
   SUPPORT_OPTIONS,
 } from "../data/participation.js";
 import { REVIEW_STATUSES } from "../data/review.js";
+import { attemptIdentity } from "../utils/bonus.js";
 import { downloadLocalFile } from "./local-export.js";
 import {
   addReviewImportEntries,
@@ -72,6 +73,7 @@ export const initializeReviewCenter = () => {
   const clearArea = center.querySelector("[data-review-clear-area]");
   const clearConfirmation = center.querySelector("[data-review-clear-confirmation]");
   const filterForm = center.querySelector("[data-review-filters]");
+  const bonusFilterForm = center.querySelector("[data-review-bonus-filters]");
   let session = createReviewSession();
   let reviews = {};
   let responsePage = 1;
@@ -161,6 +163,8 @@ export const initializeReviewCenter = () => {
         ["Registros únicos", summary.uniqueRecords],
         ["Respuestas de Participa", summary.participation],
         ["Intentos de Bonos", summary.bonuses],
+        ["Bonos anónimos", summary.bonusIdentity.anonymous],
+        ["Bonos identificados", summary.bonusIdentity.institutionalEmail],
       ].forEach(([label, value]) => {
         const group = createElement("div");
         group.append(createElement("dt", label), createElement("dd", String(value)));
@@ -373,20 +377,43 @@ export const initializeReviewCenter = () => {
     const target = center.querySelector("[data-review-bonus-records]");
     if (!target) return;
     target.replaceChildren();
-    const records = session.records.filter((record) => record.kind === "bonus");
+    const filters = bonusFilterForm instanceof HTMLFormElement
+      ? Object.fromEntries(new FormData(bonusFilterForm))
+      : {};
+    const records = session.records.filter((record) => {
+      if (record.kind !== "bonus") return false;
+      const identity = attemptIdentity(record.original);
+      const modeMatches = !filters.identityMode || identity.mode === filters.identityMode;
+      const emailMatches = !filters.email || (
+        identity.mode === "institutionalEmail" &&
+        identity.email.toLocaleLowerCase("es").includes(
+          String(filters.email).trim().toLocaleLowerCase("es")
+        )
+      );
+      return modeMatches && emailMatches;
+    });
+    const summary = center.querySelector("[data-review-bonus-summary]");
+    if (summary) {
+      summary.textContent = `${records.length} ${records.length === 1
+        ? "intento encontrado"
+        : "intentos encontrados"}.`;
+    }
     if (records.length === 0) {
       const row = createElement("tr");
       const cell = createElement("td", "No se importaron intentos de Bonos.");
-      cell.colSpan = 4;
+      cell.colSpan = 6;
       row.append(cell);
       target.append(row);
       return;
     }
     records.forEach((record) => {
       const attempt = record.original;
+      const identity = attemptIdentity(attempt);
       const row = createElement("tr");
       appendCell(row, record.sourceFiles.join(", "));
-      appendCell(row, `Intento anónimo · ${attempt.bonusTitle}`);
+      appendCell(row, attempt.bonusTitle);
+      appendCell(row, identity.mode === "institutionalEmail" ? "Identificado" : "Anónimo");
+      appendCell(row, identity.mode === "institutionalEmail" ? identity.email : "—");
       appendCell(
         row,
         `${attempt.summary.pointsEarned} / ${attempt.summary.pointsPossible} (${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(attempt.summary.percentage)} %)`
@@ -502,10 +529,17 @@ export const initializeReviewCenter = () => {
     responsePage = 1;
     renderResponses();
   });
+  bonusFilterForm?.addEventListener("input", renderBonuses);
+  center.querySelector("[data-review-bonus-reset]")?.addEventListener("click", () => {
+    if (bonusFilterForm instanceof HTMLFormElement) bonusFilterForm.reset();
+    renderBonuses();
+  });
   center.querySelector("[data-review-filter-reset]")?.addEventListener("click", () => {
     if (filterForm instanceof HTMLFormElement) filterForm.reset();
+    if (bonusFilterForm instanceof HTMLFormElement) bonusFilterForm.reset();
     responsePage = 1;
     renderResponses();
+    renderBonuses();
   });
   center.querySelector("[data-review-response-previous]")?.addEventListener("click", () => {
     responsePage -= 1;

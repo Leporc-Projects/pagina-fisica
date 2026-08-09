@@ -1,6 +1,7 @@
 ---
 import BonusQuestion from "./BonusQuestion.astro";
 import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { BONUS_DELIVERY_CONFIG } from "../../data/delivery.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -18,7 +19,12 @@ const {
   present = (value) => value,
 } = Astro.props;
 const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
+const fixedExercises = exercises.filter((exercise) =>
+  exercise.itemKind !== "parameterizedFamily"
+);
 const clientExercises = exercises.map((exercise) => ({
+  schemaVersion: exercise.schemaVersion,
+  itemKind: exercise.itemKind,
   id: exercise.id,
   version: exercise.version,
   title: exercise.title,
@@ -36,8 +42,15 @@ const clientExercises = exercises.map((exercise) => ({
   tolerance: exercise.tolerance,
   interaction: exercise.interaction,
   feedback: exercise.feedback,
+  objectives: exercise.objectives,
+  constraints: exercise.constraints,
+  hints: exercise.hints,
+  solution: exercise.solution,
 }));
-const serializedData = JSON.stringify({ bonus, exercises: clientExercises })
+const topicLabels = Object.fromEntries(
+  UNIT_1.topics.map((topic) => [topic.slug, topic.shortTitle])
+);
+const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topicLabels })
   .replaceAll("<", "\\u003c")
   .replaceAll(">", "\\u003e")
   .replaceAll("&", "\\u0026");
@@ -88,7 +101,7 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises })
     <nav class="bonus-question-nav" aria-label="Preguntas del Bono" data-question-nav></nav>
 
     <div class="bonus-question-stage" data-question-stage>
-      {exercises.map((exercise) => (
+      {fixedExercises.map((exercise) => (
         <BonusQuestion
           exercise={exercise}
           topicTitle={topicMap.get(exercise.topic)?.shortTitle ?? exercise.topic}
@@ -162,12 +175,20 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises })
           <dd>{bonus.title}</dd>
         </div>
         <div>
+          <dt>Versión</dt>
+          <dd>{bonus.version}</dd>
+        </div>
+        <div>
           <dt>ID del intento</dt>
           <dd data-result-id></dd>
         </div>
         <div>
           <dt>Fecha</dt>
           <dd data-result-date></dd>
+        </div>
+        <div data-result-email-row hidden>
+          <dt>Correo institucional</dt>
+          <dd data-result-email></dd>
         </div>
       </dl>
     </header>
@@ -189,13 +210,54 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises })
       </section>
     </div>
 
-    <div class="bonus-result__actions" data-export-actions>
+    <section class="bonus-save-options" aria-labelledby="bonus-save-title">
+      <div>
+        <h3 id="bonus-save-title">Guardar para mí</h3>
+        <p>Estas copias no incluyen identidad y permanecen bajo tu control.</p>
+      </div>
+      <div class="bonus-result__actions" data-export-actions>
+        <button type="button" data-bonus-export="copy" data-export-mode="anonymous">Copiar resumen</button>
+        <button type="button" data-bonus-export="txt" data-export-mode="anonymous">TXT</button>
+        <button type="button" data-bonus-export="json" data-export-mode="anonymous">JSON</button>
+        <button type="button" data-bonus-export="csv" data-export-mode="anonymous">CSV</button>
+        <button type="button" data-bonus-export="print" data-export-mode="anonymous">Imprimir / PDF</button>
+      </div>
+    </section>
+
+    <section class="bonus-delivery" aria-labelledby="bonus-delivery-title">
+      <div>
+        <h3 id="bonus-delivery-title">Preparar entrega</h3>
+        <p>Añade un correo institucional únicamente si necesitas identificar el archivo que vas a entregar.</p>
+      </div>
+      <button type="button" data-show-delivery>Preparar una copia identificada</button>
+      <form data-delivery-form hidden novalidate>
+        <label for="bonus-delivery-email">Correo institucional</label>
+        <div class="bonus-delivery__field">
+          <input id="bonus-delivery-email" name="email" type="email" autocomplete="email" aria-describedby="bonus-delivery-help bonus-delivery-error" />
+          <button type="submit" class="bonus-primary">Preparar archivo</button>
+        </div>
+        <small id="bonus-delivery-help">
+          {BONUS_DELIVERY_CONFIG.acceptedDomains.length > 0
+            ? `Dominios admitidos: ${BONUS_DELIVERY_CONFIG.acceptedDomains.join(", ")}.`
+            : "Se comprueba el formato del correo, no la existencia del buzón."}
+        </small>
+        <small id="bonus-delivery-error" data-delivery-error></small>
+        <p>El correo se incluye únicamente en el archivo que estás preparando para entregar. Papilla's Physics no lo envía ni lo guarda automáticamente.</p>
+      </form>
+      <div class="bonus-delivery__prepared" data-delivery-prepared hidden>
+        <strong>Archivo preparado para entrega</strong>
+        <p>Correo incluido: <span data-delivery-email></span></p>
+        <div class="bonus-result__actions">
+          <button type="button" data-bonus-export="txt" data-export-mode="identified">TXT</button>
+          <button type="button" data-bonus-export="json" data-export-mode="identified">JSON</button>
+          <button type="button" data-bonus-export="csv" data-export-mode="identified">CSV</button>
+          <button type="button" data-bonus-export="print" data-export-mode="identified">Imprimir / PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="bonus-result__actions bonus-result__next-actions">
       <button type="button" data-review-answers>Revisar respuestas</button>
-      <button type="button" data-bonus-export="copy">Copiar resumen</button>
-      <button type="button" data-bonus-export="txt">TXT</button>
-      <button type="button" data-bonus-export="json">JSON</button>
-      <button type="button" data-bonus-export="csv">CSV</button>
-      <button type="button" data-bonus-export="print">Imprimir / PDF</button>
       <button type="button" class="bonus-primary" data-another-attempt>Otro intento</button>
     </div>
 

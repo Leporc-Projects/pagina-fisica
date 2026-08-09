@@ -426,6 +426,8 @@
   color: var(--text-muted);
 }
 
+.review-bonus-filters { grid-template-columns: minmax(12rem, .45fr) minmax(14rem, 1fr) auto; }
+
 .review-response-list,
 .review-proposal-list {
   display: grid;
@@ -699,4 +701,3 @@
     padding-block: 0.75rem;
   }
 }
-

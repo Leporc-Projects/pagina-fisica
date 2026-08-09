@@ -18,6 +18,12 @@ const {
   visualizations,
   present = (value) => value,
 } = Astro.props;
+const fixedExercises = exercises.filter((exercise) =>
+  exercise.itemKind !== "parameterizedFamily"
+);
+const exerciseFamilies = exercises.filter((exercise) =>
+  exercise.itemKind === "parameterizedFamily"
+);
 const topicLabels = Object.fromEntries(
   topics.map((topic) => [topic.slug, topic.shortTitle])
 );
@@ -78,7 +84,7 @@ const availableDifficulties = [...new Set(exercises.map((exercise) => exercise.d
   <nav class="open-practice__batch-nav" aria-label="Ejercicios de la tanda" data-batch-nav></nav>
 
   <div class="open-practice__slides">
-    {exercises.map((exercise) => (
+    {fixedExercises.map((exercise) => (
       <div
         class="exercise-slide"
         data-exercise-slide
@@ -96,6 +102,22 @@ const availableDifficulties = [...new Set(exercises.map((exercise) => exercise.d
             : undefined}
           present={present}
         />
+      </div>
+    ))}
+    {exerciseFamilies.map((exercise) => (
+      <div
+        class="exercise-slide"
+        data-exercise-slide
+        data-exercise-kind="parameterizedFamily"
+        data-exercise-id={exercise.id}
+        data-exercise-topic={exercise.topic}
+        data-exercise-type={exercise.type}
+        data-exercise-difficulty={exercise.difficulty}
+        data-exercise-representation={exercise.representation}
+        hidden
+      >
+        <p class="exercise-slide__topic">{topicLabels[exercise.topic]}</p>
+        <div data-generated-practice-card></div>
       </div>
     ))}
   </div>

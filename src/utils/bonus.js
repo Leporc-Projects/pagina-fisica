@@ -1,9 +1,14 @@
 import { COURSE } from "../data/course.js";
 import { UNIT_1_CONTENT } from "../data/physics/unit-1/content.js";
 import { UNIT_1 } from "../data/physics/unit-1/unit.js";
+import {
+  createCryptoRandom,
+  generateFamilyInstance,
+} from "./exercise-families.js";
 import { recordsToCsv, sanitizeFilePart } from "./local-export.js";
 
-export const BONUS_ATTEMPT_SCHEMA_VERSION = "1.0.0";
+export const BONUS_ATTEMPT_SCHEMA_VERSION = "1.1.0";
+export const LEGACY_BONUS_ATTEMPT_SCHEMA_VERSION = "1.0.0";
 export const BONUS_FEEDBACK_POLICIES = ["afterAttempt"];
 
 const UINT32_RANGE = 0x1_0000_0000;
@@ -114,7 +119,7 @@ const expandBlueprint = (blueprint) => blueprint.flatMap((slot, slotIndex) =>
   }))
 );
 
-const solveBlueprint = ({ requirements, pool, cryptoApi, selected = [] }) => {
+const solveBlueprint = ({ requirements, pool, cryptoApi, seenItemIds, selected = [] }) => {
   if (requirements.length === 0) return selected;
 
   const selectedIds = new Set(selected.map((entry) => entry.exercise.id));
@@ -136,11 +141,16 @@ const solveBlueprint = ({ requirements, pool, cryptoApi, selected = [] }) => {
   if (!next || next.candidates.length === 0) return null;
 
   const remaining = requirements.filter((_, index) => index !== next.index);
-  for (const exercise of secureShuffle(next.candidates, cryptoApi)) {
+  const candidates = secureShuffle(next.candidates, cryptoApi)
+    .sort((first, second) =>
+      Number(seenItemIds?.has(first.id)) - Number(seenItemIds?.has(second.id))
+    );
+  for (const exercise of candidates) {
     const solution = solveBlueprint({
       requirements: remaining,
       pool,
       cryptoApi,
+      seenItemIds,
       selected: [...selected, { ...next.requirement, exercise }],
     });
     if (solution) return solution;
@@ -152,30 +162,39 @@ const solveBlueprint = ({ requirements, pool, cryptoApi, selected = [] }) => {
 export const selectBonusQuestions = (
   bonus,
   exercises,
-  cryptoApi = globalThis.crypto
+  cryptoApi = globalThis.crypto,
+  { seenItemIds = new Set(), recentParameterKeys = new Set() } = {}
 ) => {
   const pool = eligiblePoolForBonus(bonus, exercises);
   const requirements = expandBlueprint(bonus.blueprint);
-  const solution = solveBlueprint({ requirements, pool, cryptoApi });
+  const solution = solveBlueprint({ requirements, pool, cryptoApi, seenItemIds });
 
   if (!solution || solution.length !== bonus.questionCount) {
     throw new Error(`El blueprint de ${bonus.id} no puede satisfacerse.`);
   }
 
+  const random = createCryptoRandom(cryptoApi);
   return solution
     .sort((first, second) =>
       first.slotIndex - second.slotIndex || first.countIndex - second.countIndex
     )
-    .map(({ exercise, slotId }) => ({
-      exercise,
-      slotId,
-      optionOrder: exercise.interaction.kind === "singleChoice"
-        ? secureShuffle(
-            exercise.interaction.options.map((option) => option.id),
-            cryptoApi
-          )
-        : undefined,
-    }));
+    .map(({ exercise: selectedItem, slotId }) => {
+      const exercise = selectedItem.itemKind === "parameterizedFamily"
+        ? generateFamilyInstance(selectedItem, { random, recentParameterKeys })
+        : selectedItem;
+      return {
+        exercise,
+        sourceItemId: selectedItem.id,
+        slotId,
+        parameterKey: exercise.parameterKey ?? null,
+        optionOrder: exercise.interaction.kind === "singleChoice"
+          ? secureShuffle(
+              exercise.interaction.options.map((option) => option.id),
+              cryptoApi
+            )
+          : undefined,
+      };
+    });
 };
 
 export const canSatisfyBonusBlueprint = (bonus, exercises) => {
@@ -234,15 +253,27 @@ export const createBonusAttempt = (
     },
     startedAt,
     completedAt: null,
-    questions: selections.map(({ exercise, optionOrder, slotId }, index) => ({
+    questions: selections.map(({ exercise, optionOrder, slotId, sourceItemId }, index) => ({
       exerciseId: exercise.id,
       exerciseVersion: exercise.version,
+      itemKind: exercise.itemKind ?? "fixed",
+      sourceItemId: sourceItemId ?? exercise.id,
+      familyId: exercise.familyId ?? null,
+      familyVersion: exercise.familyVersion ?? null,
+      instanceId: exercise.instanceId ?? null,
+      parameters: exercise.parameters ?? null,
       order: index + 1,
       blueprintSlot: slotId,
       optionOrder: optionOrder ?? null,
       snapshot: {
         title: exercise.title,
         prompt: exercise.prompt,
+        answer: exercise.answer,
+        interaction: exercise.interaction,
+        tolerance: exercise.tolerance,
+        expectedUnit: exercise.expectedUnit,
+        solution: exercise.solution,
+        visualization: exercise.visualizationConfig ?? null,
       },
       topic: exercise.topic,
       subtopic: exercise.subtopic,
@@ -258,7 +289,65 @@ export const createBonusAttempt = (
     summary: null,
     privacy: {
       collection: "local",
-      identity: "anonymous",
+      identity: { mode: "anonymous" },
+    },
+  };
+};
+
+export const BONUS_DELIVERY_IDENTITY_MODES = ["anonymous", "institutionalEmail"];
+
+export const validateInstitutionalEmail = (
+  email,
+  { acceptedDomains = [] } = {}
+) => {
+  const normalized = typeof email === "string" ? email.trim().toLocaleLowerCase("en") : "";
+  const syntaxValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalized) && normalized.length <= 254;
+  const domain = normalized.split("@")[1] ?? "";
+  const normalizedDomains = acceptedDomains.map((item) => item.trim().toLocaleLowerCase("en"));
+  const domainValid = normalizedDomains.length === 0 || normalizedDomains.includes(domain);
+  return {
+    valid: syntaxValid && domainValid,
+    email: normalized,
+    domain,
+    acceptedDomains: normalizedDomains,
+    reason: !syntaxValid
+      ? "Escribe un correo con formato válido."
+      : !domainValid
+        ? `Usa uno de estos dominios: ${normalizedDomains.join(", ")}.`
+        : null,
+  };
+};
+
+export const attemptIdentity = (attempt) => {
+  const identity = attempt?.privacy?.identity;
+  if (identity === "anonymous" || !identity) return { mode: "anonymous" };
+  return identity;
+};
+
+export const prepareDeliveryAttempt = (
+  attempt,
+  email,
+  config = {},
+  preparedAt = new Date().toISOString()
+) => {
+  const attemptValidation = validateCompletedBonusAttempt(attempt);
+  if (!attemptValidation.valid) {
+    throw new TypeError(`El intento no está completo: ${attemptValidation.errors.join(" ")}`);
+  }
+  const validation = validateInstitutionalEmail(email, config);
+  if (!validation.valid) throw new TypeError(validation.reason);
+  if (!isExactIsoDate(preparedAt)) throw new TypeError("preparedAt debe usar ISO 8601.");
+  return {
+    ...attempt,
+    schemaVersion: BONUS_ATTEMPT_SCHEMA_VERSION,
+    privacy: {
+      ...attempt.privacy,
+      identity: { mode: "institutionalEmail", email: validation.email },
+    },
+    delivery: {
+      mode: "prepared-file",
+      preparedAt,
+      sentAutomatically: false,
     },
   };
 };
@@ -502,9 +591,14 @@ export const formatBonusPercentage = (value) => new Intl.NumberFormat("es-CO", {
 
 export const bonusCompactSummary = (attempt) => {
   const { summary } = attempt;
+  const identity = attemptIdentity(attempt);
   return [
     "Papilla's Physics · Física Básica I",
     attempt.bonusTitle,
+    `Versión del Bono: ${attempt.bonusVersion}`,
+    identity.mode === "institutionalEmail"
+      ? `Correo institucional: ${identity.email}`
+      : "Identidad: anónima",
     `Resultado: ${formatBonusPoints(summary.pointsEarned)} / ${formatBonusPoints(summary.pointsPossible)} puntos (${formatBonusPercentage(summary.percentage)} %)`,
     `ID del intento: ${attempt.attemptId}`,
     "Resultado calculado localmente; no fue enviado automáticamente.",
@@ -559,6 +653,8 @@ export const toBonusJSON = (attempt) => `${JSON.stringify(attempt, null, 2)}\n`;
 export const BONUS_CSV_COLUMNS = [
   "schema_version",
   "attempt_id",
+  "identity_mode",
+  "institutional_email",
   "bonus_id",
   "bonus_version",
   "unit",
@@ -567,6 +663,11 @@ export const BONUS_CSV_COLUMNS = [
   "question_order",
   "exercise_id",
   "exercise_version",
+  "item_kind",
+  "family_id",
+  "family_version",
+  "instance_id",
+  "parameters_json",
   "question_title",
   "question_prompt",
   "topic",
@@ -581,9 +682,12 @@ export const BONUS_CSV_COLUMNS = [
 ];
 
 export const toBonusCSV = (attempt, { includeBom = true } = {}) => {
+  const identity = attemptIdentity(attempt);
   const records = attempt.questions.map((question) => ({
     schema_version: attempt.schemaVersion,
     attempt_id: attempt.attemptId,
+    identity_mode: identity.mode,
+    institutional_email: identity.mode === "institutionalEmail" ? identity.email : "",
     bonus_id: attempt.bonusId,
     bonus_version: attempt.bonusVersion,
     unit: attempt.unit.number,
@@ -592,6 +696,11 @@ export const toBonusCSV = (attempt, { includeBom = true } = {}) => {
     question_order: question.order,
     exercise_id: question.exerciseId,
     exercise_version: question.exerciseVersion,
+    item_kind: question.itemKind ?? "fixed",
+    family_id: question.familyId ?? "",
+    family_version: question.familyVersion ?? "",
+    instance_id: question.instanceId ?? "",
+    parameters_json: question.parameters ? JSON.stringify(question.parameters) : "",
     question_title: question.snapshot.title,
     question_prompt: question.snapshot.prompt,
     topic: question.topic,
@@ -609,7 +718,7 @@ export const toBonusCSV = (attempt, { includeBom = true } = {}) => {
     columns: BONUS_CSV_COLUMNS,
     records,
     includeBom,
-    formulaSafeColumns: ["response"],
+    formulaSafeColumns: ["institutional_email", "response"],
   });
 };
 
@@ -623,7 +732,11 @@ export const validateCompletedBonusAttempt = (attempt) => {
   const require = (condition, message) => {
     if (!condition) errors.push(message);
   };
-  require(attempt?.schemaVersion === BONUS_ATTEMPT_SCHEMA_VERSION, "schemaVersion inválida.");
+  require(
+    [BONUS_ATTEMPT_SCHEMA_VERSION, LEGACY_BONUS_ATTEMPT_SCHEMA_VERSION]
+      .includes(attempt?.schemaVersion),
+    "schemaVersion inválida."
+  );
   require(isAttemptId(attempt?.attemptId), "attemptId inválido.");
   require(Number.isInteger(attempt?.bonusVersion) && attempt.bonusVersion > 0, "bonusVersion inválida.");
   require(attempt?.modality === "bonus", "modality inválida.");
@@ -633,7 +746,17 @@ export const validateCompletedBonusAttempt = (attempt) => {
   require(isExactIsoDate(attempt?.startedAt), "startedAt debe usar ISO 8601.");
   require(isExactIsoDate(attempt?.completedAt), "completedAt debe usar ISO 8601.");
   require(attempt?.privacy?.collection === "local", "collection inválida.");
-  require(attempt?.privacy?.identity === "anonymous", "identity inválida.");
+  const identity = attemptIdentity(attempt);
+  require(BONUS_DELIVERY_IDENTITY_MODES.includes(identity.mode), "identity inválida.");
+  require(
+    identity.mode !== "institutionalEmail" || validateInstitutionalEmail(identity.email).valid,
+    "Correo institucional inválido."
+  );
+  if (identity.mode === "institutionalEmail") {
+    require(attempt?.delivery?.mode === "prepared-file", "Modo de entrega inválido.");
+    require(isExactIsoDate(attempt?.delivery?.preparedAt), "preparedAt debe usar ISO 8601.");
+    require(attempt?.delivery?.sentAutomatically === false, "La entrega no puede figurar como envío automático.");
+  }
   require(Array.isArray(attempt?.questions) && attempt.questions.length > 0, "Faltan preguntas.");
   require(Number.isFinite(attempt?.summary?.pointsEarned), "Falta pointsEarned.");
   require(Number.isFinite(attempt?.summary?.pointsPossible), "Falta pointsPossible.");

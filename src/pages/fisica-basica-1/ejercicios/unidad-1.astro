@@ -2,13 +2,13 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import OpenPractice from "../../../components/academic/OpenPractice.astro";
 import UnitOneNav from "../../../components/academic/UnitOneNav.astro";
-import { UNIT_1_EXERCISES } from "../../../data/physics/unit-1/exercises.js";
+import { UNIT_1_BANK_ITEMS } from "../../../data/physics/unit-1/bank.js";
 import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
 import { UNIT_1_VISUALIZATIONS } from "../../../data/physics/unit-1/visualizations.js";
 import { withBase } from "../../../utils/paths.js";
 
-const publicLearningExercises = UNIT_1_EXERCISES.filter(
+const publicLearningExercises = UNIT_1_BANK_ITEMS.filter(
   (exercise) =>
     exercise.status !== "draft" &&
     exercise.purpose === "learning" &&

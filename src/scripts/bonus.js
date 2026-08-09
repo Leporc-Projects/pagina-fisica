@@ -7,11 +7,14 @@ import {
   formatBonusPercentage,
   formatBonusPoints,
   parseBonusNumber,
+  prepareDeliveryAttempt,
   selectBonusQuestions,
   toBonusCSV,
   toBonusJSON,
   toBonusText,
 } from "../utils/bonus.js";
+import { UNIT_1_EXERCISE_FAMILIES } from "../data/physics/unit-1/families.js";
+import { BONUS_DELIVERY_CONFIG } from "../data/delivery.js";
 import { withBase } from "../utils/paths.js";
 import { copyLocalText, downloadLocalFile } from "./local-export.js";
 
@@ -38,7 +41,11 @@ export const initializeBonus = () => {
   }
 
   const bonus = data.bonus;
-  const pool = data.exercises;
+  const topicLabels = data.topicLabels ?? {};
+  const familyMap = new Map(UNIT_1_EXERCISE_FAMILIES.map((family) => [family.id, family]));
+  const pool = data.exercises.map((item) =>
+    item.itemKind === "parameterizedFamily" ? familyMap.get(item.id) ?? item : item
+  );
   const exerciseMap = new Map(pool.map((exercise) => [exercise.id, exercise]));
   const questionElements = new Map(
     [...app.querySelectorAll("[data-bonus-question]")]
@@ -57,9 +64,147 @@ export const initializeBonus = () => {
   const backToResult = app.querySelector("[data-back-to-result]");
   let attempt = null;
   let completedAttempt = null;
+  let deliveryAttempt = null;
   let selections = [];
   let responses = {};
   let currentIndex = 0;
+  const seenItemIds = new Set();
+  const recentParameterKeys = new Set();
+
+  const appendNumberField = (container, exercise, field) => {
+    const wrapper = createElement("div", undefined, "bonus-number-field");
+    const inputId = `${exercise.id}-${field.id}`;
+    const label = createElement("label", field.label);
+    label.htmlFor = inputId;
+    const control = createElement("div", undefined, "bonus-number-field__control");
+    const input = createElement("input");
+    input.id = inputId;
+    input.type = "text";
+    input.inputMode = "decimal";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.dataset.bonusResponse = "";
+    input.dataset.fieldId = field.id;
+    const errorId = `${inputId}-error`;
+    input.setAttribute("aria-describedby", errorId);
+    control.append(input);
+    if (field.unit) control.append(createElement("span", field.unit));
+    const error = createElement("small", undefined, "bonus-field-error");
+    error.id = errorId;
+    error.dataset.fieldError = "";
+    wrapper.append(label, control, error);
+    container.append(wrapper);
+  };
+
+  const createGeneratedQuestion = (exercise) => {
+    const article = createElement("article", undefined, "bonus-question");
+    article.dataset.bonusQuestion = "";
+    article.dataset.exerciseId = exercise.id;
+    article.dataset.generatedQuestion = "true";
+    article.hidden = true;
+    const titleId = `${exercise.id}-bonus-title`;
+    article.setAttribute("aria-labelledby", titleId);
+    const header = createElement("header", undefined, "bonus-question__header");
+    const headingGroup = createElement("div");
+    const counter = createElement("p", "Pregunta", "bonus-question__counter");
+    counter.dataset.questionCounter = "";
+    const heading = createElement("h2", exercise.title);
+    heading.id = titleId;
+    heading.tabIndex = -1;
+    headingGroup.append(counter, heading);
+    header.append(
+      headingGroup,
+      createElement("p", topicLabels[exercise.topic] ?? exercise.topic, "bonus-question__topic")
+    );
+    const content = createElement("div", undefined, "bonus-question__content");
+    content.append(createElement("p", exercise.prompt, "bonus-question__prompt"));
+    article.append(header, content);
+
+    if (exercise.interaction.kind === "singleChoice") {
+      const fieldset = createElement("fieldset", undefined, "bonus-question__interaction bonus-question__choice");
+      fieldset.append(createElement("legend", "Elige una respuesta"));
+      const choices = createElement("div", undefined, "bonus-choice-list");
+      choices.dataset.bonusOptions = "";
+      exercise.interaction.options.forEach((option) => {
+        const label = createElement("label", undefined, "bonus-choice");
+        label.dataset.optionId = option.id;
+        const input = createElement("input");
+        input.type = "radio";
+        input.name = `response-${exercise.id}`;
+        input.value = option.id;
+        input.dataset.bonusResponse = "";
+        const marker = createElement("span", undefined, "bonus-choice__marker");
+        marker.setAttribute("aria-hidden", "true");
+        label.append(input, marker, createElement("span", option.content));
+        choices.append(label);
+      });
+      fieldset.append(choices);
+      article.append(fieldset);
+    } else if (exercise.interaction.kind === "number") {
+      const interaction = createElement("div", undefined, "bonus-question__interaction");
+      appendNumberField(interaction, exercise, exercise.interaction.field);
+      interaction.append(createElement("small", "Puedes usar coma, punto, notación científica o una fracción simple."));
+      article.append(interaction);
+    } else {
+      const fieldset = createElement("fieldset", undefined, "bonus-question__interaction bonus-multi-number");
+      fieldset.append(createElement("legend", "Completa cada valor"));
+      const fields = createElement("div", undefined, "bonus-multi-number__fields");
+      exercise.interaction.fields.forEach((field) => appendNumberField(fields, exercise, field));
+      fieldset.append(fields, createElement("small", "Puedes usar coma, punto, notación científica o una fracción simple."));
+      article.append(fieldset);
+    }
+
+    const feedback = createElement("section", undefined, "bonus-question__feedback");
+    feedback.dataset.questionFeedback = "";
+    feedback.hidden = true;
+    feedback.setAttribute("aria-live", "polite");
+    const feedbackStatus = createElement("p", undefined, "bonus-question__feedback-status");
+    feedbackStatus.dataset.feedbackStatus = "";
+    const facts = createElement("dl");
+    [["Tu respuesta", "feedbackResponse"], ["Respuesta esperada", "feedbackExpected"]]
+      .forEach(([label, key]) => {
+        const group = createElement("div");
+        const value = createElement("dd");
+        value.dataset[key] = "";
+        group.append(createElement("dt", label), value);
+        facts.append(group);
+      });
+    const message = createElement("p");
+    message.dataset.feedbackMessage = "";
+    feedback.append(feedbackStatus, facts, message);
+    if (exercise.solution?.length) {
+      const details = createElement("details", undefined, "bonus-question__solution");
+      details.dataset.feedbackSolution = "";
+      details.append(createElement("summary", "Revisar solución"));
+      const list = createElement("ol");
+      exercise.solution.forEach((step) => {
+        const item = createElement("li");
+        item.append(createElement("strong", step.title), createElement("p", step.text));
+        list.append(item);
+      });
+      details.append(list);
+      feedback.append(details);
+    }
+    article.append(feedback);
+    return article;
+  };
+
+  const registerGeneratedSelections = () => {
+    const stage = app.querySelector("[data-question-stage]");
+    if (!stage) return;
+    [...stage.querySelectorAll("[data-generated-question]")].forEach((element) => {
+      questionElements.delete(element.dataset.exerciseId);
+      exerciseMap.delete(element.dataset.exerciseId);
+      element.remove();
+    });
+    selections.forEach(({ exercise }) => {
+      exerciseMap.set(exercise.id, exercise);
+      if (exercise.itemKind !== "parameterizedInstance") return;
+      const element = createGeneratedQuestion(exercise);
+      stage.append(element);
+      questionElements.set(exercise.id, element);
+    });
+  };
 
   const announce = (message) => {
     if (status) status.textContent = message;
@@ -236,7 +381,17 @@ export const initializeBonus = () => {
 
   const startAttempt = () => {
     try {
-      selections = selectBonusQuestions(bonus, pool);
+      selections = selectBonusQuestions(bonus, pool, globalThis.crypto, {
+        seenItemIds,
+        recentParameterKeys,
+      });
+      selections.forEach((selection) => {
+        seenItemIds.add(selection.sourceItemId);
+        if (selection.parameterKey) {
+          recentParameterKeys.add(`${selection.sourceItemId}:${selection.parameterKey}`);
+        }
+      });
+      registerGeneratedSelections();
       attempt = createBonusAttempt(bonus, selections);
     } catch (error) {
       announce(error instanceof Error ? error.message : "No fue posible iniciar el Bono.");
@@ -245,6 +400,7 @@ export const initializeBonus = () => {
 
     responses = {};
     completedAttempt = null;
+    deliveryAttempt = null;
     currentIndex = 0;
     app.dataset.completed = "false";
     app.classList.remove("is-reviewing-results");
@@ -428,6 +584,18 @@ export const initializeBonus = () => {
         recommendations.append(list);
       }
     }
+    const deliveryForm = app.querySelector("[data-delivery-form]");
+    const deliveryPrepared = app.querySelector("[data-delivery-prepared]");
+    const deliveryError = app.querySelector("[data-delivery-error]");
+    const emailRow = app.querySelector("[data-result-email-row]");
+    if (deliveryForm instanceof HTMLFormElement) {
+      deliveryForm.hidden = true;
+      deliveryForm.reset();
+    }
+    if (deliveryPrepared instanceof HTMLElement) deliveryPrepared.hidden = true;
+    if (deliveryError) deliveryError.textContent = "";
+    if (emailRow instanceof HTMLElement) emailRow.hidden = true;
+    deliveryAttempt = null;
   };
 
   const finishAttempt = () => {
@@ -437,7 +605,7 @@ export const initializeBonus = () => {
     attempt.questions.forEach((question) => captureResponse(question.exerciseId));
     completedAttempt = completeBonusAttempt({
       attempt,
-      exercises: pool,
+      exercises: [...exerciseMap.values()],
       responses,
     });
     completedAttempt.questions.forEach(renderQuestionFeedback);
@@ -489,6 +657,42 @@ export const initializeBonus = () => {
   app.querySelector("[data-review-answers]")?.addEventListener("click", reviewAnswers);
   backToResult?.addEventListener("click", returnToResult);
   app.querySelector("[data-another-attempt]")?.addEventListener("click", startAttempt);
+  app.querySelector("[data-show-delivery]")?.addEventListener("click", () => {
+    const form = app.querySelector("[data-delivery-form]");
+    if (!(form instanceof HTMLFormElement)) return;
+    form.hidden = false;
+    const input = form.elements.namedItem("email");
+    if (input instanceof HTMLInputElement) input.focus();
+  });
+  app.querySelector("[data-delivery-form]")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!completedAttempt || !(event.currentTarget instanceof HTMLFormElement)) return;
+    const input = event.currentTarget.elements.namedItem("email");
+    const errorTarget = app.querySelector("[data-delivery-error]");
+    if (!(input instanceof HTMLInputElement)) return;
+    try {
+      deliveryAttempt = prepareDeliveryAttempt(
+        completedAttempt,
+        input.value,
+        BONUS_DELIVERY_CONFIG
+      );
+      input.setAttribute("aria-invalid", "false");
+      if (errorTarget) errorTarget.textContent = "";
+      const prepared = app.querySelector("[data-delivery-prepared]");
+      const email = app.querySelector("[data-delivery-email]");
+      if (email) email.textContent = deliveryAttempt.privacy.identity.email;
+      if (prepared instanceof HTMLElement) prepared.hidden = false;
+      announce("Archivo preparado para entrega. El correo solo está en esta copia local.");
+    } catch (error) {
+      input.setAttribute("aria-invalid", "true");
+      if (errorTarget) {
+        errorTarget.textContent = error instanceof Error
+          ? error.message
+          : "Revisa el correo.";
+      }
+      input.focus();
+    }
+  });
 
   app.addEventListener("input", (event) => {
     const target = event.target;
@@ -504,13 +708,29 @@ export const initializeBonus = () => {
     button.addEventListener("click", async () => {
       if (!completedAttempt || !(button instanceof HTMLButtonElement)) return;
       try {
+        const exportAttempt = button.dataset.exportMode === "identified"
+          ? deliveryAttempt
+          : completedAttempt;
+        if (!exportAttempt) {
+          announce("Prepara primero la copia identificada.");
+          return;
+        }
         const action = button.dataset.bonusExport;
         if (action === "copy") {
-          await copyLocalText(bonusCompactSummary(completedAttempt));
+          await copyLocalText(bonusCompactSummary(exportAttempt));
           announce("Resumen copiado al portapapeles.");
           return;
         }
         if (action === "print") {
+          const emailRow = app.querySelector("[data-result-email-row]");
+          const emailTarget = app.querySelector("[data-result-email]");
+          const identified = button.dataset.exportMode === "identified";
+          if (emailRow instanceof HTMLElement) emailRow.hidden = !identified;
+          if (emailTarget) {
+            emailTarget.textContent = identified
+              ? exportAttempt.privacy.identity.email
+              : "";
+          }
           announce("Se abrirá el diálogo para imprimir o guardar como PDF.");
           window.print();
           return;
@@ -523,9 +743,9 @@ export const initializeBonus = () => {
         const exporter = exporters[action];
         if (!exporter) return;
         downloadLocalFile({
-          contents: exporter[0](completedAttempt),
+          contents: exporter[0](exportAttempt),
           mimeType: exporter[1],
-          filename: bonusFilename(bonus, completedAttempt, action),
+          filename: bonusFilename(bonus, exportAttempt, action),
         });
         announce(`Archivo ${action.toUpperCase()} preparado para descargar.`);
       } catch {

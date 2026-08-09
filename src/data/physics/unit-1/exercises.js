@@ -1,50 +1,17 @@
 // Banco editorial de ejercicios originales en revisión. El sitio muestra solo
 // una parte de estos metadatos; tutorías y Bonos consumen el contrato.
-
-export const EXERCISE_MODALITIES = [
-  "review",
-  "practice",
-  "selfAssessment",
-  "tutoring",
-  "bonus",
-];
-
-export const EXERCISE_INTERACTION_KINDS = [
-  "singleChoice",
-  "number",
-  "multiNumber",
-];
-
-export const EXERCISE_TYPES = [
-  "conceptual",
-  "numerical",
-  "graphical",
-  "symbolic",
-  "estimation",
-  "application",
-  "integrative",
-];
-
-export const EXERCISE_REPRESENTATIONS = [
-  "verbal",
-  "numerical",
-  "symbolic",
-  "graphical",
-  "vectorial",
-  "visual",
-];
-
-export const EXERCISE_COGNITIVE_LEVELS = [
-  "recognize",
-  "understand",
-  "apply",
-  "analyze",
-  "integrate",
-];
-
-export const EXERCISE_STATUSES = ["draft", "review", "published"];
-export const EXERCISE_PURPOSES = ["learning", "measurement"];
-export const EXERCISE_EXPOSURES = ["public", "restricted"];
+import { UNIT_1_ADDITIONAL_EXERCISE_DEFINITIONS } from "./additional-exercises.js";
+import teacherQuestions from "./teacher-questions.json" with { type: "json" };
+export {
+  EXERCISE_COGNITIVE_LEVELS,
+  EXERCISE_EXPOSURES,
+  EXERCISE_INTERACTION_KINDS,
+  EXERCISE_MODALITIES,
+  EXERCISE_PURPOSES,
+  EXERCISE_REPRESENTATIONS,
+  EXERCISE_STATUSES,
+  EXERCISE_TYPES,
+} from "./exercise-schema.js";
 
 const DEFAULT_FEEDBACK = {
   correct: "La respuesta coincide con el resultado esperado.",
@@ -85,7 +52,7 @@ const singleChoice = (options, correctOptionId) => ({
   correctOptionId,
 });
 
-const createExercise = (exercise) => {
+export const createExercise = (exercise) => {
   const automaticallyEligible = ["number", "values"].includes(
     exercise.answer?.kind
   );
@@ -99,6 +66,8 @@ const createExercise = (exercise) => {
     : baseModalities;
 
   return {
+    itemKind: "fixed",
+    authorSource: "editorial",
     unit: 1,
     modalities,
     prerequisites: [],
@@ -1086,6 +1055,11 @@ export const UNIT_1_EXERCISES = [
       { step: 5, title: "Interpretación", text: "En ese instante la velocidad es horizontal hacia +x, coherente con la tangente de la trayectoria, mientras la aceleración apunta hacia −y." },
     ],
   }),
+  ...UNIT_1_ADDITIONAL_EXERCISE_DEFINITIONS.map((exercise) => createExercise({
+    ...exercise,
+    bonusEligible: true,
+  })),
+  ...teacherQuestions.map(createExercise),
 ];
 
 export const getUnit1ExercisesByTopic = (topic) =>

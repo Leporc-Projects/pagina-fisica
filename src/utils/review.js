@@ -17,6 +17,8 @@ import {
 } from "../data/review.js";
 import {
   BONUS_ATTEMPT_SCHEMA_VERSION,
+  LEGACY_BONUS_ATTEMPT_SCHEMA_VERSION,
+  attemptIdentity,
   isAttemptId,
   validateCompletedBonusAttempt,
 } from "./bonus.js";
@@ -89,7 +91,8 @@ export const validateImportedDocument = (document) => {
   }
 
   if ("attemptId" in document || "bonusId" in document) {
-    if (document.schemaVersion !== BONUS_ATTEMPT_SCHEMA_VERSION) {
+    if (![BONUS_ATTEMPT_SCHEMA_VERSION, LEGACY_BONUS_ATTEMPT_SCHEMA_VERSION]
+      .includes(document.schemaVersion)) {
       return invalidResult("La versión del esquema de Bono no está soportada.");
     }
     const validation = validateCompletedBonusAttempt(document);
@@ -201,11 +204,13 @@ export const aggregateReviewSession = (session) => {
   const helpfulness = {};
   let participation = 0;
   let bonuses = 0;
+  const bonusIdentity = { anonymous: 0, institutionalEmail: 0 };
   let withoutTopic = 0;
 
   session.records.forEach((record) => {
     if (record.kind === "bonus") {
       bonuses += 1;
+      increment(bonusIdentity, attemptIdentity(record.original).mode);
       return;
     }
     participation += 1;
@@ -236,6 +241,7 @@ export const aggregateReviewSession = (session) => {
     uniqueRecords: session.records.length,
     participation,
     bonuses,
+    bonusIdentity,
     duplicates: incidentCounts.warning,
     incidents: incidentCounts,
     activity,
@@ -458,7 +464,9 @@ export const toReviewText = (reviewExport) => {
     "Áreas de mejora",
     ...countLines(summary.improvementAreas, REVIEW_LABELS.improvementArea),
     "",
-    `Intentos anónimos de Bono reconocidos: ${summary.bonuses}`,
+    `Intentos de Bono reconocidos: ${summary.bonuses}`,
+    `- Anónimos: ${summary.bonusIdentity.anonymous}`,
+    `- Identificados: ${summary.bonusIdentity.institutionalEmail}`,
     "Los conteos describen los archivos importados; no estiman dominio ni causalidad.",
     "Los archivos se procesaron localmente y no fueron enviados automáticamente.",
   ].join("\n") + "\n";

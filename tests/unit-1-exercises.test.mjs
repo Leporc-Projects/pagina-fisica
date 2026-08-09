@@ -25,8 +25,12 @@ const trapezoidArea = (points) => points.slice(1).reduce(
   0
 );
 
-test("el banco reúne 22 ejercicios auditados y 12 ejercicios visuales nuevos", () => {
-  assert.equal(UNIT_1_EXERCISES.length, 34);
+test("el banco fijo reúne los ejercicios auditados y conserva las 12 visualizaciones centrales", () => {
+  assert.equal(UNIT_1_EXERCISES.length, 55);
+  assert.equal(
+    UNIT_1_EXERCISES.filter((exercise) => exercise.id.startsWith("u1-extra-")).length,
+    21
+  );
   assert.equal(
     UNIT_1_EXERCISES.filter((exercise) => exercise.id.startsWith("u1-visual-")).length,
     12
@@ -65,6 +69,15 @@ test("VIS-02 diferencia área algebraica y distancia", () => {
   assert.deepEqual(signedAreas, [4, 12, 4, -2]);
   assert.equal(signedAreas.reduce((sum, area) => sum + area, 0), 18);
   assert.equal(signedAreas.reduce((sum, area) => sum + Math.abs(area), 0), 22);
+});
+
+test("los ejercicios visuales derivados conservan los valores de sus gráficas", () => {
+  const answerFor = (exerciseId) => UNIT_1_EXERCISES
+    .find((exercise) => exercise.id === exerciseId)?.answer?.value;
+
+  assert.equal(answerFor("u1-extra-visual-position-net"), -2);
+  assert.equal(answerFor("u1-extra-visual-velocity-final-position"), 15);
+  assert.equal(answerFor("u1-extra-visual-elevator-displacement"), 16);
 });
 
 test("VIS-03 reconstruye el vector del cuadrante II", () => {

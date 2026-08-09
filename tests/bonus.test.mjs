@@ -193,9 +193,9 @@ test("el intento guarda snapshots, versiones, privacidad y orden", () => {
     "u1-vectors-equal-magnitude",
     "u1-units-convert-speed"
   );
-  assert.equal(attempt.schemaVersion, "1.0.0");
+  assert.equal(attempt.schemaVersion, "1.1.0");
   assert.equal(attempt.privacy.collection, "local");
-  assert.equal(attempt.privacy.identity, "anonymous");
+  assert.deepEqual(attempt.privacy.identity, { mode: "anonymous" });
   assert.deepEqual(attempt.questions.map((question) => question.order), [1, 2]);
   assert.equal(attempt.questions[0].exerciseVersion, exerciseMap.get("u1-vectors-equal-magnitude").version);
   assert.equal(attempt.questions[0].snapshot.title, "Igual magnitud");
