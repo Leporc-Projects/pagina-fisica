@@ -27,6 +27,14 @@ const token = (literal, label, tex, body) => ({
   segment: mathSegment({ label, tex, body }),
 });
 
+// MathML colapsa los espacios de mtext. El conector conserva separación
+// semántica y visual entre expresiones sin depender de espacios de texto.
+const conjunction = row(
+  mspace("0.35em"),
+  mtext("y"),
+  mspace("0.35em")
+);
+
 const identifier = (literal, base, index, label = literal) =>
   token(literal, label, `${base}_{${index}}`, sub(mi(base), mtext(index)));
 
@@ -150,7 +158,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "delta x igual a delta r coseno de treinta y dos grados y delta y igual a delta r seno de treinta y dos grados",
     "\\Delta x=\\Delta r\\cos32.0^\\circ,\\quad\\Delta y=\\Delta r\\sin32.0^\\circ",
     row(
-      mo("Δ"), mi("x"), mo("="), mo("Δ"), mi("r"), mi("cos"), sup(mn("32,0"), mo("°")), mtext(" y "),
+      mo("Δ"), mi("x"), mo("="), mo("Δ"), mi("r"), mi("cos"), sup(mn("32,0"), mo("°")), conjunction,
       mo("Δ"), mi("y"), mo("="), mo("Δ"), mi("r"), mi("sin"), sup(mn("32,0"), mo("°"))
     )
   ),
@@ -159,7 +167,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "delta x aproximadamente seis coma treinta y seis metros y delta y aproximadamente tres coma noventa y siete metros",
     "\\Delta x\\approx6.36\\,m,\\quad\\Delta y\\approx3.97\\,m",
     row(
-      mo("Δ"), mi("x"), mo("≈"), mn("6,36"), mtext(" m"), mtext(" y "),
+      mo("Δ"), mi("x"), mo("≈"), mn("6,36"), mtext(" m"), conjunction,
       mo("Δ"), mi("y"), mo("≈"), mn("3,97"), mtext(" m")
     )
   ),
@@ -195,7 +203,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "v < 0 y a < 0",
     "v menor que cero y a menor que cero",
     "v<0,\\quad a<0",
-    row(mi("v"), mo("<"), mn("0"), mtext(" y "), mi("a"), mo("<"), mn("0"))
+    row(mi("v"), mo("<"), mn("0"), conjunction, mi("a"), mo("<"), mn("0"))
   ),
   token(
     "v = (−4−2)/(3−0) = −6/3 = −2 m/s",
@@ -310,7 +318,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "d\\hat r/dt=\\dot\\theta\\hat\\theta,\\quad d\\hat\\theta/dt=-\\dot\\theta\\hat r",
     row(
       frac(row(mi("d"), unitVector("r")), row(mi("d"), mi("t"))), mo("="),
-      mover(mi("θ"), mo("˙")), unitVector("θ"), mtext(" y "),
+      mover(mi("θ"), mo("˙")), unitVector("θ"), conjunction,
       frac(row(mi("d"), unitVector("θ")), row(mi("d"), mi("t"))), mo("="), mo("−"),
       mover(mi("θ"), mo("˙")), unitVector("r")
     )
@@ -331,7 +339,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "\\vec A=2\\hat i+\\lambda\\hat j-\\hat k,\\quad\\vec B=3\\hat i-2\\hat j+4\\hat k",
     row(
       vector("A"), mo("="), mn("2"), unitVector("i"), mo("+"), mi("λ"), unitVector("j"), mo("−"), unitVector("k"),
-      mtext(" y "), vector("B"), mo("="), mn("3"), unitVector("i"), mo("−"), mn("2"), unitVector("j"), mo("+"), mn("4"), unitVector("k")
+      conjunction, vector("B"), mo("="), mn("3"), unitVector("i"), mo("−"), mn("2"), unitVector("j"), mo("+"), mn("4"), unitVector("k")
     )
   ),
   token(
@@ -340,7 +348,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "\\vec A=a\\hat i+2\\hat j,\\quad\\vec B=3\\hat i-\\hat j",
     row(
       vector("A"), mo("="), mi("a"), unitVector("i"), mo("+"), mn("2"), unitVector("j"),
-      mtext(" y "), vector("B"), mo("="), mn("3"), unitVector("i"), mo("−"), unitVector("j")
+      conjunction, vector("B"), mo("="), mn("3"), unitVector("i"), mo("−"), unitVector("j")
     )
   ),
   token(
@@ -392,7 +400,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "a_t=dv/dt,\\quad a_r=v^2/R",
     row(
       sub(mi("a"), mi("t")), mo("="), frac(row(mi("d"), mi("v")), row(mi("d"), mi("t"))),
-      mtext(" y "), sub(mi("a"), mi("r")), mo("="), frac(sup(mi("v"), mn("2")), mi("R"))
+      conjunction, sub(mi("a"), mi("r")), mo("="), frac(sup(mi("v"), mn("2")), mi("R"))
     )
   ),
   token(
@@ -437,7 +445,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "A sub x igual a A coseno theta y A sub y igual a A seno theta",
     "A_x=A\\cos\\theta,\\quad A_y=A\\sin\\theta",
     row(
-      sub(mi("A"), mi("x")), mo("="), mi("A"), mi("cos"), mi("θ"), mtext(" y "),
+      sub(mi("A"), mi("x")), mo("="), mi("A"), mi("cos"), mi("θ"), conjunction,
       sub(mi("A"), mi("y")), mo("="), mi("A"), mi("sin"), mi("θ"))
   ),
   token(
@@ -450,13 +458,13 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "aₓ = 0 y aᵧ = −g",
     "a sub x igual a cero y a sub y igual a menos g",
     "a_x=0,\\quad a_y=-g",
-    row(sub(mi("a"), mi("x")), mo("="), mn("0"), mtext(" y "), sub(mi("a"), mi("y")), mo("="), mo("−"), mi("g"))
+    row(sub(mi("a"), mi("x")), mo("="), mn("0"), conjunction, sub(mi("a"), mi("y")), mo("="), mo("−"), mi("g"))
   ),
   token(
     "vᵧ = 0 y aᵧ = −g",
     "v sub y igual a cero y a sub y igual a menos g",
     "v_y=0,\\quad a_y=-g",
-    row(sub(mi("v"), mi("y")), mo("="), mn("0"), mtext(" y "), sub(mi("a"), mi("y")), mo("="), mo("−"), mi("g"))
+    row(sub(mi("v"), mi("y")), mo("="), mn("0"), conjunction, sub(mi("a"), mi("y")), mo("="), mo("−"), mi("g"))
   ),
   token(
     "ṙ = r̈ = 0 y θ̈ = 0",
@@ -464,7 +472,7 @@ export const UNIT_1_INLINE_MATH_TOKENS = [
     "\\dot r=\\ddot r=0,\\quad\\ddot\\theta=0",
     row(
       mover(mi("r"), mo("˙")), mo("="), mover(mi("r"), mo("¨")), mo("="), mn("0"),
-      mtext(" y "), mover(mi("θ"), mo("¨")), mo("="), mn("0")
+      conjunction, mover(mi("θ"), mo("¨")), mo("="), mn("0")
     )
   ),
   token(

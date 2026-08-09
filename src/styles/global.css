@@ -3326,12 +3326,14 @@ main {
 .unit-topic-content {
   min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(4rem, 10vw, 8rem);
 }
 
 .academic-section,
 .common-errors,
 .practice-group {
+  min-width: 0;
   scroll-margin-top: calc(var(--header-h) + 6rem);
 }
 
@@ -3444,29 +3446,34 @@ main {
 }
 
 .academic-section__resources {
+  min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   margin-top: clamp(2rem, 5vw, 3.5rem);
 }
 
 .formula-block {
+  min-width: 0;
   max-width: 60rem;
-  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--formula-bg);
 }
 
-/* MathML inline comparte línea base con el texto y evita que una expresión
-   corta se corte internamente; el contenedor de bloque gestiona las largas. */
+/* El ancho intrínseco evita que una fórmula corta se comprima hasta el espacio
+   restante de la línea. Las expresiones que exceden el párrafo conservan un
+   scroll local y el padding vertical protege flechas, fracciones y exponentes. */
 .inline-math {
-  display: inline-flex;
+  display: inline-block;
+  inline-size: max-content;
   max-width: calc(100% - 0.16em);
   overflow-x: auto;
-  align-items: baseline;
+  padding-block: 0.24em;
   margin-inline: 0.08em;
   color: currentColor;
-  vertical-align: -0.08em;
+  line-height: normal;
+  vertical-align: -0.32em;
   white-space: nowrap;
   scrollbar-width: thin;
 }
@@ -4053,11 +4060,18 @@ main {
 }
 
 .exercise-card__solution ol {
+  min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.8rem;
   margin-top: 0.8rem;
   padding-left: 1.5rem;
   list-style: decimal;
+}
+
+.exercise-card__solution li,
+.exercise-card__solution li p {
+  min-width: 0;
 }
 
 .exercise-card__solution li p {
