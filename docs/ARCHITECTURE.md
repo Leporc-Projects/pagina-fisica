@@ -135,6 +135,8 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/unidades/unidad-1/circular-relativo.astro` | `/fisica-basica-1/unidades/unidad-1/circular-relativo` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/coordenadas-polares.astro` | `/fisica-basica-1/unidades/unidad-1/coordenadas-polares` |
 | `src/pages/fisica-basica-1/ejercicios/unidad-1.astro` | `/fisica-basica-1/ejercicios/unidad-1` |
+| `src/pages/fisica-basica-1/bonos/index.astro` | `/fisica-basica-1/bonos` |
+| `src/pages/fisica-basica-1/bonos/[slug].astro` | `/fisica-basica-1/bonos/<slug>` |
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
 
@@ -202,6 +204,67 @@ una biblioteca de PDF: “Imprimir / PDF” abre la capacidad nativa del navegad
 La documentación de minimización, categorías de datos y conexión futura está
 en [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
 
+### Bonos y autodiagnóstico local
+
+Los Bonos son actividades públicas de aprendizaje, no un banco de medición.
+El contrato editorial usa `modality: "bonus"`, `purpose: "learning"` y
+`exposure: "public"`. La modalidad anterior `quiz` se retiró antes de existir
+persistencia o integración externa. `measurement` conserva su significado y
+permanece separado.
+
+Las definiciones viven en `physics/unit-1/bonuses.js` y el registro transversal
+en `data/bonuses/index.js`. Cada Bono declara ID, slug, versión, título, temas,
+cantidad, tiempo, política de feedback y blueprint. La ruta dinámica
+`bonos/[slug].astro` usa `getStaticPaths()` para generar una página por registro
+y solo incluye el pool elegible de sus temas.
+
+```text
+definición del Bono + pool público elegible
+   ↓ selectBonusQuestions() satisface ranuras sin repetir IDs
+selección y orden de opciones concretos
+   ↓ createBonusAttempt()
+objeto único de intento en memoria
+   ↓ respuestas locales
+completeBonusAttempt()
+   ├─ scoring por pregunta y por tema
+   ├─ recomendaciones por errores de la tanda
+   ├─ TXT / JSON / CSV
+   └─ CSS de impresión + window.print()
+```
+
+Una ranura puede filtrar `topic`, `subtopic`, `type`, `representation` y
+`difficulty`. El selector usa `crypto.getRandomValues()`, backtracking y orden
+aleatorio de candidatos: satisface primero el blueprint y registra los IDs
+exactos; no depende de `Math.random()` ni promete reconstrucción por semilla.
+`validate.mjs` comprueba que cada blueprint puede resolverse con el banco.
+
+La auto-corrección requiere `bonusEligible: true` y `interaction`. Los tipos
+vigentes son `singleChoice`, `number` y `multiNumber`. Un `answer.kind: "text"`
+solo entra mediante opciones explícitas aprobadas. Las respuestas numéricas
+aceptan coma o punto decimal, notación científica y fracciones simples
+`número/número`; nunca se evalúa texto como código. La tolerancia es absoluta y
+un campo de `answer.values` puede sobreescribir la tolerancia general.
+
+Cada pregunta vale un punto. `singleChoice` y `number` son todo o nada;
+`multiNumber` reparte el punto por igual entre sus campos. El resultado canónico
+conserva `pointsEarned`, `pointsPossible`, `percentage`, desglose por tema y
+recomendaciones limitadas a lo observado en la tanda. No produce categorías de
+aprobación, niveles ni estimaciones globales de dominio.
+
+El contrato de intento `1.0.0` incluye `attemptId` aleatorio de 128 bits,
+versiones del Bono y de los ejercicios, timestamps ISO, orden, orden de
+opciones, snapshot de título/enunciado, respuestas, corrección, puntos,
+resumen y privacidad local/anónima. No registra tiempos por pregunta,
+navegación, dispositivo ni identidad. Un nuevo intento reemplaza el anterior
+en memoria.
+
+JSON conserva el contrato completo, TXT ofrece el reporte legible y CSV genera
+una fila por pregunta. El serializador CSV compartido con Participa duplica
+comillas, preserva saltos de línea y Unicode, añade BOM y neutraliza en campos
+de entrada los prefijos `=`, `+`, `-` y `@` para reducir formula injection al
+abrir una hoja de cálculo. Los archivos siguen siendo editables: no son una
+prueba de autenticidad, firma ni certificación.
+
 ### Arquitectura académica de la Unidad 1
 
 La implementación distingue los metadatos estables del curso, el contenido
@@ -255,6 +318,11 @@ modalidades, tolerancia y referencias a errores son metadatos editoriales para
 filtrar, validar y evolucionar tutorías deterministas. `ExerciseCard.astro`
 decide qué parte es visible; ningún resultado ni progreso estudiantil se
 persiste.
+
+La modalidad `bonus` indica compatibilidad con los Bonos. No cambia el
+propósito del ejercicio ni lo mueve al banco `measurement`. La elegibilidad se
+declara además con `bonusEligible` y una `interaction` auto-calificable; esta
+separación impide asumir que todo ejercicio público puede puntuarse.
 
 `status` describe el flujo de revisión académica: `draft` es trabajo incompleto,
 `review` está listo para revisión de César y `published` significa aprobación
@@ -396,7 +464,7 @@ Los tokens se agrupan por intención:
 - contenido: `--bg`, `--surface`, `--surface-raised`, `--text`, `--text-muted`, `--border`, `--accent` y `--focus`;
 - estados: familias `--status-info-*`, `--status-success-*`, `--status-warning-*` y `--status-event-*`;
 - marca: familia `--brand-*`, compartida por cabecera, menú, portada y footer;
-- contenido futuro: `--content-canvas`, `--formula-bg`, `--quiz-bg`, `--simulation-bg` y `--data-series-*`.
+- contenido interactivo: `--content-canvas`, `--formula-bg`, `--bonus-bg`, `--simulation-bg` y `--data-series-*`.
 
 Un componente nuevo debe consumir tokens semánticos, no decidir por sí mismo
 si el tema es claro u oscuro. Por ejemplo, una tarjeta usa
@@ -406,7 +474,7 @@ color; los diagramas raster que realmente admitan inversión pueden declarar
 `data-theme-adaptive="invert"`. El logotipo y las imágenes editoriales no se
 invierten automáticamente.
 
-Las fórmulas, gráficas, simulaciones y quizzes deben dibujarse sobre los
+Las fórmulas, gráficas, simulaciones y Bonos deben dibujarse sobre los
 tokens de lienzo previstos. Si necesitan recalcular colores en JavaScript,
 pueden escuchar `window` para el evento `themechange`; su detalle incluye la
 preferencia y el tema efectivo. Esto evita acoplar cada integración a la
@@ -426,7 +494,7 @@ La infraestructura propia prioriza SVG porque las gráficas académicas suelen
 tener un número moderado de elementos semánticos: ejes, curvas, puntos,
 vectores y etiquetas. SVG conserva esos elementos en el DOM, escala mediante
 `viewBox`, permanece nítido al imprimir y permite describir la figura con
-`title`, `desc` y texto real. Una gráfica estática se renderiza durante el
+`role="img"`, nombre ARIA, `desc` asociado y texto real. Una gráfica estática se renderiza durante el
 build de Astro y no añade JavaScript al navegador.
 
 La separación principal es:

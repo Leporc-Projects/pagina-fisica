@@ -12,6 +12,11 @@ memoria de la pestaña. Prepararla no transmite ni guarda nada. Solo una acción
 explícita del estudiante puede copiar el texto, descargar TXT/JSON/CSV o abrir
 el diálogo de impresión para guardar un PDF.
 
+Los Bonos también operan únicamente en memoria. Crean un intento local,
+calculan el resultado en el navegador y permiten copiar o exportar después de
+finalizar. Recargar o cerrar elimina el intento; no existe historial local ni
+asociación con una persona.
+
 La configuración visual claro/oscuro/sistema es la única preferencia persistida
 por el sitio. Usa `localStorage` bajo `papillas-physics:theme` y no contiene
 respuestas, contenido escrito, progreso ni identidad. No debe reutilizarse esa
@@ -43,13 +48,36 @@ Tampoco se mide tiempo de escritura, cambios, clics, scroll o permanencia. Que
 el navegador permita observar una interacción no constituye un propósito para
 recopilarla.
 
+## Datos de un intento de Bono
+
+Un intento puede contener:
+
+- versión del esquema, ID aleatorio y versión del Bono;
+- curso, unidad, fecha de inicio y fecha de finalización;
+- IDs, versiones, orden y snapshot de título/enunciado de las preguntas;
+- orden mostrado de opciones cuando corresponda;
+- respuesta, corrección y puntos por pregunta;
+- resultado total, porcentaje y desglose por tema de la tanda;
+- subtemas que podría convenir repasar a partir de errores observados;
+- `collection: local` e `identity: anonymous`.
+
+No contiene identidad, IP, user-agent, pantalla, zona horaria independiente,
+tiempo por pregunta, clics, scroll ni fingerprint. `startedAt` y `completedAt`
+describen el intento, pero no se interpretan como indicador pedagógico.
+
+El archivo exportado incluye snapshots y versiones para comprender qué recibió
+el estudiante aunque el banco cambie. Puede editarse después de descargarlo y
+no constituye una prueba de autenticidad, firma o certificación. El CSV
+neutraliza prefijos que una hoja de cálculo podría interpretar como fórmulas;
+esa protección no convierte el archivo en inmutable.
+
 ## Categorías y propósitos
 
 Las categorías deben permanecer separadas:
 
 | Categoría | Uso actual o previsto | Efecto automático |
 | --- | --- | --- |
-| `learning` | Material académico público y reflexión conceptual local | No califica ni registra progreso |
+| `learning` | Material académico público, reflexión y Bonos locales | Puede calcular un resultado local; no registra progreso ni modifica calificaciones |
 | `feedback` | Sugerencia sobre contenido o experiencia | No se envía en esta versión |
 | `contribution` | Propuesta estudiantil sin revisar | No entra al banco académico |
 | `measurement` | Banco futuro separado para instrumentos definidos | No participa en este flujo público |

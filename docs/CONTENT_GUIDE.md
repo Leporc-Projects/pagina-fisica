@@ -153,7 +153,7 @@ comerciales. Cada registro usa un identificador estable y declara:
 
 - ubicación: `unit`, `topic` y `subtopic`;
 - uso pedagógico: `modalities` (`review`, `practice`, `selfAssessment`,
-  `tutoring` o `quiz`);
+  `tutoring` o `bonus`);
 - forma: `type` y `representation`;
 - complejidad: `cognitiveLevel`, `difficulty`, prerrequisitos, objetivos y
   tiempo estimado;
@@ -162,6 +162,18 @@ comerciales. Cada registro usa un identificador estable y declara:
   retroalimentaciones aprobadas;
 - edición: `status`, `version`, `purpose`, `exposure` y si el ejercicio es parametrizable;
 - figura opcional: `visualizationId`, que debe existir en el registro central.
+
+Un ejercicio que pueda entrar a Bonos declara `bonusEligible: true` y una
+`interaction` compatible. `number` corresponde a `answer.kind: "number"`;
+`multiNumber`, a `answer.kind: "values"`; `singleChoice` exige IDs de opción
+únicos y un único `correctOptionId`. Una respuesta editorial de texto no se
+vuelve auto-calificable sin opciones explícitamente revisadas.
+
+Los Bonos se registran en `src/data/physics/<unidad>/bonuses.js`. Cada blueprint
+se compone de ranuras con cantidad y filtros académicos. Al editar un blueprint
+se debe comprobar que el banco público de aprendizaje puede satisfacer todas
+las ranuras sin repetir ejercicios. No se añaden distractores o ejercicios
+solo para completar una cuota técnica.
 
 Los identificadores de tema, subtema y error deben existir en los archivos de
 la unidad. Un ejercicio numérico requiere unidad esperada y tolerancia; estos
@@ -336,7 +348,7 @@ Para formatos que se incorporarán después:
 - fórmulas y demostraciones usan `--formula-bg`;
 - gráficas usan `--content-canvas` y las series `--data-series-*`;
 - simulaciones usan `--simulation-bg`;
-- quizzes y ejercicios interactivos usan `--quiz-bg` y las familias de estado semánticas;
+- Bonos y ejercicios interactivos usan `--bonus-bg` y las familias de estado semánticas;
 - SVG propios deben preferir `currentColor` o variables CSS cuando necesiten adaptarse.
 
 Una imagen raster no se invierte de forma global porque puede contener
@@ -346,7 +358,7 @@ un diagrama preparado y verificado para esa transformación puede declarar
 futuro variantes claras y oscuras sin cambiar el contrato de los componentes.
 
 El sistema de tema persiste exclusivamente la configuración visual
-`papillas-physics:theme`. Ningún quiz, diagnóstico, ejercicio, simulación o
+`papillas-physics:theme`. Ningún Bono, diagnóstico, ejercicio, simulación o
 tutoría debe reutilizar `localStorage` para guardar respuestas o datos de
 estudiantes sin una decisión arquitectónica y de privacidad posterior.
 
