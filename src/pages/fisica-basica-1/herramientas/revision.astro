@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import ReviewCenter from "../../../components/review/ReviewCenter.astro";
+import TeacherToolsNav from "../../../components/teacher/TeacherToolsNav.astro";
 import { COURSE } from "../../../data/course.js";
 import { withBase } from "../../../utils/paths.js";
 import "../../../styles/review-center.css";
@@ -13,9 +14,9 @@ import "../../../styles/review-center.css";
   <article class="review-page">
     <header class="review-page__hero">
       <nav class="academic-breadcrumb" aria-label="Migas de pan">
-        <a href={withBase("/fisica-basica-1/recursos")}>Recursos</a>
+        <a href={withBase("/fisica-basica-1")}>Física Básica I</a>
         <span aria-hidden="true">/</span>
-        <span>Herramientas docentes</span>
+        <a href={withBase("/fisica-basica-1/herramientas")}>Herramientas docentes</a>
         <span aria-hidden="true">/</span>
         <span aria-current="page">Centro de revisión</span>
       </nav>
@@ -36,6 +37,8 @@ import "../../../styles/review-center.css";
       </aside>
     </header>
 
+    <TeacherToolsNav current="revision" />
+
     <div class="review-print-brand" aria-hidden="true">
       <strong>Papilla's Physics</strong>
       <span>Física Básica I · Centro de revisión</span>
@@ -44,4 +47,3 @@ import "../../../styles/review-center.css";
     <ReviewCenter />
   </article>
 </BaseLayout>
-

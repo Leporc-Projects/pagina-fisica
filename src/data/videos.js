@@ -30,3 +30,8 @@ export const VIDEO_CONTENT_TYPES = [
  * @type {CourseVideo[]}
  */
 export const VIDEOS = [];
+
+export const getVideos = () => [...VIDEOS];
+
+export const getVideosByUnit = (unit) =>
+  getVideos().filter((video) => video.unit === unit);

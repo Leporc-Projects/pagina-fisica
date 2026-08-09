@@ -4,7 +4,7 @@ Sitio docente personal e independiente de César Barrero para organizar informac
 
 El primer curso desarrollado es Física Básica I. Los datos académicos estables provienen del programa oficial y el cronograma del semestre 2026-2 se organiza a partir del plan clase a clase.
 
-Publicación provisional: [https://leporc-projects.github.io/pagina-fisica/](https://leporc-projects.github.io/pagina-fisica/)
+Sitio publicado: [https://leporc-projects.github.io/pagina-fisica/](https://leporc-projects.github.io/pagina-fisica/)
 
 ## Principios del proyecto
 
@@ -58,10 +58,12 @@ Las rutas siguientes son rutas lógicas del proyecto. En GitHub Pages se publica
 - `/fisica-basica-1/videos`: biblioteca audiovisual por unidades.
 - `/fisica-basica-1/evaluacion`: evaluación oficial y política de privacidad.
 - `/fisica-basica-1/recursos`: guías, bibliografía y recursos externos del curso.
+- `/fisica-basica-1/herramientas`: hub de herramientas docentes locales.
+- `/fisica-basica-1/herramientas/avisos`: editor local de avisos.
 - `/avisos`: archivo público de avisos.
 - `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
 - `/simulaciones`: catálogo futuro de simulaciones.
-- `/herramientas`: espacio futuro para utilidades docentes locales.
+- `/herramientas`: acceso de compatibilidad al hub docente del curso.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
 
 ## Desarrollo local
@@ -163,7 +165,7 @@ git status
 
 ### Avisos
 
-Los avisos se registran en `src/data/notices.js`. Cada registro debe tener un identificador estable y único, fecha ISO, categoría, título y resumen. La portada y `/avisos` consumen esa misma fuente.
+Los avisos se almacenan en `src/data/notices.json`; `src/data/notices.js` expone las consultas públicas y solo entrega registros con estado `published`. Los borradores preparados en el editor se importan con `npm run import:notices -- archivo.json` y quedan en `review` hasta su aprobación editorial.
 
 ### Videos
 

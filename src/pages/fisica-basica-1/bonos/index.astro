@@ -3,10 +3,12 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../../components/course/CoursePageHeader.astro";
 import BonusCatalogCard from "../../../components/bonus/BonusCatalogCard.astro";
 import { COURSE } from "../../../data/course.js";
-import { UNIT_1_BONUSES } from "../../../data/physics/unit-1/bonuses.js";
+import { getBonusesByUnit } from "../../../data/bonuses/index.js";
 import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
 import { withBase } from "../../../utils/paths.js";
 import "../../../styles/bonus.css";
+
+const bonuses = getBonusesByUnit(1);
 ---
 
 <BaseLayout
@@ -46,7 +48,7 @@ import "../../../styles/bonus.css";
       </header>
 
       <div class="bonus-catalog__grid">
-        {UNIT_1_BONUSES.map((bonus) => <BonusCatalogCard bonus={bonus} />)}
+        {bonuses.map((bonus) => <BonusCatalogCard bonus={bonus} />)}
       </div>
     </section>
 

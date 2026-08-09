@@ -188,6 +188,13 @@ fecha y preguntas en borrador. El importador del repositorio procesa JSON como
 datos, no código. Esta autoría académica es distinta de datos estudiantiles y no
 convierte el editor en un servicio remoto.
 
+El Editor de avisos tampoco recopila datos de estudiantes ni identidad del
+autor. Conserva en memoria título, resumen, contenido, categoría, fecha,
+destacado y enlace opcional; el paquete declara únicamente `source: teacher`,
+ID, versión y fecha técnica de creación. El importador interpreta JSON como
+datos, rechaza contenido o enlaces no permitidos y deja cada aviso en `review`.
+No existe envío, persistencia en navegador ni publicación automática.
+
 Un ID aleatorio por respuesta no vuelve pseudónima la respuesta porque no se
 reutiliza como identidad ni existe una tabla de correspondencia. Esta condición
 deberá reevaluarse si un envío futuro asocia el archivo con una sesión, cuenta o

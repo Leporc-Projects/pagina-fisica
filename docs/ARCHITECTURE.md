@@ -28,7 +28,8 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 
 - `course.js`: contrato académico del curso, navegación interna, siete unidades, evaluación, bibliografía y cronograma.
 - `site.js`: identidad editorial, navegación global, accesos de portada y categorías generales de simulaciones.
-- `notices.js`: fuente única de avisos para la portada y `/avisos`.
+- `notices.json`: almacenamiento editorial actual de avisos; puede contener los cuatro estados.
+- `notices.js`: adaptador de consultas; `getPublishedNotices()` es la frontera que consumen portada y `/avisos`.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
@@ -84,6 +85,8 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
 - `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
 - `bank/QuestionBankEditor.astro`: formulario docente local para previsualizar preguntas fijas y preparar un paquete JSON de borradores; no modifica el banco público.
+- `notices/NoticeEditor.astro`: formulario local para preparar y previsualizar avisos como texto, sin publicar ni enviar datos.
+- `teacher/TeacherToolsNav.astro`: navegación común del hub, los dos editores, el Centro de revisión y el Organizador.
 - `participation/`: selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
 - `review/`: importación accesible, agregados descriptivos, listado paginado, revisión de propuestas, incidencias y exportación de una sesión docente local. La ruta de la herramienta los compone sin incorporar lógica de contratos.
 - `results/`: importación del listado, configuración de fuentes, resumen, incidencias, consolidado y exportaciones del Organizador de resultados. Cada componente representa una etapa visible; el estado y los cálculos permanecen fuera de Astro y del DOM.
@@ -93,6 +96,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `src/utils/exercise-families.js`: valida familias, genera parámetros con aleatoriedad criptográfica, evita combinaciones recientes en memoria y materializa una instancia determinista.
 - `src/utils/bonus-audit.js`: audita candidatos por slot y simula diversidad de tandas sin modificar blueprints.
 - `src/utils/question-pack.js`: contrato versionado, normalización y validación compartida por el editor y el importador del repositorio.
+- `src/utils/notices.js`: contrato canónico de avisos, estados, categorías, enlaces seguros, orden, paquetes e importación.
 - `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, delimitadores semánticos, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
 - `src/utils/participation.js`: núcleo puro para crear, validar y serializar una respuesta. No conoce formularios ni nodos del DOM y es la única fuente para TXT, JSON y CSV.
 - `src/scripts/participation.js`: adaptación pequeña entre formularios y contrato. Conserva una sola respuesta en memoria, controla la previsualización, descarga archivos, copia texto y abre la impresión nativa.
@@ -138,6 +142,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/evaluacion.astro` | `/fisica-basica-1/evaluacion` |
 | `src/pages/fisica-basica-1/recursos.astro` | `/fisica-basica-1/recursos` |
 | `src/pages/fisica-basica-1/participa.astro` | `/fisica-basica-1/participa` |
+| `src/pages/fisica-basica-1/herramientas/index.astro` | `/fisica-basica-1/herramientas` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/index.astro` | `/fisica-basica-1/unidades/unidad-1` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/herramientas.astro` | `/fisica-basica-1/unidades/unidad-1/herramientas` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/vectores.astro` | `/fisica-basica-1/unidades/unidad-1/vectores` |
@@ -151,6 +156,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/bonos/[slug].astro` | `/fisica-basica-1/bonos/<slug>` |
 | `src/pages/fisica-basica-1/herramientas/revision.astro` | `/fisica-basica-1/herramientas/revision` |
 | `src/pages/fisica-basica-1/herramientas/banco.astro` | `/fisica-basica-1/herramientas/banco` |
+| `src/pages/fisica-basica-1/herramientas/avisos.astro` | `/fisica-basica-1/herramientas/avisos` |
 | `src/pages/fisica-basica-1/herramientas/notas.astro` | `/fisica-basica-1/herramientas/notas` |
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
@@ -425,6 +431,35 @@ estado a `review` o `published`. El flujo sigue siendo:
 editor local → paquete docente JSON → importador del repositorio
              → borrador separado → revisión/corrección → aprobación/publicación
 ```
+
+### Avisos y flujo editorial
+
+`notices.json` conserva los datos y `notices.js` oculta su representación física.
+Las páginas solo llaman `getPublishedNotices()` o `getHomepageNotices()`; una
+fuente futura puede sustituir el JSON sin cambiar consumidores. La portada
+prioriza los destacados y desaparece por completo cuando la consulta está
+vacía. `/avisos` conserva un estado vacío compacto.
+
+El Editor de avisos genera ID, versiones y estado `draft`, muestra el contenido
+con las mismas clases públicas y exporta `papillas-notice-pack-*.json`. El
+importador acepta solo JSON, valida fechas, categorías, duplicados, texto y
+enlaces, y fuerza `review`:
+
+```text
+editor local → notice pack (draft) → npm run import:notices
+             → notices.json (review) → aprobación en repo → published → build/deploy
+```
+
+`publishedAt` es metadato editorial, no un programador. En un sitio estático un
+cambio de disponibilidad requiere un build. La transición completa es `draft →
+review → published → archived`; en esta fase, cambiar de `review` a `published`
+es una acción editorial revisada en el repositorio.
+
+La revisión de fuentes afines conserva fronteras pequeñas: videos ofrece
+`getVideos*()`, Bonos ofrece `getBonuses*()`, y las preguntas docentes entran al
+banco mediante `UNIT_1_EXERCISES`/`UNIT_1_BANK_ITEMS`. No se introduce un
+repositorio genérico. El reemplazo por un CMS se describe en
+[`CMS_ROADMAP.md`](./CMS_ROADMAP.md).
 
 ### Arquitectura académica de la Unidad 1
 
@@ -764,6 +799,7 @@ Los contratos más importantes son:
 - suma de evaluación igual a 100 %;
 - sesiones consecutivas y fechas ordenadas;
 - ausencia de sesiones, rutas, avisos o videos duplicados;
+- contrato de avisos, filtro público por estado, categorías y rutas del hub docente;
 - existencia de las rutas declaradas en `COURSE_NAV`;
 - tres modos de participación, temas reales, contrato local/anónimo y ausencia de `research` o `measurement` públicos;
 - enlaces internos principales;

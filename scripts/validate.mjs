@@ -14,7 +14,10 @@ import {
   UNITS,
 } from "../src/data/course.js";
 import { HOME_LINKS, NAV, SITE } from "../src/data/site.js";
-import { NOTICES } from "../src/data/notices.js";
+import {
+  NOTICES,
+  getPublishedNotices,
+} from "../src/data/notices.js";
 import { BONUSES } from "../src/data/bonuses/index.js";
 import { VIDEOS } from "../src/data/videos.js";
 import {
@@ -81,6 +84,11 @@ import {
 } from "../src/utils/review.js";
 import { auditAllBonusBlueprints } from "../src/utils/bonus-audit.js";
 import { validateFamilyDefinition } from "../src/utils/exercise-families.js";
+import {
+  NOTICE_CATEGORIES,
+  NOTICE_STATUSES,
+  validateNotice,
+} from "../src/utils/notices.js";
 
 const projectRoot = fileURLToPath(
   new URL("../", import.meta.url)
@@ -325,6 +333,22 @@ check(
   "El Organizador existe como herramienta docente sin entrar a la navegación global."
 );
 
+const teacherToolRoutes = [
+  "/fisica-basica-1/herramientas",
+  "/fisica-basica-1/herramientas/banco",
+  "/fisica-basica-1/herramientas/avisos",
+  reviewRoute,
+  resultsRoute,
+];
+check(
+  teacherToolRoutes.every((route) => routes.has(route)) &&
+    teacherToolRoutes.every((route) => !COURSE_NAV.some((item) => item.href === route)) &&
+    teacherToolRoutes.every((route) =>
+      !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === route)
+    ),
+  "El hub y sus cuatro herramientas existen fuera del menú estudiantil principal."
+);
+
 check(
   SUPPORTED_RESULT_FORMATS.join(",") === "csv,xlsx,json" &&
     DUPLICATE_POLICIES.map(([value]) => value).join(",") ===
@@ -405,8 +429,21 @@ check(
 );
 
 check(
-  NOTICES.every((notice) => /^[a-z0-9-]+$/.test(notice.id)),
-  "Los identificadores de avisos son estables."
+  NOTICES.every((notice) => validateNotice(notice).valid),
+  "Todos los avisos cumplen el contrato editorial canónico."
+);
+
+check(
+  NOTICE_STATUSES.join(",") === "draft,review,published,archived" &&
+    !NOTICE_STATUSES.includes("new") &&
+    NOTICE_CATEGORIES.length === 5,
+  "Avisos conserva cuatro estados explícitos y un conjunto pequeño de categorías."
+);
+
+check(
+  getPublishedNotices().every((notice) => notice.status === "published") &&
+    getPublishedNotices().length === NOTICES.filter((notice) => notice.status === "published").length,
+  "La consulta pública de avisos excluye draft, review y archived."
 );
 
 check(
@@ -1428,6 +1465,35 @@ const reviewImportSource = fs.readFileSync(
 const reviewStyleSource = fs.readFileSync(
   path.join(projectRoot, "src/styles/review-center.css"),
   "utf8"
+);
+
+const noticeEditorSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/notice-editor.js"),
+  "utf8"
+);
+const noticeEditorComponent = fs.readFileSync(
+  path.join(projectRoot, "src/components/notices/NoticeEditor.astro"),
+  "utf8"
+);
+const publicPageSource = pageFiles
+  .map((file) => fs.readFileSync(file, "utf8"))
+  .join("\n");
+
+check(
+  !noticeEditorSource.includes("innerHTML") &&
+    !noticeEditorSource.includes("fetch(") &&
+    !noticeEditorSource.includes("localStorage") &&
+    noticeEditorSource.includes("textContent") &&
+    noticeEditorComponent.includes('name="title"') &&
+    noticeEditorComponent.includes('name="publishedAt"'),
+  "El Editor de avisos usa texto seguro, no envía datos y expone campos accesibles."
+);
+
+check(
+  !publicPageSource.includes("Primera etapa de desarrollo") &&
+    !publicPageSource.includes("El sitio se encuentra en construcción") &&
+    !publicPageSource.includes("Sección en desarrollo"),
+  "Las páginas públicas no conservan mensajes obsoletos del proceso de desarrollo."
 );
 
 check(

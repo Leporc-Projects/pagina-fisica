@@ -1,54 +1,24 @@
 ---
-// Espacio futuro para herramientas docentes locales.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
-import SectionHeading from "../components/SectionHeading.astro";
-import { COURSE } from "../data/course.js";
+import { withBase } from "../utils/paths.js";
 ---
 
 <BaseLayout
   title="Herramientas docentes"
-  description={`Herramientas locales de apoyo docente para ${COURSE.name}.`}
+  description="Acceso a las herramientas docentes locales de Física Básica I."
 >
   <PageHeader
-    eyebrow="Trabajo local"
+    eyebrow="Física Básica I"
     title="Herramientas docentes"
-    description="Espacio reservado para utilidades que funcionen en el navegador y protejan la información académica."
+    description="Las utilidades docentes del curso están reunidas en un único espacio."
   />
-
-  <section class="page-section" aria-labelledby="local-tools-title">
-    <SectionHeading
-      id="local-tools-title"
-      title="Herramienta prevista"
-      desc="No hay utilidades operativas publicadas en este momento."
-    />
-
-    <article class="local-tool-panel" aria-labelledby="grade-tool-title">
-      <div>
-        <p class="course-section__index">Evaluación</p>
-        <h3 id="grade-tool-title">Consolidador local de notas</h3>
-        <p>
-          La futura herramienta permitirá revisar y consolidar archivos de evaluación
-          sin transferirlos fuera del dispositivo.
-        </p>
-      </div>
-
-      <span class="status-label status-label--preparing">En preparación</span>
-    </article>
-  </section>
-
-  <section class="page-section" aria-labelledby="tool-principles-title">
-    <SectionHeading
-      id="tool-principles-title"
-      title="Principios de privacidad"
-      desc="Condiciones que deberá cumplir cualquier herramienta publicada aquí."
-    />
-
-    <ol class="content-type-list">
-      <li><span>01</span><p>Procesamiento completo dentro del navegador.</p></li>
-      <li><span>02</span><p>Ausencia de envíos a servidores o servicios externos.</p></li>
-      <li><span>03</span><p>Sin conservación de datos al cerrar o recargar la página.</p></li>
-      <li><span>04</span><p>Sin datos personales incorporados al repositorio.</p></li>
-    </ol>
+  <section class="page-section" aria-labelledby="tools-access-title">
+    <div class="transition-panel">
+      <p class="course-section__index">Acceso</p>
+      <h2 id="tools-access-title">Abrir el espacio docente del curso</h2>
+      <p>Las herramientas funcionan localmente en el navegador y no constituyen un área privada.</p>
+      <a class="text-link" href={withBase("/fisica-basica-1/herramientas")}>Ir a Herramientas docentes</a>
+    </div>
   </section>
 </BaseLayout>

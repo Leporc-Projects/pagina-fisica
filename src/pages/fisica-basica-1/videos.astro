@@ -4,15 +4,17 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { COURSE, UNITS } from "../../data/course.js";
 import {
-  VIDEOS,
+  getVideos,
+  getVideosByUnit,
   VIDEO_CONTENT_TYPES,
 } from "../../data/videos.js";
 
 // Cada unidad se conserva visible aunque aún no tenga publicaciones asociadas.
 const videosByUnit = UNITS.map((unit) => ({
   unit,
-  videos: VIDEOS.filter((video) => video.unit === unit.number),
+  videos: getVideosByUnit(unit.number),
 }));
+const videos = getVideos();
 ---
 
 <BaseLayout
@@ -68,7 +70,7 @@ const videosByUnit = UNITS.map((unit) => ({
 
       {
         // El estado vacío es parte deliberada del flujo editorial.
-        VIDEOS.length === 0 && (
+        videos.length === 0 && (
           <div class="empty-state">
             <p class="empty-state__label">Estado actual</p>
             <h3>Aún no hay videos publicados</h3>

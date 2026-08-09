@@ -2,22 +2,10 @@
 // Archivo público que comparte la misma fuente de avisos con la portada.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
-import { SITE } from "../data/site.js";
-import { getNoticesByDate } from "../data/notices.js";
-import { withBase } from "../utils/paths.js";
+import NoticeCard from "../components/NoticeCard.astro";
+import { getPublishedNotices } from "../data/notices.js";
 
-const notices = getNoticesByDate();
-
-// Añadir la hora local evita que una fecha ISO sin hora retroceda por zona horaria.
-const formatDate = (date) =>
-  new Date(`${date}T00:00:00`).toLocaleDateString(
-    SITE.locale,
-    {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    }
-  );
+const notices = getPublishedNotices();
 ---
 
 <BaseLayout
@@ -27,7 +15,7 @@ const formatDate = (date) =>
   <PageHeader
     eyebrow="Actualizaciones"
     title="Avisos"
-    description="Información pública sobre el desarrollo del sitio y la publicación de contenidos revisados."
+    description="Información académica y cambios de disponibilidad del curso."
   />
 
   <!-- Mantiene un estado vacío válido si la fuente editorial no tiene registros. -->
@@ -43,49 +31,14 @@ const formatDate = (date) =>
         ? (
           <div class="empty-state">
             <p class="empty-state__label">Estado actual</p>
-            <h3>No hay avisos publicados</h3>
-            <p>Las actualizaciones aparecerán aquí cuando estén disponibles.</p>
+            <h3>No hay avisos publicados en este momento.</h3>
           </div>
         )
         : (
           <div class="notice-list notice-list--archive">
             <!-- Los IDs ARIA derivan del identificador editorial, que validate.mjs exige único. -->
             {
-              notices.map((notice) => (
-                <article
-                  class="notice-entry"
-                  id={notice.id}
-                  aria-labelledby={`notice-title-${notice.id}`}
-                >
-                  <div class="notice-meta">
-                    <span>{notice.category}</span>
-                    <time datetime={notice.date}>{formatDate(notice.date)}</time>
-                  </div>
-
-                  <div class="notice-entry__heading">
-                    <h3 id={`notice-title-${notice.id}`}>{notice.title}</h3>
-                    {
-                      notice.featured && (
-                        <span class="status-label status-label--featured">
-                          Destacado
-                        </span>
-                      )
-                    }
-                  </div>
-
-                  <p>{notice.summary}</p>
-                  {notice.content && <p>{notice.content}</p>}
-
-                  {
-                    notice.href && (
-                      <a class="text-link" href={withBase(notice.href)}>
-                        Consultar información
-                        <span aria-hidden="true">→</span>
-                      </a>
-                    )
-                  }
-                </article>
-              ))
+              notices.map((notice) => <NoticeCard notice={notice} idPrefix="notice-title" />)
             }
           </div>
         )

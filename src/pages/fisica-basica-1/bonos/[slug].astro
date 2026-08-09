@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import BonusAttempt from "../../../components/bonus/BonusAttempt.astro";
-import { UNIT_1_BONUSES } from "../../../data/physics/unit-1/bonuses.js";
+import { getBonusesByUnit } from "../../../data/bonuses/index.js";
 import { UNIT_1_BANK_ITEMS } from "../../../data/physics/unit-1/bank.js";
 import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
@@ -11,7 +11,7 @@ import { withBase } from "../../../utils/paths.js";
 import "../../../styles/bonus.css";
 
 export function getStaticPaths() {
-  return UNIT_1_BONUSES.map((bonus) => ({
+  return getBonusesByUnit(1).map((bonus) => ({
     params: { slug: bonus.slug },
     props: {
       bonus,

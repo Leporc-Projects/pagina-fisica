@@ -13,34 +13,53 @@ Esta guía describe cómo incorporar contenido sin romper las fuentes académica
 
 ## Añadir un aviso
 
-Los avisos se registran en `src/data/notices.js`. La portada toma los tres más recientes y `/avisos` muestra el archivo completo ordenado por fecha.
+Los avisos se almacenan en `src/data/notices.json`. Las páginas no leen ese
+archivo: consumen las consultas de `src/data/notices.js`, que entregan solo
+registros `published`. La portada muestra hasta tres y prioriza `featured`;
+`/avisos` ordena el archivo público por fecha descendente.
 
 Cada aviso admite:
 
-```js
+```json
 {
-  id: "identificador-estable",
-  date: "AAAA-MM-DD",
-  category: "Categoría",
-  title: "Título verificado",
-  summary: "Resumen público",
-  content: "Detalle opcional",
-  featured: false,
-  href: "/ruta-interna-opcional",
+  "schemaVersion": "1.0.0",
+  "id": "notice-AAAA-MM-DD-sufijo",
+  "version": 1,
+  "title": "Título verificado",
+  "summary": "Resumen público",
+  "content": "Detalle del aviso",
+  "category": "Curso",
+  "publishedAt": "AAAA-MM-DD",
+  "featured": false,
+  "href": "/ruta-interna-opcional",
+  "status": "review"
 }
 ```
 
 Reglas:
 
-- `id` usa minúsculas, números y guiones; no debe cambiar después de publicarse.
-- `date` usa formato ISO `AAAA-MM-DD`.
+- El editor genera `schemaVersion`, `id`, `version` y el estado inicial `draft`.
+- `publishedAt` usa una fecha ISO real `AAAA-MM-DD`; no programa la publicación.
+- Las categorías admitidas son `Curso`, `Evaluación`, `Material`, `Horario` y `General`.
+- Los estados siguen `draft → review → published → archived`; solo `published` es público.
 - `href` se omite cuando el aviso no necesita destino. Una ruta interna se
   guarda desde la raíz lógica, sin escribir `/pagina-fisica`; la página de
-  avisos añade el `base` activo mediante `withBase()`.
+  avisos añade el `base` activo. Enlaces externos deben usar HTTPS.
+- `title`, `summary` y `content` son texto. No se admite HTML ni scripts.
 - No se inventan cambios de clase, exámenes o eventos académicos.
-- Sí puede informarse honestamente que una página o material está en desarrollo.
+- `Próximamente`, `En preparación` y `Sin material publicado` solo describen
+  una disponibilidad real; no se usan etiquetas de novedad o proceso interno.
 
-Después de añadirlo, ejecutar `npm run validate` para comprobar su identificador y cualquier enlace interno.
+El flujo normal es preparar el paquete en
+`/fisica-basica-1/herramientas/avisos`, descargarlo e importar:
+
+```sh
+npm run import:notices -- ruta/al/paquete.json
+```
+
+El importador fuerza `review` y nunca publica. Después se revisa el JSON, se
+cambia explícitamente a `published` si corresponde y se ejecutan validación,
+build y despliegue.
 
 ## Registrar un video mediante enlace
 
