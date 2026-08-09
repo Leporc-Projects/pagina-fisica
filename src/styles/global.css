@@ -1442,6 +1442,13 @@ main {
   margin-top: 1rem;
 }
 
+.policy-panel .text-link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-5);
+}
+
 .content-type-list {
   margin-top: 1.5rem;
   border-top: 1px solid var(--border);

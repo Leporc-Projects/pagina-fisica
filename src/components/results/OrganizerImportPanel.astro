@@ -1,0 +1,48 @@
+<section class="results-step results-import" aria-labelledby="results-students-title">
+  <header class="results-step__heading">
+    <div>
+      <span class="results-step__number" aria-hidden="true">1</span>
+      <div>
+        <p class="academic-label">Estudiantes</p>
+        <h2 id="results-students-title">Carga el listado base</h2>
+      </div>
+    </div>
+    <p>El correo institucional es la única llave necesaria para conciliar resultados.</p>
+  </header>
+
+  <div class="results-upload">
+    <label class="results-file-button">
+      <span>Seleccionar listado CSV o XLSX</span>
+      <input type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-roster-file />
+    </label>
+    <p>Máximo 15 MB por archivo. No se solicita teléfono ni información adicional.</p>
+  </div>
+
+  <div class="results-config" data-roster-config hidden></div>
+  <div class="results-roster-status" data-roster-status hidden></div>
+</section>
+
+<section class="results-step results-import" aria-labelledby="results-sources-title">
+  <header class="results-step__heading">
+    <div>
+      <span class="results-step__number" aria-hidden="true">2</span>
+      <div>
+        <p class="academic-label">Resultados</p>
+        <h2 id="results-sources-title">Añade las fuentes</h2>
+      </div>
+    </div>
+    <p>Cada archivo conserva su nombre, mapping, escala y política de duplicados.</p>
+  </header>
+
+  <div class="results-upload">
+    <label class="results-file-button">
+      <span>Seleccionar CSV, XLSX o Bonos JSON</span>
+      <input type="file" accept=".csv,.xlsx,.xls,.json,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple data-source-files />
+    </label>
+    <p>Los archivos de formularios no dependen de un proveedor ni de columnas fijas.</p>
+  </div>
+
+  <div class="results-source-list" data-source-list>
+    <p class="results-empty">Todavía no hay fuentes cargadas.</p>
+  </div>
+</section>

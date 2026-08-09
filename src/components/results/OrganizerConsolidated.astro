@@ -1,0 +1,44 @@
+<section class="results-step" aria-labelledby="results-consolidated-title">
+  <header class="results-step__heading">
+    <div>
+      <span class="results-step__number" aria-hidden="true">5</span>
+      <div>
+        <p class="academic-label">Consolidado</p>
+        <h2 id="results-consolidated-title">Una fila por estudiante</h2>
+      </div>
+    </div>
+    <p>Los resultados son descriptivos. Esta herramienta no calcula ni modifica la nota oficial.</p>
+  </header>
+
+  <div class="results-controls">
+    <label>
+      <span>Buscar estudiante o correo</span>
+      <input type="search" data-results-search />
+    </label>
+    <label>
+      <span>Grupo</span>
+      <select data-results-group><option value="">Todos</option></select>
+    </label>
+    <label>
+      <span>Estado</span>
+      <select data-results-status>
+        <option value="">Todos</option>
+        <option value="complete">Completos</option>
+        <option value="missing">Con faltantes</option>
+        <option value="incidents">Con incidencias</option>
+      </select>
+    </label>
+    <label>
+      <span>Faltantes en el promedio</span>
+      <select data-missing-policy>
+        <option value="unresolved">No calcular hasta resolver</option>
+        <option value="exclude">Excluir faltantes</option>
+        <option value="zero">Tratar faltantes como cero</option>
+      </select>
+    </label>
+  </div>
+  <p class="results-policy-note" data-missing-policy-note>
+    Faltante es un estado, no una puntuación. El promedio permanece pendiente hasta resolverlo.
+  </p>
+  <div class="results-table-wrap results-table-wrap--wide" data-consolidated-table></div>
+</section>

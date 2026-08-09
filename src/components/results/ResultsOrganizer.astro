@@ -1,0 +1,45 @@
+---
+import OrganizerConsolidated from "./OrganizerConsolidated.astro";
+import OrganizerExports from "./OrganizerExports.astro";
+import OrganizerImportPanel from "./OrganizerImportPanel.astro";
+import OrganizerReview from "./OrganizerReview.astro";
+import OrganizerSummary from "./OrganizerSummary.astro";
+---
+
+<div class="results-organizer" data-results-organizer>
+  <nav class="results-section-nav" aria-label="Flujo del organizador">
+    <a href="#results-students-title">Estudiantes</a>
+    <a href="#results-sources-title">Resultados</a>
+    <a href="#results-summary-title">Resumen</a>
+    <a href="#results-incidents-title">Incidencias</a>
+    <a href="#results-consolidated-title">Consolidado</a>
+    <a href="#results-exports-title">Exportar</a>
+  </nav>
+
+  <OrganizerImportPanel />
+
+  <div class="results-workspace" data-results-workspace hidden>
+    <OrganizerSummary />
+    <OrganizerReview />
+    <OrganizerConsolidated />
+    <OrganizerExports />
+  </div>
+
+  <section class="results-clear" data-clear-area hidden aria-labelledby="results-clear-title">
+    <h2 id="results-clear-title">Sesión local</h2>
+    <p>El listado, las fuentes y las decisiones viven únicamente en la memoria de esta pestaña.</p>
+    <button type="button" class="results-button--quiet" data-clear-session>Limpiar sesión</button>
+    <div class="results-clear__confirm" data-clear-confirmation hidden>
+      <p>Se retirarán de memoria el listado, las fuentes, las incidencias y el consolidado.</p>
+      <button type="button" data-clear-cancel>Cancelar</button>
+      <button type="button" class="results-button--danger" data-clear-confirm>Confirmar limpieza</button>
+    </div>
+  </section>
+
+  <p class="results-live" aria-live="polite" data-results-live></p>
+</div>
+
+<script>
+  import { initializeResultsOrganizer } from "../../scripts/results-organizer.js";
+  initializeResultsOrganizer();
+</script>

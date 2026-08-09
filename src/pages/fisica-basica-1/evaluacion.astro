@@ -67,7 +67,7 @@ const totalPercentage = EVALUATION.reduce(
       </div>
     </section>
 
-    <!-- Esta sección describe el flujo futuro sin habilitar carga ni persistencia de archivos. -->
+    <!-- Estas utilidades son locales y no sustituyen el sistema institucional. -->
     <section
       class="course-section course-section--split"
       aria-labelledby="grades-privacy-title"
@@ -79,18 +79,27 @@ const totalPercentage = EVALUATION.reduce(
 
       <div class="course-section__body">
         <p class="course-lead">
-          Este sitio no almacena ni publica calificaciones individuales,
-          nombres, correos u otros datos personales de estudiantes.
+          Las páginas públicas no almacenan ni publican calificaciones
+          individuales, nombres, correos u otros datos personales de estudiantes.
         </p>
 
         <div class="policy-panel">
-          <h3>Herramienta local prevista</h3>
+          <h3>Herramientas docentes</h3>
           <p>
-            Una futura utilidad permitirá consolidar archivos en el navegador.
-            El procesamiento será local, no enviará información a servidores y
-            no conservará datos después de cerrar o recargar la página.
+            Estas herramientas procesan los archivos localmente en el navegador.
+            No son zonas privadas y no sustituyen el sistema institucional.
           </p>
-          <span class="status-label status-label--preparing">En preparación</span>
+          <div class="text-link-list">
+            <a class="text-link" href={withBase("/fisica-basica-1/herramientas/revision")}>
+              Centro de revisión
+            </a>
+            <a class="text-link" href={withBase("/fisica-basica-1/herramientas/banco")}>
+              Editor de banco
+            </a>
+            <a class="text-link" href={withBase("/fisica-basica-1/herramientas/notas")}>
+              Organizador de resultados
+            </a>
+          </div>
         </div>
       </div>
     </section>

@@ -1,0 +1,42 @@
+---
+import ResultsOrganizer from "../../../components/results/ResultsOrganizer.astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { COURSE } from "../../../data/course.js";
+import { withBase } from "../../../utils/paths.js";
+import "../../../styles/results-organizer.css";
+---
+
+<BaseLayout
+  title={`Organizador de resultados · ${COURSE.name}`}
+  description="Herramienta docente para conciliar y consolidar localmente listados y resultados."
+>
+  <article class="results-page">
+    <header class="results-page__hero">
+      <nav class="academic-breadcrumb" aria-label="Migas de pan">
+        <a href={withBase("/fisica-basica-1/evaluacion")}>Evaluación y notas</a>
+        <span aria-hidden="true">/</span><span>Herramientas docentes</span>
+        <span aria-hidden="true">/</span><span aria-current="page">Organizador de resultados</span>
+      </nav>
+      <div class="results-page__heading">
+        <p class="eyebrow eyebrow--dark">Herramienta docente local</p>
+        <h1>Organizador de resultados</h1>
+        <p>
+          Concilia un listado de estudiantes con resultados de formularios y
+          Bonos, revisa incidencias y prepara archivos de trabajo trazables.
+        </p>
+      </div>
+      <aside class="results-page__policy">
+        <strong>Los archivos se procesan en este navegador</strong>
+        <p>No se envían ni se almacenan automáticamente.</p>
+        <p>La sesión desaparece al cerrar, recargar o limpiar la página.</p>
+      </aside>
+    </header>
+
+    <div class="results-print-brand" aria-hidden="true">
+      <strong>Papilla's Physics</strong>
+      <span>Física Básica I · Resumen de resultados</span>
+    </div>
+
+    <ResultsOrganizer />
+  </article>
+</BaseLayout>

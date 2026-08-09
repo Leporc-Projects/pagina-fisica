@@ -56,6 +56,13 @@ import {
   REVIEW_STATUSES,
 } from "../src/data/review.js";
 import {
+  DUPLICATE_POLICIES,
+  INCIDENT_TYPES,
+  MISSING_POLICIES,
+  RESULTS_LIMITS,
+  SUPPORTED_RESULT_FORMATS,
+} from "../src/data/results-organizer.js";
+import {
   BONUS_FEEDBACK_POLICIES,
   canSatisfyBonusBlueprint,
   eligiblePoolForBonus,
@@ -308,6 +315,27 @@ check(
     REVIEW_FILE_MAX_BYTES === 5 * 1024 * 1024 &&
     REVIEW_STATUSES.map(([value]) => value).join(",") === reviewStatuses.join(","),
   "La sesión de revisión declara versión, límite y estados docentes estables."
+);
+
+const resultsRoute = "/fisica-basica-1/herramientas/notas";
+check(
+  routes.has(resultsRoute) &&
+    !COURSE_NAV.some((item) => item.href === resultsRoute) &&
+    !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === resultsRoute),
+  "El Organizador existe como herramienta docente sin entrar a la navegación global."
+);
+
+check(
+  SUPPORTED_RESULT_FORMATS.join(",") === "csv,xlsx,json" &&
+    DUPLICATE_POLICIES.map(([value]) => value).join(",") ===
+      "unresolved,first,last,highest,average" &&
+    MISSING_POLICIES.map(([value]) => value).join(",") ===
+      "unresolved,exclude,zero" &&
+    INCIDENT_TYPES.length >= 14 &&
+    RESULTS_LIMITS.maxFileBytes === 15 * 1024 * 1024 &&
+    RESULTS_LIMITS.maxRows === 10_000 &&
+    RESULTS_LIMITS.maxColumns === 250,
+  "El Organizador declara formatos, políticas, incidencias y límites explícitos."
 );
 
 const reviewDocument = JSON.parse(JSON.stringify(validationParticipationResponse));
