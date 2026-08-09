@@ -1,0 +1,47 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import ReviewCenter from "../../../components/review/ReviewCenter.astro";
+import { COURSE } from "../../../data/course.js";
+import { withBase } from "../../../utils/paths.js";
+import "../../../styles/review-center.css";
+---
+
+<BaseLayout
+  title={`Centro de revisión · ${COURSE.name}`}
+  description="Herramienta docente local para validar y revisar archivos exportados desde Papilla's Physics."
+>
+  <article class="review-page">
+    <header class="review-page__hero">
+      <nav class="academic-breadcrumb" aria-label="Migas de pan">
+        <a href={withBase("/fisica-basica-1/recursos")}>Recursos</a>
+        <span aria-hidden="true">/</span>
+        <span>Herramientas docentes</span>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Centro de revisión</span>
+      </nav>
+
+      <div class="review-page__heading">
+        <p class="eyebrow eyebrow--dark">Herramienta docente</p>
+        <h1>Centro de revisión</h1>
+        <p>
+          Valida archivos de Participa, revisa propuestas y consulta intentos de
+          Bonos sin cargar información a un servidor.
+        </p>
+      </div>
+
+      <aside class="review-page__policy">
+        <strong>Procesamiento local, sin autenticación</strong>
+        <p>Esta herramienta procesa archivos únicamente en tu navegador.</p>
+        <p>Los archivos no se envían ni se guardan automáticamente.</p>
+      </aside>
+    </header>
+
+    <div class="review-print-brand" aria-hidden="true">
+      <strong>Papilla's Physics</strong>
+      <span>Física Básica I · Centro de revisión</span>
+    </div>
+
+    <ReviewCenter />
+  </article>
+</BaseLayout>
+

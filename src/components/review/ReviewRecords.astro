@@ -1,0 +1,50 @@
+<section class="review-bonuses" aria-labelledby="review-bonuses-title">
+  <header class="review-section-heading">
+    <div>
+      <p class="academic-label">Consulta</p>
+      <h2 id="review-bonuses-title">Intentos de Bonos reconocidos</h2>
+    </div>
+    <p>El ID del intento identifica el archivo, no a un estudiante.</p>
+  </header>
+  <div class="review-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Archivo</th>
+          <th scope="col">Bono</th>
+          <th scope="col">Resultado</th>
+          <th scope="col">Fecha</th>
+        </tr>
+      </thead>
+      <tbody data-review-bonus-records></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="review-incidents" aria-labelledby="review-incidents-title">
+  <header class="review-section-heading">
+    <div>
+      <p class="academic-label">Validación</p>
+      <h2 id="review-incidents-title">Archivos e incidencias</h2>
+    </div>
+    <p>Un archivo inválido no interrumpe la importación de los demás.</p>
+  </header>
+  <div class="review-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Archivo</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Motivo</th>
+        </tr>
+      </thead>
+      <tbody data-review-incidents></tbody>
+    </table>
+  </div>
+  <nav class="review-pagination" aria-label="Páginas de incidencias">
+    <button type="button" data-review-incident-previous>Anterior</button>
+    <span data-review-incident-page></span>
+    <button type="button" data-review-incident-next>Siguiente</button>
+  </nav>
+</section>
+

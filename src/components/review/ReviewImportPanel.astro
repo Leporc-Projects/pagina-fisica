@@ -1,0 +1,47 @@
+<section class="review-import" aria-labelledby="review-import-title">
+  <header>
+    <p class="academic-label">Importación local</p>
+    <h2 id="review-import-title">Archivos para revisar</h2>
+    <p>
+      Selecciona archivos JSON exportados desde Participa. Los intentos JSON de
+      Bonos también se reconocen, pero en esta herramienta son solo de consulta.
+    </p>
+  </header>
+
+  <div class="review-dropzone" data-review-dropzone>
+    <div>
+      <strong>Arrastra archivos JSON hasta aquí</strong>
+      <span>o selecciónalos desde tu equipo</span>
+    </div>
+    <label class="review-file-button">
+      <span data-review-file-label>Seleccionar archivos</span>
+      <input
+        type="file"
+        accept=".json,application/json"
+        multiple
+        data-review-files
+      />
+    </label>
+  </div>
+
+  <p class="review-import__limits">
+    Máximo 5 MB por archivo. Cada archivo se valida por separado.
+  </p>
+  <p class="review-live" data-review-live aria-live="polite"></p>
+
+  <div class="review-clear" data-review-clear-area hidden>
+    <button type="button" class="review-button review-button--quiet" data-review-clear>
+      Limpiar sesión
+    </button>
+    <div class="review-clear__confirmation" data-review-clear-confirmation hidden>
+      <p>Se eliminarán de esta pestaña los archivos y notas de revisión cargados.</p>
+      <div>
+        <button type="button" data-review-clear-cancel>Cancelar</button>
+        <button type="button" class="review-button review-button--danger" data-review-clear-confirm>
+          Confirmar limpieza
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+

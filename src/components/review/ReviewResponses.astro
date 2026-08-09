@@ -1,0 +1,53 @@
+---
+import {
+  ACTIVITY_OPTIONS,
+  PARTICIPATION_TOPICS,
+} from "../../data/participation.js";
+---
+
+<section class="review-responses" aria-labelledby="review-responses-title">
+  <header class="review-section-heading">
+    <div>
+      <p class="academic-label">Lectura</p>
+      <h2 id="review-responses-title">Respuestas abiertas</h2>
+    </div>
+    <p>Busca y filtra sin modificar el texto original.</p>
+  </header>
+
+  <form class="review-filters" data-review-filters>
+    <label>
+      Buscar en el texto
+      <input type="search" name="query" autocomplete="off" />
+    </label>
+    <label>
+      Tema
+      <select name="topic">
+        <option value="">Todos los temas</option>
+        {PARTICIPATION_TOPICS.map((topic) => (
+          <option value={topic.slug}>{topic.title}</option>
+        ))}
+      </select>
+    </label>
+    <label>
+      Actividad
+      <select name="activityType">
+        <option value="">Todas las actividades</option>
+        {ACTIVITY_OPTIONS.map((option) => (
+          <option value={option.value}>{option.label}</option>
+        ))}
+      </select>
+    </label>
+    <button type="button" class="review-button review-button--quiet" data-review-filter-reset>
+      Restablecer filtros
+    </button>
+  </form>
+
+  <p class="review-list-summary" data-review-response-summary></p>
+  <div class="review-response-list" data-review-response-list></div>
+  <nav class="review-pagination" aria-label="Páginas de respuestas">
+    <button type="button" data-review-response-previous>Anterior</button>
+    <span data-review-response-page></span>
+    <button type="button" data-review-response-next>Siguiente</button>
+  </nav>
+</section>
+

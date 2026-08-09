@@ -49,6 +49,11 @@ import {
   PARTICIPATION_TOPICS,
 } from "../src/data/participation.js";
 import {
+  REVIEW_FILE_MAX_BYTES,
+  REVIEW_SESSION_SCHEMA_VERSION,
+  REVIEW_STATUSES,
+} from "../src/data/review.js";
+import {
   BONUS_FEEDBACK_POLICIES,
   canSatisfyBonusBlueprint,
   eligiblePoolForBonus,
@@ -58,6 +63,13 @@ import {
   createParticipationResponse,
   validateParticipationResponse,
 } from "../src/utils/participation.js";
+import {
+  addReviewImportEntries,
+  aggregateReviewSession,
+  createReviewExport,
+  createReviewSession,
+  validateImportedDocument,
+} from "../src/utils/review.js";
 
 const projectRoot = fileURLToPath(
   new URL("../", import.meta.url)
@@ -269,6 +281,64 @@ check(
   !PARTICIPATION_PURPOSES.includes("research") &&
     !PARTICIPATION_PURPOSES.includes("measurement"),
   "Participación mantiene research y measurement fuera del flujo público."
+);
+
+const reviewRoute = "/fisica-basica-1/herramientas/revision";
+const reviewStatuses = [
+  "pending",
+  "interesting",
+  "needs-adjustments",
+  "discard",
+  "bank-candidate",
+];
+
+check(
+  routes.has(reviewRoute) &&
+    !COURSE_NAV.some((item) => item.href === reviewRoute) &&
+    !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === reviewRoute),
+  "El Centro de revisión existe sin convertirse en navegación estudiantil prominente."
+);
+
+check(
+  REVIEW_SESSION_SCHEMA_VERSION === "1.0.0" &&
+    REVIEW_FILE_MAX_BYTES === 5 * 1024 * 1024 &&
+    REVIEW_STATUSES.map(([value]) => value).join(",") === reviewStatuses.join(","),
+  "La sesión de revisión declara versión, límite y estados docentes estables."
+);
+
+const reviewDocument = JSON.parse(JSON.stringify(validationParticipationResponse));
+const reviewImport = addReviewImportEntries(createReviewSession(), [
+  {
+    name: "respuesta.json",
+    size: 1024,
+    text: JSON.stringify(reviewDocument),
+  },
+  {
+    name: "duplicado.json",
+    size: 1024,
+    text: JSON.stringify(reviewDocument),
+  },
+  {
+    name: "invalido.json",
+    size: 12,
+    text: "{no-json}",
+  },
+]);
+const reviewSummary = aggregateReviewSession(reviewImport);
+const reviewExport = createReviewExport(
+  reviewImport,
+  {},
+  "2026-08-08T00:00:00.000Z"
+);
+
+check(
+  validateImportedDocument(reviewDocument).status === "valid" &&
+    reviewSummary.uniqueRecords === 1 &&
+    reviewSummary.duplicates === 1 &&
+    reviewSummary.incidents.invalid === 1 &&
+    reviewExport.items[0].original.responseId === validationParticipationResponse.responseId &&
+    reviewExport.authenticity === "local-editable-file",
+  "La revisión valida por archivo, deduplica sin inflar conteos y conserva el original."
 );
 
 check(
@@ -1291,6 +1361,53 @@ const chartLibraries = ["chart.js", "plotly.js", "d3", "echarts", "highcharts"];
 check(
   chartLibraries.every((library) => !packageNames.includes(library)),
   "La infraestructura de gráficas no incorpora dependencias de visualización."
+);
+
+const reviewUtilitySource = fs.readFileSync(
+  path.join(projectRoot, "src/utils/review.js"),
+  "utf8"
+);
+const reviewScriptSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/review-center.js"),
+  "utf8"
+);
+const reviewImportSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/review/ReviewImportPanel.astro"),
+  "utf8"
+);
+const reviewStyleSource = fs.readFileSync(
+  path.join(projectRoot, "src/styles/review-center.css"),
+  "utf8"
+);
+
+check(
+  !reviewScriptSource.includes("fetch(") &&
+    !reviewScriptSource.includes("localStorage") &&
+    !reviewScriptSource.includes("sessionStorage") &&
+    !reviewScriptSource.includes("indexedDB") &&
+    !reviewScriptSource.includes("innerHTML") &&
+    !reviewUtilitySource.includes("eval(") &&
+    !reviewUtilitySource.includes("Function("),
+  "El Centro de revisión no envía, persiste ni evalúa contenido importado."
+);
+
+check(
+  reviewImportSource.includes('type="file"') &&
+    reviewImportSource.includes('accept=".json,application/json"') &&
+    reviewImportSource.includes("multiple") &&
+    reviewImportSource.includes('aria-live="polite"') &&
+    reviewScriptSource.includes("file.text()") &&
+    reviewScriptSource.includes("textContent") &&
+    reviewScriptSource.includes("window.print()"),
+  "La importación JSON múltiple y las salidas locales usan APIs nativas accesibles."
+);
+
+check(
+  reviewStyleSource.includes("@media screen") &&
+    reviewStyleSource.includes("[hidden]") &&
+    reviewStyleSource.includes("@media print") &&
+    reviewStyleSource.includes("prefers-reduced-motion"),
+  "El Centro de revisión define estados ocultos, impresión y movimiento reducido."
 );
 
 if (failures.length > 0) {
