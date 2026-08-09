@@ -1,0 +1,5 @@
+Timestamp,Email Address,Score,Comentario
+2026-08-08T10:00:00.000Z,ana@example.edu,8,"Comprendí, pero necesito practicar"
+2026-08-08T10:05:00.000Z,luis@example.edu,9,"Línea uno
+Línea dos"
+2026-08-08T10:10:00.000Z,desconocido@example.edu,7,Correo fuera del listado
