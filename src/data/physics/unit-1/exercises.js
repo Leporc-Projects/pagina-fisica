@@ -1,12 +1,18 @@
 // Banco editorial de ejercicios originales en revisión. El sitio muestra solo
-// una parte de estos metadatos; tutorías y quizzes futuros consumirán el contrato.
+// una parte de estos metadatos; tutorías y Bonos consumen el contrato.
 
 export const EXERCISE_MODALITIES = [
   "review",
   "practice",
   "selfAssessment",
   "tutoring",
-  "quiz",
+  "bonus",
+];
+
+export const EXERCISE_INTERACTION_KINDS = [
+  "singleChoice",
+  "number",
+  "multiNumber",
 ];
 
 export const EXERCISE_TYPES = [
@@ -47,31 +53,80 @@ const DEFAULT_FEEDBACK = {
   commonErrors: {},
 };
 
-const createExercise = (exercise) => ({
-  unit: 1,
-  modalities: ["practice", "selfAssessment"],
-  prerequisites: [],
-  objectives: [],
-  estimatedMinutes: 5,
-  tolerance: null,
-  expectedUnit: null,
-  hints: [],
-  commonErrors: [],
-  parameterizable: false,
-  purpose: "learning",
-  exposure: "public",
-  status: "review",
-  version: 1,
-  ...exercise,
-  feedback: {
-    ...DEFAULT_FEEDBACK,
-    ...exercise.feedback,
-    commonErrors: {
-      ...DEFAULT_FEEDBACK.commonErrors,
-      ...exercise.feedback?.commonErrors,
-    },
-  },
+const numericInteraction = (exercise) => {
+  if (exercise.answer?.kind === "number") {
+    return {
+      kind: "number",
+      field: {
+        id: "value",
+        label: "Respuesta",
+        unit: exercise.expectedUnit,
+      },
+    };
+  }
+
+  if (exercise.answer?.kind === "values") {
+    return {
+      kind: "multiNumber",
+      fields: exercise.answer.values.map((value, index) => ({
+        id: `value-${index + 1}`,
+        label: value.symbol,
+        unit: value.unit ?? exercise.expectedUnit,
+      })),
+    };
+  }
+
+  return null;
+};
+
+const singleChoice = (options, correctOptionId) => ({
+  kind: "singleChoice",
+  options,
+  correctOptionId,
 });
+
+const createExercise = (exercise) => {
+  const automaticallyEligible = ["number", "values"].includes(
+    exercise.answer?.kind
+  );
+  const bonusEligible = exercise.bonusEligible ?? automaticallyEligible;
+  const interaction = exercise.interaction ?? (
+    bonusEligible ? numericInteraction(exercise) : null
+  );
+  const baseModalities = exercise.modalities ?? ["practice", "selfAssessment"];
+  const modalities = bonusEligible
+    ? [...new Set([...baseModalities, "bonus"])]
+    : baseModalities;
+
+  return {
+    unit: 1,
+    modalities,
+    prerequisites: [],
+    objectives: [],
+    estimatedMinutes: 5,
+    tolerance: null,
+    expectedUnit: null,
+    hints: [],
+    commonErrors: [],
+    parameterizable: false,
+    purpose: "learning",
+    exposure: "public",
+    status: "review",
+    version: 1,
+    ...exercise,
+    modalities,
+    bonusEligible,
+    interaction,
+    feedback: {
+      ...DEFAULT_FEEDBACK,
+      ...exercise.feedback,
+      commonErrors: {
+        ...DEFAULT_FEEDBACK.commonErrors,
+        ...exercise.feedback?.commonErrors,
+      },
+    },
+  };
+};
 
 export const UNIT_1_EXERCISES = [
   createExercise({
@@ -91,6 +146,13 @@ export const UNIT_1_EXERCISES = [
       kind: "text",
       value: "No: vt tiene dimensión de longitud, mientras at tiene dimensión de velocidad.",
     },
+    bonusEligible: true,
+    interaction: singleChoice([
+      { id: "a", content: "Sí. Los dos términos tienen dimensiones de longitud." },
+      { id: "b", content: "No. vt tiene dimensión de longitud y at tiene dimensión de velocidad." },
+      { id: "c", content: "No. vt tiene dimensión de velocidad y at tiene dimensión de longitud." },
+      { id: "d", content: "Sí, siempre que t sea positivo." },
+    ], "b"),
     hints: ["Compara [v][t] con [a][t]."],
     solution: [
       { step: 1, title: "Dimensiones", text: "[vt] = (L/T)T = L." },
@@ -157,6 +219,13 @@ export const UNIT_1_EXERCISES = [
     prompt: "Dos vectores tienen la misma magnitud. ¿Esto garantiza que sean iguales?",
     objectives: ["Distinguir magnitud de igualdad vectorial."],
     answer: { kind: "text", value: "No; también deben coincidir dirección y sentido." },
+    bonusEligible: true,
+    interaction: singleChoice([
+      { id: "a", content: "Sí. La magnitud determina completamente un vector." },
+      { id: "b", content: "No. Igual magnitud no basta; también deben coincidir dirección y sentido." },
+      { id: "c", content: "No. Dos vectores solo son iguales si parten del mismo punto." },
+      { id: "d", content: "Sí, siempre que se expresen con las mismas unidades." },
+    ], "b"),
     solution: [
       { step: 1, title: "Criterio", text: "La igualdad vectorial exige la misma magnitud y la misma orientación." },
       { step: 2, title: "Conclusión", text: "Dos flechas de igual longitud pueden apuntar en direcciones distintas." },
@@ -249,6 +318,13 @@ export const UNIT_1_EXERCISES = [
     prompt: "Un móvil tiene x = −20 m. ¿Qué puede inferirse sobre su velocidad y aceleración?",
     objectives: ["Separar posición, velocidad y aceleración."],
     answer: { kind: "text", value: "No puede inferirse ninguna de las dos solo a partir de x." },
+    bonusEligible: true,
+    interaction: singleChoice([
+      { id: "a", content: "Se mueve necesariamente hacia −x." },
+      { id: "b", content: "Su aceleración apunta necesariamente hacia −x." },
+      { id: "c", content: "Está en el lado negativo del origen; con ese dato no puede determinarse ni la velocidad ni la aceleración." },
+      { id: "d", content: "Está disminuyendo su rapidez." },
+    ], "c"),
     solution: [
       { step: 1, title: "Interpretación", text: "x = −20 m ubica al móvil en el lado negativo del origen." },
       { step: 2, title: "Límite del dato", text: "No informa cómo cambia x ni cómo cambia v." },
@@ -293,6 +369,13 @@ export const UNIT_1_EXERCISES = [
     prompt: "En un instante v < 0 y a < 0. ¿La rapidez aumenta o disminuye?",
     objectives: ["Relacionar signos de v y a con cambio de rapidez."],
     answer: { kind: "text", value: "Aumenta." },
+    bonusEligible: true,
+    interaction: singleChoice([
+      { id: "a", content: "La rapidez aumenta." },
+      { id: "b", content: "La rapidez disminuye." },
+      { id: "c", content: "La rapidez permanece constante." },
+      { id: "d", content: "No puede determinarse." },
+    ], "a"),
     solution: [
       { step: 1, title: "Sentidos", text: "v y a apuntan ambos hacia −x." },
       { step: 2, title: "Rapidez", text: "Cuando tienen el mismo sentido, aumenta la magnitud |v|." },
@@ -388,6 +471,13 @@ export const UNIT_1_EXERCISES = [
     prompt: "Una pelota está en el punto más alto de un lanzamiento vertical ideal. Describe vᵧ y aᵧ si +y apunta hacia arriba.",
     objectives: ["Separar velocidad instantánea y aceleración gravitacional."],
     answer: { kind: "text", value: "vᵧ = 0 y aᵧ = −g." },
+    bonusEligible: true,
+    interaction: singleChoice([
+      { id: "a", content: "vᵧ = 0 y aᵧ = 0." },
+      { id: "b", content: "vᵧ = 0 y aᵧ = −g." },
+      { id: "c", content: "vᵧ = −g y aᵧ = 0." },
+      { id: "d", content: "vᵧ = g y aᵧ = −g." },
+    ], "b"),
     solution: [
       { step: 1, title: "Velocidad", text: "La componente vertical cambia de positiva a negativa y vale cero en el instante de retorno." },
       { step: 2, title: "Aceleración", text: "La gravedad continúa: aᵧ = −g durante todo el vuelo ideal." },
@@ -428,6 +518,13 @@ export const UNIT_1_EXERCISES = [
     prompt: "Un proyectil ideal alcanza su punto más alto con vₓ = 8 m/s. Determina el vector velocidad —o, equivalentemente, su magnitud y dirección— en ese instante y describe la aceleración.",
     objectives: ["Distinguir componente vertical nula de velocidad total nula."],
     answer: { kind: "text", value: "v = 8 m/s hacia +x y a = −g j." },
+    bonusEligible: true,
+    interaction: singleChoice([
+      { id: "a", content: "v = 0 y a = −g j." },
+      { id: "b", content: "v = 8 i m/s y a = −g j." },
+      { id: "c", content: "v = 8 i m/s y a = 0." },
+      { id: "d", content: "v = −8 j m/s y a = −g j." },
+    ], "b"),
     solution: [
       { step: 1, title: "Velocidad", text: "En la cima vᵧ = 0 y vₓ permanece en 8 m/s." },
       { step: 2, title: "Aceleración", text: "aₓ = 0 y aᵧ = −g en todo el vuelo ideal." },
@@ -494,6 +591,13 @@ export const UNIT_1_EXERCISES = [
     prompt: "Una partícula recorre una circunferencia con rapidez constante. ¿Su velocidad es constante? ¿Tiene aceleración?",
     objectives: ["Reconocer cambio de dirección con rapidez constante."],
     answer: { kind: "text", value: "La velocidad no es constante; existe aceleración radial hacia el centro." },
+    bonusEligible: true,
+    interaction: singleChoice([
+      { id: "a", content: "La velocidad es constante y la aceleración es cero." },
+      { id: "b", content: "La velocidad cambia porque cambia su dirección y existe aceleración hacia el centro." },
+      { id: "c", content: "La velocidad cambia y la aceleración es tangente a la trayectoria." },
+      { id: "d", content: "La rapidez necesariamente cambia porque hay aceleración." },
+    ], "b"),
     solution: [
       { step: 1, title: "Velocidad", text: "Su magnitud es fija, pero su dirección tangente cambia." },
       { step: 2, title: "Aceleración", text: "Cambiar el vector velocidad requiere aceleración hacia el centro." },

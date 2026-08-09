@@ -8,6 +8,9 @@ import {
   STUDENT_DIFFICULTY_ESTIMATES,
   SUPPORT_OPTIONS,
 } from "../data/participation.js";
+import { recordsToCsv } from "./local-export.js";
+
+export { escapeCsvField } from "./local-export.js";
 
 export const PARTICIPATION_SCHEMA_VERSION = "1.0.0";
 export const STUDENT_PROPOSAL_SCHEMA_VERSION = "1.0.0";
@@ -431,11 +434,6 @@ export const PARTICIPATION_CSV_COLUMNS = [
   "payload_json",
 ];
 
-export const escapeCsvField = (value) => {
-  const text = value === null || value === undefined ? "" : String(value);
-  return `"${text.replaceAll('"', '""')}"`;
-};
-
 const participationCsvRecord = (response) => {
   const proposal = response.payload.proposal;
   return {
@@ -477,13 +475,11 @@ export const toParticipationCSV = (response, { includeBom = true } = {}) => {
   const result = validateParticipationResponse(response);
   if (!result.valid) throw new TypeError(result.errors.join(" "));
 
-  const record = participationCsvRecord(response);
-  const header = PARTICIPATION_CSV_COLUMNS.map(escapeCsvField).join(",");
-  const row = PARTICIPATION_CSV_COLUMNS
-    .map((column) => escapeCsvField(record[column]))
-    .join(",");
-
-  return `${includeBom ? "\uFEFF" : ""}${header}\r\n${row}\r\n`;
+  return recordsToCsv({
+    columns: PARTICIPATION_CSV_COLUMNS,
+    records: [participationCsvRecord(response)],
+    includeBom,
+  });
 };
 
 export const participationFilename = (response, extension) => {

@@ -6,6 +6,7 @@ import {
   toParticipationJSON,
   toParticipationText,
 } from "../utils/participation.js";
+import { copyLocalText, downloadLocalFile } from "./local-export.js";
 
 const app = document.querySelector("[data-participation-app]");
 
@@ -182,15 +183,13 @@ if (app instanceof HTMLElement) {
     announce("Puedes editar los campos y preparar una nueva versión.");
   });
 
-  const download = (contents, type, extension) => {
+  const download = (contents, mimeType, extension) => {
     if (!currentResponse) return;
-    const blob = new Blob([contents], { type });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = participationFilename(currentResponse, extension);
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    downloadLocalFile({
+      contents,
+      mimeType,
+      filename: participationFilename(currentResponse, extension),
+    });
   };
 
   app.querySelectorAll("[data-export]").forEach((button) => {
@@ -201,7 +200,7 @@ if (app instanceof HTMLElement) {
         const action = button.dataset.export;
 
         if (action === "copy") {
-          await navigator.clipboard.writeText(toParticipationText(currentResponse));
+          await copyLocalText(toParticipationText(currentResponse));
           announce("Respuesta copiada al portapapeles.");
           return;
         }
