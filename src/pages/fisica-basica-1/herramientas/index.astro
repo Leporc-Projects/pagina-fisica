@@ -1,0 +1,80 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../../components/course/CoursePageHeader.astro";
+import TeacherToolsNav from "../../../components/teacher/TeacherToolsNav.astro";
+import { COURSE } from "../../../data/course.js";
+import { withBase } from "../../../utils/paths.js";
+
+const tools = [
+  {
+    title: "Editor de banco",
+    description: "Prepara preguntas fijas y expórtalas como borradores para el banco académico.",
+    href: "/fisica-basica-1/herramientas/banco",
+  },
+  {
+    title: "Editor de avisos",
+    description: "Redacta, previsualiza y reúne avisos en un paquete editorial JSON.",
+    href: "/fisica-basica-1/herramientas/avisos",
+  },
+  {
+    title: "Centro de revisión",
+    description: "Valida archivos de Participa y Bonos, y revisa propuestas localmente.",
+    href: "/fisica-basica-1/herramientas/revision",
+  },
+  {
+    title: "Organizador de resultados",
+    description: "Concilia listados y resultados en el navegador sin enviarlos a un servidor.",
+    href: "/fisica-basica-1/herramientas/notas",
+  },
+];
+---
+
+<BaseLayout
+  title={`Herramientas docentes · ${COURSE.name}`}
+  description={`Herramientas docentes locales de ${COURSE.name}.`}
+>
+  <article class="course-subpage teacher-tools-hub">
+    <CoursePageHeader
+      title="Herramientas docentes"
+      description="Utilidades locales para preparar contenido y revisar archivos del curso."
+    />
+
+    <TeacherToolsNav current="hub" />
+
+    <section class="course-section" aria-labelledby="teacher-tools-title">
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">Trabajo local</p>
+          <h2 id="teacher-tools-title">Herramientas disponibles</h2>
+        </div>
+        <p>
+          Estas herramientas trabajan localmente en el navegador. Algunas preparan
+          archivos que después deben incorporarse al sitio mediante el flujo editorial.
+        </p>
+      </header>
+
+      <div class="teacher-tools-grid">
+        {tools.map((tool) => (
+          <article class="teacher-tool-card">
+            <h3>{tool.title}</h3>
+            <p>{tool.description}</p>
+            <a class="text-link" href={withBase(tool.href)}>Abrir herramienta</a>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="course-section course-section--split" aria-labelledby="teacher-tools-scope-title">
+      <div>
+        <p class="course-section__index">Alcance</p>
+        <h2 id="teacher-tools-scope-title">Sin autenticación</h2>
+      </div>
+      <div class="course-section__body">
+        <p class="course-lead">
+          Este espacio organiza utilidades de trabajo; no es un área privada ni controla permisos.
+        </p>
+        <p>Los archivos permanecen en el dispositivo hasta que decides descargarlos o abrirlos.</p>
+      </div>
+    </section>
+  </article>
+</BaseLayout>

@@ -1398,8 +1398,72 @@ main {
   margin-top: 0.6rem;
 }
 
+.notice-entry__content {
+  white-space: pre-line;
+}
+
 .notice-entry>.text-link {
   margin-top: 1rem;
+}
+
+.teacher-tools-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-block: 1rem;
+}
+
+.teacher-tools-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+
+.teacher-tools-nav a {
+  display: inline-flex;
+  border-radius: var(--radius-round);
+  padding: .45rem .75rem;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.teacher-tools-nav a:hover,
+.teacher-tools-nav a[aria-current="page"] {
+  background: var(--surface-hover);
+  color: var(--accent);
+}
+
+.teacher-tools-nav__course {
+  border: 1px solid var(--border);
+}
+
+.teacher-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.teacher-tool-card {
+  display: grid;
+  align-content: start;
+  gap: .8rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: clamp(1.2rem, 3vw, 1.8rem);
+}
+
+.teacher-tool-card p {
+  color: var(--text-muted);
+}
+
+.teacher-tool-card .text-link {
+  justify-self: start;
+  margin-top: .4rem;
 }
 
 .transition-panel {
@@ -1745,6 +1809,10 @@ main {
 
   .text-link {
     justify-self: start;
+  }
+
+  .teacher-tools-grid {
+    grid-template-columns: 1fr;
   }
 }
 

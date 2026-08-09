@@ -1,0 +1,32 @@
+---
+import { withBase } from "../../utils/paths.js";
+
+const { current = "hub" } = Astro.props;
+const tools = [
+  { id: "hub", label: "Herramientas", href: "/fisica-basica-1/herramientas" },
+  { id: "banco", label: "Editor de banco", href: "/fisica-basica-1/herramientas/banco" },
+  { id: "avisos", label: "Editor de avisos", href: "/fisica-basica-1/herramientas/avisos" },
+  { id: "revision", label: "Centro de revisión", href: "/fisica-basica-1/herramientas/revision" },
+  { id: "notas", label: "Organizador de resultados", href: "/fisica-basica-1/herramientas/notas" },
+];
+---
+
+<nav class="teacher-tools-nav" aria-label="Herramientas docentes">
+  <ul>
+    {
+      tools.map((tool) => (
+        <li>
+          <a
+            href={withBase(tool.href)}
+            aria-current={tool.id === current ? "page" : undefined}
+          >
+            {tool.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <a class="teacher-tools-nav__course" href={withBase("/fisica-basica-1")}>
+    Volver a Física Básica I
+  </a>
+</nav>

@@ -7,11 +7,11 @@ import {
   HOME_LINKS,
 } from "../data/site.js";
 import { COURSE } from "../data/course.js";
-import { getNoticesByDate } from "../data/notices.js";
+import { getHomepageNotices } from "../data/notices.js";
+import NoticeCard from "../components/NoticeCard.astro";
 import { withBase } from "../utils/paths.js";
 
-// La portada limita la fuente compartida; /avisos conserva el archivo completo.
-const recentNotices = getNoticesByDate().slice(0, 3);
+const recentNotices = getHomepageNotices(3);
 ---
 
 <BaseLayout
@@ -151,61 +151,26 @@ const recentNotices = getNoticesByDate().slice(0, 3);
     </div>
   </section>
 
-  <section
-    class="notices-section"
-    id="avisos"
-    aria-labelledby="notices-title"
-  >
-    <div class="container notices-layout">
-      <div>
-        <p class="eyebrow eyebrow--dark">
-          Actualizaciones
-        </p>
+  {
+    recentNotices.length > 0 && (
+      <section class="notices-section" id="avisos" aria-labelledby="notices-title">
+        <div class="container notices-layout">
+          <div>
+            <p class="eyebrow eyebrow--dark">Actualizaciones</p>
+            <h2 id="notices-title">Avisos</h2>
+          </div>
 
-        <h2 id="notices-title">
-          Avisos
-        </h2>
-      </div>
-
-      <div class="notice-list">
-        {
-          recentNotices.map((notice) => (
-            <article
-              class="notice-entry"
-              aria-labelledby={`home-notice-${notice.id}`}
-            >
-              <div class="notice-meta">
-                <span>{notice.category}</span>
-
-                <time datetime={notice.date}>
-                  {
-                    new Date(
-                      `${notice.date}T00:00:00`
-                    ).toLocaleDateString(
-                      SITE.locale,
-                      {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      }
-                    )
-                  }
-                </time>
-              </div>
-
-              <h3 id={`home-notice-${notice.id}`}>
-                {notice.title}
-              </h3>
-              <p>{notice.summary}</p>
-            </article>
-          ))
-        }
-
-        <a class="notice-list__more" href={withBase("/avisos")}>
-          Consultar todos los avisos
-          <span aria-hidden="true">→</span>
-        </a>
-      </div>
-    </div>
-  </section>
+          <div class="notice-list">
+            {recentNotices.map((notice) => (
+              <NoticeCard notice={notice} compact idPrefix="home-notice" />
+            ))}
+            <a class="notice-list__more" href={withBase("/avisos")}>
+              Consultar todos los avisos
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    )
+  }
 </BaseLayout>

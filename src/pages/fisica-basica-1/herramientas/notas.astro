@@ -1,6 +1,7 @@
 ---
 import ResultsOrganizer from "../../../components/results/ResultsOrganizer.astro";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+import TeacherToolsNav from "../../../components/teacher/TeacherToolsNav.astro";
 import { COURSE } from "../../../data/course.js";
 import { withBase } from "../../../utils/paths.js";
 import "../../../styles/results-organizer.css";
@@ -13,8 +14,8 @@ import "../../../styles/results-organizer.css";
   <article class="results-page">
     <header class="results-page__hero">
       <nav class="academic-breadcrumb" aria-label="Migas de pan">
-        <a href={withBase("/fisica-basica-1/evaluacion")}>Evaluación y notas</a>
-        <span aria-hidden="true">/</span><span>Herramientas docentes</span>
+        <a href={withBase("/fisica-basica-1")}>Física Básica I</a>
+        <span aria-hidden="true">/</span><a href={withBase("/fisica-basica-1/herramientas")}>Herramientas docentes</a>
         <span aria-hidden="true">/</span><span aria-current="page">Organizador de resultados</span>
       </nav>
       <div class="results-page__heading">
@@ -31,6 +32,8 @@ import "../../../styles/results-organizer.css";
         <p>La sesión desaparece al cerrar, recargar o limpiar la página.</p>
       </aside>
     </header>
+
+    <TeacherToolsNav current="notas" />
 
     <div class="results-print-brand" aria-hidden="true">
       <strong>Papilla's Physics</strong>
