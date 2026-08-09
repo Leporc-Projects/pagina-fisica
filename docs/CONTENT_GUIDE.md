@@ -257,6 +257,43 @@ Un mecanismo futuro de envío se conectará en la frontera que hoy ocupa
 docente. No se debe introducir un proveedor o endpoint desde los componentes.
 Ver [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
 
+### Entrega de archivos y revisión docente
+
+JSON es el formato canónico para trasladar una respuesta de Participa al Centro
+de revisión. Si un curso utiliza Google Forms, Microsoft Forms u otro canal
+externo, este solo recibe manualmente el archivo que el estudiante decide
+adjuntar. Papilla's Physics no llama su API, no incrusta un endpoint y no
+presenta la preparación local como un envío. La instrucción al estudiante debe
+ser concreta: exportar JSON y entregarlo por el canal indicado por el docente.
+
+El Centro de revisión acepta cada archivo de forma independiente. Un error de
+formato se describe sin descartar los demás y un ID repetido se marca como
+duplicado, sin sugerir fraude ni contar dos veces la respuesta. No se importan
+TXT o CSV arbitrarios porque perderían parte del contrato y harían ambigua su
+validación.
+
+El texto importado es contenido no confiable: se presenta como texto, nunca se
+interpreta como HTML o código. La revisión no modifica el objeto original. Para
+una propuesta se mantiene una capa local con uno de estos estados:
+
+- pendiente;
+- interesante;
+- necesita ajustes;
+- descartar;
+- candidata al banco.
+
+“Candidata al banco” es una decisión de clasificación docente, no una
+aprobación académica. El paso posterior sigue siendo manual: revisar el
+contenido, corregirlo, asignar metadatos editoriales y crear un registro nuevo
+en `UNIT_1_EXERCISES` solo tras aprobación explícita. La nota docente y la
+dificultad estimada por quien propone no deben copiarse como contenido o
+dificultad editorial oficial.
+
+Los resúmenes muestran conteos observables por actividad, tema u opción. No se
+redactan diagnósticos, índices de satisfacción, perfiles, inferencias causales
+ni conclusiones sobre todo el grupo. Los intentos de Bonos se consultan como
+archivos anónimos individuales; no se usan para consolidar notas.
+
 ## Añadir una fórmula
 
 Las fórmulas de la Unidad 1 viven en `formulas.js` y se referencian desde el

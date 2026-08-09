@@ -17,6 +17,12 @@ calculan el resultado en el navegador y permiten copiar o exportar después de
 finalizar. Recargar o cerrar elimina el intento; no existe historial local ni
 asociación con una persona.
 
+El Centro de revisión docente lee los JSON que una persona selecciona desde su
+equipo. La selección no carga archivos a Papilla's Physics ni a un tercero: se
+validan y presentan en la memoria de esa pestaña. Sus filtros, notas y estados
+de revisión tampoco persisten. La acción “Limpiar sesión” requiere confirmación
+y descarta ese estado en memoria.
+
 La configuración visual claro/oscuro/sistema es la única preferencia persistida
 por el sitio. Usa `localStorage` bajo `papillas-physics:theme` y no contiene
 respuestas, contenido escrito, progreso ni identidad. No debe reutilizarse esa
@@ -70,6 +76,29 @@ el estudiante aunque el banco cambie. Puede editarse después de descargarlo y
 no constituye una prueba de autenticidad, firma o certificación. El CSV
 neutraliza prefijos que una hoja de cálculo podría interpretar como fórmulas;
 esa protección no convierte el archivo en inmutable.
+
+## Datos de una sesión de revisión
+
+Una sesión docente puede contener los originales importados, nombres de
+archivos fuente, resultados de validación, IDs duplicados, conteos descriptivos
+y una capa local de revisión para propuestas. Esa capa puede incluir estado,
+nota docente opcional y fecha ISO 8601 de la decisión. El original permanece
+separado e inmutable durante la sesión.
+
+El JSON de revisión conserva Participa, Bonos e incidencias. El CSV contiene una
+fila por respuesta de Participa; TXT e impresión resumen los conteos y pueden
+incluir respuestas abiertas cuando el docente lo decide. Todas las salidas son
+archivos locales editables: no prueban autenticidad, identidad ni integridad y
+no constituyen un registro institucional.
+
+Los nombres de archivo podrían haber sido elegidos por sus autores y, por
+tanto, no deben interpretarse como identidad. El Centro no extrae metadatos del
+dispositivo, ruta local, IP, user-agent ni huella. Tampoco registra tiempo de
+revisión, clics, navegación o tamaño de pantalla.
+
+El reconocimiento básico de un intento de Bono comprueba su contrato, Bono y
+versión, y permite consultar su resultado. No crea una planilla de notas, no
+vincula intentos entre sí y no estima dominio individual o grupal.
 
 ## Categorías y propósitos
 
@@ -166,3 +195,23 @@ El adaptador no debe leer campos directamente del DOM ni reconstruir un modelo
 paralelo. Antes de configurar proveedor, endpoint o credenciales deben cerrarse
 las decisiones de privacidad, consentimiento, conservación y revisión docente.
 No hay proveedor preseleccionado en esta versión.
+
+### Canal manual antes de un adaptador
+
+Un formulario externo puede utilizarse como buzón manual para que el estudiante
+adjunte el JSON que exportó deliberadamente. En ese flujo el servicio externo,
+no Papilla's Physics, recibe y conserva el archivo conforme a la configuración
+que adopte el curso. El sitio no incrusta formularios, no llama APIs y no conoce
+la URL del canal.
+
+Antes de activar ese procedimiento deben definirse instrucciones, responsables,
+acceso, retención y eliminación en el servicio elegido. También debe aclararse
+si ese canal añade identidad por inicio de sesión, correo o metadatos, porque un
+archivo diseñado como anónimo podría dejar de serlo al asociarse con la cuenta
+que lo entrega.
+
+Un backend futuro sería una arquitectura distinta y no una extensión silenciosa
+del Centro local. Requeriría autenticación y autorización reales cuando
+corresponda, validación en servidor, almacenamiento, auditoría de acceso,
+retención y consentimiento definidos. No debe simularse privacidad mediante una
+ruta poco visible o una etiqueta de interfaz.

@@ -84,12 +84,15 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
 - `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
 - `participation/`: selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
+- `review/`: importación accesible, agregados descriptivos, listado paginado, revisión de propuestas, incidencias y exportación de una sesión docente local. La ruta de la herramienta los compone sin incorporar lógica de contratos.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
 - `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, delimitadores semánticos, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
 - `src/utils/participation.js`: núcleo puro para crear, validar y serializar una respuesta. No conoce formularios ni nodos del DOM y es la única fuente para TXT, JSON y CSV.
 - `src/scripts/participation.js`: adaptación pequeña entre formularios y contrato. Conserva una sola respuesta en memoria, controla la previsualización, descarga archivos, copia texto y abre la impresión nativa.
+- `src/utils/review.js`: valida cada JSON contra los contratos públicos vigentes, deduplica, agrega y serializa sin conocer el DOM. Conserva el objeto importado separado de la revisión docente.
+- `src/scripts/review-center.js`: adaptación cliente para File API, filtros, paginación, notas locales, descargas e impresión; no usa red ni almacenamiento del navegador.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
@@ -203,6 +206,52 @@ una biblioteca de PDF: “Imprimir / PDF” abre la capacidad nativa del navegad
 
 La documentación de minimización, categorías de datos y conexión futura está
 en [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
+
+### Recopilación controlada y revisión docente
+
+`/fisica-basica-1/herramientas/revision` es una herramienta docente discreta,
+enlazada desde Recursos pero ausente de `COURSE_NAV` y de la navegación global.
+No representa un área privada: no tiene autenticación, backend ni control de
+acceso. Todo el procesamiento ocurre en la pestaña mediante File API.
+
+El flujo canónico usa los archivos JSON exportados por Participa. Un formulario
+externo, cuando el equipo docente decida utilizarlo, sirve únicamente como
+canal manual para recibir esos archivos; el sitio no integra proveedores,
+endpoints ni APIs. TXT, CSV y PDF siguen siendo salidas de lectura o trabajo,
+no formatos arbitrarios de importación.
+
+```text
+archivos JSON seleccionados por el docente
+   ↓ lectura local + validación independiente por archivo
+válido / advertencia / inválido
+   ↓ deduplicación por tipo e ID
+registros canónicos en memoria
+   ├─ conteos descriptivos separados por actividad
+   ├─ búsqueda, filtros y paginación
+   ├─ consulta básica de intentos de Bonos
+   └─ propuesta original inmutable + revisión docente local
+          ↓
+      JSON / CSV / TXT / impresión de la sesión
+```
+
+La sesión de revisión usa esquema `1.0.0`. Cada elemento exportado conserva el
+objeto original, los archivos fuente y, solo para propuestas, una capa
+independiente con estado, nota y fecha de revisión. Los estados son `pending`,
+`interesting`, `needs-adjustments`, `discard` y `bank-candidate`. “Candidata al
+banco” no crea ni modifica un ejercicio: el paso al banco académico continúa
+requiriendo corrección y aprobación explícitas.
+
+Los duplicados producen una advertencia, registran todos los nombres de archivo
+y aportan una sola instancia a los agregados. Un archivo inválido no bloquea
+los demás. Los intentos de Bonos se reconocen por esquema, ID, Bono y versión,
+pero solo se listan; el Centro no consolida calificaciones ni infiere dominio.
+Todos los conteos son descriptivos y no constituyen diagnóstico, puntuación de
+satisfacción, analítica, clasificación automática ni investigación.
+
+El límite es 5 MB por archivo y las listas abiertas se paginan para mantener un
+comportamiento razonable con cientos de archivos. Limpiar la sesión requiere
+confirmación y elimina de memoria los archivos y notas de la pestaña. Las
+salidas son editables, no están firmadas y no autentican su contenido.
 
 ### Bonos y autodiagnóstico local
 
