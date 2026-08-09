@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import QuestionBankEditor from "../../../components/bank/QuestionBankEditor.astro";
+import { COURSE } from "../../../data/course.js";
+import { withBase } from "../../../utils/paths.js";
+import "../../../styles/bank-editor.css";
+---
+
+<BaseLayout
+  title={`Editor de banco · ${COURSE.name}`}
+  description="Herramienta docente local para preparar preguntas fijas del banco académico."
+>
+  <article class="bank-editor-page">
+    <header class="bank-editor-page__hero">
+      <nav class="academic-breadcrumb" aria-label="Migas de pan">
+        <a href={withBase("/fisica-basica-1/recursos")}>Recursos</a>
+        <span aria-hidden="true">/</span><span>Herramientas docentes</span>
+        <span aria-hidden="true">/</span><span aria-current="page">Editor de banco</span>
+      </nav>
+      <div>
+        <p class="eyebrow eyebrow--dark">Herramienta docente local</p>
+        <h1>Editor de banco</h1>
+        <p>Prepara preguntas fijas y revísalas antes de incorporarlas al repositorio.</p>
+      </div>
+      <aside>
+        <strong>Sin acceso directo al sitio público</strong>
+        <p>La exportación produce borradores JSON. La publicación requiere revisión dentro del repositorio.</p>
+      </aside>
+    </header>
+    <QuestionBankEditor />
+  </article>
+</BaseLayout>

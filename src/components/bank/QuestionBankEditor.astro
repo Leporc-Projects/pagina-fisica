@@ -1,0 +1,163 @@
+---
+import { UNIT_1_COMMON_ERRORS } from "../../data/physics/unit-1/common-errors.js";
+import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+---
+
+<section class="bank-editor" data-bank-editor aria-labelledby="bank-editor-title">
+  <header class="bank-editor__intro">
+    <div>
+      <p class="academic-label">Borrador local</p>
+      <h2 id="bank-editor-title">Preparar una pregunta fija</h2>
+      <p>El editor prepara un paquete validado para incorporarlo al banco académico.</p>
+    </div>
+    <p class="bank-editor__local">Nada se publica ni se envía desde esta página.</p>
+  </header>
+
+  <form data-question-form novalidate>
+    <fieldset>
+      <legend>Ubicación y propósito</legend>
+      <div class="bank-editor__grid bank-editor__grid--three">
+        <label><span>Unidad</span><input value="Unidad 1" disabled /></label>
+        <label>
+          <span>Tema</span>
+          <select name="topic" required>
+            {UNIT_1.topics.map((topic) => <option value={topic.slug}>{topic.shortTitle}</option>)}
+          </select>
+        </label>
+        <label><span>Subtema</span><input name="subtopic" required /></label>
+      </div>
+      <fieldset class="bank-editor__inline-options">
+        <legend>Modalidades</legend>
+        <label><input type="checkbox" name="modalities" value="practice" checked /> Práctica</label>
+        <label><input type="checkbox" name="modalities" value="selfAssessment" checked /> Autodiagnóstico</label>
+        <label><input type="checkbox" name="modalities" value="bonus" /> Bono</label>
+      </fieldset>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pregunta</legend>
+      <label><span>Título</span><input name="title" required /></label>
+      <label><span>Enunciado</span><textarea name="prompt" rows="4" required></textarea></label>
+      <div class="bank-editor__grid bank-editor__grid--four">
+        <label><span>Tipo</span><select name="type">
+          <option value="conceptual">Conceptual</option><option value="numerical">Numérico</option>
+          <option value="graphical">Gráfico</option><option value="symbolic">Simbólico</option>
+          <option value="estimation">Estimación</option><option value="application">Aplicación</option>
+          <option value="integrative">Integrador</option>
+        </select></label>
+        <label><span>Representación</span><select name="representation">
+          <option value="verbal">Verbal</option><option value="numerical">Numérica</option>
+          <option value="symbolic">Simbólica</option><option value="graphical">Gráfica</option>
+          <option value="vectorial">Vectorial</option><option value="visual">Visual</option>
+        </select></label>
+        <label><span>Nivel cognitivo</span><select name="cognitiveLevel">
+          <option value="recognize">Reconocer</option><option value="understand">Comprender</option>
+          <option value="apply">Aplicar</option><option value="analyze">Analizar</option>
+          <option value="integrate">Integrar</option>
+        </select></label>
+        <label><span>Dificultad editorial</span><select name="difficulty">
+          {[1, 2, 3, 4, 5].map((value) => <option value={value}>{value} de 5</option>)}
+        </select></label>
+      </div>
+      <label><span>Objetivos <small>(uno por línea)</small></span><textarea name="objectives" rows="3" required></textarea></label>
+      <label><span>Pistas opcionales <small>(una por línea)</small></span><textarea name="hints" rows="3"></textarea></label>
+      <label class="bank-editor__check">
+        <input type="checkbox" name="requiresEditorialMath" />
+        <span>Requiere composición matemática o gráfica editorial</span>
+      </label>
+      <p class="bank-editor__help">Puedes escribir símbolos Unicode. Si la notación necesita fracciones complejas, integrales, vectores especiales o una gráfica, marca la revisión editorial; el borrador no será elegible para Bono.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Respuesta</legend>
+      <label class="bank-editor__kind"><span>Tipo de interacción</span><select name="interactionKind" data-interaction-kind>
+        <option value="singleChoice">Selección única</option>
+        <option value="number">Número</option>
+        <option value="multiNumber">Varios números</option>
+      </select></label>
+
+      <div data-interaction-panel="singleChoice">
+        <fieldset class="bank-editor__choices">
+          <legend>Opciones y respuesta correcta</legend>
+          {["a", "b", "c", "d"].map((id, index) => (
+            <label>
+              <input type="radio" name="correctOption" value={id} checked={index === 0} />
+              <span class="sr-only">Marcar opción {id.toUpperCase()} como correcta</span>
+              <strong aria-hidden="true">{id.toUpperCase()}</strong>
+              <input name={`option-${id}`} aria-label={`Texto de la opción ${id.toUpperCase()}`} />
+            </label>
+          ))}
+        </fieldset>
+      </div>
+
+      <div data-interaction-panel="number" hidden>
+        <div class="bank-editor__grid bank-editor__grid--three">
+          <label><span>Respuesta numérica</span><input name="numberValue" type="number" step="any" /></label>
+          <label><span>Unidad</span><input name="numberUnit" /></label>
+          <label><span>Tolerancia</span><input name="numberTolerance" type="number" step="any" min="0" value="0" /></label>
+        </div>
+      </div>
+
+      <div data-interaction-panel="multiNumber" hidden>
+        <p class="bank-editor__help">Completa al menos dos campos. El tercero es opcional.</p>
+        {[1, 2, 3].map((index) => (
+          <fieldset class="bank-editor__number-row" data-multi-row>
+            <legend>Campo {index}</legend>
+            <label><span>Etiqueta</span><input name={`multiLabel-${index}`} /></label>
+            <label><span>Respuesta</span><input name={`multiValue-${index}`} type="number" step="any" /></label>
+            <label><span>Unidad</span><input name={`multiUnit-${index}`} /></label>
+            <label><span>Tolerancia</span><input name={`multiTolerance-${index}`} type="number" step="any" min="0" value="0" /></label>
+          </fieldset>
+        ))}
+      </div>
+
+      <details class="bank-editor__optional">
+        <summary>Retroalimentación y errores frecuentes</summary>
+        <label><span>Mensaje al acertar, opcional</span><input name="feedbackCorrect" /></label>
+        <label><span>Mensaje para revisar, opcional</span><input name="feedbackIncorrect" /></label>
+        <label>
+          <span>Errores frecuentes, opcional</span>
+          <select name="commonErrors" multiple size="5">
+            {UNIT_1_COMMON_ERRORS.map((error) => <option value={error.id}>{error.description}</option>)}
+          </select>
+        </label>
+      </details>
+    </fieldset>
+
+    <fieldset>
+      <legend>Solución por pasos</legend>
+      {[1, 2, 3].map((index) => (
+        <div class="bank-editor__solution-row">
+          <label><span>Título del paso {index}</span><input name={`solutionTitle-${index}`} /></label>
+          <label><span>Explicación</span><textarea name={`solutionText-${index}`} rows="2"></textarea></label>
+        </div>
+      ))}
+    </fieldset>
+
+    <div class="bank-editor__form-actions">
+      <button type="button" data-preview-question>Comprobar y previsualizar</button>
+      <button type="button" class="review-button" data-add-question>Añadir al paquete</button>
+    </div>
+    <div class="bank-editor__errors" data-editor-errors aria-live="polite"></div>
+  </form>
+
+  <section class="bank-preview" data-bank-preview hidden aria-labelledby="bank-preview-title">
+    <header><p class="academic-label">Previsualización</p><h2 id="bank-preview-title" tabindex="-1">Así se verá la pregunta</h2></header>
+    <article class="exercise-card" data-preview-card></article>
+  </section>
+
+  <section class="bank-pack" aria-labelledby="bank-pack-title">
+    <header>
+      <div><p class="academic-label">Paquete docente</p><h2 id="bank-pack-title">Borradores preparados</h2></div>
+      <button type="button" data-export-pack disabled>Exportar paquete JSON</button>
+    </header>
+    <p data-pack-empty>No hay preguntas en el paquete.</p>
+    <ol data-pack-list></ol>
+    <p class="bank-editor__status" data-editor-status aria-live="polite"></p>
+  </section>
+</section>
+
+<script>
+  import { initializeQuestionBankEditor } from "../../scripts/question-bank-editor.js";
+  initializeQuestionBankEditor();
+</script>

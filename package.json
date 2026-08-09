@@ -13,6 +13,7 @@
     "validate": "node scripts/validate.mjs && npm test",
     "verify": "npm run validate && npm run build",
     "preview": "astro preview",
+    "import:questions": "node scripts/import-questions.mjs",
     "astro": "astro"
   },
   "dependencies": {
