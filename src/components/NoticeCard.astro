@@ -34,16 +34,16 @@ const formattedDate = new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateStr
   {!compact && notice.content && <p class="notice-entry__content">{notice.content}</p>}
 
   {
-    !compact && href && (
-      <a
-        class="text-link"
-        href={href}
-        target={external ? "_blank" : undefined}
-        rel={external ? "noopener noreferrer" : undefined}
-      >
-        Consultar información
-        <span aria-hidden="true">→</span>
-      </a>
-    )
-  }
+  href && (
+    <a
+      class="text-link"
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+    >
+      Consultar información
+      <span aria-hidden="true">→</span>
+    </a>
+  )
+}
 </article>
