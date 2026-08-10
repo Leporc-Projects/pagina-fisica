@@ -4,7 +4,7 @@ Sitio docente personal e independiente de César Barrero para organizar informac
 
 El primer curso desarrollado es Física Básica I. Los datos académicos estables provienen del programa oficial y el cronograma del semestre 2026-2 se organiza a partir del plan clase a clase.
 
-Sitio publicado: [https://leporc-projects.github.io/pagina-fisica/](https://leporc-projects.github.io/pagina-fisica/)
+Sitio publicado: [https://aulafisica.com](https://aulafisica.com)
 
 ## Principios del proyecto
 
@@ -95,8 +95,7 @@ La vista previa también se abre bajo `/pagina-fisica/`.
 `astro.config.mjs` define actualmente:
 
 ```js
-site: "https://leporc-projects.github.io",
-base: "/pagina-fisica",
+site: "https://aulafisica.com",
 ```
 
 Las estructuras de datos conservan destinos legibles desde la raíz lógica, como `/fisica-basica-1/recursos`. Los componentes convierten esos valores al `base` activo mediante `withBase()` de `src/utils/paths.js`, que usa `import.meta.env.BASE_URL`. No se debe escribir `/pagina-fisica` dentro de páginas o componentes.

@@ -600,8 +600,7 @@ La API (`unitLabel`, `unitTitle`, `topics`) permite reutilizarlo en Unidades 2�
 `astro.config.mjs` configura la Project Page provisional:
 
 ```js
-site: "https://leporc-projects.github.io",
-base: "/pagina-fisica",
+site: "https://aulafisica.com",
 ```
 
 `site` identifica el origen canónico y `base` indica que la aplicación no vive en la raíz del dominio. Por eso una ruta lógica como `/fisica-basica-1/videos` debe renderizarse como `/pagina-fisica/fisica-basica-1/videos`.
