@@ -605,7 +605,7 @@ const importSourceFile = async (root, state, file) => {
         throw new SyntaxError("El archivo no contiene JSON válido.");
       }
       if (!document || typeof document !== "object" || Array.isArray(document) || !("attemptId" in document || "bonusId" in document)) {
-        throw new TypeError("El JSON no corresponde a un intento de Bono de Papilla's Physics.");
+        throw new TypeError("El JSON no corresponde a un intento de Bono de Aula Física.");
       }
       const key = `${document.bonusId ?? "invalid"}:${document.bonusVersion ?? "unknown"}`;
       const existing = state.sources.find((source) => source.kind === "bonus" && source.bonusKey === key);
@@ -715,7 +715,7 @@ const wireActions = (root, state) => {
   });
   root.querySelector("[data-export-txt]")?.addEventListener("click", () => {
     if (!state.model) return;
-    download(createResultsText(state.model), "papillas-resumen-resultados.txt", "text/plain;charset=utf-8");
+    download(createResultsText(state.model), "aula-fisica-resumen-resultados.txt", "text/plain;charset=utf-8");
     setLive(root, "Resumen TXT preparado.");
   });
   root.querySelector("[data-export-print]")?.addEventListener("click", () => window.print());

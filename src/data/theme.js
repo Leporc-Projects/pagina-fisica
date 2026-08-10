@@ -1,6 +1,6 @@
 // Contrato compartido por el arranque temprano y el selector visual de tema.
 
-export const THEME_STORAGE_KEY = "papillas-physics:theme";
+export const THEME_STORAGE_KEY = "aula-fisica:theme";
 
 /**
  * Preferencias admitidas por la interfaz. `system` no es un cuarto tema:

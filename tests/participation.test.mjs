@@ -208,7 +208,7 @@ test("TXT produce una representación legible de la misma respuesta", () => {
   const response = conceptResponse({ helpfulSupport: "graph" });
   const text = toParticipationText(response);
 
-  assert.match(text, /Papilla's Physics/);
+  assert.match(text, /Aula Física/);
   assert.match(text, /Tema: Movimiento en una dimensión/);
   assert.match(text, /Podría ayudar: Una gráfica/);
   assert.match(text, new RegExp(response.responseId));

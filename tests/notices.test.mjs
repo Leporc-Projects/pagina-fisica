@@ -132,7 +132,7 @@ test("valida el notice pack y fuerza review durante la importación", () => {
   });
   assert.equal(validateNoticePack(pack).valid, true);
   assert.equal(pack.source, "teacher");
-  assert.match(noticePackFilename(pack), /^papillas-notice-pack-2026-08-14-[0-9a-f]{8}\.json$/);
+  assert.match(noticePackFilename(pack), /^aula-fisica-notice-pack-2026-08-14-[0-9a-f]{8}\.json$/);
   const merge = mergeNoticePack(pack, []);
   assert.equal(merge.imported[0].status, "review");
   assert.equal(merge.imported[0].content.includes("Δ"), true);
@@ -150,7 +150,7 @@ test("rechaza paquetes inválidos y duplicados dentro o fuera del paquete", () =
 });
 
 test("import:notices procesa un fixture temporal y nunca publica", (context) => {
-  const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "papillas-notices-"));
+  const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "aula-fisica-notices-"));
   context.after(() => fs.rmSync(temporaryDirectory, { recursive: true, force: true }));
   const source = path.join(temporaryDirectory, "pack.json");
   const target = path.join(temporaryDirectory, "notices.json");

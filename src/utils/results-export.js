@@ -151,7 +151,7 @@ export const createResultsCsvExports = (model, generatedAt = new Date().toISOStr
 
 export const createResultsText = (model, generatedAt = new Date().toISOString()) => {
   const lines = [
-    "Papilla's Physics · Física Básica I",
+    "Aula Física · Física Básica I",
     "Resumen de resultados",
     `Generado: ${generatedAt}`,
     "",
@@ -183,5 +183,5 @@ export const createResultsText = (model, generatedAt = new Date().toISOString())
 
 export const resultsExportBaseName = (date = new Date()) => {
   const day = date.toISOString().slice(0, 10);
-  return `papillas-resultados-${day}`;
+  return `aula-fisica-resultados-${day}`;
 };

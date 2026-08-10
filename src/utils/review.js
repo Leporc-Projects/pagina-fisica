@@ -442,7 +442,7 @@ const countLines = (record, labels) => Object.entries(record)
 export const toReviewText = (reviewExport) => {
   const summary = reviewExport.summary;
   return [
-    "Papilla's Physics · Física Básica I",
+    "Aula Física · Física Básica I",
     "Centro de revisión",
     `Fecha: ${reviewExport.generatedAt}`,
     "",

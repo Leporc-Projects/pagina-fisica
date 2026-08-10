@@ -216,7 +216,7 @@ export const validateQuestionPack = (pack, { existingIds = [] } = {}) => {
 };
 
 export const questionPackFilename = (pack) =>
-  `papillas-question-pack-${pack.createdAt.slice(0, 10)}-${pack.packageId.slice(-8)}.json`;
+  `aula-fisica-question-pack-${pack.createdAt.slice(0, 10)}-${pack.packageId.slice(-8)}.json`;
 
 export const toQuestionPackJSON = (pack) => `${JSON.stringify(pack, null, 2)}\n`;
 

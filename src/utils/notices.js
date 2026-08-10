@@ -173,6 +173,6 @@ export const mergeNoticePack = (pack, currentNotices) => {
 };
 
 export const noticePackFilename = (pack) =>
-  `papillas-notice-pack-${pack.createdAt.slice(0, 10)}-${pack.packageId.slice(-8)}.json`;
+  `aula-fisica-notice-pack-${pack.createdAt.slice(0, 10)}-${pack.packageId.slice(-8)}.json`;
 
 export const toNoticePackJSON = (pack) => `${JSON.stringify(pack, null, 2)}\n`;

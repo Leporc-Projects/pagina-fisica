@@ -312,7 +312,7 @@ Ver [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
 JSON es el formato canónico para trasladar una respuesta de Participa al Centro
 de revisión. Si un curso utiliza Google Forms, Microsoft Forms u otro canal
 externo, este solo recibe manualmente el archivo que el estudiante decide
-adjuntar. Papilla's Physics no llama su API, no incrusta un endpoint y no
+adjuntar. Aula Física no llama su API, no incrusta un endpoint y no
 presenta la preparación local como un envío. La instrucción al estudiante debe
 ser concreta: exportar JSON y entregarlo por el canal indicado por el docente.
 
@@ -474,7 +474,7 @@ un diagrama preparado y verificado para esa transformación puede declarar
 futuro variantes claras y oscuras sin cambiar el contrato de los componentes.
 
 El sistema de tema persiste exclusivamente la configuración visual
-`papillas-physics:theme`. Ningún Bono, diagnóstico, ejercicio, simulación o
+`aula-fisica:theme`. Ningún Bono, diagnóstico, ejercicio, simulación o
 tutoría debe reutilizar `localStorage` para guardar respuestas o datos de
 estudiantes sin una decisión arquitectónica y de privacidad posterior.
 

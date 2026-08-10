@@ -554,7 +554,7 @@ check(
 );
 
 check(
-  THEME_STORAGE_KEY === "papillas-physics:theme",
+  THEME_STORAGE_KEY === "aula-fisica:theme",
   "La preferencia visual utiliza una clave local estable."
 );
 

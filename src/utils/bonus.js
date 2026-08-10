@@ -593,7 +593,7 @@ export const bonusCompactSummary = (attempt) => {
   const { summary } = attempt;
   const identity = attemptIdentity(attempt);
   return [
-    "Papilla's Physics · Física Básica I",
+    "Aula Física · Física Básica I",
     attempt.bonusTitle,
     `Versión del Bono: ${attempt.bonusVersion}`,
     identity.mode === "institutionalEmail"

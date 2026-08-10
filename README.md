@@ -1,4 +1,4 @@
-# Papilla's Physics
+# Aula Física
 
 Sitio docente personal e independiente de César Barrero para organizar información académica, materiales propios y recursos relacionados con la enseñanza de la física. No constituye un sitio oficial de la Universidad de Antioquia.
 

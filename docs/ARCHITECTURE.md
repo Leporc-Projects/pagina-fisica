@@ -1,10 +1,10 @@
-# Arquitectura de Papilla's Physics
+# Arquitectura de Aula Física
 
 Este documento explica cómo se organiza el sitio y cómo fluye la información desde los datos hasta las páginas generadas. Está dirigido a quien necesite mantener el proyecto mientras aprende Astro, JavaScript y CSS.
 
 ## Visión general
 
-Papilla's Physics es un sitio estático construido con Astro. No tiene backend, base de datos ni estado persistente. Durante la compilación, Astro transforma los archivos `.astro` de `src/pages/` en páginas HTML dentro de `dist/`.
+Aula Física es un sitio estático construido con Astro. No tiene backend, base de datos ni estado persistente. Durante la compilación, Astro transforma los archivos `.astro` de `src/pages/` en páginas HTML dentro de `dist/`.
 
 El flujo principal es:
 
@@ -417,7 +417,7 @@ la corrección y las exportaciones nunca regeneran la pregunta.
 
 `/fisica-basica-1/herramientas/banco` no es administración ni tiene
 autenticación ficticia. Previsualiza `singleChoice`, `number` y `multiNumber`,
-mantiene borradores en memoria y exporta `papillas-question-pack-*.json` con
+mantiene borradores en memoria y exporta `aula-fisica-question-pack-*.json` con
 esquema versionado, `authorSource: "teacher"` y `status: "draft"`. Contenido
 con `requiresEditorialMath: true` queda fuera de Bonos hasta composición y
 revisión editorial.
@@ -441,7 +441,7 @@ prioriza los destacados y desaparece por completo cuando la consulta está
 vacía. `/avisos` conserva un estado vacío compacto.
 
 El Editor de avisos genera ID, versiones y estado `draft`, muestra el contenido
-con las mismas clases públicas y exporta `papillas-notice-pack-*.json`. El
+con las mismas clases públicas y exporta `aula-fisica-notice-pack-*.json`. El
 importador acepta solo JSON, valida fechas, categorías, duplicados, texto y
 enlaces, y fuerza `review`:
 
@@ -646,7 +646,7 @@ system ─→ prefers-color-scheme ─→ light o dark
 ```
 
 La única configuración persistente es
-`papillas-physics:theme`, almacenada en `localStorage` con uno de los valores
+`aula-fisica:theme`, almacenada en `localStorage` con uno de los valores
 `light`, `dark` o `system`. No se guardan navegación, contenido académico,
 respuestas ni información estudiantil. Si el navegador bloquea el
 almacenamiento, la aplicación continúa en modo sistema.

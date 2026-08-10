@@ -368,7 +368,7 @@ export const participationSummary = (response) => {
 export const toParticipationText = (response) => {
   const summary = participationSummary(response);
   const lines = [
-    "Papilla's Physics",
+    "Aula Física",
     "Respuesta de participación preparada localmente",
     "",
     `Tipo: ${summary.type}`,

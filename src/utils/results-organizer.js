@@ -419,7 +419,7 @@ export const normalizeBonusSource = (source) => {
       score,
       rawTimestamp: document.completedAt,
       timestamp: document.completedAt,
-      provider: "papillas-bonus",
+      provider: "aula-fisica-bonus",
     });
   });
   return { ...source, submissions, incidents };

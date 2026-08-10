@@ -1,7 +1,7 @@
 # Datos y privacidad
 
 Este documento registra decisiones técnicas y editoriales internas de
-Papilla's Physics. No pretende ser una política legal ni sustituye una revisión
+Aula Física. No pretende ser una política legal ni sustituye una revisión
 institucional cuando exista recopilación o investigación.
 
 ## Estado actual
@@ -20,7 +20,7 @@ no la envía ni la persiste. Recargar o cerrar elimina ambos objetos; no existe
 historial local.
 
 El Centro de revisión docente lee los JSON que una persona selecciona desde su
-equipo. La selección no carga archivos a Papilla's Physics ni a un tercero: se
+equipo. La selección no carga archivos a Aula Física ni a un tercero: se
 validan y presentan en la memoria de esa pestaña. Sus filtros, notas y estados
 de revisión tampoco persisten. La acción “Limpiar sesión” requiere confirmación
 y descarta ese estado en memoria.
@@ -33,7 +33,7 @@ cerrar o confirmar “Limpiar sesión”. Solo una exportación iniciada por el
 docente crea archivos en su equipo.
 
 La configuración visual claro/oscuro/sistema es la única preferencia persistida
-por el sitio. Usa `localStorage` bajo `papillas-physics:theme` y no contiene
+por el sitio. Usa `localStorage` bajo `aula-fisica:theme` y no contiene
 respuestas, contenido escrito, progreso ni identidad. No debe reutilizarse esa
 clave o ese mecanismo para participación.
 
@@ -269,7 +269,7 @@ No hay proveedor preseleccionado en esta versión.
 
 Un formulario externo puede utilizarse como buzón manual para que el estudiante
 adjunte el JSON que exportó deliberadamente. En ese flujo el servicio externo,
-no Papilla's Physics, recibe y conserva el archivo conforme a la configuración
+no Aula Física, recibe y conserva el archivo conforme a la configuración
 que adopte el curso. El sitio no incrusta formularios, no llama APIs y no conoce
 la URL del canal.
 

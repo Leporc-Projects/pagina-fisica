@@ -4,7 +4,7 @@
 import { COURSE, COURSE_NAV } from "./course.js";
 
 export const SITE = {
-  name: "Papilla's Physics",
+  name: "Aula Física",
   teacherName: "César Barrero",
   tagline: "Física para comprender, practicar y conectar ideas.",
   description:
