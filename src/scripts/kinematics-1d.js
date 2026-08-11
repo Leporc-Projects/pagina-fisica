@@ -1,7 +1,8 @@
+import { getSimulationModelById } from "../data/simulation-models.js";
 import {
-  KINEMATICS_1D_CONTROLS,
-  KINEMATICS_1D_PRESETS,
-} from "../data/simulations.js";
+  normalizeSimulationExperience,
+  validateSimulationExperience,
+} from "../utils/simulation-experience.js";
 import {
   getKinematicsState,
   getTurningPoint,
@@ -16,7 +17,12 @@ import {
 } from "../utils/kinematics-svg.js";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-const quantityKeys = ["position", "velocity", "acceleration"];
+const quantityViews = Object.freeze({
+  position: "positionGraph",
+  velocity: "velocityGraph",
+  acceleration: "accelerationGraph",
+});
+const runtimes = new WeakMap();
 
 const createSvgElement = (name, attributes = {}, content = null) => {
   const element = document.createElementNS(SVG_NAMESPACE, name);
@@ -27,18 +33,32 @@ const createSvgElement = (name, attributes = {}, content = null) => {
   return element;
 };
 
-const parametersEqual = (first, second) =>
-  KINEMATICS_1D_CONTROLS.every(
-    (control) => first[control.key] === second[control.key]
+const readEmbeddedExperience = (root) => {
+  try {
+    return JSON.parse(root.dataset.experience ?? "");
+  } catch {
+    return null;
+  }
+};
+
+export const initializeKinematicsSimulation = (root, suppliedExperience) => {
+  if (!(root instanceof HTMLElement)) return null;
+  const existing = runtimes.get(root);
+  if (existing) {
+    if (suppliedExperience) existing.updateExperience(suppliedExperience);
+    return existing;
+  }
+
+  let experience = normalizeSimulationExperience(
+    suppliedExperience ?? readEmbeddedExperience(root)
   );
+  const initialValidation = validateSimulationExperience(experience);
+  const initialModel = getSimulationModelById(experience.modelId);
+  if (!initialValidation.valid || initialModel?.rendererId !== "svg-kinematics-1d") {
+    root.dataset.initialized = "error";
+    return null;
+  }
 
-const initializeSimulation = (root) => {
-  if (root.dataset.initialized === "true") return;
-  root.dataset.initialized = "true";
-
-  const initialPreset = KINEMATICS_1D_PRESETS.find(
-    (preset) => preset.id === root.dataset.initialPreset
-  ) ?? KINEMATICS_1D_PRESETS[0];
   const scrubber = root.querySelector("[data-time-scrubber]");
   const toggleButton = root.querySelector('[data-action="toggle"]');
   const playbackLabel = root.querySelector("[data-playback-label]");
@@ -46,11 +66,6 @@ const initializeSimulation = (root) => {
   const playbackState = root.querySelector("[data-playback-state]");
   const timeOutput = root.querySelector("[data-time-output]");
   const liveRegion = root.querySelector("[data-simulation-live]");
-  const motionFigure = root.querySelector("[data-kinematics-motion]");
-  const motionCurrent = root.querySelector("[data-motion-current]");
-  const motionCurrentLabel = root.querySelector("[data-motion-current-label]");
-  const motionInitial = root.querySelector("[data-motion-initial]");
-
   if (
     !(scrubber instanceof HTMLInputElement) ||
     !(toggleButton instanceof HTMLButtonElement) ||
@@ -58,15 +73,25 @@ const initializeSimulation = (root) => {
     !playbackIcon ||
     !playbackState ||
     !timeOutput ||
-    !liveRegion ||
-    !motionFigure ||
-    !motionCurrent ||
-    !motionCurrentLabel ||
-    !motionInitial
-  ) return;
+    !liveRegion
+  ) return null;
+
+  const abortController = new AbortController();
+  const listenerOptions = { signal: abortController.signal };
+  const defaultsFromExperience = () => Object.fromEntries(
+    Object.entries(experience.parameters).map(([key, config]) => [key, config.default])
+  );
+  const parameterDefinitions = () => {
+    const model = getSimulationModelById(experience.modelId);
+    return Object.entries(model.parameters).map(([key, definition]) => ({
+      key,
+      ...definition,
+      ...experience.parameters[key],
+    }));
+  };
 
   const state = {
-    parameters: { ...initialPreset.parameters },
+    parameters: defaultsFromExperience(),
     time: 0,
     playing: false,
     frameId: null,
@@ -115,7 +140,6 @@ const initializeSimulation = (root) => {
       const element = root.querySelector(`[data-reading="${key}"]`);
       if (element) element.textContent = formatKinematicsNumber(physicalState[key]);
     }
-
     const direction = root.querySelector('[data-reading="direction"]');
     if (direction) direction.textContent = `Sentido: ${physicalState.direction}`;
     timeOutput.textContent = `${formatKinematicsNumber(physicalState.time)} s`;
@@ -126,16 +150,16 @@ const initializeSimulation = (root) => {
     scrubber.value = String(state.time);
     updateReadings(physicalState);
 
-    for (const quantityKey of quantityKeys) {
+    for (const quantityKey of Object.keys(quantityViews)) {
       const figure = root.querySelector(`[data-kinematics-chart="${quantityKey}"]`);
       const geometry = state.chartGeometries.get(quantityKey);
       if (!figure || !geometry) continue;
-
-      const value = physicalState[quantityKey];
-      const point = geometry.transform.point({ x: state.time, y: value });
+      const point = geometry.transform.point({
+        x: state.time,
+        y: physicalState[quantityKey],
+      });
       const cursor = figure.querySelector("[data-chart-cursor]");
       const current = figure.querySelector("[data-chart-current]");
-
       if (cursor) {
         cursor.setAttribute("x1", String(point.x));
         cursor.setAttribute("x2", String(point.x));
@@ -146,7 +170,9 @@ const initializeSimulation = (root) => {
       }
     }
 
-    if (state.motionGeometry) {
+    const motionCurrent = root.querySelector("[data-motion-current]");
+    const motionCurrentLabel = root.querySelector("[data-motion-current-label]");
+    if (state.motionGeometry && motionCurrent && motionCurrentLabel) {
       const x = state.motionGeometry.transform.x(physicalState.position);
       const labelX = Math.min(
         KINEMATICS_MOTION_VIEW.plot.left + KINEMATICS_MOTION_VIEW.plot.width - 45,
@@ -160,24 +186,21 @@ const initializeSimulation = (root) => {
 
   const populateChartGeometry = (quantityKey) => {
     const figure = root.querySelector(`[data-kinematics-chart="${quantityKey}"]`);
-    if (!figure) return;
-
-    const geometry = createKinematicsChartGeometry(
-      state.parameters,
-      quantityKey
-    );
+    if (!figure) {
+      state.chartGeometries.delete(quantityKey);
+      return;
+    }
+    const geometry = createKinematicsChartGeometry(state.parameters, quantityKey);
     state.chartGeometries.set(quantityKey, geometry);
     figure.dataset.xMin = String(geometry.xDomain[0]);
     figure.dataset.xMax = String(geometry.xDomain[1]);
     figure.dataset.yMin = String(geometry.yDomain[0]);
     figure.dataset.yMax = String(geometry.yDomain[1]);
-
-    const curve = figure.querySelector("[data-chart-curve]");
-    if (curve) curve.setAttribute("d", geometry.linePath);
+    figure.querySelector("[data-chart-curve]")?.setAttribute("d", geometry.linePath);
 
     const grid = figure.querySelector("[data-chart-grid]");
     if (grid) {
-      const lines = [
+      grid.replaceChildren(
         ...geometry.xTicks.map((tick) => createSvgElement("line", {
           x1: geometry.transform.x(tick),
           y1: KINEMATICS_CHART_VIEW.plot.top,
@@ -189,14 +212,13 @@ const initializeSimulation = (root) => {
           y1: geometry.transform.y(tick),
           x2: KINEMATICS_CHART_VIEW.plot.left + KINEMATICS_CHART_VIEW.plot.width,
           y2: geometry.transform.y(tick),
-        })),
-      ];
-      grid.replaceChildren(...lines);
+        }))
+      );
     }
 
     const ticks = figure.querySelector("[data-chart-ticks]");
     if (ticks) {
-      const labels = [
+      ticks.replaceChildren(
         ...geometry.xTicks.map((tick) => createSvgElement("text", {
           x: geometry.transform.x(tick),
           y: KINEMATICS_CHART_VIEW.plot.top + KINEMATICS_CHART_VIEW.plot.height + 18,
@@ -207,9 +229,8 @@ const initializeSimulation = (root) => {
           y: geometry.transform.y(tick),
           "text-anchor": "end",
           "dominant-baseline": "middle",
-        }, formatKinematicsNumber(tick, 1))),
-      ];
-      ticks.replaceChildren(...labels);
+        }, formatKinematicsNumber(tick, 1)))
+      );
     }
 
     const zero = figure.querySelector("[data-chart-zero]");
@@ -226,6 +247,12 @@ const initializeSimulation = (root) => {
   };
 
   const populateMotionGeometry = () => {
+    const motionFigure = root.querySelector("[data-kinematics-motion]");
+    const motionInitial = root.querySelector("[data-motion-initial]");
+    if (!motionFigure || !motionInitial) {
+      state.motionGeometry = null;
+      return;
+    }
     const geometry = createKinematicsMotionGeometry(state.parameters);
     state.motionGeometry = geometry;
     motionFigure.dataset.xMin = String(geometry.xDomain[0]);
@@ -233,7 +260,7 @@ const initializeSimulation = (root) => {
 
     const tickGroup = motionFigure.querySelector("[data-motion-ticks]");
     if (tickGroup) {
-      const groups = geometry.ticks.map((tick) => {
+      tickGroup.replaceChildren(...geometry.ticks.map((tick) => {
         const group = createSvgElement("g");
         group.append(
           createSvgElement("line", {
@@ -249,8 +276,7 @@ const initializeSimulation = (root) => {
           }, formatKinematicsNumber(tick, 1))
         );
         return group;
-      });
-      tickGroup.replaceChildren(...groups);
+      }));
     }
 
     const origin = motionFigure.querySelector("[data-motion-origin]");
@@ -276,19 +302,16 @@ const initializeSimulation = (root) => {
         origin.replaceChildren(group);
       }
     }
-
     motionInitial.setAttribute("x1", String(geometry.initialX));
     motionInitial.setAttribute("x2", String(geometry.initialX));
   };
 
   const updateTurningReading = () => {
-    const turning = getTurningPoint(state.parameters);
     const container = root.querySelector("[data-turning-reading]");
     if (!container) return;
-
-    container.hidden = !turning;
+    const turning = getTurningPoint(state.parameters);
+    container.hidden = experience.views.turningPoint !== true || !turning;
     if (!turning) return;
-
     const time = container.querySelector("[data-turn-time]");
     const position = container.querySelector("[data-turn-position]");
     if (time) time.textContent = formatKinematicsNumber(turning.time);
@@ -296,67 +319,67 @@ const initializeSimulation = (root) => {
   };
 
   const rebuildVisuals = () => {
-    for (const quantityKey of quantityKeys) populateChartGeometry(quantityKey);
+    Object.keys(quantityViews).forEach(populateChartGeometry);
     populateMotionGeometry();
     updateTurningReading();
     scrubber.max = String(state.parameters.T);
   };
 
   const clearValidation = () => {
-    for (const control of KINEMATICS_1D_CONTROLS) {
-      const field = root.querySelector(`[data-param-field="${control.key}"]`);
+    for (const control of parameterDefinitions()) {
+      root.querySelector(`[data-param-field="${control.key}"]`)?.classList.remove("is-invalid");
       const error = root.querySelector(`[data-param-error="${control.key}"]`);
-      const number = root.querySelector(`[data-param-number="${control.key}"]`);
-      const range = root.querySelector(`[data-param-range="${control.key}"]`);
-      field?.classList.remove("is-invalid");
       if (error) error.textContent = "";
-      number?.removeAttribute("aria-invalid");
-      range?.removeAttribute("aria-invalid");
+      root.querySelector(`[data-param-number="${control.key}"]`)?.removeAttribute("aria-invalid");
+      root.querySelector(`[data-param-range="${control.key}"]`)?.removeAttribute("aria-invalid");
     }
   };
 
   const showValidation = (issues) => {
     clearValidation();
-    for (const issue of issues) {
-      const field = root.querySelector(`[data-param-field="${issue.field}"]`);
-      const error = root.querySelector(`[data-param-error="${issue.field}"]`);
-      const number = root.querySelector(`[data-param-number="${issue.field}"]`);
-      const range = root.querySelector(`[data-param-range="${issue.field}"]`);
+    for (const entry of issues) {
+      const field = root.querySelector(`[data-param-field="${entry.field}"]`);
+      const error = root.querySelector(`[data-param-error="${entry.field}"]`);
       field?.classList.add("is-invalid");
-      if (error) error.textContent = issue.message;
-      number?.setAttribute("aria-invalid", "true");
-      range?.setAttribute("aria-invalid", "true");
+      if (error) error.textContent = entry.message;
+      root.querySelector(`[data-param-number="${entry.field}"]`)?.setAttribute("aria-invalid", "true");
+      root.querySelector(`[data-param-range="${entry.field}"]`)?.setAttribute("aria-invalid", "true");
     }
   };
 
   const readParameters = () => {
     const parameters = {};
     const inputIssues = [];
-
-    for (const control of KINEMATICS_1D_CONTROLS) {
+    for (const control of parameterDefinitions()) {
       const input = root.querySelector(`[data-param-number="${control.key}"]`);
       if (!(input instanceof HTMLInputElement)) continue;
       parameters[control.key] = input.valueAsNumber;
-
-      if (input.validity.stepMismatch) {
+      if (!Number.isFinite(input.valueAsNumber) ||
+          input.valueAsNumber < control.minimum ||
+          input.valueAsNumber > control.maximum) {
+        inputIssues.push({
+          field: control.key,
+          message: `${control.label} debe estar entre ${control.minimum} y ${control.maximum} ${control.unit}.`,
+        });
+      } else if (input.validity.stepMismatch) {
         inputIssues.push({
           field: control.key,
           message: `${control.label} debe usar incrementos de ${control.step} ${control.unit}.`,
         });
       }
     }
-
-    const validation = validateKinematicsParameters(parameters);
     return {
       parameters,
-      issues: [...inputIssues, ...validation.issues],
+      issues: [...inputIssues, ...validateKinematicsParameters(parameters).issues],
     };
   };
 
+  const parametersEqual = (first, second) =>
+    parameterDefinitions().every((control) => first[control.key] === second[control.key]);
+
   const updatePresetState = () => {
-    for (const preset of KINEMATICS_1D_PRESETS) {
-      const button = root.querySelector(`[data-preset="${preset.id}"]`);
-      button?.setAttribute(
+    for (const preset of experience.presets) {
+      root.querySelector(`[data-preset="${preset.id}"]`)?.setAttribute(
         "aria-pressed",
         String(parametersEqual(preset.parameters, state.parameters))
       );
@@ -364,7 +387,7 @@ const initializeSimulation = (root) => {
   };
 
   const updateControlOutputs = () => {
-    for (const control of KINEMATICS_1D_CONTROLS) {
+    for (const control of parameterDefinitions()) {
       const output = root.querySelector(`[data-param-output="${control.key}"]`);
       if (output) {
         output.textContent = `${formatKinematicsNumber(state.parameters[control.key])} ${control.unit}`;
@@ -384,16 +407,69 @@ const initializeSimulation = (root) => {
     announce(message);
   };
 
+  const configureControls = () => {
+    for (const control of parameterDefinitions()) {
+      const range = root.querySelector(`[data-param-range="${control.key}"]`);
+      const number = root.querySelector(`[data-param-number="${control.key}"]`);
+      for (const input of [range, number]) {
+        if (!(input instanceof HTMLInputElement)) continue;
+        input.min = String(control.minimum);
+        input.max = String(control.maximum);
+        input.step = String(control.step);
+        input.value = String(control.default);
+        input.disabled = !control.editable;
+      }
+      const limits = root.querySelector(`[data-param-limits="${control.key}"]`);
+      if (limits) {
+        limits.textContent = control.editable
+          ? `Rango: ${control.minimum} a ${control.maximum} ${control.unit}`
+          : `Valor fijo: ${formatKinematicsNumber(control.default)} ${control.unit}`;
+      }
+    }
+  };
+
+  const renderPresets = () => {
+    const fieldset = root.querySelector("[data-presets-fieldset]");
+    const list = root.querySelector("[data-presets-list]");
+    if (!(fieldset instanceof HTMLElement) || !(list instanceof HTMLElement)) return;
+    fieldset.hidden = experience.presets.length === 0;
+    list.replaceChildren(...experience.presets.map((preset) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.preset = preset.id;
+      button.setAttribute("aria-pressed", String(parametersEqual(preset.parameters, state.parameters)));
+      button.textContent = preset.label;
+      return button;
+    }));
+  };
+
+  const applyViewVisibility = () => {
+    root.querySelectorAll("[data-view-section]").forEach((element) => {
+      const view = element.dataset.viewSection;
+      element.hidden = experience.views[view] !== true;
+    });
+    const readingsSection = root.querySelector("[data-readings-section]");
+    if (readingsSection instanceof HTMLElement) {
+      readingsSection.hidden = !experience.views.readings && !experience.views.turningPoint;
+    }
+    const stage = root.querySelector("[data-stage-section]");
+    if (stage instanceof HTMLElement) {
+      stage.hidden = !experience.views.motion && !experience.views.readings && !experience.views.turningPoint;
+    }
+    const charts = root.querySelector("[data-charts-section]");
+    if (charts instanceof HTMLElement) {
+      charts.hidden = !Object.values(quantityViews).some((view) => experience.views[view]);
+    }
+  };
+
   const handleParameterInput = (event) => {
     const source = event.currentTarget;
     const key = source.dataset.paramRange ?? source.dataset.paramNumber;
-    if (!key) return;
-
+    if (!key || experience.parameters[key]?.editable !== true) return;
     pause({
       shouldAnnounce: state.playing,
       reason: "La simulación se pausó para cambiar parámetros.",
     });
-
     if (source.matches("[data-param-range]")) {
       const number = root.querySelector(`[data-param-number="${key}"]`);
       if (number instanceof HTMLInputElement) number.value = source.value;
@@ -401,32 +477,27 @@ const initializeSimulation = (root) => {
       const range = root.querySelector(`[data-param-range="${key}"]`);
       if (range instanceof HTMLInputElement) range.value = source.value;
     }
-
-    const { parameters, issues } = readParameters();
-    if (issues.length > 0) {
-      showValidation(issues);
-      announce(issues[0].message);
+    const result = readParameters();
+    if (result.issues.length > 0) {
+      showValidation(result.issues);
+      announce(result.issues[0].message);
       return;
     }
-
-    applyParameters(parameters);
+    applyParameters(result.parameters);
   };
 
   const animationFrame = (timestamp) => {
     if (!state.playing) return;
     if (state.frameStart === null) state.frameStart = timestamp;
-
     const elapsed = (timestamp - state.frameStart) / 1000;
     state.time = Math.min(state.parameters.T, state.playStartTime + elapsed);
     updateFrame();
-
     if (state.time >= state.parameters.T) {
       pause();
       playbackState.textContent = "Intervalo completo";
       announce("La simulación llegó al final del intervalo.");
       return;
     }
-
     state.frameId = window.requestAnimationFrame(animationFrame);
   };
 
@@ -440,54 +511,44 @@ const initializeSimulation = (root) => {
     state.frameId = window.requestAnimationFrame(animationFrame);
   };
 
-  for (const control of KINEMATICS_1D_CONTROLS) {
-    const range = root.querySelector(`[data-param-range="${control.key}"]`);
-    const number = root.querySelector(`[data-param-number="${control.key}"]`);
-    range?.addEventListener("input", handleParameterInput);
-    number?.addEventListener("input", handleParameterInput);
-  }
-
-  for (const preset of KINEMATICS_1D_PRESETS) {
-    root.querySelector(`[data-preset="${preset.id}"]`)?.addEventListener("click", () => {
-      for (const control of KINEMATICS_1D_CONTROLS) {
-        const value = preset.parameters[control.key];
-        const range = root.querySelector(`[data-param-range="${control.key}"]`);
-        const number = root.querySelector(`[data-param-number="${control.key}"]`);
-        if (range instanceof HTMLInputElement) range.value = String(value);
-        if (number instanceof HTMLInputElement) number.value = String(value);
-      }
-      state.time = 0;
-      applyParameters(preset.parameters, `Caso “${preset.label}” cargado.`);
-    });
-  }
-
-  toggleButton.addEventListener("click", () => {
-    if (state.playing) {
-      pause({ shouldAnnounce: true });
-    } else {
-      play();
-    }
+  root.querySelectorAll("[data-param-range], [data-param-number]").forEach((input) => {
+    input.addEventListener("input", handleParameterInput, listenerOptions);
   });
-
+  root.querySelector("[data-presets-list]")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-preset]");
+    if (!(button instanceof HTMLButtonElement)) return;
+    const preset = experience.presets.find((entry) => entry.id === button.dataset.preset);
+    if (!preset) return;
+    for (const control of parameterDefinitions()) {
+      const value = preset.parameters[control.key];
+      for (const selector of ["range", "number"]) {
+        const input = root.querySelector(`[data-param-${selector}="${control.key}"]`);
+        if (input instanceof HTMLInputElement) input.value = String(value);
+      }
+    }
+    state.time = 0;
+    applyParameters(preset.parameters, `Caso “${preset.label}” cargado.`);
+  }, listenerOptions);
+  toggleButton.addEventListener("click", () => {
+    if (state.playing) pause({ shouldAnnounce: true });
+    else play();
+  }, listenerOptions);
   root.querySelector('[data-action="reset"]')?.addEventListener("click", () => {
     pause();
     state.time = 0;
     updateFrame();
     announce("Tiempo reiniciado a cero segundos.");
-  });
-
+  }, listenerOptions);
   scrubber.addEventListener("input", () => {
     pause({
       shouldAnnounce: state.playing,
       reason: "La simulación se pausó para mover el tiempo.",
     });
-    const nextTime = scrubber.valueAsNumber;
-    if (Number.isFinite(nextTime)) {
-      state.time = Math.min(state.parameters.T, Math.max(0, nextTime));
+    if (Number.isFinite(scrubber.valueAsNumber)) {
+      state.time = Math.min(state.parameters.T, Math.max(0, scrubber.valueAsNumber));
       updateFrame();
     }
-  });
-
+  }, listenerOptions);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && state.playing) {
       pause({
@@ -495,14 +556,59 @@ const initializeSimulation = (root) => {
         reason: "La simulación se pausó porque la página dejó de estar visible.",
       });
     }
-  });
+  }, listenerOptions);
+  window.addEventListener("pagehide", () => pause(), { ...listenerOptions, once: true });
 
-  window.addEventListener("pagehide", () => pause(), { once: true });
+  const api = {
+    get experience() {
+      return experience;
+    },
+    updateExperience(nextExperience) {
+      const normalized = normalizeSimulationExperience(nextExperience);
+      const validation = validateSimulationExperience(normalized);
+      const model = getSimulationModelById(normalized.modelId);
+      if (!validation.valid || model?.rendererId !== "svg-kinematics-1d") {
+        throw new TypeError(validation.errors.join(" ") || "Renderer incompatible.");
+      }
+      pause();
+      experience = normalized;
+      state.parameters = defaultsFromExperience();
+      state.time = 0;
+      state.chartGeometries.clear();
+      applyViewVisibility();
+      configureControls();
+      renderPresets();
+      clearValidation();
+      rebuildVisuals();
+      updateFrame();
+      updateControlOutputs();
+      updatePresetState();
+      announce("Previsualización actualizada.");
+      return experience;
+    },
+    destroy() {
+      pause();
+      abortController.abort();
+      root.removeAttribute("data-initialized");
+      runtimes.delete(root);
+    },
+  };
 
+  runtimes.set(root, api);
+  root.dataset.initialized = "true";
+  applyViewVisibility();
+  configureControls();
+  renderPresets();
   rebuildVisuals();
   updateFrame();
+  updateControlOutputs();
   setPlaybackPresentation();
+  return api;
+};
+
+export const destroyKinematicsSimulation = (root) => {
+  runtimes.get(root)?.destroy();
 };
 
 document.querySelectorAll("[data-kinematics-simulation]")
-  .forEach(initializeSimulation);
+  .forEach((root) => initializeKinematicsSimulation(root));

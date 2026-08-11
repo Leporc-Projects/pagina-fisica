@@ -1,5 +1,13 @@
-// Catálogo canónico de simulaciones propias. La relación con cursos y temas se
-// declara como contexto educativo, sin convertir el recurso en contenido local.
+// Adaptador del catálogo público. La experiencia es fuente de verdad para su
+// identidad, texto, estado y contextos; aquí solo viven ruta y categoría.
+
+import {
+  getSimulationExperienceById,
+} from "./simulation-experiences.js";
+import { getSimulationModelById } from "./simulation-models.js";
+import {
+  SIMULATION_EXPERIENCE_STATUSES,
+} from "../utils/simulation-experience.js";
 
 export const SIMULATION_CATEGORIES = Object.freeze([
   "Vectores",
@@ -12,88 +20,50 @@ export const SIMULATION_CATEGORIES = Object.freeze([
   "Oscilaciones",
 ]);
 
-export const SIMULATION_STATUSES = Object.freeze([
-  "draft",
-  "review",
-  "published",
-  "archived",
-]);
-
-export const SIMULATIONS = Object.freeze([
+const SIMULATION_CATALOG = Object.freeze([
   Object.freeze({
-    id: "kinematics-1d",
-    title: "Cinemática en una dimensión",
+    experienceId: "kinematics-1d",
     route: "/simulaciones/cinematica-1d",
     category: "Cinemática",
-    status: "published",
-    description:
-      "Explora posición, velocidad y aceleración constante sobre un eje, con gráficas sincronizadas y lectura física del cambio de sentido.",
-    contexts: Object.freeze([
-      Object.freeze({
-        courseId: "fisica-basica-1",
-        unit: 1,
-        topics: Object.freeze(["movimiento-1d", "ecuaciones-movimiento"]),
-      }),
-    ]),
   }),
 ]);
 
-export const KINEMATICS_1D_CONTROLS = Object.freeze([
-  Object.freeze({
-    key: "x0",
-    label: "Posición inicial",
-    symbol: "x₀",
-    unit: "m",
-    minimum: -50,
-    maximum: 50,
-    step: 1,
-  }),
-  Object.freeze({
-    key: "v0",
-    label: "Velocidad inicial",
-    symbol: "v₀",
-    unit: "m/s",
-    minimum: -20,
-    maximum: 20,
-    step: 0.5,
-  }),
-  Object.freeze({
-    key: "a",
-    label: "Aceleración",
-    symbol: "a",
-    unit: "m/s²",
-    minimum: -10,
-    maximum: 10,
-    step: 0.5,
-  }),
-  Object.freeze({
-    key: "T",
-    label: "Duración",
-    symbol: "T",
-    unit: "s",
-    minimum: 1,
-    maximum: 20,
-    step: 0.5,
-  }),
-]);
+export const SIMULATIONS = Object.freeze(SIMULATION_CATALOG.map((catalogEntry) => {
+  const experience = getSimulationExperienceById(catalogEntry.experienceId);
+  if (!experience) {
+    throw new Error(`Experiencia de catálogo inexistente: ${catalogEntry.experienceId}.`);
+  }
+  return Object.freeze({
+    id: experience.id,
+    modelId: experience.modelId,
+    title: experience.title,
+    route: catalogEntry.route,
+    category: catalogEntry.category,
+    status: experience.status,
+    description: experience.summary,
+    contexts: experience.contexts,
+    experience,
+  });
+}));
 
-export const KINEMATICS_1D_PRESETS = Object.freeze([
-  Object.freeze({
-    id: "uniform",
-    label: "Movimiento uniforme",
-    parameters: Object.freeze({ x0: -6, v0: 2.5, a: 0, T: 6 }),
-  }),
-  Object.freeze({
-    id: "rest",
-    label: "Parte del reposo",
-    parameters: Object.freeze({ x0: -4, v0: 0, a: 1.5, T: 6 }),
-  }),
-  Object.freeze({
-    id: "return",
-    label: "Frena y regresa",
-    parameters: Object.freeze({ x0: -4, v0: 6, a: -2, T: 6 }),
-  }),
-]);
+// Adaptadores de compatibilidad para consumidores del Bloque 2. Se derivan de
+// las fuentes nuevas y no vuelven a almacenar la configuración de Cinemática.
+export const SIMULATION_STATUSES = SIMULATION_EXPERIENCE_STATUSES;
+const kinematicsExperience = getSimulationExperienceById("kinematics-1d");
+const kinematicsModel = getSimulationModelById("kinematics-1d");
+export const KINEMATICS_1D_CONTROLS = Object.freeze(
+  Object.entries(kinematicsModel.parameters).map(([key, definition]) => Object.freeze({
+    key,
+    label: definition.label,
+    symbol: definition.symbol,
+    unit: definition.unit,
+    minimum: kinematicsExperience.parameters[key].minimum,
+    maximum: kinematicsExperience.parameters[key].maximum,
+    step: kinematicsExperience.parameters[key].step,
+    editable: kinematicsExperience.parameters[key].editable,
+  }))
+);
+export const KINEMATICS_1D_PRESETS = kinematicsExperience.presets;
 
 export const getSimulationById = (simulationId) =>
   SIMULATIONS.find((simulation) => simulation.id === simulationId);

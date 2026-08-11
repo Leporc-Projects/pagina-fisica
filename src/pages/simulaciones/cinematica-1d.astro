@@ -2,16 +2,19 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import KinematicsSimulation from "../../components/simulations/KinematicsSimulation.astro";
+import { getSimulationExperienceById } from "../../data/simulation-experiences.js";
+
+const experience = getSimulationExperienceById("kinematics-1d");
 ---
 
 <BaseLayout
-  title="Cinemática en una dimensión"
-  description="Simulación interactiva de posición, velocidad y aceleración constante en una dimensión."
+  title={experience.title}
+  description={experience.summary}
 >
   <PageHeader
     eyebrow="Simulación · Cinemática"
-    title="Cinemática en una dimensión"
-    description="Explora cómo las condiciones iniciales y una aceleración constante conectan el movimiento sobre un eje con las gráficas x(t), v(t) y a(t)."
+    title={experience.title}
+    description={experience.summary}
   />
 
   <section class="kinematics-page-intro page-section" aria-labelledby="kinematics-model-title">
@@ -31,32 +34,24 @@ import KinematicsSimulation from "../../components/simulations/KinematicsSimulat
     </div>
   </section>
 
-  <KinematicsSimulation />
+  <KinematicsSimulation experience={experience} />
 
-  <section class="kinematics-observe page-section" aria-labelledby="kinematics-observe-title">
-    <div>
-      <p class="academic-label">Guía de exploración</p>
-      <h2 id="kinematics-observe-title">Qué observar</h2>
-    </div>
-    <ol>
-      <li>
-        <span>01</span>
-        <p>Cambia solo v₀ y compara la pendiente inicial de x(t) con el valor inicial de v(t).</p>
-      </li>
-      <li>
-        <span>02</span>
-        <p>Usa “Frena y regresa”: cuando v cruza cero, x alcanza un extremo y la distancia deja de coincidir con |Δx|.</p>
-      </li>
-      <li>
-        <span>03</span>
-        <p>Compara el signo de v y a. Signos opuestos reducen la rapidez; signos iguales la aumentan.</p>
-      </li>
-      <li>
-        <span>04</span>
-        <p>Mueve el control de tiempo y verifica que las tres gráficas señalan exactamente el mismo instante.</p>
-      </li>
-    </ol>
-  </section>
+  {experience.observations.length > 0 && (
+    <section class="kinematics-observe page-section" aria-labelledby="kinematics-observe-title">
+      <div>
+        <p class="academic-label">Guía de exploración</p>
+        <h2 id="kinematics-observe-title">Qué observar</h2>
+      </div>
+      <ol>
+        {experience.observations.map((observation, index) => (
+          <li>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <p>{observation}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
 
   <section class="kinematics-limits page-section" aria-labelledby="kinematics-limits-title">
     <p class="academic-label">Alcance</p>

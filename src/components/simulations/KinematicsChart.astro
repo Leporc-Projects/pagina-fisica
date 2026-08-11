@@ -15,11 +15,12 @@ interface Parameters {
 interface Props {
   id: string;
   quantity: "position" | "velocity" | "acceleration";
+  viewKey?: "positionGraph" | "velocityGraph" | "accelerationGraph";
   parameters: Parameters;
   relation: string;
 }
 
-const { id, quantity, parameters, relation } = Astro.props;
+const { id, quantity, parameters, relation, viewKey } = Astro.props;
 const geometry = createKinematicsChartGeometry(parameters, quantity);
 const { plot, width, height } = KINEMATICS_CHART_VIEW;
 const descriptionId = `${id}-description`;
@@ -30,6 +31,7 @@ const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
 <figure
   class="kinematics-chart theme-canvas"
   data-kinematics-chart={quantity}
+  data-view-section={viewKey}
   data-x-min={geometry.xDomain[0]}
   data-x-max={geometry.xDomain[1]}
   data-y-min={geometry.yDomain[0]}

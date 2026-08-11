@@ -1,10 +1,12 @@
 ---
 import KinematicsChart from "./KinematicsChart.astro";
 import KinematicsMotion from "./KinematicsMotion.astro";
+import { getSimulationExperienceById } from "../../data/simulation-experiences.js";
+import { getSimulationModelById } from "../../data/simulation-models.js";
 import {
-  KINEMATICS_1D_CONTROLS,
-  KINEMATICS_1D_PRESETS,
-} from "../../data/simulations.js";
+  normalizeSimulationExperience,
+  validateSimulationExperience,
+} from "../../utils/simulation-experience.js";
 import {
   getKinematicsState,
   getTurningPoint,
@@ -12,12 +14,42 @@ import {
 import { formatKinematicsNumber } from "../../utils/kinematics-svg.js";
 import "../../styles/kinematics-simulation.css";
 
-const initialPreset = KINEMATICS_1D_PRESETS.find(
-  (preset) => preset.id === "return"
-) ?? KINEMATICS_1D_PRESETS[0];
-const initialParameters = initialPreset.parameters;
+interface Props {
+  experience?: Record<string, unknown>;
+  preview?: boolean;
+}
+
+const {
+  experience: suppliedExperience = getSimulationExperienceById("kinematics-1d"),
+  preview = false,
+} = Astro.props;
+const experience = normalizeSimulationExperience(suppliedExperience);
+const validation = validateSimulationExperience(experience);
+if (!validation.valid) {
+  throw new TypeError(`Experiencia de Cinemática inválida: ${validation.errors.join(" ")}`);
+}
+const model = getSimulationModelById(experience.modelId);
+if (model?.rendererId !== "svg-kinematics-1d") {
+  throw new TypeError("KinematicsSimulation requiere el renderer svg-kinematics-1d.");
+}
+
+const initialParameters = Object.fromEntries(
+  Object.entries(experience.parameters).map(([key, config]) => [key, config.default])
+);
 const initialState = getKinematicsState(initialParameters, 0);
 const initialTurningPoint = getTurningPoint(initialParameters);
+const controls = Object.entries(model.parameters).map(([key, definition]) => ({
+  key,
+  ...definition,
+  ...experience.parameters[key],
+}));
+const initialPreset = experience.presets.find((preset) =>
+  controls.every((control) => preset.parameters[control.key] === initialParameters[control.key])
+);
+const shouldRender = (view) => preview || experience.views[view];
+const hasStage = preview || experience.views.motion || experience.views.readings || experience.views.turningPoint;
+const hasCharts = preview || experience.views.positionGraph || experience.views.velocityGraph || experience.views.accelerationGraph;
+const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
 
 const readings = [
   { key: "time", label: "Instante", symbol: "t", unit: "s" },
@@ -33,7 +65,8 @@ const readings = [
 <section
   class="kinematics-simulation"
   data-kinematics-simulation
-  data-initial-preset={initialPreset.id}
+  data-experience={serializedExperience}
+  data-preview={preview ? "true" : undefined}
 >
   <div class="kinematics-simulation__workspace">
     <aside class="kinematics-controls" aria-labelledby="kinematics-controls-title">
@@ -43,21 +76,21 @@ const readings = [
         <p>Cualquier cambio pausa la reproducción y recalcula la trayectoria completa.</p>
       </div>
 
-      <fieldset class="kinematics-presets">
+      <fieldset class="kinematics-presets" data-presets-fieldset hidden={experience.presets.length === 0}>
         <legend>Casos de estudio</legend>
-        <div>
-          {KINEMATICS_1D_PRESETS.map((preset) => (
+        <div data-presets-list>
+          {experience.presets.map((preset) => (
             <button
               type="button"
               data-preset={preset.id}
-              aria-pressed={preset.id === initialPreset.id ? "true" : "false"}
+              aria-pressed={preset.id === initialPreset?.id ? "true" : "false"}
             >{preset.label}</button>
           ))}
         </div>
       </fieldset>
 
       <form class="kinematics-parameters" data-parameter-form novalidate>
-        {KINEMATICS_1D_CONTROLS.map((control) => {
+        {controls.map((control) => {
           const value = initialParameters[control.key];
           const numberId = `kinematics-${control.key}-number`;
           const errorId = `kinematics-${control.key}-error`;
@@ -77,6 +110,7 @@ const readings = [
                 max={control.maximum}
                 step={control.step}
                 value={value}
+                disabled={!control.editable}
                 aria-label={`${control.label}, control deslizante`}
                 aria-describedby={errorId}
                 data-param-range={control.key}
@@ -90,6 +124,7 @@ const readings = [
                   max={control.maximum}
                   step={control.step}
                   value={value}
+                  disabled={!control.editable}
                   required
                   inputmode="decimal"
                   aria-describedby={errorId}
@@ -98,8 +133,8 @@ const readings = [
                 <span aria-hidden="true">{control.unit}</span>
               </div>
               <small id={errorId} data-param-error={control.key}></small>
-              <small class="kinematics-field__limits">
-                Rango: {control.minimum} a {control.maximum} {control.unit}
+              <small class="kinematics-field__limits" data-param-limits={control.key}>
+                {control.editable ? `Rango: ${control.minimum} a ${control.maximum} ${control.unit}` : `Valor fijo: ${formatKinematicsNumber(value)} ${control.unit}`}
               </small>
             </div>
           );
@@ -107,45 +142,56 @@ const readings = [
       </form>
     </aside>
 
-    <div class="kinematics-stage">
-      <KinematicsMotion parameters={initialParameters} />
+    {hasStage && (
+      <div class="kinematics-stage" data-stage-section>
+        {shouldRender("motion") && <KinematicsMotion parameters={initialParameters} />}
 
-      <section class="kinematics-readings" aria-labelledby="kinematics-readings-title">
-        <div class="kinematics-readings__header">
-          <div>
-            <p class="academic-label">Lecturas sincronizadas</p>
-            <h2 id="kinematics-readings-title">Estado físico</h2>
-          </div>
-          <p class="kinematics-direction" data-reading="direction">
-            Sentido: {initialState.direction}
-          </p>
-        </div>
-
-        <dl>
-          {readings.map((reading) => (
-            <div>
-              <dt>{reading.label} <span>{reading.symbol}</span></dt>
-              <dd>
-                <span data-reading={reading.key}>
-                  {formatKinematicsNumber(initialState[reading.key])}
-                </span>
-                <small>{reading.unit}</small>
-              </dd>
+        {(preview || experience.views.readings || experience.views.turningPoint) && (
+          <section class="kinematics-readings" aria-labelledby="kinematics-readings-title" data-readings-section>
+            <div class="kinematics-readings__header">
+              <div>
+                <p class="academic-label">Lecturas sincronizadas</p>
+                <h2 id="kinematics-readings-title">Estado físico</h2>
+              </div>
+              {shouldRender("readings") && (
+                <p class="kinematics-direction" data-view-section="readings" data-reading="direction">
+                  Sentido: {initialState.direction}
+                </p>
+              )}
             </div>
-          ))}
-        </dl>
 
-        <p
-          class="kinematics-turning"
-          data-turning-reading
-          hidden={!initialTurningPoint}
-        >
-          Cambio de sentido previsto en
-          <strong>t = <span data-turn-time>{formatKinematicsNumber(initialTurningPoint?.time)}</span> s</strong>,
-          <strong>x = <span data-turn-position>{formatKinematicsNumber(initialTurningPoint?.position)}</span> m</strong>.
-        </p>
-      </section>
-    </div>
+            {shouldRender("readings") && (
+              <dl data-view-section="readings">
+                {readings.map((reading) => (
+                  <div>
+                    <dt>{reading.label} <span>{reading.symbol}</span></dt>
+                    <dd>
+                      <span data-reading={reading.key}>
+                        {formatKinematicsNumber(initialState[reading.key])}
+                      </span>
+                      <small>{reading.unit}</small>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            {shouldRender("turningPoint") && (
+              <p
+                class="kinematics-turning"
+                data-view-section="turningPoint"
+                data-turning-reading
+                hidden={!initialTurningPoint}
+              >
+                Cambio de sentido previsto en
+                <strong>t = <span data-turn-time>{formatKinematicsNumber(initialTurningPoint?.time)}</span> s</strong>,
+                <strong>x = <span data-turn-position>{formatKinematicsNumber(initialTurningPoint?.position)}</span> m</strong>.
+              </p>
+            )}
+          </section>
+        )}
+      </div>
+    )}
   </div>
 
   <section class="kinematics-playback" aria-labelledby="kinematics-playback-title">
@@ -184,43 +230,51 @@ const readings = [
     <p class="sr-only" aria-live="polite" aria-atomic="true" data-simulation-live></p>
   </section>
 
-  <section class="kinematics-charts" aria-labelledby="kinematics-charts-title">
-    <div class="kinematics-charts__header">
-      <div>
-        <p class="academic-label">Gráficas vinculadas</p>
-        <h2 id="kinematics-charts-title">Tres lecturas del mismo movimiento</h2>
+  {hasCharts && (
+    <section class="kinematics-charts" aria-labelledby="kinematics-charts-title" data-charts-section>
+      <div class="kinematics-charts__header">
+        <div>
+          <p class="academic-label">Gráficas vinculadas</p>
+          <h2 id="kinematics-charts-title">Tres lecturas del mismo movimiento</h2>
+        </div>
+        <p>Las curvas muestran todo el intervalo; el cursor común señala el instante actual.</p>
       </div>
-      <p>Las curvas muestran todo el intervalo; el cursor común señala el instante actual.</p>
-    </div>
-    <div class="kinematics-charts__grid">
-      <KinematicsChart
-        id="kinematics-position-chart"
-        quantity="position"
-        parameters={initialParameters}
-        relation="Su pendiente es la velocidad."
-      />
-      <KinematicsChart
-        id="kinematics-velocity-chart"
-        quantity="velocity"
-        parameters={initialParameters}
-        relation="Su pendiente es a; su área algebraica es Δx."
-      />
-      <KinematicsChart
-        id="kinematics-acceleration-chart"
-        quantity="acceleration"
-        parameters={initialParameters}
-        relation="Su área algebraica es el cambio de velocidad."
-      />
-    </div>
-  </section>
+      <div class="kinematics-charts__grid">
+        {shouldRender("positionGraph") && (
+          <KinematicsChart
+            id="kinematics-position-chart"
+            quantity="position"
+            viewKey="positionGraph"
+            parameters={initialParameters}
+            relation="Su pendiente es la velocidad."
+          />
+        )}
+        {shouldRender("velocityGraph") && (
+          <KinematicsChart
+            id="kinematics-velocity-chart"
+            quantity="velocity"
+            viewKey="velocityGraph"
+            parameters={initialParameters}
+            relation="Su pendiente es a; su área algebraica es Δx."
+          />
+        )}
+        {shouldRender("accelerationGraph") && (
+          <KinematicsChart
+            id="kinematics-acceleration-chart"
+            quantity="acceleration"
+            viewKey="accelerationGraph"
+            parameters={initialParameters}
+            relation="Su área algebraica es el cambio de velocidad."
+          />
+        )}
+      </div>
+    </section>
+  )}
 
   <noscript>
     <div class="kinematics-noscript" role="note">
       <strong>La interacción requiere JavaScript.</strong>
-      <p>
-        Aun sin JavaScript puedes estudiar el modelo, los parámetros del caso
-        “Frena y regresa” y las tres gráficas iniciales renderizadas en esta página.
-      </p>
+      <p>Sin JavaScript puedes consultar el estado inicial y las representaciones configuradas en esta experiencia.</p>
     </div>
   </noscript>
 </section>
