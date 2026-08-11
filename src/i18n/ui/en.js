@@ -1,4 +1,7 @@
+import publicEn from "./public-en.js";
+
 export default Object.freeze({
+  ...publicEn,
   "brand.home": "Aula Física home page",
   "shell.skip": "Skip to content",
   "shell.menu": "Menu",

@@ -1,14 +1,18 @@
 ---
-import { ACTIVITY_OPTIONS } from "../../data/participation.js";
+import { localizeParticipationData } from "../../data/participation-localize.js";
+import { t } from "../../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
+const { activityOptions } = localizeParticipationData(locale);
 ---
 
 <fieldset class="participation-chooser" data-activity-chooser>
-  <legend>Elige una actividad</legend>
-  <p>Verás únicamente los campos que necesitas para esa opción.</p>
+  <legend>{t(locale, "participation.choose")}</legend>
+  <p>{t(locale, "participation.chooseHelp")}</p>
 
   <div class="participation-chooser__options">
     {
-      ACTIVITY_OPTIONS.map((option, index) => (
+      activityOptions.map((option, index) => (
         <label class="participation-choice">
           <input
             type="radio"
@@ -22,7 +26,7 @@ import { ACTIVITY_OPTIONS } from "../../data/participation.js";
           </span>
           <strong>{option.label}</strong>
           <span>{option.description}</span>
-          <small>Seleccionar</small>
+          <small>{t(locale, "participation.select")}</small>
         </label>
       ))
     }

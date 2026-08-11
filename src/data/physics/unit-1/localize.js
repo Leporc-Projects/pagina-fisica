@@ -197,6 +197,15 @@ const EN_BONUSES = Object.freeze({
   "bonus-u1-review": Object.freeze({ title: "Unit 1 review bonus", shortTitle: "Unit 1 review", description: "Review the unit's main ideas with numerical, conceptual, and visual questions." }),
 });
 
+const BONUS_ROUTE_IDS = Object.freeze({
+  "bonus-u1-tools-vectors": ROUTE_IDS.COURSE_BONUS_TOOLS_VECTORS,
+  "bonus-u1-kinematics": ROUTE_IDS.COURSE_BONUS_KINEMATICS,
+  "bonus-u1-motion-2d-circular-relative": ROUTE_IDS.COURSE_BONUS_MOTION_2D_CIRCULAR_RELATIVE,
+  "bonus-u1-review": ROUTE_IDS.COURSE_BONUS_UNIT_1_REVIEW,
+});
+
+export const getUnit1BonusRouteId = (bonusId) => BONUS_ROUTE_IDS[bonusId] ?? null;
+
 export const localizeUnit1Bonus = (bonus, locale) => {
   assertSupportedLocale(locale);
   if (!bonus || locale === "es") return bonus;

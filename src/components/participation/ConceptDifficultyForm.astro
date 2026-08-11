@@ -1,6 +1,10 @@
 ---
 import TopicSelect from "./TopicSelect.astro";
-import { SUPPORT_OPTIONS } from "../../data/participation.js";
+import { localizeParticipationData } from "../../data/participation-localize.js";
+import { t } from "../../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
+const { supportOptions } = localizeParticipationData(locale);
 ---
 
 <section
@@ -10,34 +14,34 @@ import { SUPPORT_OPTIONS } from "../../data/participation.js";
   hidden
 >
   <div class="participation-panel__heading">
-    <p class="participation-kicker">Reflexión de aprendizaje</p>
-    <h2>¿Qué te quedó menos claro?</h2>
-    <p>No necesitas tener la pregunta perfectamente formulada. Describe el punto donde perdiste el hilo.</p>
+    <p class="participation-kicker">{t(locale, "participation.learningReflection")}</p>
+    <h2>{t(locale, "participation.unclear")}</h2>
+    <p>{t(locale, "participation.unclearHelp")}</p>
   </div>
 
   <form data-activity-form="concept-difficulty">
-    <TopicSelect id="concept-topic" />
+    <TopicSelect id="concept-topic" locale={locale} />
 
     <div class="participation-field">
-      <label for="unclear-point">¿Qué te quedó menos claro?</label>
+      <label for="unclear-point">{t(locale, "participation.unclear")}</label>
       <textarea
         id="unclear-point"
         name="unclearPoint"
         rows="6"
         required
-        placeholder="Por ejemplo: no logro conectar la pendiente de la gráfica con la velocidad..."
+        placeholder={t(locale, "participation.unclearPlaceholder")}
       ></textarea>
     </div>
 
     <fieldset class="participation-field participation-field--options">
-      <legend>¿Qué ayudaría a entenderlo mejor? <span>Opcional</span></legend>
+      <legend>{t(locale, "participation.support")} <span>{t(locale, "participation.optional")}</span></legend>
       <div class="participation-radio-list">
-        {SUPPORT_OPTIONS.map(([value, label]) => (
+        {supportOptions.map(([value, label]) => (
           <label><input type="radio" name="helpfulSupport" value={value} /> <span>{label}</span></label>
         ))}
       </div>
     </fieldset>
 
-    <button class="participation-primary" type="submit">Preparar respuesta</button>
+    <button class="participation-primary" type="submit">{t(locale, "participation.prepare")}</button>
   </form>
 </section>

@@ -1,7 +1,9 @@
 ---
 import BonusQuestion from "./BonusQuestion.astro";
-import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { localizeUnit1 } from "../../data/physics/unit-1/localize.js";
 import { BONUS_DELIVERY_CONFIG } from "../../data/delivery.js";
+import { localizeCourseData } from "../../data/course-localize.js";
+import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -10,6 +12,7 @@ interface Props {
   exercises: any[];
   visualizations: Record<string, any>;
   present?: (value: string) => RichContent;
+  locale?: "es" | "en";
 }
 
 const {
@@ -17,7 +20,10 @@ const {
   exercises,
   visualizations,
   present = (value) => value,
+  locale = "es",
 } = Astro.props;
+const UNIT_1 = localizeUnit1(locale);
+const COURSE = localizeCourseData(locale).COURSE;
 const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
 const fixedExercises = exercises.filter((exercise) =>
   exercise.itemKind !== "parameterizedFamily"
@@ -50,55 +56,52 @@ const clientExercises = exercises.map((exercise) => ({
 const topicLabels = Object.fromEntries(
   UNIT_1.topics.map((topic) => [topic.slug, topic.shortTitle])
 );
-const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topicLabels })
+const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topicLabels, locale })
   .replaceAll("<", "\\u003c")
   .replaceAll(">", "\\u003e")
   .replaceAll("&", "\\u0026");
 ---
 
-<section class="bonus-app" data-bonus-app aria-labelledby="bonus-app-title">
+<section class="bonus-app" data-bonus-app data-locale={locale} aria-labelledby="bonus-app-title">
   <script type="application/json" data-bonus-data set:html={serializedData}></script>
 
   <div class="bonus-introduction" data-bonus-introduction>
     <div>
-      <p class="academic-label">Antes de comenzar</p>
-      <h2 id="bonus-app-title">Una tanda corta, sin cronómetro</h2>
-      <p>
-        Responde una pregunta a la vez y revisa la tanda antes de finalizar.
-        El intento permanece únicamente mientras esta página está abierta.
-      </p>
+      <p class="academic-label">{t(locale, "bonus.beforeStart")}</p>
+      <h2 id="bonus-app-title">{t(locale, "bonus.shortSet")}</h2>
+      <p>{t(locale, "bonus.shortSetDescription")}</p>
     </div>
 
     <dl class="bonus-introduction__facts">
       <div>
-        <dt>Preguntas</dt>
+        <dt>{t(locale, "bonus.questions")}</dt>
         <dd>{bonus.questionCount}</dd>
       </div>
       <div>
-        <dt>Tiempo orientativo</dt>
+        <dt>{t(locale, "bonus.guidanceTime")}</dt>
         <dd>{bonus.estimatedMinutes} min</dd>
       </div>
       <div>
-        <dt>Retroalimentación</dt>
-        <dd>Al finalizar</dd>
+        <dt>{t(locale, "bonus.feedback")}</dt>
+        <dd>{t(locale, "bonus.afterFinish")}</dd>
       </div>
     </dl>
 
     <button type="button" class="bonus-primary" data-bonus-start>
-      Iniciar Bono
+      {t(locale, "bonus.start")}
     </button>
   </div>
 
   <div class="bonus-session" data-bonus-session hidden>
     <header class="bonus-session__header">
       <div>
-        <p class="academic-label">Intento local</p>
-        <h2 data-session-title>Responde con calma</h2>
+        <p class="academic-label">{t(locale, "bonus.localAttempt")}</p>
+        <h2 data-session-title>{t(locale, "bonus.calm")}</h2>
       </div>
       <p class="bonus-session__progress" data-bonus-progress></p>
     </header>
 
-    <nav class="bonus-question-nav" aria-label="Preguntas del Bono" data-question-nav></nav>
+    <nav class="bonus-question-nav" aria-label={t(locale, "bonus.questionNav")} data-question-nav></nav>
 
     <div class="bonus-question-stage" data-question-stage>
       {fixedExercises.map((exercise) => (
@@ -109,49 +112,50 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topic
             ? visualizations[exercise.visualizationId]
             : undefined}
           present={present}
+          locale={locale}
         />
       ))}
     </div>
 
-    <nav class="bonus-session__controls" aria-label="Navegación del intento">
+    <nav class="bonus-session__controls" aria-label={t(locale, "bonus.attemptNav")}>
       <button type="button" data-question-previous>
-        <span aria-hidden="true">←</span> Anterior
+        <span aria-hidden="true">←</span> {t(locale, "bonus.previous")}
       </button>
       <button type="button" class="bonus-review-button" data-bonus-review>
-        Revisar intento
+        {t(locale, "bonus.reviewAttempt")}
       </button>
       <button type="button" data-question-next>
-        Siguiente <span aria-hidden="true">→</span>
+        {t(locale, "bonus.next")} <span aria-hidden="true">→</span>
       </button>
     </nav>
 
     <button type="button" class="bonus-back-result" data-back-to-result hidden>
-      Volver al resultado
+      {t(locale, "bonus.backResult")}
     </button>
   </div>
 
   <section class="bonus-review" data-bonus-review-panel hidden aria-labelledby="bonus-review-title">
     <header>
-      <p class="academic-label">Revisión</p>
-      <h2 id="bonus-review-title">Comprueba tus respuestas</h2>
+      <p class="academic-label">{t(locale, "bonus.review")}</p>
+      <h2 id="bonus-review-title">{t(locale, "bonus.checkAnswers")}</h2>
       <p data-review-summary></p>
     </header>
 
     <ol class="bonus-review__list" data-review-list></ol>
 
     <div class="bonus-review__actions">
-      <button type="button" data-review-return>Volver a las preguntas</button>
+      <button type="button" data-review-return>{t(locale, "bonus.backQuestions")}</button>
       <button type="button" class="bonus-primary" data-finish-attempt>
-        Finalizar intento
+        {t(locale, "bonus.finish")}
       </button>
     </div>
 
     <div class="bonus-unanswered-confirmation" data-unanswered-confirmation hidden>
       <p data-unanswered-message></p>
       <div>
-        <button type="button" data-unanswered-return>Volver a revisar</button>
+        <button type="button" data-unanswered-return>{t(locale, "bonus.backReview")}</button>
         <button type="button" class="bonus-primary" data-finish-anyway>
-          Finalizar de todos modos
+          {t(locale, "bonus.finishAnyway")}
         </button>
       </div>
     </div>
@@ -160,109 +164,108 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topic
   <section class="bonus-result" data-bonus-result hidden aria-labelledby="bonus-result-title">
     <div class="bonus-print-brand" aria-hidden="true">
       <strong>Aula Física</strong>
-      <span>Física Básica I</span>
+      <span>{COURSE.name}</span>
     </div>
 
     <header class="bonus-result__header">
       <div>
-        <p class="academic-label">Resultado del Bono</p>
-        <h2 id="bonus-result-title" tabindex="-1">Resultado de este intento</h2>
+        <p class="academic-label">{t(locale, "bonus.resultLabel")}</p>
+        <h2 id="bonus-result-title" tabindex="-1">{t(locale, "bonus.resultTitle")}</h2>
         <p class="bonus-result__score" data-result-score></p>
       </div>
       <dl class="bonus-result__meta">
         <div>
-          <dt>Bono</dt>
+          <dt>{t(locale, "bonus.label")}</dt>
           <dd>{bonus.title}</dd>
         </div>
         <div>
-          <dt>Versión</dt>
+          <dt>{t(locale, "bonus.version")}</dt>
           <dd>{bonus.version}</dd>
         </div>
         <div>
-          <dt>ID del intento</dt>
+          <dt>{t(locale, "bonus.attemptId")}</dt>
           <dd data-result-id></dd>
         </div>
         <div>
-          <dt>Fecha</dt>
+          <dt>{t(locale, "bonus.date")}</dt>
           <dd data-result-date></dd>
         </div>
         <div data-result-email-row hidden>
-          <dt>Correo institucional</dt>
+          <dt>{t(locale, "bonus.email")}</dt>
           <dd data-result-email></dd>
         </div>
       </dl>
     </header>
 
     <p class="bonus-result__scope">
-      Este resultado describe únicamente las preguntas de esta tanda y no
-      constituye por sí solo una medición completa de tu dominio del tema.
+      {t(locale, "bonus.resultScope")}
     </p>
 
     <div class="bonus-result__grid">
       <section aria-labelledby="result-topics-title">
-        <h3 id="result-topics-title">Resultado por tema en esta tanda</h3>
+        <h3 id="result-topics-title">{t(locale, "bonus.byTopic")}</h3>
         <dl class="bonus-topic-results" data-result-topics></dl>
       </section>
 
       <section aria-labelledby="result-review-title">
-        <h3 id="result-review-title">Qué podría convenirte repasar</h3>
+        <h3 id="result-review-title">{t(locale, "bonus.whatToReview")}</h3>
         <div data-result-recommendations></div>
       </section>
     </div>
 
     <section class="bonus-save-options" aria-labelledby="bonus-save-title">
       <div>
-        <h3 id="bonus-save-title">Guardar para mí</h3>
-        <p>Estas copias no incluyen identidad y permanecen bajo tu control.</p>
+        <h3 id="bonus-save-title">{t(locale, "bonus.save")}</h3>
+        <p>{t(locale, "bonus.saveDescription")}</p>
       </div>
       <div class="bonus-result__actions" data-export-actions>
-        <button type="button" data-bonus-export="copy" data-export-mode="anonymous">Copiar resumen</button>
+        <button type="button" data-bonus-export="copy" data-export-mode="anonymous">{t(locale, "bonus.copySummary")}</button>
         <button type="button" data-bonus-export="txt" data-export-mode="anonymous">TXT</button>
         <button type="button" data-bonus-export="json" data-export-mode="anonymous">JSON</button>
         <button type="button" data-bonus-export="csv" data-export-mode="anonymous">CSV</button>
-        <button type="button" data-bonus-export="print" data-export-mode="anonymous">Imprimir / PDF</button>
+        <button type="button" data-bonus-export="print" data-export-mode="anonymous">{t(locale, "bonus.print")}</button>
       </div>
     </section>
 
     <section class="bonus-delivery" aria-labelledby="bonus-delivery-title">
       <div>
-        <h3 id="bonus-delivery-title">Preparar entrega</h3>
-        <p>Añade un correo institucional únicamente si necesitas identificar el archivo que vas a entregar.</p>
+        <h3 id="bonus-delivery-title">{t(locale, "bonus.prepareDelivery")}</h3>
+        <p>{t(locale, "bonus.deliveryDescription")}</p>
       </div>
-      <button type="button" data-show-delivery>Preparar una copia identificada</button>
+      <button type="button" data-show-delivery>{t(locale, "bonus.identifiedCopy")}</button>
       <form data-delivery-form hidden novalidate>
-        <label for="bonus-delivery-email">Correo institucional</label>
+        <label for="bonus-delivery-email">{t(locale, "bonus.email")}</label>
         <div class="bonus-delivery__field">
           <input id="bonus-delivery-email" name="email" type="email" autocomplete="email" aria-describedby="bonus-delivery-help bonus-delivery-error" />
-          <button type="submit" class="bonus-primary">Preparar archivo</button>
+          <button type="submit" class="bonus-primary">{t(locale, "bonus.prepareFile")}</button>
         </div>
         <small id="bonus-delivery-help">
           {BONUS_DELIVERY_CONFIG.acceptedDomains.length > 0
-            ? `Dominios admitidos: ${BONUS_DELIVERY_CONFIG.acceptedDomains.join(", ")}.`
-            : "Se comprueba el formato del correo, no la existencia del buzón."}
+            ? t(locale, "bonus.domains", { domains: BONUS_DELIVERY_CONFIG.acceptedDomains.join(", ") })
+            : t(locale, "bonus.emailFormatOnly")}
         </small>
         <small id="bonus-delivery-error" data-delivery-error></small>
-        <p>El correo se incluye únicamente en el archivo que estás preparando para entregar. Aula Física no lo envía ni lo guarda automáticamente.</p>
+        <p>{t(locale, "bonus.emailPrivacy")}</p>
       </form>
       <div class="bonus-delivery__prepared" data-delivery-prepared hidden>
-        <strong>Archivo preparado para entrega</strong>
-        <p>Correo incluido: <span data-delivery-email></span></p>
+        <strong>{t(locale, "bonus.filePrepared")}</strong>
+        <p>{t(locale, "bonus.emailIncluded")} <span data-delivery-email></span></p>
         <div class="bonus-result__actions">
           <button type="button" data-bonus-export="txt" data-export-mode="identified">TXT</button>
           <button type="button" data-bonus-export="json" data-export-mode="identified">JSON</button>
           <button type="button" data-bonus-export="csv" data-export-mode="identified">CSV</button>
-          <button type="button" data-bonus-export="print" data-export-mode="identified">Imprimir / PDF</button>
+          <button type="button" data-bonus-export="print" data-export-mode="identified">{t(locale, "bonus.print")}</button>
         </div>
       </div>
     </section>
 
     <div class="bonus-result__actions bonus-result__next-actions">
-      <button type="button" data-review-answers>Revisar respuestas</button>
-      <button type="button" class="bonus-primary" data-another-attempt>Otro intento</button>
+      <button type="button" data-review-answers>{t(locale, "bonus.reviewAnswers")}</button>
+      <button type="button" class="bonus-primary" data-another-attempt>{t(locale, "bonus.anotherAttempt")}</button>
     </div>
 
     <p class="bonus-result__local-note">
-      Este resultado se calculó localmente y no se envió ni se registró automáticamente.
+      {t(locale, "bonus.localNote")}
     </p>
   </section>
 

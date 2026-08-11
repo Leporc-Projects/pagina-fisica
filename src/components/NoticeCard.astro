@@ -28,7 +28,7 @@ const formattedDate = new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateStr
   <div class="notice-meta">
     <span>
       {notice.category}
-      {showScope ? ` · ${contentScopeLabel(notice.scope)}` : ""}
+      {showScope ? ` · ${contentScopeLabel(notice.scope, locale)}` : ""}
     </span>
     <time datetime={notice.publishedAt}>{formattedDate}</time>
   </div>

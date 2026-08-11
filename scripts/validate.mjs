@@ -13,6 +13,7 @@ import {
   SCHEDULE,
   UNITS,
 } from "../src/data/course.js";
+import { localizeCourseData } from "../src/data/course-localize.js";
 import {
   COURSES,
   COURSE_IDS,
@@ -61,7 +62,7 @@ import {
   getPublishedNotices,
 } from "../src/data/notices.js";
 import { BONUSES } from "../src/data/bonuses/index.js";
-import { VIDEOS } from "../src/data/videos.js";
+import { VIDEOS, getVideoContentTypes } from "../src/data/videos.js";
 import {
   THEME_COLORS,
   THEME_PREFERENCES,
@@ -92,6 +93,7 @@ import {
   UNIT_1_INLINE_MATH_TOKENS,
 } from "../src/data/physics/unit-1/math-content.js";
 import { UNIT_1 } from "../src/data/physics/unit-1/unit.js";
+import { getLocalizedUnit1Bonuses } from "../src/data/physics/unit-1/localize.js";
 import { UNIT_1_VISUALIZATIONS } from "../src/data/physics/unit-1/visualizations.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "../src/data/physics/unit-1/families.js";
 import { UNIT_1_BANK_ITEMS } from "../src/data/physics/unit-1/bank.js";
@@ -99,6 +101,7 @@ import {
   ACTIVITY_TYPES,
   PARTICIPATION_TOPICS,
 } from "../src/data/participation.js";
+import { localizeParticipationData } from "../src/data/participation-localize.js";
 import {
   REVIEW_FILE_MAX_BYTES,
   REVIEW_SESSION_SCHEMA_VERSION,
@@ -246,6 +249,13 @@ const routes = new Set(
     return normalizeRoute(`/${route}`);
   })
 );
+
+const routeExists = (route) => routes.has(route) || [...routes].some((candidate) => {
+  const pattern = candidate
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\\\[[^/]+\\\]/g, "[^/]+");
+  return new RegExp(`^${pattern}$`).test(route);
+});
 
 const evaluationTotal = EVALUATION.reduce(
   (total, item) => total + item.percentage,
@@ -646,13 +656,42 @@ check(
   "El registro de locales y los diccionarios bilingües tienen paridad exacta."
 );
 
+const localizedPublicContent = SUPPORTED_LOCALES.map((locale) => ({
+  locale,
+  course: localizeCourseData(locale),
+  bonuses: getLocalizedUnit1Bonuses(locale),
+  participation: localizeParticipationData(locale),
+  videoTypes: getVideoContentTypes(locale),
+}));
+
+check(
+  localizedPublicContent.every(({ course, bonuses, participation, videoTypes }) =>
+    course.COURSE.name && course.COURSE.summary && course.COURSE.purpose &&
+    course.COURSE.methodology.every(Boolean) && course.COURSE.learningGoals.every(Boolean) &&
+    course.UNITS.length === UNITS.length && course.UNITS.every((unit) => unit.title && unit.description) &&
+    course.SCHEDULE.length === SCHEDULE.length && course.SCHEDULE.every((session) =>
+      session.title && session.topics.every(Boolean) && session.objectives.every(Boolean)
+    ) &&
+    course.EVALUATION.length === EVALUATION.length && course.EVALUATION.every((item) => item.name && item.content) &&
+    bonuses.length === BONUSES.length && bonuses.every((bonus) => bonus.title && bonus.description) &&
+    participation.topics.length === PARTICIPATION_TOPICS.length && participation.topics.every((topic) => topic.title) &&
+    participation.activityOptions.length === ACTIVITY_TYPES.length && participation.activityOptions.every((option) => option.label && option.description) &&
+    videoTypes.length === 4 && videoTypes.every(Boolean)
+  ),
+  "Todo el contenido público core declara presentación estructural completa en ES y EN."
+);
+
 const requiredLocalizedRoutes = Object.values(LOCALIZED_ROUTES)
   .flatMap((localized) => Object.values(localized))
   .filter(Boolean)
   .map(normalizeRoute);
 
 check(
-  requiredLocalizedRoutes.every((route) => routes.has(route)) &&
+  requiredLocalizedRoutes.every(routeExists) &&
+    duplicates(requiredLocalizedRoutes).length === 0 &&
+    Object.values(LOCALIZED_ROUTES).every((localized) =>
+      SUPPORTED_LOCALES.every((locale) => typeof localized[locale] === "string" && localized[locale].length > 0)
+    ) &&
     !requiredLocalizedRoutes.some((route) => route.startsWith("/es/")) &&
     getRouteCounterpart("/simulaciones/cinematica-1d", "en") === "/en/simulations/kinematics-1d" &&
     getRouteCounterpart("/fisica-basica-1", "en") === "/en/basic-physics-1" &&
@@ -731,8 +770,9 @@ check(
 );
 
 check(
-  duplicates(VIDEOS.map((video) => video.id)).length === 0,
-  "Los videos tienen identificadores únicos."
+  duplicates(VIDEOS.map((video) => video.id)).length === 0 &&
+    VIDEOS.every((video) => SUPPORTED_LOCALES.includes(video.language)),
+  "Los videos tienen identificadores únicos y declaran su idioma explícitamente."
 );
 
 check(
@@ -1994,7 +2034,8 @@ check(
 check(
   generalNoticesPageSource.includes("getGlobalNotices") &&
     courseNoticesPageSource.includes("getCourseNotices(COURSE.id") &&
-    courseNoticesPageSource.includes('withBase("/avisos")') &&
+    courseNoticesPageSource.includes("getLocalizedPath(ROUTE_IDS.NOTICES, locale)") &&
+    noticeCardSource.includes("contentScopeLabel(notice.scope, locale)") &&
     noticeCardSource.includes("href &&") &&
     noticeCardSource.includes('rel={external ? "noopener noreferrer"') &&
     !noticeCardSource.includes("!compact && href"),

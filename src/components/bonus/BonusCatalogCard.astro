@@ -1,6 +1,6 @@
 ---
-import { localizeUnit1 } from "../../data/physics/unit-1/localize.js";
-import { ROUTE_IDS, getLocalizedPath } from "../../i18n/routes.js";
+import { getUnit1BonusRouteId, localizeUnit1 } from "../../data/physics/unit-1/localize.js";
+import { getLocalizedPath } from "../../i18n/routes.js";
 import { t } from "../../i18n/index.js";
 import { withBase } from "../../utils/paths.js";
 
@@ -12,6 +12,7 @@ interface Props {
 const { bonus, locale = "es" } = Astro.props;
 const unit = localizeUnit1(locale);
 const topicMap = new Map(unit.topics.map((topic) => [topic.slug, topic.shortTitle]));
+const bonusRoute = getLocalizedPath(getUnit1BonusRouteId(bonus.id), locale);
 ---
 
 <article class="bonus-card" aria-labelledby={`${bonus.id}-title`}>
@@ -36,7 +37,7 @@ const topicMap = new Map(unit.topics.map((topic) => [topic.slug, topic.shortTitl
     </div>
   </dl>
 
-  <a class="text-link" href={withBase(`${getLocalizedPath(ROUTE_IDS.COURSE_BONUSES, locale)}/${bonus.slug}`)}>
+  <a class="text-link" href={withBase(bonusRoute)}>
     {t(locale, "bonus.open")}
   </a>
 </article>

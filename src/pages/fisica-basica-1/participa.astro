@@ -6,43 +6,45 @@ import ConceptDifficultyForm from "../../components/participation/ConceptDifficu
 import QuestionProposalForm from "../../components/participation/QuestionProposalForm.astro";
 import FeedbackForm from "../../components/participation/FeedbackForm.astro";
 import ResponsePreview from "../../components/participation/ResponsePreview.astro";
-import { COURSE } from "../../data/course.js";
+import { localizeCourseData } from "../../data/course-localize.js";
+import { t } from "../../i18n/index.js";
 import { ROUTE_IDS } from "../../i18n/routes.js";
 import "../../styles/participation.css";
 
 const { locale = "es" } = Astro.props;
+const { COURSE } = localizeCourseData(locale);
 ---
 
 <BaseLayout
-  title={`Participa · ${COURSE.name}`}
-  description="Herramientas locales para expresar dificultades, proponer preguntas y mejorar Física Básica I."
+  title={t(locale, "participation.pageTitle", { course: COURSE.name })}
+  description={t(locale, "participation.meta", { course: COURSE.name })}
   locale={locale}
   routeId={ROUTE_IDS.COURSE_PARTICIPATE}
 >
-  <article class="course-subpage participation-shell" data-participation-app>
+  <article class="course-subpage participation-shell" data-participation-app data-locale={locale}>
     <CoursePageHeader
-      title="Participa"
-      description="Expresa una dificultad, construye una pregunta o sugiere una mejora. Tú decides si copias o exportas la respuesta."
+      title={t(locale, "participation.title")}
+      description={t(locale, "participation.description")}
       locale={locale}
     />
 
     <section class="participation-intro" aria-labelledby="participation-local-title">
       <div>
-        <p class="participation-kicker">Local y anónimo</p>
-        <h2 id="participation-local-title">Tu texto permanece contigo</h2>
+        <p class="participation-kicker">{t(locale, "participation.localAnonymous")}</p>
+        <h2 id="participation-local-title">{t(locale, "participation.staysWithYou")}</h2>
       </div>
       <div>
-        <p><strong>Tu respuesta no se envía ni se guarda automáticamente.</strong></p>
-        <p>No se pide nombre, correo, identificación, grupo ni nota. Evita incluir datos personales en el texto. Puedes copiar o exportar tu respuesta mientras esta página esté abierta.</p>
+        <p><strong>{t(locale, "participation.notSentStrong")}</strong></p>
+        <p>{t(locale, "participation.privacy")}</p>
       </div>
     </section>
 
     <div class="participation-workspace">
-      <ParticipationChooser />
-      <ConceptDifficultyForm />
-      <QuestionProposalForm />
-      <FeedbackForm />
-      <ResponsePreview />
+      <ParticipationChooser locale={locale} />
+      <ConceptDifficultyForm locale={locale} />
+      <QuestionProposalForm locale={locale} />
+      <FeedbackForm locale={locale} />
+      <ResponsePreview locale={locale} />
     </div>
 
     <p class="participation-status" aria-live="polite" aria-atomic="true" data-participation-status></p>

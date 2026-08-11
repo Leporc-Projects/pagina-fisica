@@ -13,8 +13,11 @@ import {
   toBonusJSON,
   toBonusText,
 } from "../utils/bonus.js";
+import { generateLocalizedUnit1FamilyInstance } from "../data/physics/unit-1/family-localize.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "../data/physics/unit-1/families.js";
 import { BONUS_DELIVERY_CONFIG } from "../data/delivery.js";
+import { getLocaleConfig } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
 import { withBase } from "../utils/paths.js";
 import { copyLocalText, downloadLocalFile } from "./local-export.js";
 
@@ -41,6 +44,8 @@ export const initializeBonus = () => {
   }
 
   const bonus = data.bonus;
+  const locale = data.locale === "en" ? "en" : "es";
+  const intlLocale = getLocaleConfig(locale).intlLocale;
   const topicLabels = data.topicLabels ?? {};
   const familyMap = new Map(UNIT_1_EXERCISE_FAMILIES.map((family) => [family.id, family]));
   const pool = data.exercises.map((item) =>
@@ -88,7 +93,7 @@ export const initializeBonus = () => {
     const errorId = `${inputId}-error`;
     input.setAttribute("aria-describedby", errorId);
     control.append(input);
-    if (field.unit) control.append(createElement("span", field.unit));
+    if (field.unitLabel ?? field.unit) control.append(createElement("span", field.unitLabel ?? field.unit));
     const error = createElement("small", undefined, "bonus-field-error");
     error.id = errorId;
     error.dataset.fieldError = "";
@@ -106,7 +111,7 @@ export const initializeBonus = () => {
     article.setAttribute("aria-labelledby", titleId);
     const header = createElement("header", undefined, "bonus-question__header");
     const headingGroup = createElement("div");
-    const counter = createElement("p", "Pregunta", "bonus-question__counter");
+    const counter = createElement("p", t(locale, "bonus.question"), "bonus-question__counter");
     counter.dataset.questionCounter = "";
     const heading = createElement("h2", exercise.title);
     heading.id = titleId;
@@ -122,7 +127,7 @@ export const initializeBonus = () => {
 
     if (exercise.interaction.kind === "singleChoice") {
       const fieldset = createElement("fieldset", undefined, "bonus-question__interaction bonus-question__choice");
-      fieldset.append(createElement("legend", "Elige una respuesta"));
+      fieldset.append(createElement("legend", t(locale, "bonus.chooseAnswer")));
       const choices = createElement("div", undefined, "bonus-choice-list");
       choices.dataset.bonusOptions = "";
       exercise.interaction.options.forEach((option) => {
@@ -143,14 +148,14 @@ export const initializeBonus = () => {
     } else if (exercise.interaction.kind === "number") {
       const interaction = createElement("div", undefined, "bonus-question__interaction");
       appendNumberField(interaction, exercise, exercise.interaction.field);
-      interaction.append(createElement("small", "Puedes usar coma, punto, notación científica o una fracción simple."));
+      interaction.append(createElement("small", t(locale, "bonus.numberHelp")));
       article.append(interaction);
     } else {
       const fieldset = createElement("fieldset", undefined, "bonus-question__interaction bonus-multi-number");
-      fieldset.append(createElement("legend", "Completa cada valor"));
+      fieldset.append(createElement("legend", t(locale, "bonus.completeValues")));
       const fields = createElement("div", undefined, "bonus-multi-number__fields");
       exercise.interaction.fields.forEach((field) => appendNumberField(fields, exercise, field));
-      fieldset.append(fields, createElement("small", "Puedes usar coma, punto, notación científica o una fracción simple."));
+      fieldset.append(fields, createElement("small", t(locale, "bonus.numberHelp")));
       article.append(fieldset);
     }
 
@@ -161,7 +166,7 @@ export const initializeBonus = () => {
     const feedbackStatus = createElement("p", undefined, "bonus-question__feedback-status");
     feedbackStatus.dataset.feedbackStatus = "";
     const facts = createElement("dl");
-    [["Tu respuesta", "feedbackResponse"], ["Respuesta esperada", "feedbackExpected"]]
+    [[t(locale, "bonus.yourAnswer"), "feedbackResponse"], [t(locale, "bonus.expectedAnswer"), "feedbackExpected"]]
       .forEach(([label, key]) => {
         const group = createElement("div");
         const value = createElement("dd");
@@ -175,7 +180,7 @@ export const initializeBonus = () => {
     if (exercise.solution?.length) {
       const details = createElement("details", undefined, "bonus-question__solution");
       details.dataset.feedbackSolution = "";
-      details.append(createElement("summary", "Revisar solución"));
+      details.append(createElement("summary", t(locale, "bonus.reviewSolution")));
       const list = createElement("ol");
       exercise.solution.forEach((step) => {
         const item = createElement("li");
@@ -244,7 +249,7 @@ export const initializeBonus = () => {
         const error = field?.querySelector("[data-field-error]");
         if (error) {
           error.textContent = invalid
-            ? "Escribe un número con coma o punto, notación científica o una fracción simple."
+            ? t(locale, "bonus.invalidNumber")
             : "";
         }
         if (invalid) valid = false;
@@ -275,14 +280,14 @@ export const initializeBonus = () => {
       const graded = completedAttempt.questions.find(
         (item) => item.exerciseId === question.exerciseId
       );
-      if (!graded?.answered) return "Sin respuesta";
-      if (graded.correct) return "Correcta";
-      if (graded.pointsEarned > 0) return "Parcial";
-      return "Incorrecta";
+      if (!graded?.answered) return t(locale, "bonus.status.unanswered");
+      if (graded.correct) return t(locale, "bonus.status.correct");
+      if (graded.pointsEarned > 0) return t(locale, "bonus.status.partial");
+      return t(locale, "bonus.status.incorrect");
     }
     const state = responseStatus(question);
-    if (state === "invalid") return "Revisar formato";
-    return state === "answered" ? "Respondida" : "Sin responder";
+    if (state === "invalid") return t(locale, "bonus.status.format");
+    return state === "answered" ? t(locale, "bonus.status.answered") : t(locale, "bonus.status.unansweredShort");
   };
 
   const answeredCount = () => attempt?.questions.filter(
@@ -308,7 +313,7 @@ export const initializeBonus = () => {
       button.append(number, label);
       button.setAttribute(
         "aria-label",
-        `Pregunta ${index + 1}: ${statusLabel(question)}${index === currentIndex ? ", actual" : ""}`
+        `${t(locale, "bonus.question")} ${index + 1}: ${statusLabel(question)}${index === currentIndex ? `, ${t(locale, "bonus.status.current")}` : ""}`
       );
       button.addEventListener("click", () => showQuestion(index));
       nav.append(button);
@@ -318,8 +323,8 @@ export const initializeBonus = () => {
   const updateProgress = () => {
     if (!attempt || !progress) return;
     progress.textContent = completedAttempt
-      ? `Revisión · pregunta ${currentIndex + 1} de ${attempt.questions.length}`
-      : `Pregunta ${currentIndex + 1} de ${attempt.questions.length} · ${answeredCount()} respondidas`;
+      ? t(locale, "bonus.progress.review", { current: currentIndex + 1, total: attempt.questions.length })
+      : t(locale, "bonus.progress.answering", { current: currentIndex + 1, total: attempt.questions.length, answered: answeredCount() });
   };
 
   const showQuestion = (index, { focus = true } = {}) => {
@@ -384,6 +389,7 @@ export const initializeBonus = () => {
       selections = selectBonusQuestions(bonus, pool, globalThis.crypto, {
         seenItemIds,
         recentParameterKeys,
+        generateInstance: (family, options) => generateLocalizedUnit1FamilyInstance(family, locale, options),
       });
       selections.forEach((selection) => {
         seenItemIds.add(selection.sourceItemId);
@@ -392,9 +398,9 @@ export const initializeBonus = () => {
         }
       });
       registerGeneratedSelections();
-      attempt = createBonusAttempt(bonus, selections);
+      attempt = createBonusAttempt(bonus, selections, { locale });
     } catch (error) {
-      announce(error instanceof Error ? error.message : "No fue posible iniciar el Bono.");
+      announce(locale === "es" && error instanceof Error ? error.message : t(locale, "bonus.status.startFailed"));
       return;
     }
 
@@ -410,7 +416,7 @@ export const initializeBonus = () => {
       if (!element) return;
       element.dataset.selected = "true";
       const counter = element.querySelector("[data-question-counter]");
-      if (counter) counter.textContent = `Pregunta ${index + 1} de ${attempt.questions.length}`;
+      if (counter) counter.textContent = t(locale, "bonus.progress.question", { current: index + 1, total: attempt.questions.length });
       reorderOptions(question, question.optionOrder);
     });
 
@@ -420,7 +426,7 @@ export const initializeBonus = () => {
     if (session instanceof HTMLElement) session.hidden = false;
     if (backToResult instanceof HTMLButtonElement) backToResult.hidden = true;
     showQuestion(0);
-    announce("Bono iniciado. El intento permanece local y no se ha enviado.");
+    announce(t(locale, "bonus.status.started"));
   };
 
   const renderReview = () => {
@@ -436,8 +442,8 @@ export const initializeBonus = () => {
     ).length;
     if (summary) {
       summary.textContent = unanswered === 0
-        ? "Todas las preguntas tienen una respuesta. Puedes volver a cualquiera antes de finalizar."
-        : `Quedan ${unanswered} ${unanswered === 1 ? "pregunta" : "preguntas"} sin responder.`;
+        ? t(locale, "bonus.review.complete")
+        : t(locale, "bonus.review.unanswered", { count: unanswered, questions: t(locale, unanswered === 1 ? "bonus.review.questionSingular" : "bonus.review.questionPlural") });
     }
     const list = app.querySelector("[data-review-list]");
     if (list) {
@@ -464,7 +470,7 @@ export const initializeBonus = () => {
     if (confirmation instanceof HTMLElement) confirmation.hidden = true;
     const title = app.querySelector("#bonus-review-title");
     if (title instanceof HTMLElement) title.focus?.({ preventScroll: true });
-    announce("Revisión del intento preparada. No se muestran respuestas correctas antes de finalizar.");
+    announce(t(locale, "bonus.status.reviewReady"));
   };
 
   const firstInvalidQuestionIndex = () => attempt?.questions.findIndex((question) => {
@@ -482,7 +488,7 @@ export const initializeBonus = () => {
       const invalid = questionElements.get(selectedQuestion()?.exerciseId)
         ?.querySelector("[aria-invalid='true']");
       if (invalid instanceof HTMLElement) invalid.focus();
-      announce("Revisa el formato numérico señalado antes de finalizar.");
+      announce(t(locale, "bonus.status.fixNumber"));
       return;
     }
     const unanswered = attempt.questions.filter(
@@ -492,10 +498,10 @@ export const initializeBonus = () => {
       const confirmation = app.querySelector("[data-unanswered-confirmation]");
       const message = app.querySelector("[data-unanswered-message]");
       if (message) {
-        message.textContent = `Quedan ${unanswered} ${unanswered === 1 ? "pregunta" : "preguntas"} sin responder.`;
+        message.textContent = t(locale, "bonus.review.unanswered", { count: unanswered, questions: t(locale, unanswered === 1 ? "bonus.review.questionSingular" : "bonus.review.questionPlural") });
       }
       if (confirmation instanceof HTMLElement) confirmation.hidden = false;
-      announce("Puedes volver a revisar o finalizar de todos modos.");
+      announce(t(locale, "bonus.status.finishChoice"));
       return;
     }
     finishAttempt();
@@ -516,19 +522,19 @@ export const initializeBonus = () => {
     const partial = question.pointsEarned > 0 && !question.correct;
     if (statusTarget) {
       statusTarget.textContent = !question.answered
-        ? "Sin respuesta"
+        ? t(locale, "bonus.status.unanswered")
         : question.correct
-          ? "Correcta"
+          ? t(locale, "bonus.status.correct")
           : partial
-            ? "Parcialmente correcta"
-            : "Incorrecta";
+            ? t(locale, "bonus.status.partiallyCorrect")
+            : t(locale, "bonus.status.incorrect");
       statusTarget.dataset.result = question.correct
         ? "correct"
         : partial
           ? "partial"
           : "incorrect";
     }
-    if (responseTarget) responseTarget.textContent = bonusQuestionResponseText(question);
+    if (responseTarget) responseTarget.textContent = bonusQuestionResponseText(question, locale);
     if (expectedTarget) expectedTarget.textContent = question.expectedResponse;
     if (messageTarget) messageTarget.textContent = question.feedback;
   };
@@ -537,13 +543,13 @@ export const initializeBonus = () => {
     if (!completedAttempt) return;
     const score = app.querySelector("[data-result-score]");
     if (score) {
-      score.textContent = `${formatBonusPoints(completedAttempt.summary.pointsEarned)} / ${formatBonusPoints(completedAttempt.summary.pointsPossible)} puntos · ${formatBonusPercentage(completedAttempt.summary.percentage)} %`;
+      score.textContent = t(locale, "bonus.points", { earned: formatBonusPoints(completedAttempt.summary.pointsEarned, locale), possible: formatBonusPoints(completedAttempt.summary.pointsPossible, locale), percentage: formatBonusPercentage(completedAttempt.summary.percentage, locale) });
     }
     const id = app.querySelector("[data-result-id]");
     if (id) id.textContent = completedAttempt.attemptId;
     const date = app.querySelector("[data-result-date]");
     if (date) {
-      date.textContent = new Intl.DateTimeFormat("es-CO", {
+      date.textContent = new Intl.DateTimeFormat(intlLocale, {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(new Date(completedAttempt.completedAt));
@@ -557,7 +563,7 @@ export const initializeBonus = () => {
           createElement("dt", topic.title),
           createElement(
             "dd",
-            `${formatBonusPoints(topic.pointsEarned)} / ${formatBonusPoints(topic.pointsPossible)}`
+            `${formatBonusPoints(topic.pointsEarned, locale)} / ${formatBonusPoints(topic.pointsPossible, locale)}`
           )
         );
         topics.append(group);
@@ -569,10 +575,10 @@ export const initializeBonus = () => {
       if (completedAttempt.summary.reviewRecommendations.length === 0) {
         recommendations.append(createElement(
           "p",
-          "No se detectaron errores en esta tanda. Puedes intentar otro Bono o continuar con los ejercicios abiertos."
+          t(locale, "bonus.noErrors")
         ));
       } else {
-        recommendations.append(createElement("p", "Podría convenirte repasar:"));
+        recommendations.append(createElement("p", t(locale, "bonus.reviewRecommendation")));
         const list = createElement("ul");
         completedAttempt.summary.reviewRecommendations.forEach((item) => {
           const entry = createElement("li");
@@ -607,6 +613,7 @@ export const initializeBonus = () => {
       attempt,
       exercises: [...exerciseMap.values()],
       responses,
+      locale,
     });
     completedAttempt.questions.forEach(renderQuestionFeedback);
     app.dataset.completed = "true";
@@ -616,7 +623,7 @@ export const initializeBonus = () => {
     if (resultPanel instanceof HTMLElement) resultPanel.hidden = false;
     const title = app.querySelector("#bonus-result-title");
     if (title instanceof HTMLElement) title.focus({ preventScroll: true });
-    announce("Resultado calculado localmente. No se ha enviado ni registrado.");
+    announce(t(locale, "bonus.status.completed"));
   };
 
   const reviewAnswers = () => {
@@ -627,7 +634,7 @@ export const initializeBonus = () => {
     app.classList.add("is-reviewing-results");
     currentIndex = 0;
     showQuestion(0);
-    announce("Revisión de respuestas. Ya puedes ver el resultado y la solución de cada pregunta.");
+    announce(t(locale, "bonus.status.reviewAnswers"));
   };
 
   const returnToResult = () => {
@@ -651,7 +658,7 @@ export const initializeBonus = () => {
   app.querySelector("[data-unanswered-return]")?.addEventListener("click", () => {
     const confirmation = app.querySelector("[data-unanswered-confirmation]");
     if (confirmation instanceof HTMLElement) confirmation.hidden = true;
-    announce("Puedes revisar las preguntas antes de finalizar.");
+    announce(t(locale, "bonus.status.reviewBeforeFinish"));
   });
   app.querySelector("[data-finish-anyway]")?.addEventListener("click", finishAttempt);
   app.querySelector("[data-review-answers]")?.addEventListener("click", reviewAnswers);
@@ -682,13 +689,13 @@ export const initializeBonus = () => {
       const email = app.querySelector("[data-delivery-email]");
       if (email) email.textContent = deliveryAttempt.privacy.identity.email;
       if (prepared instanceof HTMLElement) prepared.hidden = false;
-      announce("Archivo preparado para entrega. El correo solo está en esta copia local.");
+      announce(t(locale, "bonus.status.filePrepared"));
     } catch (error) {
       input.setAttribute("aria-invalid", "true");
       if (errorTarget) {
         errorTarget.textContent = error instanceof Error
-          ? error.message
-          : "Revisa el correo.";
+          ? (locale === "es" ? error.message : t(locale, "bonus.emailInvalid"))
+          : t(locale, "bonus.emailInvalid");
       }
       input.focus();
     }
@@ -712,13 +719,13 @@ export const initializeBonus = () => {
           ? deliveryAttempt
           : completedAttempt;
         if (!exportAttempt) {
-          announce("Prepara primero la copia identificada.");
+          announce(t(locale, "bonus.prepareIdentifiedFirst"));
           return;
         }
         const action = button.dataset.bonusExport;
         if (action === "copy") {
-          await copyLocalText(bonusCompactSummary(exportAttempt));
-          announce("Resumen copiado al portapapeles.");
+          await copyLocalText(bonusCompactSummary(exportAttempt, locale));
+          announce(t(locale, "bonus.status.summaryCopied"));
           return;
         }
         if (action === "print") {
@@ -731,25 +738,25 @@ export const initializeBonus = () => {
               ? exportAttempt.privacy.identity.email
               : "";
           }
-          announce("Se abrirá el diálogo para imprimir o guardar como PDF.");
+          announce(t(locale, "bonus.status.print"));
           window.print();
           return;
         }
         const exporters = {
-          txt: [toBonusText, "text/plain;charset=utf-8"],
+          txt: [(attempt) => toBonusText(attempt, locale), "text/plain;charset=utf-8"],
           json: [toBonusJSON, "application/json;charset=utf-8"],
-          csv: [toBonusCSV, "text/csv;charset=utf-8"],
+          csv: [(attempt) => toBonusCSV(attempt, { locale }), "text/csv;charset=utf-8"],
         };
         const exporter = exporters[action];
         if (!exporter) return;
         downloadLocalFile({
           contents: exporter[0](exportAttempt),
           mimeType: exporter[1],
-          filename: bonusFilename(bonus, exportAttempt, action),
+          filename: bonusFilename(bonus, exportAttempt, action, locale),
         });
-        announce(`Archivo ${action.toUpperCase()} preparado para descargar.`);
+        announce(t(locale, "bonus.status.download", { format: action.toUpperCase() }));
       } catch {
-        announce("El navegador no pudo completar la acción. Inténtalo de nuevo.");
+        announce(t(locale, "bonus.status.actionFailed"));
       }
     });
   });

@@ -6,8 +6,9 @@ import { localizeCourseData } from "../../data/course-localize.js";
 import {
   getVideos,
   getVideosByUnit,
-  VIDEO_CONTENT_TYPES,
+  getVideoContentTypes,
 } from "../../data/videos.js";
+import { t } from "../../i18n/index.js";
 import { ROUTE_IDS } from "../../i18n/routes.js";
 
 const { locale = "es" } = Astro.props;
@@ -19,18 +20,19 @@ const videosByUnit = UNITS.map((unit) => ({
   videos: getVideosByUnit(unit.number),
 }));
 const videos = getVideos();
+const videoContentTypes = getVideoContentTypes(locale);
 ---
 
 <BaseLayout
-  title={`Videos · ${COURSE.name}`}
-  description={`Biblioteca audiovisual de ${COURSE.name}.`}
+  title={t(locale, "public.videos.pageTitle", { course: COURSE.name })}
+  description={t(locale, "public.videos.meta", { course: COURSE.name })}
   locale={locale}
   routeId={ROUTE_IDS.COURSE_VIDEOS}
 >
   <article class="course-subpage">
     <CoursePageHeader
-      title="Videos"
-      description="Biblioteca audiovisual preparada para organizar materiales propios y aprobados por unidad."
+      title={t(locale, "public.videos.title")}
+      description={t(locale, "public.videos.description")}
       locale={locale}
     />
 
@@ -40,19 +42,18 @@ const videos = getVideos();
       aria-labelledby="video-structure-title"
     >
       <div>
-        <p class="course-section__index">Estructura</p>
-        <h2 id="video-structure-title">Una biblioteca preparada para crecer</h2>
+        <p class="course-section__index">{t(locale, "public.videos.structure")}</p>
+        <h2 id="video-structure-title">{t(locale, "public.videos.grow")}</h2>
       </div>
 
       <div class="course-section__body">
         <p class="course-lead">
-          Cada publicación podrá registrar título, descripción, unidad, duración,
-          fecha, dirección web, miniatura opcional y estado de publicación.
+          {t(locale, "public.videos.fields")}
         </p>
 
         <ul class="content-type-list">
           {
-            VIDEO_CONTENT_TYPES.map((type, index) => (
+            videoContentTypes.map((type, index) => (
               <li>
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <p>{type}</p>
@@ -66,12 +67,12 @@ const videos = getVideos();
     <section class="course-section" aria-labelledby="video-library-title">
       <header class="course-section__header">
         <div>
-          <p class="course-section__index">Publicaciones</p>
-          <h2 id="video-library-title">Biblioteca por unidades</h2>
+          <p class="course-section__index">{t(locale, "public.videos.publications")}</p>
+          <h2 id="video-library-title">{t(locale, "public.videos.byUnit")}</h2>
         </div>
 
         <p>
-          No se muestran plataformas externas ni enlaces hasta contar con publicaciones reales y revisadas.
+          {t(locale, "public.videos.reviewPolicy")}
         </p>
       </header>
 
@@ -79,11 +80,9 @@ const videos = getVideos();
         // El estado vacío es parte deliberada del flujo editorial.
         videos.length === 0 && (
           <div class="empty-state">
-            <p class="empty-state__label">Estado actual</p>
-            <h3>Aún no hay videos publicados</h3>
-            <p>
-              La biblioteca conservará este estado informativo hasta que exista material aprobado.
-            </p>
+            <p class="empty-state__label">{t(locale, "public.common.currentStatus")}</p>
+            <h3>{t(locale, "public.resources.noVideos")}</h3>
+            <p>{t(locale, "public.videos.emptyDescription")}</p>
           </div>
         )
       }
@@ -100,13 +99,13 @@ const videos = getVideos();
                 <h3>{unit.title}</h3>
                 <p class="publication-row__meta">
                   {videos.length === 0
-                    ? "Sin publicaciones"
-                    : `${videos.length} ${videos.length === 1 ? "video" : "videos"}`}
+                    ? t(locale, "public.videos.none")
+                    : t(locale, videos.length === 1 ? "public.videos.count" : "public.videos.countPlural", { count: videos.length })}
                 </p>
               </div>
 
               <span class="status-label status-label--preparing">
-                En preparación
+                {t(locale, "public.videos.preparing")}
               </span>
             </article>
           ))

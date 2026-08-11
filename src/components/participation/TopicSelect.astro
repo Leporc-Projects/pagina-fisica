@@ -1,17 +1,20 @@
 ---
-import { PARTICIPATION_TOPICS } from "../../data/participation.js";
+import { localizeParticipationData } from "../../data/participation-localize.js";
+import { t } from "../../i18n/index.js";
 
 interface Props {
   id: string;
+  locale?: "es" | "en";
 }
 
-const { id } = Astro.props;
+const { id, locale = "es" } = Astro.props;
+const { topics } = localizeParticipationData(locale);
 ---
 
 <div class="participation-field">
-  <label for={id}>Tema de la Unidad 1</label>
+  <label for={id}>{t(locale, "participation.topic")}</label>
   <select id={id} name="topicSlug" required>
-    <option value="">Selecciona un tema</option>
-    {PARTICIPATION_TOPICS.map((topic) => <option value={topic.slug}>{topic.title}</option>)}
+    <option value="">{t(locale, "participation.selectTopic")}</option>
+    {topics.map((topic) => <option value={topic.slug}>{topic.title}</option>)}
   </select>
 </div>

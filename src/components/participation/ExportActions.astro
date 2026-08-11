@@ -1,7 +1,11 @@
-<div class="export-actions" aria-label="Exportar respuesta">
-  <button type="button" data-export="copy">Copiar</button>
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
+<div class="export-actions" aria-label={t(locale, "participation.exportLabel")}>
+  <button type="button" data-export="copy">{t(locale, "participation.copy")}</button>
   <button type="button" data-export="txt">TXT</button>
   <button type="button" data-export="json">JSON</button>
   <button type="button" data-export="csv">CSV</button>
-  <button type="button" data-export="print">Imprimir / PDF</button>
+  <button type="button" data-export="print">{t(locale, "participation.print")}</button>
 </div>

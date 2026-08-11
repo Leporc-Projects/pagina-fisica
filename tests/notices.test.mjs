@@ -270,7 +270,7 @@ test("las rutas públicas y la tarjeta compacta conservan enlaces seguros y ámb
   assert.match(generalPage, /getGlobalNotices/);
   assert.doesNotMatch(generalPage, /getPublishedNotices/);
   assert.match(coursePage, /getCourseNotices\(COURSE\.id/);
-  assert.match(coursePage, /\/avisos/);
+  assert.match(coursePage, /getLocalizedPath\(ROUTE_IDS\.NOTICES, locale\)/);
   assert.match(homepage, /showScope/);
   assert.match(homepage, /getHomepageNotices\(3/);
   assert.match(card, /href &&/);

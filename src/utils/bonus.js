@@ -1,6 +1,9 @@
 import { COURSE } from "../data/course.js";
-import { UNIT_1_CONTENT } from "../data/physics/unit-1/content.js";
+import { localizeCourseData } from "../data/course-localize.js";
 import { UNIT_1 } from "../data/physics/unit-1/unit.js";
+import { localizeUnit1, localizeUnit1Content } from "../data/physics/unit-1/localize.js";
+import { getLocaleConfig } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
 import {
   createCryptoRandom,
   generateFamilyInstance,
@@ -163,7 +166,7 @@ export const selectBonusQuestions = (
   bonus,
   exercises,
   cryptoApi = globalThis.crypto,
-  { seenItemIds = new Set(), recentParameterKeys = new Set() } = {}
+  { seenItemIds = new Set(), recentParameterKeys = new Set(), generateInstance = generateFamilyInstance } = {}
 ) => {
   const pool = eligiblePoolForBonus(bonus, exercises);
   const requirements = expandBlueprint(bonus.blueprint);
@@ -180,7 +183,7 @@ export const selectBonusQuestions = (
     )
     .map(({ exercise: selectedItem, slotId }) => {
       const exercise = selectedItem.itemKind === "parameterizedFamily"
-        ? generateFamilyInstance(selectedItem, { random, recentParameterKeys })
+        ? generateInstance(selectedItem, { random, recentParameterKeys })
         : selectedItem;
       return {
         exercise,
@@ -230,6 +233,9 @@ export const createBonusAttempt = (
 ) => {
   const startedAt = environment.startedAt ?? new Date().toISOString();
   const attemptId = environment.attemptId ?? generateAttemptId();
+  const locale = environment.locale ?? "es";
+  const localizedCourse = localizeCourseData(locale).COURSE;
+  const localizedUnit = localizeUnit1(locale);
 
   return {
     schemaVersion: BONUS_ATTEMPT_SCHEMA_VERSION,
@@ -244,12 +250,12 @@ export const createBonusAttempt = (
     course: {
       code: COURSE.code,
       slug: "fisica-basica-1",
-      title: COURSE.name,
+      title: localizedCourse.name,
     },
     unit: {
       number: UNIT_1.number,
       slug: UNIT_1.slug,
-      title: UNIT_1.title,
+      title: localizedUnit.title,
     },
     startedAt,
     completedAt: null,
@@ -487,22 +493,27 @@ export const gradeExerciseResponse = (exercise, input) => {
   };
 };
 
-const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
-const subtopicMap = new Map(
-  Object.entries(UNIT_1_CONTENT).flatMap(([topicSlug, content]) =>
-    content.sections.map((section) => [
+const presentationMaps = (locale) => {
+  const unit = localizeUnit1(locale);
+  const content = localizeUnit1Content(locale);
+  const topicMap = new Map(unit.topics.map((topic) => [topic.slug, topic]));
+  const subtopicMap = new Map(
+  Object.entries(content).flatMap(([topicSlug, topicContent]) =>
+    topicContent.sections.map((section) => [
       `${topicSlug}:${section.id}`,
       {
         topic: topicSlug,
         subtopic: section.id,
         title: section.title,
-        route: `${topicMap.get(topicSlug)?.route ?? UNIT_1.route}#${section.id}`,
+        route: `${topicMap.get(topicSlug)?.route ?? unit.route}#${section.id}`,
       },
     ])
-  )
-);
+  ));
+  return { topicMap, subtopicMap, unit };
+};
 
-const summarizeByTopic = (questions) => {
+const summarizeByTopic = (questions, locale) => {
+  const { topicMap } = presentationMaps(locale);
   const summaries = new Map();
   questions.forEach((question) => {
     const current = summaries.get(question.topic) ?? {
@@ -518,7 +529,8 @@ const summarizeByTopic = (questions) => {
   return [...summaries.values()];
 };
 
-const reviewRecommendations = (questions) => {
+const reviewRecommendations = (questions, locale) => {
+  const { topicMap, subtopicMap, unit } = presentationMaps(locale);
   const recommendations = new Map();
   questions
     .filter((question) => question.pointsEarned < question.pointsPossible)
@@ -528,7 +540,7 @@ const reviewRecommendations = (questions) => {
         topic: question.topic,
         subtopic: question.subtopic,
         title: topicMap.get(question.topic)?.title ?? question.topic,
-        route: topicMap.get(question.topic)?.route ?? UNIT_1.route,
+        route: topicMap.get(question.topic)?.route ?? unit.route,
       };
       recommendations.set(key, reference);
     });
@@ -540,6 +552,7 @@ export const completeBonusAttempt = ({
   exercises,
   responses,
   completedAt = new Date().toISOString(),
+  locale = "es",
 }) => {
   const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
   const questions = attempt.questions.map((question) => {
@@ -568,60 +581,60 @@ export const completeBonusAttempt = ({
       pointsEarned,
       pointsPossible,
       percentage: pointsPossible === 0 ? 0 : (pointsEarned / pointsPossible) * 100,
-      byTopic: summarizeByTopic(questions),
-      reviewRecommendations: reviewRecommendations(questions),
+      byTopic: summarizeByTopic(questions, locale),
+      reviewRecommendations: reviewRecommendations(questions, locale),
     },
   };
 };
 
-export const bonusQuestionResponseText = (question) => {
-  if (!question.response) return "Sin respuesta";
+export const bonusQuestionResponseText = (question, locale = "es") => {
+  if (!question.response) return t(locale, "bonus.status.unanswered");
   if (question.response.kind === "singleChoice") {
     return question.response.content || question.response.optionId;
   }
   if (question.response.kind === "number") return question.response.raw;
   return question.response.values
-    .map((value) => `${value.label}: ${value.raw || "sin respuesta"}`)
+    .map((value) => `${value.label}: ${value.raw || t(locale, "bonus.status.unanswered")}`)
     .join("; ");
 };
 
-export const formatBonusPoints = (value) => new Intl.NumberFormat("es-CO", {
+export const formatBonusPoints = (value, locale = "es") => new Intl.NumberFormat(getLocaleConfig(locale).intlLocale, {
   maximumFractionDigits: 3,
 }).format(value);
 
-export const formatBonusPercentage = (value) => new Intl.NumberFormat("es-CO", {
+export const formatBonusPercentage = (value, locale = "es") => new Intl.NumberFormat(getLocaleConfig(locale).intlLocale, {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 }).format(value);
 
-export const bonusCompactSummary = (attempt) => {
+export const bonusCompactSummary = (attempt, locale = "es") => {
   const { summary } = attempt;
   const identity = attemptIdentity(attempt);
   return [
-    "Aula Física · Física Básica I",
+    `Aula Física · ${localizeCourseData(locale).COURSE.name}`,
     attempt.bonusTitle,
-    `Versión del Bono: ${attempt.bonusVersion}`,
+    `${t(locale, "bonus.export.version")}: ${attempt.bonusVersion}`,
     identity.mode === "institutionalEmail"
-      ? `Correo institucional: ${identity.email}`
-      : "Identidad: anónima",
-    `Resultado: ${formatBonusPoints(summary.pointsEarned)} / ${formatBonusPoints(summary.pointsPossible)} puntos (${formatBonusPercentage(summary.percentage)} %)`,
-    `ID del intento: ${attempt.attemptId}`,
-    "Resultado calculado localmente; no fue enviado automáticamente.",
+      ? `${t(locale, "bonus.email")}: ${identity.email}`
+      : t(locale, "bonus.export.anonymous"),
+    `${t(locale, "bonus.export.result")}: ${t(locale, "bonus.points", { earned: formatBonusPoints(summary.pointsEarned, locale), possible: formatBonusPoints(summary.pointsPossible, locale), percentage: formatBonusPercentage(summary.percentage, locale) })}`,
+    `${t(locale, "bonus.attemptId")}: ${attempt.attemptId}`,
+    t(locale, "bonus.export.local"),
   ].join("\n");
 };
 
-export const toBonusText = (attempt) => {
+export const toBonusText = (attempt, locale = "es") => {
   const lines = [
-    bonusCompactSummary(attempt),
-    `Inicio: ${attempt.startedAt}`,
-    `Finalización: ${attempt.completedAt}`,
+    bonusCompactSummary(attempt, locale),
+    `${t(locale, "bonus.export.start")}: ${attempt.startedAt}`,
+    `${t(locale, "bonus.export.end")}: ${attempt.completedAt}`,
     "",
-    "Resultado por tema en esta tanda",
+    t(locale, "bonus.byTopic"),
     ...attempt.summary.byTopic.map((topic) =>
-      `${topic.title}: ${formatBonusPoints(topic.pointsEarned)} / ${formatBonusPoints(topic.pointsPossible)}`
+      `${topic.title}: ${formatBonusPoints(topic.pointsEarned, locale)} / ${formatBonusPoints(topic.pointsPossible, locale)}`
     ),
     "",
-    "Preguntas",
+    t(locale, "bonus.export.questions"),
   ];
 
   attempt.questions.forEach((question) => {
@@ -629,25 +642,25 @@ export const toBonusText = (attempt) => {
       "",
       `${question.order}. ${question.snapshot.title}`,
       question.snapshot.prompt,
-      `Respuesta: ${bonusQuestionResponseText(question)}`,
-      `Resultado: ${formatBonusPoints(question.pointsEarned)} / ${formatBonusPoints(question.pointsPossible)}`,
-      `Respuesta esperada: ${question.expectedResponse}`,
-      `Retroalimentación: ${question.feedback}`
+      `${t(locale, "bonus.export.response")}: ${bonusQuestionResponseText(question, locale)}`,
+      `${t(locale, "bonus.export.result")}: ${formatBonusPoints(question.pointsEarned, locale)} / ${formatBonusPoints(question.pointsPossible, locale)}`,
+      `${t(locale, "bonus.expectedAnswer")}: ${question.expectedResponse}`,
+      `${t(locale, "bonus.export.feedback")}: ${question.feedback}`
     );
   });
 
   if (attempt.summary.reviewRecommendations.length > 0) {
     lines.push(
       "",
-      "Podría convenirte repasar:",
+      t(locale, "bonus.reviewRecommendation"),
       ...attempt.summary.reviewRecommendations.map((item) => `- ${item.title}`)
     );
   }
 
   lines.push(
     "",
-    "Este resultado describe únicamente las preguntas de esta tanda y no constituye por sí solo una medición completa de tu dominio del tema.",
-    "Este archivo fue generado localmente y no fue enviado automáticamente."
+    t(locale, "bonus.resultScope"),
+    t(locale, "bonus.export.generatedLocal")
   );
 
   return `${lines.join("\n")}\n`;
@@ -686,7 +699,7 @@ export const BONUS_CSV_COLUMNS = [
   "attempt_percentage",
 ];
 
-export const toBonusCSV = (attempt, { includeBom = true } = {}) => {
+export const toBonusCSV = (attempt, { includeBom = true, locale = "es" } = {}) => {
   const identity = attemptIdentity(attempt);
   const records = attempt.questions.map((question) => ({
     schema_version: attempt.schemaVersion,
@@ -710,7 +723,7 @@ export const toBonusCSV = (attempt, { includeBom = true } = {}) => {
     question_prompt: question.snapshot.prompt,
     topic: question.topic,
     subtopic: question.subtopic,
-    response: bonusQuestionResponseText(question),
+    response: bonusQuestionResponseText(question, locale),
     correct: question.correct,
     points_earned: question.pointsEarned,
     points_possible: question.pointsPossible,
@@ -727,9 +740,10 @@ export const toBonusCSV = (attempt, { includeBom = true } = {}) => {
   });
 };
 
-export const bonusFilename = (bonus, attempt, extension) => {
+export const bonusFilename = (bonus, attempt, extension, locale = "es") => {
   const shortId = attempt.attemptId.replace("attempt_", "").slice(0, 6);
-  return `bono-unidad-${attempt.unit.number}-${sanitizeFilePart(bonus.slug)}-${shortId}.${extension}`;
+  const prefix = locale === "en" ? "bonus-unit" : "bono-unidad";
+  return `${prefix}-${attempt.unit.number}-${sanitizeFilePart(bonus.slug)}-${shortId}.${extension}`;
 };
 
 export const validateCompletedBonusAttempt = (attempt) => {

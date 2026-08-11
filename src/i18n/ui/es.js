@@ -1,4 +1,7 @@
+import publicEs from "./public-es.js";
+
 export default Object.freeze({
+  ...publicEs,
   "brand.home": "Aula Física, página de inicio",
   "shell.skip": "Saltar al contenido",
   "shell.menu": "Menú",

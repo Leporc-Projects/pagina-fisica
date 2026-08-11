@@ -3,19 +3,19 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 
-import {
-  COURSE,
-  SCHEDULE,
-  SCHEDULE_TYPES,
-} from "../../data/course.js";
+import { localizeCourseData } from "../../data/course-localize.js";
+import { getLocaleConfig } from "../../i18n/config.js";
+import { t } from "../../i18n/index.js";
 import { ROUTE_IDS } from "../../i18n/routes.js";
 
 const { locale = "es" } = Astro.props;
+const { COURSE, SCHEDULE, SCHEDULE_TYPES } = localizeCourseData(locale);
+const intlLocale = getLocaleConfig(locale).intlLocale;
 
 type ScheduleEntry = (typeof SCHEDULE)[number];
 
 const monthFormatter = new Intl.DateTimeFormat(
-  "es-CO",
+  intlLocale,
   {
     month: "long",
     year: "numeric",
@@ -23,7 +23,7 @@ const monthFormatter = new Intl.DateTimeFormat(
 );
 
 const dateFormatter = new Intl.DateTimeFormat(
-  "es-CO",
+  intlLocale,
   {
     weekday: "long",
     day: "2-digit",
@@ -91,15 +91,15 @@ const eventsCount = SCHEDULE.filter(
 ---
 
 <BaseLayout
-  title={`Cronograma · ${COURSE.name}`}
-  description={`Cronograma académico de ${COURSE.name} para el semestre ${COURSE.semester}.`}
+  title={t(locale, "public.schedule.pageTitle", { course: COURSE.name })}
+  description={t(locale, "public.schedule.meta", { course: COURSE.name, semester: COURSE.semester })}
   locale={locale}
   routeId={ROUTE_IDS.COURSE_SCHEDULE}
 >
   <article class="course-subpage">
     <CoursePageHeader
-      title="Cronograma"
-      description={`Plan de clases, repasos, evaluaciones y eventos académicos del semestre ${COURSE.semester}.`}
+      title={t(locale, "public.schedule.title")}
+      description={t(locale, "public.schedule.description", { semester: COURSE.semester })}
       locale={locale}
     />
 
@@ -109,42 +109,38 @@ const eventsCount = SCHEDULE.filter(
       aria-labelledby="schedule-overview-title"
     >
       <div class="schedule-overview__intro">
-        <p class="course-section__index">Resumen</p>
+        <p class="course-section__index">{t(locale, "public.schedule.summary")}</p>
 
         <h2 id="schedule-overview-title">
-          Organización del semestre
+          {t(locale, "public.schedule.organization")}
         </h2>
 
-        <p>
-          El curso está organizado en {SCHEDULE.length} sesiones. Las
-          modificaciones posteriores al cronograma se
-          comunicarán mediante la sección de avisos.
-        </p>
+        <p>{t(locale, "public.schedule.organizationDescription", { count: SCHEDULE.length })}</p>
       </div>
 
       <dl class="schedule-stats">
         <div>
-          <dt>Sesiones</dt>
+          <dt>{t(locale, "public.schedule.sessions")}</dt>
           <dd>{SCHEDULE.length}</dd>
         </div>
 
         <div>
-          <dt>Clases</dt>
+          <dt>{t(locale, "public.schedule.classes")}</dt>
           <dd>{classesCount}</dd>
         </div>
 
         <div>
-          <dt>Repasos</dt>
+          <dt>{t(locale, "public.schedule.reviews")}</dt>
           <dd>{reviewsCount}</dd>
         </div>
 
         <div>
-          <dt>Exámenes</dt>
+          <dt>{t(locale, "public.schedule.exams")}</dt>
           <dd>{examsCount}</dd>
         </div>
 
         <div>
-          <dt>Eventos</dt>
+          <dt>{t(locale, "public.schedule.events")}</dt>
           <dd>{eventsCount}</dd>
         </div>
       </dl>
@@ -152,7 +148,7 @@ const eventsCount = SCHEDULE.filter(
 
     <section
       class="schedule-legend"
-      aria-label="Tipos de sesión"
+      aria-label={t(locale, "public.schedule.types")}
     >
       {
         Object.entries(SCHEDULE_TYPES).map(
@@ -183,8 +179,8 @@ const eventsCount = SCHEDULE.filter(
                 {group.sessions.length}
                 {
                   group.sessions.length === 1
-                    ? " sesión"
-                    : " sesiones"
+                    ? ` ${t(locale, "public.schedule.session")}`
+                    : ` ${t(locale, "public.schedule.sessionsLower")}`
                 }
               </span>
             </header>
@@ -197,11 +193,7 @@ const eventsCount = SCHEDULE.filter(
                   >
                     <div class="schedule-entry__date">
                       <span>
-                        Sesión{" "}
-                        {String(session.session).padStart(
-                          2,
-                          "0"
-                        )}
+                        {t(locale, "public.schedule.sessionNumber", { number: String(session.session).padStart(2, "0") })}
                       </span>
 
                       <time datetime={session.date}>
@@ -224,7 +216,7 @@ const eventsCount = SCHEDULE.filter(
                         {
                           session.chapter && (
                             <span class="schedule-entry__chapter">
-                              {session.chapter}
+                              {session.chapterLabel ?? session.chapter}
                             </span>
                           )
                         }
@@ -250,7 +242,7 @@ const eventsCount = SCHEDULE.filter(
                         session.objectives.length > 0 && (
                           <details class="schedule-objectives">
                             <summary>
-                              Objetivos de la sesión
+                              {t(locale, "public.schedule.objectives")}
                             </summary>
 
                             <ul>

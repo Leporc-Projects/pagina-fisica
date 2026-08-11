@@ -231,5 +231,5 @@ test("los clientes del editor y Bono no persisten preguntas ni correos", () => {
     "../src/scripts/bonus.js",
   ].map((path) => fs.readFileSync(new URL(path, import.meta.url), "utf8")).join("\n");
   assert.doesNotMatch(sources, /localStorage|sessionStorage|document\.cookie/);
-  assert.match(fs.readFileSync(new URL("../src/components/bonus/BonusAttempt.astro", import.meta.url), "utf8"), /data-export-mode="identified"[^>]*>Imprimir \/ PDF/);
+  assert.match(fs.readFileSync(new URL("../src/components/bonus/BonusAttempt.astro", import.meta.url), "utf8"), /data-export-mode="identified"[^>]*>\{t\(locale, "bonus\.print"\)\}/);
 });

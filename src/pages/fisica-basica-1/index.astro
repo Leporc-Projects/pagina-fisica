@@ -3,6 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import CourseNav from "../../components/course/CourseNav.astro";
 
 import { localizeCourseData } from "../../data/course-localize.js";
+import { t } from "../../i18n/index.js";
 import { ROUTE_IDS } from "../../i18n/routes.js";
 
 const { locale = "es" } = Astro.props;
@@ -23,7 +24,7 @@ const totalPercentage = EVALUATION.reduce(
     <header class="course-hero">
       <div class="course-hero__heading">
         <p class="eyebrow eyebrow--dark">
-          Curso activo · {COURSE.semester}
+          {t(locale, "public.course.active", { semester: COURSE.semester })}
         </p>
 
         <h1>{COURSE.name}</h1>
@@ -35,22 +36,22 @@ const totalPercentage = EVALUATION.reduce(
 
       <dl class="course-facts">
         <div>
-          <dt>Código</dt>
+          <dt>{t(locale, "public.course.code")}</dt>
           <dd>{COURSE.code}</dd>
         </div>
 
         <div>
-          <dt>Créditos</dt>
+          <dt>{t(locale, "public.course.credits")}</dt>
           <dd>{COURSE.credits}</dd>
         </div>
 
         <div>
-          <dt>Modalidad</dt>
+          <dt>{t(locale, "public.course.modality")}</dt>
           <dd>{COURSE.modality}</dd>
         </div>
 
         <div>
-          <dt>Semestre</dt>
+          <dt>{t(locale, "public.course.semester")}</dt>
           <dd>{COURSE.semester}</dd>
         </div>
       </dl>
@@ -66,7 +67,7 @@ const totalPercentage = EVALUATION.reduce(
         <p class="course-section__index">01</p>
 
         <h2 id="course-purpose">
-          Propósito formativo
+          {t(locale, "public.course.purpose")}
         </h2>
       </div>
 
@@ -78,17 +79,17 @@ const totalPercentage = EVALUATION.reduce(
         <div class="course-hours">
           <div>
             <strong>{COURSE.interactionHours}</strong>
-            <span>horas de interacción</span>
+            <span>{t(locale, "public.course.interactionHours")}</span>
           </div>
 
           <div>
             <strong>{COURSE.independentHours}</strong>
-            <span>horas de trabajo independiente</span>
+            <span>{t(locale, "public.course.independentHours")}</span>
           </div>
 
           <div>
             <strong>{COURSE.totalHours}</strong>
-            <span>horas totales</span>
+            <span>{t(locale, "public.course.totalHours")}</span>
           </div>
         </div>
       </div>
@@ -102,7 +103,7 @@ const totalPercentage = EVALUATION.reduce(
         <p class="course-section__index">02</p>
 
         <h2 id="course-goals">
-          Resultados de aprendizaje
+          {t(locale, "public.course.goals")}
         </h2>
       </div>
 
@@ -128,14 +129,10 @@ const totalPercentage = EVALUATION.reduce(
       <header class="course-section__header">
         <div>
           <p class="course-section__index">03</p>
-          <h2 id="course-units">Unidades del curso</h2>
+          <h2 id="course-units">{t(locale, "public.course.units")}</h2>
         </div>
 
-        <p>
-          La asignatura se organiza en siete unidades que
-          recorren los fundamentos de la mecánica
-          newtoniana.
-        </p>
+        <p>{t(locale, "public.course.unitsDescription")}</p>
       </header>
 
       <div class="course-unit-list">
@@ -168,7 +165,7 @@ const totalPercentage = EVALUATION.reduce(
         <p class="course-section__index">04</p>
 
         <h2 id="course-methodology">
-          Metodología
+          {t(locale, "public.course.methodology")}
         </h2>
       </div>
 
@@ -191,14 +188,10 @@ const totalPercentage = EVALUATION.reduce(
       <header class="course-section__header">
         <div>
           <p class="course-section__index">05</p>
-          <h2 id="course-evaluation">Evaluación</h2>
+          <h2 id="course-evaluation">{t(locale, "public.course.assessment")}</h2>
         </div>
 
-        <p>
-          La suma de los componentes corresponde al
-          {` ${totalPercentage} %`} de la calificación del
-          curso.
-        </p>
+        <p>{t(locale, "public.course.assessmentTotal", { percentage: totalPercentage })}</p>
       </header>
 
       <div class="evaluation-list">
@@ -226,14 +219,11 @@ const totalPercentage = EVALUATION.reduce(
           <p class="course-section__index">06</p>
 
           <h2 id="course-bibliography">
-            Bibliografía
+            {t(locale, "public.course.bibliography")}
           </h2>
         </div>
 
-        <p>
-          Textos guía y materiales complementarios
-          establecidos para el desarrollo del curso.
-        </p>
+        <p>{t(locale, "public.course.bibliographyDescription")}</p>
       </header>
 
       <div class="bibliography-list">

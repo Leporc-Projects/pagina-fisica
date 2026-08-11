@@ -8,6 +8,8 @@ import {
   STUDENT_DIFFICULTY_ESTIMATES,
   SUPPORT_OPTIONS,
 } from "../data/participation.js";
+import { localizeParticipationData } from "../data/participation-localize.js";
+import { t } from "../i18n/index.js";
 import { recordsToCsv } from "./local-export.js";
 
 export { escapeCsvField } from "./local-export.js";
@@ -38,9 +40,9 @@ const IMPROVEMENT_AREA_VALUES = optionValues(IMPROVEMENT_AREAS);
 const HELPFULNESS_VALUES = optionValues(HELPFULNESS_OPTIONS);
 const TOPIC_SLUGS = PARTICIPATION_TOPICS.map((topic) => topic.slug);
 
-const cleanRequiredText = (value, label) => {
+const cleanRequiredText = (value, label, locale) => {
   if (typeof value !== "string" || value.trim() === "") {
-    throw new TypeError(`${label} es obligatorio.`);
+    throw new TypeError(t(locale, "participation.validation.required", { label }));
   }
 
   return value.trim();
@@ -52,9 +54,9 @@ const cleanOptionalText = (value) => {
   return cleaned === "" ? undefined : cleaned;
 };
 
-const assertEnum = (value, allowed, label) => {
+const assertEnum = (value, allowed, label, locale) => {
   if (!allowed.includes(value)) {
-    throw new TypeError(`${label} no pertenece al contrato permitido.`);
+    throw new TypeError(t(locale, "participation.validation.invalid", { label }));
   }
 
   return value;
@@ -85,12 +87,13 @@ export const generateResponseId = (cryptoApi = globalThis.crypto) => {
 export const isResponseId = (value) =>
   typeof value === "string" && /^resp_[0-9a-f]{32}$/.test(value);
 
-const normalizePayload = (activityType, payload = {}) => {
+const normalizePayload = (activityType, payload = {}, locale = "es") => {
   if (activityType === "concept-difficulty") {
     const normalized = {
       unclearPoint: cleanRequiredText(
         payload.unclearPoint,
-        "¿Qué te quedó menos claro?"
+        t(locale, "participation.unclear"),
+        locale
       ),
     };
 
@@ -98,7 +101,8 @@ const normalizePayload = (activityType, payload = {}) => {
       normalized.helpfulSupport = assertEnum(
         payload.helpfulSupport,
         SUPPORT_VALUES,
-        "La ayuda sugerida"
+        t(locale, "participation.field.support"),
+        locale
       );
     }
 
@@ -112,12 +116,14 @@ const normalizePayload = (activityType, payload = {}) => {
       kind: assertEnum(
         payload.proposalType,
         PROPOSAL_TYPE_VALUES,
-        "El tipo de propuesta"
+        t(locale, "participation.proposalType"),
+        locale
       ),
-      statement: cleanRequiredText(payload.statement, "El enunciado"),
+      statement: cleanRequiredText(payload.statement, t(locale, "participation.statement"), locale),
       intendedConcept: cleanRequiredText(
         payload.intendedConcept,
-        "El concepto que intenta poner a prueba"
+        t(locale, "participation.conceptTested"),
+        locale
       ),
       review: {
         status: "unreviewed",
@@ -143,7 +149,8 @@ const normalizePayload = (activityType, payload = {}) => {
         value: assertEnum(
           payload.studentDifficultyEstimate,
           DIFFICULTY_VALUES,
-          "La dificultad estimada"
+          t(locale, "participation.field.difficulty"),
+          locale
         ),
       };
     }
@@ -156,11 +163,13 @@ const normalizePayload = (activityType, payload = {}) => {
       area: assertEnum(
         payload.area,
         IMPROVEMENT_AREA_VALUES,
-        "El aspecto por mejorar"
+        t(locale, "participation.area"),
+        locale
       ),
       improvement: cleanRequiredText(
         payload.improvement,
-        "¿Qué cambiarías o mejorarías?"
+        t(locale, "participation.improvement"),
+        locale
       ),
     };
 
@@ -168,7 +177,8 @@ const normalizePayload = (activityType, payload = {}) => {
       normalized.helpfulness = assertEnum(
         payload.helpfulness,
         HELPFULNESS_VALUES,
-        "La valoración"
+        t(locale, "participation.field.rating"),
+        locale
       );
     }
 
@@ -179,15 +189,18 @@ const normalizePayload = (activityType, payload = {}) => {
 };
 
 export const createParticipationResponse = (input, environment = {}) => {
+  const locale = environment.locale ?? "es";
   const activityType = assertEnum(
     input?.activityType,
     ACTIVITY_TYPES,
-    "El tipo de actividad"
+    t(locale, "participation.field.activity"),
+    locale
   );
   const topicSlug = assertEnum(
     input?.topicSlug,
     TOPIC_SLUGS,
-    "El tema"
+    t(locale, "participation.field.topic"),
+    locale
   );
   const topic = PARTICIPATION_TOPICS.find((item) => item.slug === topicSlug);
   const createdAt = environment.createdAt ?? new Date().toISOString();
@@ -207,7 +220,7 @@ export const createParticipationResponse = (input, environment = {}) => {
     // Punto de extensión deliberadamente vacío hasta definir entrega,
     // consentimiento, privacidad y flujo docente.
     submissionTarget: null,
-    payload: normalizePayload(activityType, input.payload),
+    payload: normalizePayload(activityType, input.payload, locale),
   };
 
   const result = validateParticipationResponse(response);
@@ -301,26 +314,23 @@ export const validateParticipationResponse = (response) => {
   return { valid: errors.length === 0, errors };
 };
 
-const labels = {
-  activity: Object.fromEntries([
-    ["concept-difficulty", "¿Qué te quedó menos claro?"],
-    ["student-question-proposal", "Propuesta de pregunta o problema"],
-    ["improvement-feedback", "Ayúdanos a mejorar"],
-  ]),
-  support: Object.fromEntries(SUPPORT_OPTIONS),
-  proposalType: Object.fromEntries(PROPOSAL_TYPES),
-  difficulty: Object.fromEntries(STUDENT_DIFFICULTY_ESTIMATES),
-  area: Object.fromEntries(IMPROVEMENT_AREAS),
-  helpfulness: Object.fromEntries(HELPFULNESS_OPTIONS),
-};
-
-export const participationSummary = (response) => {
+export const participationSummary = (response, locale = "es") => {
   const result = validateParticipationResponse(response);
   if (!result.valid) throw new TypeError(result.errors.join(" "));
 
+  const presentation = localizeParticipationData(locale);
+  const labels = {
+    activity: Object.fromEntries(presentation.activityOptions.map(({ value, label }) => [value, label])),
+    support: Object.fromEntries(presentation.supportOptions),
+    proposalType: Object.fromEntries(presentation.proposalTypes),
+    difficulty: Object.fromEntries(presentation.difficultyEstimates),
+    area: Object.fromEntries(presentation.improvementAreas),
+    helpfulness: Object.fromEntries(presentation.helpfulnessOptions),
+  };
+
   const common = {
     type: labels.activity[response.activityType],
-    topic: response.topic.title,
+    topic: presentation.topics.find((topic) => topic.slug === response.topic.slug)?.title ?? response.topic.title,
   };
 
   if (response.activityType === "concept-difficulty") {
@@ -328,7 +338,7 @@ export const participationSummary = (response) => {
       ...common,
       response: response.payload.unclearPoint,
       optional: response.payload.helpfulSupport
-        ? [["Podría ayudar", labels.support[response.payload.helpfulSupport]]]
+        ? [[t(locale, "participation.couldHelp"), labels.support[response.payload.helpfulSupport]]]
         : [],
     };
   }
@@ -336,10 +346,10 @@ export const participationSummary = (response) => {
   if (response.activityType === "student-question-proposal") {
     const proposal = response.payload.proposal;
     const optional = [
-      proposal.expectedAnswer && ["Respuesta esperada", proposal.expectedAnswer],
-      proposal.answerExplanation && ["Explicación", proposal.answerExplanation],
+      proposal.expectedAnswer && [t(locale, "participation.expectedAnswer"), proposal.expectedAnswer],
+      proposal.answerExplanation && [t(locale, "participation.answerExplanation"), proposal.answerExplanation],
       proposal.studentDifficultyEstimate && [
-        "Dificultad estimada por el estudiante",
+        t(locale, "participation.studentDifficulty"),
         labels.difficulty[proposal.studentDifficultyEstimate.value],
       ],
     ].filter(Boolean);
@@ -348,8 +358,8 @@ export const participationSummary = (response) => {
       ...common,
       response: proposal.statement,
       details: [
-        ["Tipo de propuesta", labels.proposalType[proposal.kind]],
-        ["Concepto que intenta poner a prueba", proposal.intendedConcept],
+        [t(locale, "participation.proposalType"), labels.proposalType[proposal.kind]],
+        [t(locale, "participation.conceptTested"), proposal.intendedConcept],
       ],
       optional,
     };
@@ -358,22 +368,22 @@ export const participationSummary = (response) => {
   return {
     ...common,
     response: response.payload.improvement,
-    details: [["Aspecto", labels.area[response.payload.area]]],
+    details: [[t(locale, "participation.aspect"), labels.area[response.payload.area]]],
     optional: response.payload.helpfulness
-      ? [["Valoración opcional", labels.helpfulness[response.payload.helpfulness]]]
+      ? [[t(locale, "participation.optionalRating"), labels.helpfulness[response.payload.helpfulness]]]
       : [],
   };
 };
 
-export const toParticipationText = (response) => {
-  const summary = participationSummary(response);
+export const toParticipationText = (response, locale = "es") => {
+  const summary = participationSummary(response, locale);
   const lines = [
     "Aula Física",
-    "Respuesta de participación preparada localmente",
+    t(locale, "participation.exportHeading"),
     "",
-    `Tipo: ${summary.type}`,
-    `Tema: ${summary.topic}`,
-    `Respuesta: ${summary.response}`,
+    `${t(locale, "participation.type")}: ${summary.type}`,
+    `${t(locale, "participation.topicShort")}: ${summary.topic}`,
+    `${t(locale, "participation.response")}: ${summary.response}`,
   ];
 
   [...(summary.details ?? []), ...summary.optional].forEach(([label, value]) => {
@@ -382,13 +392,13 @@ export const toParticipationText = (response) => {
 
   lines.push(
     "",
-    `ID de respuesta: ${response.responseId}`,
-    `Fecha ISO: ${response.createdAt}`,
-    `Propósito: ${response.purpose}`,
-    "Privacidad: anónima",
-    "Recopilación: local",
+    `${t(locale, "participation.responseId")}: ${response.responseId}`,
+    `${t(locale, "participation.date")} ISO: ${response.createdAt}`,
+    `${t(locale, "participation.exportPurpose")}: ${response.purpose}`,
+    t(locale, "participation.exportPrivacy"),
+    t(locale, "participation.exportCollection"),
     "",
-    "Esta versión no envía ni guarda tu respuesta automáticamente."
+    t(locale, "participation.exportNoSend")
   );
 
   return `${lines.join("\n")}\n`;

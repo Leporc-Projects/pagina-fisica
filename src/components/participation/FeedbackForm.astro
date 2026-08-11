@@ -1,9 +1,10 @@
 ---
 import TopicSelect from "./TopicSelect.astro";
-import {
-  HELPFULNESS_OPTIONS,
-  IMPROVEMENT_AREAS,
-} from "../../data/participation.js";
+import { localizeParticipationData } from "../../data/participation-localize.js";
+import { t } from "../../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
+const { helpfulnessOptions, improvementAreas } = localizeParticipationData(locale);
 ---
 
 <section
@@ -13,38 +14,38 @@ import {
   hidden
 >
   <div class="participation-panel__heading">
-    <p class="participation-kicker">Feedback de la página</p>
-    <h2>Ayúdanos a mejorar</h2>
-    <p>Señala el cambio concreto que haría una explicación o la experiencia más útil.</p>
+    <p class="participation-kicker">{t(locale, "participation.pageFeedback")}</p>
+    <h2>{t(locale, "participation.improve")}</h2>
+    <p>{t(locale, "participation.improveHelp")}</p>
   </div>
 
   <form data-activity-form="improvement-feedback">
     <div class="participation-form-grid">
-      <TopicSelect id="feedback-topic" />
+      <TopicSelect id="feedback-topic" locale={locale} />
 
       <div class="participation-field">
-        <label for="improvement-area">Aspecto por mejorar</label>
+        <label for="improvement-area">{t(locale, "participation.area")}</label>
         <select id="improvement-area" name="area" required>
-          <option value="">Selecciona un aspecto</option>
-          {IMPROVEMENT_AREAS.map(([value, label]) => <option value={value}>{label}</option>)}
+          <option value="">{t(locale, "participation.selectArea")}</option>
+          {improvementAreas.map(([value, label]) => <option value={value}>{label}</option>)}
         </select>
       </div>
     </div>
 
     <div class="participation-field">
-      <label for="improvement-text">¿Qué cambiarías o mejorarías?</label>
+      <label for="improvement-text">{t(locale, "participation.improvement")}</label>
       <textarea id="improvement-text" name="improvement" rows="7" required></textarea>
     </div>
 
     <fieldset class="participation-field participation-field--options">
-      <legend>Valoración ligera <span>Opcional</span></legend>
+      <legend>{t(locale, "participation.helpfulness")} <span>{t(locale, "participation.optional")}</span></legend>
       <div class="participation-radio-list participation-radio-list--short">
-        {HELPFULNESS_OPTIONS.map(([value, label]) => (
+        {helpfulnessOptions.map(([value, label]) => (
           <label><input type="radio" name="helpfulness" value={value} /> <span>{label}</span></label>
         ))}
       </div>
     </fieldset>
 
-    <button class="participation-primary" type="submit">Preparar respuesta</button>
+    <button class="participation-primary" type="submit">{t(locale, "participation.prepare")}</button>
   </form>
 </section>

@@ -3,10 +3,13 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import BonusAttempt from "../../../components/bonus/BonusAttempt.astro";
 import { getBonusesByUnit } from "../../../data/bonuses/index.js";
 import { UNIT_1_BANK_ITEMS } from "../../../data/physics/unit-1/bank.js";
+import { localizeCourseData } from "../../../data/course-localize.js";
+import { getLocalizedUnit1BankItems } from "../../../data/physics/unit-1/exercise-localize.js";
 import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
-import { localizeUnit1, localizeUnit1Bonus } from "../../../data/physics/unit-1/localize.js";
+import { getLocalizedUnit1Visualization, getUnit1BonusRouteId, localizeUnit1, localizeUnit1Bonus } from "../../../data/physics/unit-1/localize.js";
 import { UNIT_1_VISUALIZATIONS } from "../../../data/physics/unit-1/visualizations.js";
-import { ROUTE_IDS } from "../../../i18n/routes.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../../i18n/routes.js";
+import { t } from "../../../i18n/index.js";
 import { eligiblePoolForBonus } from "../../../utils/bonus.js";
 import { withBase } from "../../../utils/paths.js";
 import "../../../styles/bonus.css";
@@ -21,48 +24,49 @@ export function getStaticPaths() {
   }));
 }
 
-const { bonus: sourceBonus, exercises, locale = "es" } = Astro.props;
+const { bonus: sourceBonus, locale = "es" } = Astro.props;
 const bonus = localizeUnit1Bonus(sourceBonus, locale);
+const COURSE = localizeCourseData(locale).COURSE;
 const UNIT_1 = localizeUnit1(locale);
+const exercises = eligiblePoolForBonus(bonus, getLocalizedUnit1BankItems(locale));
+const visualizations = Object.fromEntries(Object.keys(UNIT_1_VISUALIZATIONS).map((id) => [id, getLocalizedUnit1Visualization(id, locale)]));
+const routeId = getUnit1BonusRouteId(bonus.id);
 const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
 ---
 
-<BaseLayout title={`${bonus.title} · Física Básica I`} description={bonus.description} locale={locale} routeId={ROUTE_IDS.COURSE_BONUSES}>
+<BaseLayout title={`${bonus.title} · ${COURSE.name}`} description={bonus.description} locale={locale} routeId={routeId}>
   <article class="bonus-page">
     <header class="bonus-page__hero">
-      <nav class="academic-breadcrumb" aria-label="Migas de pan">
-        <a href={withBase("/fisica-basica-1/bonos")}>Bonos</a>
+      <nav class="academic-breadcrumb" aria-label={t(locale, "bonus.breadcrumb")}>
+        <a href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_BONUSES, locale))}>{t(locale, "course.nav.bonuses")}</a>
         <span aria-hidden="true">/</span>
         <span aria-current="page">{bonus.shortTitle}</span>
       </nav>
 
       <div class="bonus-page__heading">
-        <p class="eyebrow eyebrow--dark">Bono · {UNIT_1.shortTitle}</p>
+        <p class="eyebrow eyebrow--dark">{t(locale, "bonus.label")} · {UNIT_1.shortTitle}</p>
         <h1>{bonus.title}</h1>
         <p>{bonus.description}</p>
       </div>
 
-      <ul class="bonus-page__topics" aria-label="Temas de este Bono">
+      <ul class="bonus-page__topics" aria-label={t(locale, "bonus.pageTopics")}>
         {bonus.topics.map((topic) => (
           <li>{topicMap.get(topic)?.shortTitle ?? topic}</li>
         ))}
       </ul>
 
       <aside class="bonus-page__policy">
-        <strong>Resultado local y anónimo por defecto</strong>
-        <p>
-          El resultado se calcula en tu navegador y no se envía ni se registra
-          automáticamente. Solo después de finalizar puedes preparar, si lo
-          necesitas, una copia de entrega con correo institucional.
-        </p>
+        <strong>{t(locale, "bonus.policyTitle")}</strong>
+        <p>{t(locale, "bonus.policy")}</p>
       </aside>
     </header>
 
     <BonusAttempt
       bonus={bonus}
       exercises={exercises}
-      visualizations={UNIT_1_VISUALIZATIONS}
+      visualizations={visualizations}
       present={presentUnit1RichText}
+      locale={locale}
     />
   </article>
 </BaseLayout>

@@ -1,6 +1,7 @@
 import { assertSupportedLocale } from "../i18n/config.js";
 import { ROUTE_IDS, getLocalizedPath } from "../i18n/routes.js";
 import { BIBLIOGRAPHY, COURSE, EVALUATION, SCHEDULE, SCHEDULE_TYPES, UNITS } from "./course.js";
+import scheduleEn from "./course-schedule.en.js";
 
 const EN_COURSE = Object.freeze({
   name: "Basic Physics I",
@@ -47,6 +48,20 @@ const EN_SCHEDULE_TYPES = Object.freeze({
   class: { label: "Class" }, review: { label: "Review" }, exam: { label: "Assessment" }, event: { label: "Event" },
 });
 
+const localizeSchedule = () => SCHEDULE.map((session, index) => {
+  const translation = scheduleEn[index];
+  if (!translation || translation[1].length !== session.topics.length || translation[2].length !== session.objectives.length) {
+    throw new RangeError(`English schedule translation changed structure: session ${session.session}`);
+  }
+  return {
+    ...session,
+    chapterLabel: session.chapter.replace("Capítulo", "Chapter").replace("Capítulos", "Chapters"),
+    title: translation[0],
+    topics: translation[1],
+    objectives: translation[2],
+  };
+});
+
 // Academic invariants remain in course.js. These projections replace only
 // human-facing text, so dates, percentages, identifiers, and course workload
 // have one canonical source regardless of locale.
@@ -58,7 +73,7 @@ export const localizeCourseData = (locale) => {
     UNITS: UNITS.map((unit, index) => ({ ...unit, title: EN_UNITS[index][0], chapters: EN_UNITS[index][1], description: EN_UNITS[index][2] })),
     EVALUATION: EVALUATION.map((item, index) => ({ ...item, name: EN_EVALUATION[index][0], content: EN_EVALUATION[index][1] })),
     BIBLIOGRAPHY: BIBLIOGRAPHY.map((book, index) => ({ ...book, role: EN_BIBLIOGRAPHY_ROLES[index] })),
-    SCHEDULE,
+    SCHEDULE: localizeSchedule(),
     SCHEDULE_TYPES: EN_SCHEDULE_TYPES,
   };
 };

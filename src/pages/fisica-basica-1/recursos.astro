@@ -4,7 +4,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
 import { localizeCourseData } from "../../data/course-localize.js";
-import { ROUTE_IDS } from "../../i18n/routes.js";
+import { t } from "../../i18n/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
@@ -12,37 +13,37 @@ const { BIBLIOGRAPHY, COURSE } = localizeCourseData(locale);
 ---
 
 <BaseLayout
-  title={`Recursos · ${COURSE.name}`}
-  description={`Guías, bibliografía y recursos de consulta para ${COURSE.name}.`}
+  title={t(locale, "public.resources.pageTitle", { course: COURSE.name })}
+  description={t(locale, "public.resources.meta", { course: COURSE.name })}
   locale={locale}
   routeId={ROUTE_IDS.COURSE_RESOURCES}
 >
   <article class="course-subpage">
     <CoursePageHeader
-      title="Recursos"
-      description="Materiales propios y referencias públicas seleccionadas para acompañar el estudio."
+      title={t(locale, "public.resources.title")}
+      description={t(locale, "public.resources.description")}
       locale={locale}
     />
 
     <section class="page-section" aria-labelledby="guides-title">
       <SectionHeading
         id="guides-title"
-        title="Guías y apuntes"
-        desc="Documentos elaborados y revisados para el curso."
+        title={t(locale, "public.resources.guides")}
+        desc={t(locale, "public.resources.guidesDescription")}
       />
 
       <div class="empty-state">
-        <p class="empty-state__label">Estado actual</p>
-        <h3>Contenido en preparación</h3>
-        <p>Las guías se publicarán únicamente después de su revisión académica.</p>
+        <p class="empty-state__label">{t(locale, "public.common.currentStatus")}</p>
+        <h3>{t(locale, "public.common.inPreparation")}</h3>
+        <p>{t(locale, "public.resources.guidesPolicy")}</p>
       </div>
     </section>
 
     <section class="page-section" aria-labelledby="bibliography-title">
       <SectionHeading
         id="bibliography-title"
-        title="Bibliografía de referencia"
-        desc="Textos establecidos en los datos académicos del curso."
+        title={t(locale, "public.resources.bibliography")}
+        desc={t(locale, "public.resources.bibliographyDescription")}
       />
 
       <div class="bibliography-list">
@@ -67,15 +68,15 @@ const { BIBLIOGRAPHY, COURSE } = localizeCourseData(locale);
     <section class="page-section" aria-labelledby="audiovisual-title">
       <SectionHeading
         id="audiovisual-title"
-        title="Biblioteca audiovisual"
-        desc="Los videos propios se organizarán por unidad en la página del curso."
+        title={t(locale, "public.resources.audiovisual")}
+        desc={t(locale, "public.resources.audiovisualDescription")}
       />
 
       <div class="transition-panel transition-panel--compact">
-        <h3>Aún no hay videos publicados</h3>
-        <p>No se mostrarán títulos ni plataformas hasta contar con enlaces reales y aprobados.</p>
-        <a class="text-link" href={withBase("/fisica-basica-1/videos")}>
-          Consultar la biblioteca
+        <h3>{t(locale, "public.resources.noVideos")}</h3>
+        <p>{t(locale, "public.resources.noVideosDescription")}</p>
+        <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_VIDEOS, locale))}>
+          {t(locale, "public.resources.openLibrary")}
           <span aria-hidden="true">→</span>
         </a>
       </div>
@@ -84,15 +85,15 @@ const { BIBLIOGRAPHY, COURSE } = localizeCourseData(locale);
     <section class="page-section" aria-labelledby="external-resources-title">
       <SectionHeading
         id="external-resources-title"
-        title="Recursos externos"
-        desc="Sitios públicos de consulta para explorar y revisar conceptos."
+        title={t(locale, "public.resources.external")}
+        desc={t(locale, "public.resources.externalDescription")}
       />
 
       <div class="resource-link-list">
         <article class="resource-link-row">
           <div>
             <h3>PhET Interactive Simulations</h3>
-            <p>Simulaciones educativas públicas de la Universidad de Colorado Boulder.</p>
+            <p>{t(locale, "public.resources.phetDescription")}</p>
           </div>
           <a
             class="text-link"
@@ -100,14 +101,14 @@ const { BIBLIOGRAPHY, COURSE } = localizeCourseData(locale);
             target="_blank"
             rel="noopener noreferrer"
           >
-            Visitar sitio
+            {t(locale, "public.resources.visit")}
           </a>
         </article>
 
         <article class="resource-link-row">
           <div>
             <h3>HyperPhysics</h3>
-            <p>Mapa temático público para consultar conceptos y relaciones de física.</p>
+            <p>{t(locale, "public.resources.hyperphysicsDescription")}</p>
           </div>
           <a
             class="text-link"
@@ -115,36 +116,33 @@ const { BIBLIOGRAPHY, COURSE } = localizeCourseData(locale);
             target="_blank"
             rel="noopener noreferrer"
           >
-            Visitar sitio
+            {t(locale, "public.resources.visit")}
           </a>
         </article>
       </div>
     </section>
 
-    <section class="page-section" aria-labelledby="teacher-tools-title">
+    {locale === "es" && <section class="page-section" aria-labelledby="teacher-tools-title">
       <SectionHeading
         id="teacher-tools-title"
-        title="Herramientas docentes"
-        desc="Utilidades locales para trabajar con archivos preparados desde el sitio."
+        title={t(locale, "public.assessment.teacherTools")}
+        desc={t(locale, "public.resources.teacherToolsDescription")}
       />
 
       <div class="resource-link-list">
         <article class="resource-link-row">
           <div>
-            <h3>Espacio de herramientas</h3>
-            <p>
-              Reúne editores, revisión y organización de resultados. No requiere
-              cuenta y trabaja localmente en el navegador.
-            </p>
+            <h3>{t(locale, "public.resources.toolsSpace")}</h3>
+            <p>{t(locale, "public.resources.toolsSpaceDescription")}</p>
           </div>
           <a
             class="text-link"
             href={withBase("/fisica-basica-1/herramientas")}
           >
-            Ver herramientas
+            {t(locale, "public.resources.viewTools")}
           </a>
         </article>
       </div>
-    </section>
+    </section>}
   </article>
 </BaseLayout>

@@ -13,6 +13,7 @@
  * @property {string} duration
  * @property {string} date
  * @property {string} url
+ * @property {"es" | "en"} language
  * @property {string} [thumbnail]
  * @property {VideoStatus} status
  */
@@ -23,6 +24,16 @@ export const VIDEO_CONTENT_TYPES = [
   "Orientaciones de estudio",
   "Resolución de problemas seleccionados por el docente",
 ];
+
+const VIDEO_CONTENT_TYPES_EN = Object.freeze([
+  "Conceptual explanations",
+  "Demonstrations and analysis",
+  "Study guidance",
+  "Problems selected by the instructor",
+]);
+
+export const getVideoContentTypes = (locale) =>
+  locale === "en" ? [...VIDEO_CONTENT_TYPES_EN] : [...VIDEO_CONTENT_TYPES];
 
 /**
  * Publicaciones audiovisuales aprobadas. Mantener vacío mientras no existan

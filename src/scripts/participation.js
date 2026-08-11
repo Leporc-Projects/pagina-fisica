@@ -6,11 +6,15 @@ import {
   toParticipationJSON,
   toParticipationText,
 } from "../utils/participation.js";
+import { getLocaleConfig } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
 import { copyLocalText, downloadLocalFile } from "./local-export.js";
 
 const app = document.querySelector("[data-participation-app]");
 
 if (app instanceof HTMLElement) {
+  const locale = app.dataset.locale === "en" ? "en" : "es";
+  const intlLocale = getLocaleConfig(locale).intlLocale;
   const chooser = app.querySelector("[data-activity-chooser]");
   const choices = [...app.querySelectorAll("[data-activity-choice]")];
   const panels = [...app.querySelectorAll("[data-activity-panel]")];
@@ -62,7 +66,7 @@ if (app instanceof HTMLElement) {
 
   const renderPreview = (response) => {
     if (!(preview instanceof HTMLElement)) return;
-    const summary = participationSummary(response);
+    const summary = participationSummary(response, locale);
     const details = summary.details ?? [];
     const optional = summary.optional ?? [];
     const detailsTarget = preview.querySelector("[data-preview-details]");
@@ -75,7 +79,7 @@ if (app instanceof HTMLElement) {
     setPreviewText("[data-preview-id]", response.responseId);
     setPreviewText(
       "[data-preview-date]",
-      new Intl.DateTimeFormat(undefined, {
+      new Intl.DateTimeFormat(intlLocale, {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(new Date(response.createdAt))
@@ -153,7 +157,7 @@ if (app instanceof HTMLElement) {
       if (preview instanceof HTMLElement) preview.hidden = true;
       if (chooser instanceof HTMLElement) chooser.hidden = false;
       showSelectedPanel();
-      announce("Actividad seleccionada. La respuesta todavía no ha sido preparada.");
+      announce(t(locale, "participation.status.selected"));
     });
   });
 
@@ -163,12 +167,12 @@ if (app instanceof HTMLElement) {
       if (!(form instanceof HTMLFormElement)) return;
 
       try {
-        currentResponse = createParticipationResponse(responseInputFromForm(form));
+        currentResponse = createParticipationResponse(responseInputFromForm(form), { locale });
         currentForm = form;
         renderPreview(currentResponse);
-        announce("Respuesta preparada localmente. No se ha enviado ni guardado.");
+        announce(t(locale, "participation.status.prepared"));
       } catch (error) {
-        announce(error instanceof Error ? error.message : "No fue posible preparar la respuesta.");
+        announce(error instanceof Error ? error.message : t(locale, "participation.status.failed"));
       }
     });
   });
@@ -180,7 +184,7 @@ if (app instanceof HTMLElement) {
     showSelectedPanel();
     const firstControl = currentForm?.querySelector("select, textarea, input");
     if (firstControl instanceof HTMLElement) firstControl.focus();
-    announce("Puedes editar los campos y preparar una nueva versión.");
+    announce(t(locale, "participation.status.edit"));
   });
 
   const download = (contents, mimeType, extension) => {
@@ -200,35 +204,35 @@ if (app instanceof HTMLElement) {
         const action = button.dataset.export;
 
         if (action === "copy") {
-          await copyLocalText(toParticipationText(currentResponse));
-          announce("Respuesta copiada al portapapeles.");
+          await copyLocalText(toParticipationText(currentResponse, locale));
+          announce(t(locale, "participation.status.copied"));
           return;
         }
 
         if (action === "txt") {
-          download(toParticipationText(currentResponse), "text/plain;charset=utf-8", "txt");
-          announce("Archivo TXT preparado para descargar.");
+          download(toParticipationText(currentResponse, locale), "text/plain;charset=utf-8", "txt");
+          announce(t(locale, "participation.status.download", { format: "TXT" }));
           return;
         }
 
         if (action === "json") {
           download(toParticipationJSON(currentResponse), "application/json;charset=utf-8", "json");
-          announce("Archivo JSON preparado para descargar.");
+          announce(t(locale, "participation.status.download", { format: "JSON" }));
           return;
         }
 
         if (action === "csv") {
           download(toParticipationCSV(currentResponse), "text/csv;charset=utf-8", "csv");
-          announce("Archivo CSV preparado para descargar.");
+          announce(t(locale, "participation.status.download", { format: "CSV" }));
           return;
         }
 
         if (action === "print") {
-          announce("Se abrirá el diálogo del navegador para imprimir o guardar como PDF.");
+          announce(t(locale, "participation.status.print"));
           window.print();
         }
       } catch {
-        announce("El navegador no pudo completar esta acción. Inténtalo de nuevo.");
+        announce(t(locale, "participation.status.actionFailed"));
       }
     });
   });

@@ -1,6 +1,7 @@
 ---
 import RichText from "../academic/RichText.astro";
 import AcademicVisualization from "../visualization/AcademicVisualization.astro";
+import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -9,6 +10,7 @@ interface Props {
   topicTitle: string;
   visualization?: any;
   present?: (value: string) => RichContent;
+  locale?: "es" | "en";
 }
 
 const {
@@ -16,6 +18,7 @@ const {
   topicTitle,
   visualization,
   present = (value) => value,
+  locale = "es",
 } = Astro.props;
 const interaction = exercise.interaction;
 ---
@@ -29,7 +32,7 @@ const interaction = exercise.interaction;
 >
   <header class="bonus-question__header">
     <div>
-      <p class="bonus-question__counter" data-question-counter>Pregunta</p>
+      <p class="bonus-question__counter" data-question-counter>{t(locale, "bonus.question")}</p>
       <h2 id={`${exercise.id}-bonus-title`} tabindex="-1">{exercise.title}</h2>
     </div>
     <p class="bonus-question__topic">{topicTitle}</p>
@@ -46,6 +49,7 @@ const interaction = exercise.interaction;
           visualization={visualization}
           present={present}
           showExplanation={false}
+          locale={locale}
         />
       </div>
     )}
@@ -53,7 +57,7 @@ const interaction = exercise.interaction;
 
   {interaction.kind === "singleChoice" && (
     <fieldset class="bonus-question__interaction bonus-question__choice">
-      <legend>Elige una respuesta</legend>
+      <legend>{t(locale, "bonus.chooseAnswer")}</legend>
       <div class="bonus-choice-list" data-bonus-options>
         {interaction.options.map((option) => (
           <label class="bonus-choice" data-option-id={option.id}>
@@ -85,16 +89,16 @@ const interaction = exercise.interaction;
           data-field-id={interaction.field.id}
           aria-describedby={`${exercise.id}-value-help ${exercise.id}-value-error`}
         />
-        {interaction.field.unit && <span>{interaction.field.unit}</span>}
+        {(interaction.field.unitLabel ?? interaction.field.unit) && <span>{interaction.field.unitLabel ?? interaction.field.unit}</span>}
       </div>
-      <small id={`${exercise.id}-value-help`}>Puedes usar coma, punto, notación científica o una fracción simple.</small>
+      <small id={`${exercise.id}-value-help`}>{t(locale, "bonus.numberHelp")}</small>
       <small class="bonus-field-error" id={`${exercise.id}-value-error`} data-field-error></small>
     </div>
   )}
 
   {interaction.kind === "multiNumber" && (
     <fieldset class="bonus-question__interaction bonus-multi-number">
-      <legend>Completa cada valor</legend>
+      <legend>{t(locale, "bonus.completeValues")}</legend>
       <div class="bonus-multi-number__fields">
         {interaction.fields.map((field) => (
           <div class="bonus-number-field">
@@ -110,7 +114,7 @@ const interaction = exercise.interaction;
                 data-field-id={field.id}
                 aria-describedby={`${exercise.id}-${field.id}-error`}
               />
-              {field.unit && <span>{field.unit}</span>}
+              {(field.unitLabel ?? field.unit) && <span>{field.unitLabel ?? field.unit}</span>}
             </div>
             <small
               class="bonus-field-error"
@@ -120,7 +124,7 @@ const interaction = exercise.interaction;
           </div>
         ))}
       </div>
-      <small>Puedes usar coma, punto, notación científica o una fracción simple.</small>
+      <small>{t(locale, "bonus.numberHelp")}</small>
     </fieldset>
   )}
 
@@ -128,11 +132,11 @@ const interaction = exercise.interaction;
     <p class="bonus-question__feedback-status" data-feedback-status></p>
     <dl>
       <div>
-        <dt>Tu respuesta</dt>
+        <dt>{t(locale, "bonus.yourAnswer")}</dt>
         <dd data-feedback-response></dd>
       </div>
       <div>
-        <dt>Respuesta esperada</dt>
+        <dt>{t(locale, "bonus.expectedAnswer")}</dt>
         <dd data-feedback-expected></dd>
       </div>
     </dl>
@@ -140,7 +144,7 @@ const interaction = exercise.interaction;
 
     {exercise.solution.length > 0 && (
       <details class="bonus-question__solution" data-feedback-solution>
-        <summary>Revisar solución</summary>
+        <summary>{t(locale, "bonus.reviewSolution")}</summary>
         <ol>
           {exercise.solution.map((item) => (
             <li>

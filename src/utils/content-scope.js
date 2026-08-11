@@ -1,4 +1,5 @@
 import { getCourseById } from "../data/courses.js";
+import { localizeCourseData } from "../data/course-localize.js";
 
 export const CONTENT_SCOPE_TYPES = Object.freeze(["global", "course"]);
 
@@ -62,8 +63,9 @@ export const normalizeContentScope = (scope) => {
     : { type: "course", courseId: scope.courseId };
 };
 
-export const contentScopeLabel = (scope) => {
+export const contentScopeLabel = (scope, locale = "es") => {
   const normalized = normalizeContentScope(scope);
   if (normalized.type === "global") return "Aula Física";
+  if (normalized.courseId === "fisica-basica-1") return localizeCourseData(locale).COURSE.name;
   return getCourseById(normalized.courseId).name;
 };

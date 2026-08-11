@@ -1,46 +1,49 @@
 ---
 import ExportActions from "./ExportActions.astro";
+import { t } from "../../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
 ---
 
 <section class="response-preview" data-response-preview hidden aria-labelledby="response-preview-title">
   <header class="response-preview__header">
     <div>
-      <p class="participation-kicker">Respuesta preparada</p>
-      <h2 id="response-preview-title" tabindex="-1">Tu respuesta está lista para revisar</h2>
+      <p class="participation-kicker">{t(locale, "participation.prepared")}</p>
+      <h2 id="response-preview-title" tabindex="-1">{t(locale, "participation.ready")}</h2>
     </div>
-    <button class="response-preview__edit" type="button" data-edit-response>Editar</button>
+    <button class="response-preview__edit" type="button" data-edit-response>{t(locale, "participation.edit")}</button>
   </header>
 
   <p class="response-preview__brand">Aula Física</p>
 
   <dl class="response-preview__facts">
-    <div><dt>Tipo</dt><dd data-preview-type></dd></div>
-    <div><dt>Tema</dt><dd data-preview-topic></dd></div>
+    <div><dt>{t(locale, "participation.type")}</dt><dd data-preview-type></dd></div>
+    <div><dt>{t(locale, "participation.topicShort")}</dt><dd data-preview-topic></dd></div>
   </dl>
 
   <div class="response-preview__answer">
-    <h3>Respuesta</h3>
+    <h3>{t(locale, "participation.response")}</h3>
     <p data-preview-response></p>
   </div>
 
   <dl class="response-preview__details" data-preview-details hidden></dl>
 
   <section class="response-preview__optional" aria-labelledby="preview-optional-title">
-    <h3 id="preview-optional-title">Campos opcionales incluidos</h3>
+    <h3 id="preview-optional-title">{t(locale, "participation.optionalIncluded")}</h3>
     <dl data-preview-optional></dl>
-    <p data-preview-no-optional>Ninguno.</p>
+    <p data-preview-no-optional>{t(locale, "participation.none")}</p>
   </section>
 
   <dl class="response-preview__metadata">
-    <div><dt>ID de respuesta</dt><dd data-preview-id></dd></div>
-    <div><dt>Fecha</dt><dd data-preview-date></dd></div>
+    <div><dt>{t(locale, "participation.responseId")}</dt><dd data-preview-id></dd></div>
+    <div><dt>{t(locale, "participation.date")}</dt><dd data-preview-date></dd></div>
   </dl>
 
   <div class="response-preview__local-note">
-    <strong>Permanece en este navegador.</strong>
-    <p>Tu respuesta no se envía ni se guarda automáticamente. Cópiala o expórtala antes de cerrar o recargar la página.</p>
-    <p>Si tu profesor solicita el archivo, descarga JSON y entrégalo por el canal que te indique.</p>
+    <strong>{t(locale, "participation.staysBrowser")}</strong>
+    <p>{t(locale, "participation.localNote")}</p>
+    <p>{t(locale, "participation.deliveryNote")}</p>
   </div>
 
-  <ExportActions />
+  <ExportActions locale={locale} />
 </section>

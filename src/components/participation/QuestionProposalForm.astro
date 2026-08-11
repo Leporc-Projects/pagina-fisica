@@ -1,9 +1,10 @@
 ---
 import TopicSelect from "./TopicSelect.astro";
-import {
-  PROPOSAL_TYPES,
-  STUDENT_DIFFICULTY_ESTIMATES,
-} from "../../data/participation.js";
+import { localizeParticipationData } from "../../data/participation-localize.js";
+import { t } from "../../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
+const { difficultyEstimates, proposalTypes } = localizeParticipationData(locale);
 ---
 
 <section
@@ -13,58 +14,58 @@ import {
   hidden
 >
   <div class="participation-panel__heading">
-    <p class="participation-kicker">Construcción de problemas</p>
-    <h2>Propón una pregunta o problema</h2>
-    <p>La propuesta quedará marcada como trabajo estudiantil sin revisar. No entrará al banco académico automáticamente.</p>
+    <p class="participation-kicker">{t(locale, "participation.problemBuilding")}</p>
+    <h2>{t(locale, "participation.propose")}</h2>
+    <p>{t(locale, "participation.proposeHelp")}</p>
   </div>
 
   <form data-activity-form="student-question-proposal">
     <div class="participation-form-grid">
-      <TopicSelect id="proposal-topic" />
+      <TopicSelect id="proposal-topic" locale={locale} />
 
       <div class="participation-field">
-        <label for="proposal-type">Tipo de propuesta</label>
+        <label for="proposal-type">{t(locale, "participation.proposalType")}</label>
         <select id="proposal-type" name="proposalType" required>
-          <option value="">Selecciona un tipo</option>
-          {PROPOSAL_TYPES.map(([value, label]) => <option value={value}>{label}</option>)}
+          <option value="">{t(locale, "participation.selectType")}</option>
+          {proposalTypes.map(([value, label]) => <option value={value}>{label}</option>)}
         </select>
       </div>
     </div>
 
     <div class="participation-field">
-      <label for="proposal-statement">Enunciado propuesto</label>
+      <label for="proposal-statement">{t(locale, "participation.statement")}</label>
       <textarea id="proposal-statement" name="statement" rows="7" required></textarea>
     </div>
 
     <div class="participation-field">
-      <label for="proposal-concept">¿Qué crees que evalúa o qué concepto intenta poner a prueba?</label>
+      <label for="proposal-concept">{t(locale, "participation.intendedConcept")}</label>
       <textarea id="proposal-concept" name="intendedConcept" rows="4" required></textarea>
     </div>
 
     <details class="participation-optionals">
-      <summary>Añadir detalles opcionales</summary>
+      <summary>{t(locale, "participation.addOptional")}</summary>
       <div class="participation-optionals__body">
         <div class="participation-field">
-          <label for="proposal-answer">Respuesta esperada <span>Opcional</span></label>
+          <label for="proposal-answer">{t(locale, "participation.expectedAnswer")} <span>{t(locale, "participation.optional")}</span></label>
           <textarea id="proposal-answer" name="expectedAnswer" rows="4"></textarea>
         </div>
 
         <div class="participation-field">
-          <label for="proposal-explanation">Explicación de la respuesta <span>Opcional</span></label>
+          <label for="proposal-explanation">{t(locale, "participation.answerExplanation")} <span>{t(locale, "participation.optional")}</span></label>
           <textarea id="proposal-explanation" name="answerExplanation" rows="5"></textarea>
         </div>
 
         <div class="participation-field">
-          <label for="proposal-difficulty">Dificultad que estimas <span>Opcional</span></label>
+          <label for="proposal-difficulty">{t(locale, "participation.estimatedDifficulty")} <span>{t(locale, "participation.optional")}</span></label>
           <select id="proposal-difficulty" name="studentDifficultyEstimate">
-            <option value="">Sin estimación</option>
-            {STUDENT_DIFFICULTY_ESTIMATES.map(([value, label]) => <option value={value}>{label}</option>)}
+            <option value="">{t(locale, "participation.noEstimate")}</option>
+            {difficultyEstimates.map(([value, label]) => <option value={value}>{label}</option>)}
           </select>
-          <small>Es tu estimación, no la dificultad editorial oficial del banco.</small>
+          <small>{t(locale, "participation.estimateNote")}</small>
         </div>
       </div>
     </details>
 
-    <button class="participation-primary" type="submit">Preparar respuesta</button>
+    <button class="participation-primary" type="submit">{t(locale, "participation.prepare")}</button>
   </form>
 </section>

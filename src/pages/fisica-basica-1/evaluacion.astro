@@ -3,7 +3,8 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { localizeCourseData } from "../../data/course-localize.js";
-import { ROUTE_IDS } from "../../i18n/routes.js";
+import { t } from "../../i18n/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
@@ -15,15 +16,15 @@ const totalPercentage = EVALUATION.reduce(
 ---
 
 <BaseLayout
-  title={`Evaluación y notas · ${COURSE.name}`}
-  description={`Sistema de evaluación y principios de privacidad de ${COURSE.name}.`}
+  title={t(locale, "public.assessment.pageTitle", { course: COURSE.name })}
+  description={t(locale, "public.assessment.meta", { course: COURSE.name })}
   locale={locale}
   routeId={ROUTE_IDS.COURSE_ASSESSMENT}
 >
   <article class="course-subpage">
     <CoursePageHeader
-      title="Evaluación y notas"
-      description="Componentes oficiales de evaluación y principios para el tratamiento local y privado de la información."
+      title={t(locale, "public.assessment.title")}
+      description={t(locale, "public.assessment.description")}
       locale={locale}
     />
 
@@ -31,13 +32,11 @@ const totalPercentage = EVALUATION.reduce(
     <section class="course-section" aria-labelledby="evaluation-plan-title">
       <header class="course-section__header">
         <div>
-          <p class="course-section__index">Plan oficial</p>
-          <h2 id="evaluation-plan-title">Componentes de evaluación</h2>
+          <p class="course-section__index">{t(locale, "public.assessment.officialPlan")}</p>
+          <h2 id="evaluation-plan-title">{t(locale, "public.assessment.components")}</h2>
         </div>
 
-        <p>
-          Los cuatro exámenes y el taller representan en conjunto el {totalPercentage} % de la calificación.
-        </p>
+        <p>{t(locale, "public.assessment.total", { percentage: totalPercentage })}</p>
       </header>
 
       <div class="evaluation-list">
@@ -57,19 +56,17 @@ const totalPercentage = EVALUATION.reduce(
 
     <section class="course-section course-section--split" aria-labelledby="evaluation-bonuses-title">
       <div>
-        <p class="course-section__index">Actividades complementarias</p>
-        <h2 id="evaluation-bonuses-title">Bonos</h2>
+        <p class="course-section__index">{t(locale, "public.assessment.complementary")}</p>
+        <h2 id="evaluation-bonuses-title">{t(locale, "public.assessment.bonuses")}</h2>
       </div>
       <div class="course-section__body">
         <p class="course-lead">
-          Los Bonos ayudan a prepararse y no sustituyen los cuatro exámenes ni
-          el taller. Un resultado no modifica automáticamente ninguna calificación.
+          {t(locale, "public.assessment.bonusLead")}
         </p>
         <p>
-          Si un Bono se utiliza como complemento de una evaluación, el profesor
-          comunicará explícitamente cómo se tendrá en cuenta.
+          {t(locale, "public.assessment.bonusPolicy")}
         </p>
-        <a class="text-link" href={withBase("/fisica-basica-1/bonos")}>Abrir Bonos</a>
+        <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_BONUSES, locale))}>{t(locale, "public.assessment.openBonuses")}</a>
       </div>
     </section>
 
@@ -79,36 +76,33 @@ const totalPercentage = EVALUATION.reduce(
       aria-labelledby="grades-privacy-title"
     >
       <div>
-        <p class="course-section__index">Privacidad</p>
-        <h2 id="grades-privacy-title">Las notas no son contenido público</h2>
+        <p class="course-section__index">{t(locale, "public.assessment.privacy")}</p>
+        <h2 id="grades-privacy-title">{t(locale, "public.assessment.notPublic")}</h2>
       </div>
 
       <div class="course-section__body">
         <p class="course-lead">
-          Las páginas públicas no almacenan ni publican calificaciones
-          individuales, nombres, correos u otros datos personales de estudiantes.
+          {t(locale, "public.assessment.privacyLead")}
         </p>
 
         <div class="policy-panel">
-          <h3>Herramientas docentes</h3>
-          <p>
-            Estas herramientas procesan los archivos localmente en el navegador.
-            No son zonas privadas y no sustituyen el sistema institucional.
-          </p>
-          <div class="text-link-list">
+          <h3>{t(locale, "public.assessment.teacherTools")}</h3>
+          <p>{t(locale, "public.assessment.teacherToolsDescription")}</p>
+          {locale === "en" && <p>{t(locale, "public.assessment.teacherToolsPending")}</p>}
+          {locale === "es" && <div class="text-link-list">
             <a class="text-link" href={withBase("/fisica-basica-1/herramientas")}>
-              Ver todas las herramientas docentes
+              {t(locale, "public.assessment.allTeacherTools")}
             </a>
             <a class="text-link" href={withBase("/fisica-basica-1/herramientas/revision")}>
-              Centro de revisión
+              {t(locale, "public.assessment.reviewCenter")}
             </a>
             <a class="text-link" href={withBase("/fisica-basica-1/herramientas/banco")}>
-              Editor de banco
+              {t(locale, "public.assessment.bankEditor")}
             </a>
             <a class="text-link" href={withBase("/fisica-basica-1/herramientas/notas")}>
-              Organizador de resultados
+              {t(locale, "public.assessment.resultsOrganizer")}
             </a>
-          </div>
+          </div>}
         </div>
       </div>
     </section>
