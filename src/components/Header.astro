@@ -1,9 +1,17 @@
 ---
 // Cabecera y menú principal de pantalla completa.
-import { SITE, NAV } from "../data/site.js";
+import { SITE, getNavigation } from "../data/site.js";
 import { COURSE } from "../data/course.js";
 import { withBase } from "../utils/paths.js";
+import { t } from "../i18n/index.js";
 import ThemeSelector from "./ThemeSelector.astro";
+import LanguageSelector from "./LanguageSelector.astro";
+
+const { locale = "es" } = Astro.props;
+const NAV = getNavigation(locale).map((item) => ({
+  ...item,
+  label: t(locale, item.labelKey),
+}));
 
 const { pathname } = Astro.url;
 
@@ -38,7 +46,7 @@ const isExactCurrent = (href: string) =>
     <a
       class="site-brand"
       href={withBase("/")}
-      aria-label={`${SITE.name}, página de inicio`}
+      aria-label={t(locale, "brand.home")}
     >
       <img
         class="site-brand__logo"
@@ -60,7 +68,9 @@ const isExactCurrent = (href: string) =>
     </a>
 
     <div class="header-actions">
-      <ThemeSelector id="header-theme" />
+      <ThemeSelector id="header-theme" locale={locale} />
+
+      <LanguageSelector locale={locale} pathname={pathname} />
 
       <button
         class="menu-trigger"
@@ -69,7 +79,7 @@ const isExactCurrent = (href: string) =>
         aria-expanded="false"
         data-menu-open
       >
-        <span class="menu-trigger__label">Menú</span>
+        <span class="menu-trigger__label">{t(locale, "shell.menu")}</span>
 
         <svg
           aria-hidden="true"
@@ -100,7 +110,7 @@ const isExactCurrent = (href: string) =>
     <div class="menu-panel__top">
       <div>
         <p class="menu-panel__eyebrow">
-          Navegación
+          {t(locale, "shell.navigation")}
         </p>
 
         <h2 id="menu-title">
@@ -111,7 +121,7 @@ const isExactCurrent = (href: string) =>
       <button
         class="menu-close"
         type="button"
-        aria-label="Cerrar menú"
+        aria-label={t(locale, "shell.closeMenu")}
         data-menu-close
       >
         <svg
@@ -127,12 +137,12 @@ const isExactCurrent = (href: string) =>
 
     <nav
       class="menu-nav"
-      aria-label="Navegación principal"
+      aria-label={t(locale, "shell.primaryNavigation")}
     >
       <ol class="menu-list">
         {
           NAV.map((item, index) => {
-            const active = isCurrent(item.href);
+            const active = item.href ? isCurrent(item.href) : false;
 
             if (item.children) {
               return (
@@ -167,7 +177,7 @@ const isExactCurrent = (href: string) =>
                                     aria-disabled="true"
                                   >
                                     <span>{child.label}</span>
-                                    <small>Próximamente</small>
+                                    <small>{t(locale, "shell.comingSoon")}</small>
                                   </span>
                                 )
                                 : (
@@ -189,6 +199,17 @@ const isExactCurrent = (href: string) =>
                       }
                     </ul>
                   </details>
+                </li>
+              );
+            }
+
+            if (item.disabled) {
+              return (
+                <li class="menu-item">
+                  <span class="menu-link is-disabled" aria-disabled="true">
+                    <span class="menu-index">{String(index + 1).padStart(2, "0")}</span>
+                    <span>{item.label} <small>{t(locale, "shell.comingSoon")}</small></span>
+                  </span>
                 </li>
               );
             }
@@ -223,7 +244,7 @@ const isExactCurrent = (href: string) =>
     </nav>
 
     <p class="menu-panel__footer">
-      {COURSE.name} · Semestre {COURSE.semester}
+      {COURSE.name} · {t(locale, "shell.semester", { semester: COURSE.semester })}
     </p>
   </section>
 </div>

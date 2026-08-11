@@ -71,9 +71,9 @@ test("genera ID y metadatos sin pedirlos al editor", () => {
   assert.notEqual(first, second);
   const draft = notice();
   assert.equal(draft.version, 1);
-  assert.equal(draft.schemaVersion, "2.0.0");
-  assert.equal(NOTICE_SCHEMA_VERSION, "2.0.0");
-  assert.equal(NOTICE_PACK_SCHEMA_VERSION, "2.0.0");
+  assert.equal(draft.schemaVersion, "3.0.0");
+  assert.equal(NOTICE_SCHEMA_VERSION, "3.0.0");
+  assert.equal(NOTICE_PACK_SCHEMA_VERSION, "3.0.0");
   assert.equal(draft.status, "draft");
   assert.equal(validateNotice(draft).valid, true);
 });
@@ -183,7 +183,7 @@ test("rechaza paquetes inválidos y duplicados dentro o fuera del paquete", () =
   assert.equal(validateNoticePack({ ...pack, createdAt: "hoy" }).valid, false);
   const legacy = { ...pack, schemaVersion: "1.0.0" };
   assert.equal(validateNoticePack(legacy).valid, false);
-  assert.throws(() => mergeNoticePack(legacy, []), /paquetes 1\.x/);
+  assert.throws(() => mergeNoticePack(legacy, []), /anteriores a 3\.x/);
 });
 
 test("los avisos reales conservan sus datos y tienen el ámbito editorial esperado", () => {
@@ -264,14 +264,14 @@ test("el editor exige campos, previsualiza, exporta y usa APIs de texto seguras"
 test("las rutas públicas y la tarjeta compacta conservan enlaces seguros y ámbitos separados", () => {
   const generalPage = fs.readFileSync(new URL("../src/pages/avisos.astro", import.meta.url), "utf8");
   const coursePage = fs.readFileSync(new URL("../src/pages/fisica-basica-1/avisos.astro", import.meta.url), "utf8");
-  const homepage = fs.readFileSync(new URL("../src/pages/index.astro", import.meta.url), "utf8");
+  const homepage = fs.readFileSync(new URL("../src/components/pages/HomePage.astro", import.meta.url), "utf8");
   const card = fs.readFileSync(new URL("../src/components/NoticeCard.astro", import.meta.url), "utf8");
   assert.match(generalPage, /getGlobalNotices/);
   assert.doesNotMatch(generalPage, /getPublishedNotices/);
   assert.match(coursePage, /getCourseNotices\(COURSE\.id\)/);
   assert.match(coursePage, /\/avisos/);
   assert.match(homepage, /showScope/);
-  assert.match(homepage, /getHomepageNotices\(3\)/);
+  assert.match(homepage, /getHomepageNotices\(3/);
   assert.match(card, /href &&/);
   assert.match(card, /target=\{external \? "_blank"/);
   assert.match(card, /rel=\{external \? "noopener noreferrer"/);

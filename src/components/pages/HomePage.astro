@@ -1,0 +1,83 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import NoticeCard from "../NoticeCard.astro";
+import { SITE } from "../../data/site.js";
+import { COURSE } from "../../data/course.js";
+import { getHomepageNotices } from "../../data/notices.js";
+import { t } from "../../i18n/index.js";
+import { ROUTE_IDS, getLocalizedPath } from "../../i18n/routes.js";
+import { withBase } from "../../utils/paths.js";
+
+const { locale = "es" } = Astro.props;
+const recentNotices = locale === "es" ? getHomepageNotices(3, undefined, locale) : [];
+const links = [
+  {
+    number: "01",
+    label: COURSE.name,
+    description: t(locale, "home.courseDescription"),
+    href: getLocalizedPath(ROUTE_IDS.COURSE, "es"),
+  },
+  {
+    number: "02",
+    label: t(locale, "nav.simulations"),
+    description: t(locale, "home.simulationsDescription"),
+    href: getLocalizedPath(ROUTE_IDS.SIMULATIONS, locale),
+  },
+];
+---
+
+<BaseLayout title={t(locale, "meta.homeTitle")} description={t(locale, "meta.defaultDescription")} fullWidth locale={locale} routeId={ROUTE_IDS.HOME}>
+  <section class="landing" aria-labelledby="landing-title">
+    <div class="landing-grid" aria-hidden="true"></div>
+    <div class="container landing-inner">
+      <div class="landing-mark">
+        <img src={withBase(SITE.logoPath)} alt={`Aula Física ${locale === "es" ? "logotipo" : "logo"}`} width="220" height="220" />
+      </div>
+      <p class="eyebrow">{t(locale, "home.eyebrow")}</p>
+      <h1 id="landing-title">{SITE.name}</h1>
+      <p class="landing-teacher">{SITE.teacherName}</p>
+      <p class="landing-tagline">{t(locale, "home.tagline")}</p>
+      <button class="landing-menu-button" type="button" aria-controls="site-menu" aria-expanded="false" data-menu-open>
+        <span>{t(locale, "shell.menu")}</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <a class="scroll-cue" href="#content"><span>{t(locale, "home.explore")}</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v16M6 14l6 6 6-6"></path></svg></a>
+    </div>
+  </section>
+
+  <section class="home-content" id="content">
+    <div class="container">
+      <header class="editorial-heading">
+        <p class="eyebrow eyebrow--dark">{t(locale, "home.activeCourse")}</p>
+        <div><h2>{COURSE.name}</h2><p>{t(locale, "home.courseIntro")}</p></div>
+        <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE, "es"))} hreflang="es">
+          {t(locale, "home.enterCourse")}<span aria-hidden="true">→</span>
+        </a>
+      </header>
+      <div class="home-directory" aria-label={t(locale, "home.featured")}>
+        {links.map((item) => (
+          <a class="directory-row" href={withBase(item.href)} hreflang={item.number === "01" && locale === "en" ? "es" : undefined}>
+            <span class="directory-number">{item.number}</span>
+            <span class="directory-copy"><strong>{item.label}</strong><span>{item.description}</span></span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {recentNotices.length > 0 && (
+    <section class="notices-section" id="notices" aria-labelledby="notices-title">
+      <div class="container notices-layout">
+        <div><p class="eyebrow eyebrow--dark">{t(locale, "home.updates")}</p><h2 id="notices-title">{t(locale, "home.notices")}</h2></div>
+        <div class="notice-list">
+          {recentNotices.map((notice) => <NoticeCard notice={notice} compact showScope idPrefix="home-notice" locale={locale} />)}
+          <div class="notice-list__links" aria-label={t(locale, "home.notices")}>
+            <a class="notice-list__more" href={withBase("/avisos")}>{t(locale, "home.generalNotices")}<span aria-hidden="true">→</span></a>
+            <a class="notice-list__more" href={withBase(`${COURSE.href}/avisos`)}>{t(locale, "home.courseNotices", { course: COURSE.name })}<span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+</BaseLayout>

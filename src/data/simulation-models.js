@@ -19,6 +19,10 @@ const parameter = ({ label, symbol, unit, limits, defaultStep }) =>
 
 const view = (label, visual = false) => Object.freeze({ label, visual });
 
+const translations = (name, category, parameters, views) => Object.freeze({
+  en: Object.freeze({ name, category, parameters: Object.freeze(parameters), views: Object.freeze(views) }),
+});
+
 export const SIMULATION_MODELS = Object.freeze([
   Object.freeze({
     id: "kinematics-1d",
@@ -63,6 +67,19 @@ export const SIMULATION_MODELS = Object.freeze([
       accelerationGraph: view("Gráfica a(t)", true),
       turningPoint: view("Información del cambio de sentido"),
     }),
+    translations: translations(
+      "One-dimensional kinematics with constant acceleration",
+      "Kinematics",
+      { x0: "Initial position", v0: "Initial velocity", a: "Acceleration", T: "Duration" },
+      {
+        motion: "Motion along the axis",
+        readings: "Instantaneous readings",
+        positionGraph: "x(t) graph",
+        velocityGraph: "v(t) graph",
+        accelerationGraph: "a(t) graph",
+        turningPoint: "Change-of-direction information",
+      }
+    ),
   }),
   Object.freeze({
     id: "projectile-2d",
@@ -108,8 +125,45 @@ export const SIMULATION_MODELS = Object.freeze([
       velocityComponents: view("Componentes de velocidad"),
       keyPoints: view("Puntos de lanzamiento, vértice e impacto"),
     }),
+    translations: translations(
+      "Two-dimensional projectile motion",
+      "Kinematics",
+      { y0: "Initial height", v0: "Initial speed", theta: "Launch angle", g: "Gravity magnitude" },
+      {
+        scene: "Cartesian scene",
+        readings: "Instantaneous readings",
+        trajectory: "Complete trajectory",
+        velocityVector: "Velocity vector",
+        accelerationVector: "Acceleration vector",
+        velocityComponents: "Velocity components",
+        keyPoints: "Launch, apex, and impact points",
+      }
+    ),
   }),
 ]);
 
 export const getSimulationModelById = (modelId) =>
   SIMULATION_MODELS.find((model) => model.id === modelId);
+
+export const localizeSimulationModel = (model, locale = "es") => {
+  if (!model) return undefined;
+  if (locale === "es") return model;
+  const localized = model.translations?.[locale];
+  if (!localized) throw new RangeError(`El modelo ${model.id} no tiene traducción ${locale}.`);
+  return {
+    ...model,
+    name: localized.name,
+    category: localized.category,
+    parameters: Object.fromEntries(Object.entries(model.parameters).map(([key, definition]) => [
+      key,
+      { ...definition, label: localized.parameters[key] },
+    ])),
+    views: Object.fromEntries(Object.entries(model.views).map(([key, definition]) => [
+      key,
+      { ...definition, label: localized.views[key] },
+    ])),
+  };
+};
+
+export const getLocalizedSimulationModelById = (modelId, locale = "es") =>
+  localizeSimulationModel(getSimulationModelById(modelId), locale);

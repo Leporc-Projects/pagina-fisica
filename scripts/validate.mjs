@@ -68,6 +68,10 @@ import {
   THEME_STORAGE_KEY,
 } from "../src/data/theme.js";
 import { resolveBasePath } from "../src/utils/paths.js";
+import { DEFAULT_LOCALE, LOCALES, SUPPORTED_LOCALES } from "../src/i18n/config.js";
+import { UI_DICTIONARIES, getDictionaryKeys, t } from "../src/i18n/index.js";
+import { LOCALIZED_ROUTES, ROUTE_IDS, getRouteCounterpart } from "../src/i18n/routes.js";
+import { getLanguageMetadata } from "../src/i18n/metadata.js";
 import { ACADEMIC_UNITS } from "../src/data/physics/index.js";
 import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
 import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
@@ -501,8 +505,8 @@ check(
 );
 
 check(
-  SIMULATION_EXPERIENCE_SCHEMA_VERSION === "1.0.0" &&
-    SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION === "1.0.0" &&
+  SIMULATION_EXPERIENCE_SCHEMA_VERSION === "2.0.0" &&
+    SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION === "2.0.0" &&
     duplicates(simulationExperienceIds).length === 0 &&
     SIMULATION_EXPERIENCES.every((experience) =>
       validateSimulationExperience(experience).valid &&
@@ -519,7 +523,7 @@ check(
       SIMULATION_CATEGORIES.includes(simulation.category) &&
       SIMULATION_STATUSES.includes(simulation.status) &&
       routes.has(normalizeRoute(simulation.route)) &&
-      simulation.experience === getSimulationExperienceById(simulation.id) &&
+      simulation.experience.id === getSimulationExperienceById(simulation.id)?.id &&
       simulation.title === simulation.experience.title &&
       simulation.description === simulation.experience.summary &&
       simulation.modelId === simulation.experience.modelId &&
@@ -629,6 +633,34 @@ check(
 );
 
 check(
+  DEFAULT_LOCALE === "es" &&
+    SUPPORTED_LOCALES.join(",") === "es,en" &&
+    Object.values(LOCALES).every((locale) =>
+      locale.htmlLang && locale.intlLocale && locale.label && locale.short
+    ) &&
+    getDictionaryKeys("es").join("|") === getDictionaryKeys("en").join("|") &&
+    Object.values(UI_DICTIONARIES).every((dictionary) =>
+      Object.values(dictionary).every((value) => typeof value === "string" && value.length > 0)
+    ) &&
+    t("en", "shell.menu") === "Menu",
+  "El registro de locales y los diccionarios bilingües tienen paridad exacta."
+);
+
+const requiredLocalizedRoutes = Object.values(LOCALIZED_ROUTES)
+  .flatMap((localized) => Object.values(localized))
+  .filter(Boolean)
+  .map(normalizeRoute);
+
+check(
+  requiredLocalizedRoutes.every((route) => routes.has(route)) &&
+    !requiredLocalizedRoutes.some((route) => route.startsWith("/es/")) &&
+    getRouteCounterpart("/simulaciones/cinematica-1d", "en") === "/en/simulations/kinematics-1d" &&
+    getRouteCounterpart("/fisica-basica-1", "en") === null &&
+    getLanguageMetadata("en", ROUTE_IDS.PROJECTILE_2D).canonicalPath === "/en/simulations/projectile-2d",
+  "Las rutas bilingües, contrapartes y metadatos existen sin publicar un prefijo /es."
+);
+
+check(
   duplicates(NOTICES.map((notice) => notice.id)).length === 0,
   "Los avisos tienen identificadores únicos."
 );
@@ -639,11 +671,12 @@ check(
 );
 
 check(
-  NOTICE_SCHEMA_VERSION === "2.0.0" &&
-    NOTICE_PACK_SCHEMA_VERSION === "2.0.0" &&
+  NOTICE_SCHEMA_VERSION === "3.0.0" &&
+    NOTICE_PACK_SCHEMA_VERSION === "3.0.0" &&
     NOTICES.every((notice) => notice.schemaVersion === NOTICE_SCHEMA_VERSION) &&
+    NOTICES.every((notice) => notice.locale === "es") &&
     NOTICES.every((notice) => validateContentScope(notice.scope).valid),
-  "Avisos y paquetes usan el esquema 2.0.0 con ámbito explícito válido."
+  "Avisos y paquetes usan el esquema 3.0.0 con ámbito y locale explícitos."
 );
 
 check(
@@ -1785,7 +1818,7 @@ check(
     projectileComponentSource.includes("<noscript>") &&
     projectileComponentSource.includes('aria-live="polite"') &&
     projectileComponentSource.includes("data-time-scrubber") &&
-    projectileComponentSource.includes("Alternativa textual al Canvas"),
+    projectileComponentSource.includes('t(locale, "projectile.textAlternative")'),
   "El proyectil fija p5 local y conserva controles, lecturas y alternativa accesible."
 );
 

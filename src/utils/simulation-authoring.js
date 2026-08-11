@@ -11,6 +11,7 @@ export const createSimulationLabBaseConfiguration = (modelId) => {
     modelId: model.id,
     title: experience.title,
     summary: experience.summary,
+    translations: experience.translations,
     parameters: experience.parameters,
     views: experience.views,
     presets: experience.presets,

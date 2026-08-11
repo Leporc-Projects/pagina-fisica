@@ -5,23 +5,29 @@ import {
   THEME_STORAGE_KEY,
   THEME_COLORS,
 } from "../data/theme.js";
+import { t } from "../i18n/index.js";
 
 interface Props {
   id?: string;
+  locale?: "es" | "en";
 }
 
-const { id = "theme-selector" } = Astro.props;
+const { id = "theme-selector", locale = "es" } = Astro.props;
+const localizedOptions = THEME_PREFERENCES.map((option) => ({
+  ...option,
+  label: t(locale, `theme.${option.value}`),
+}));
 ---
 
 <fieldset class="theme-selector" data-theme-selector>
-  <legend class="sr-only">Preferencia de tema</legend>
+  <legend class="sr-only">{t(locale, "theme.label")}</legend>
 
   <div class="theme-selector__options">
     {
-      THEME_PREFERENCES.map((option) => (
+      localizedOptions.map((option) => (
         <label
           class="theme-selector__option"
-          title={`Tema ${option.label.toLocaleLowerCase("es")}`}
+          title={t(locale, "theme.title", { theme: option.label })}
         >
           <input
             type="radio"

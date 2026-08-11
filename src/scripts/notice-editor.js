@@ -8,7 +8,7 @@ import {
   validateNoticePack,
 } from "../utils/notices.js";
 import { contentScopeLabel } from "../utils/content-scope.js";
-import { SITE } from "../data/site.js";
+import { LOCALES } from "../i18n/config.js";
 import { withBase } from "../utils/paths.js";
 import { downloadLocalFile } from "./local-export.js";
 
@@ -49,7 +49,7 @@ const renderPreview = (panel, notice) => {
 
   const meta = create("div", undefined, "notice-meta");
   meta.append(create("span", `${notice.category} · ${contentScopeLabel(notice.scope)}`));
-  const time = create("time", new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateString(SITE.locale, {
+  const time = create("time", new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateString(LOCALES.es.intlLocale, {
     day: "2-digit", month: "long", year: "numeric",
   }));
   time.dateTime = notice.publishedAt;

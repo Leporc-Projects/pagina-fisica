@@ -2,18 +2,38 @@
 // Los datos académicos se importan desde course.js en lugar de duplicarse aquí.
 
 import { COURSE, COURSE_NAV } from "./course.js";
+import { ROUTE_IDS, getLocalizedPath } from "../i18n/routes.js";
 
 export const SITE = {
   name: "Aula Física",
   teacherName: "César Barrero",
-  tagline: "Física para comprender, practicar y conectar ideas.",
-  description:
-    "Sitio docente personal con materiales, ejercicios y recursos para el aprendizaje de la física.",
   // Ruta lógica: BaseLayout, Header y la portada la resuelven con withBase().
   logoPath: "/images/leporc-projects.jpg",
-  lang: "es",
-  locale: "es-CO",
 };
+
+export const getNavigation = (locale) => [
+  {
+    labelKey: "nav.home",
+    href: getLocalizedPath(ROUTE_IDS.HOME, locale),
+  },
+  {
+    labelKey: "nav.course",
+    href: getLocalizedPath(ROUTE_IDS.COURSE, locale),
+    disabled: !getLocalizedPath(ROUTE_IDS.COURSE, locale),
+    children: locale === "es"
+      ? COURSE_NAV.filter((item) => item.includeInGlobalMenu !== false)
+      : undefined,
+  },
+  {
+    labelKey: "nav.simulations",
+    href: getLocalizedPath(ROUTE_IDS.SIMULATIONS, locale),
+  },
+  {
+    labelKey: "nav.notices",
+    href: getLocalizedPath(ROUTE_IDS.NOTICES, locale),
+    disabled: !getLocalizedPath(ROUTE_IDS.NOTICES, locale),
+  },
+];
 
 /**
  * Navegación principal consumida por Header y por la validación de enlaces.

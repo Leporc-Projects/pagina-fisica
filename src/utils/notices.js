@@ -2,9 +2,10 @@ import {
   normalizeContentScope,
   validateContentScope,
 } from "./content-scope.js";
+import { DEFAULT_LOCALE, isSupportedLocale } from "../i18n/config.js";
 
-export const NOTICE_SCHEMA_VERSION = "2.0.0";
-export const NOTICE_PACK_SCHEMA_VERSION = "2.0.0";
+export const NOTICE_SCHEMA_VERSION = "3.0.0";
+export const NOTICE_PACK_SCHEMA_VERSION = "3.0.0";
 export const NOTICE_STATUSES = ["draft", "review", "published", "archived"];
 export const NOTICE_CATEGORIES = [
   "Curso",
@@ -82,6 +83,7 @@ export const normalizeNotice = (notice, { status = notice?.status ?? "draft" } =
   schemaVersion: NOTICE_SCHEMA_VERSION,
   id: String(notice?.id ?? "").trim(),
   version: Number.isInteger(notice?.version) ? notice.version : 1,
+  locale: String(notice?.locale ?? DEFAULT_LOCALE).trim(),
   scope: normalizeContentScope(notice?.scope),
   title: String(notice?.title ?? "").trim(),
   summary: String(notice?.summary ?? "").trim(),
@@ -100,6 +102,7 @@ export const validateNotice = (notice, { existingIds = [] } = {}) => {
   require(/^notice-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$/.test(notice?.id ?? ""), "ID de aviso inválido.");
   require(!new Set(existingIds).has(notice?.id), "El ID del aviso ya existe.");
   require(Number.isInteger(notice?.version) && notice.version >= 1, "La versión debe ser un entero positivo.");
+  require(isSupportedLocale(notice?.locale), "El locale del aviso no está soportado.");
   const scopeValidation = validateContentScope(notice?.scope);
   scopeValidation.errors.forEach((error) => errors.push(`Ámbito: ${error}`));
   require(validText(notice?.title), "Falta el título.");
@@ -154,11 +157,11 @@ export const createNoticePack = (
 export const validateNoticePack = (pack, { existingIds = [] } = {}) => {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
-  const isLegacyPack = typeof pack?.schemaVersion === "string" && /^1(?:\.|$)/.test(pack.schemaVersion);
+  const isLegacyPack = typeof pack?.schemaVersion === "string" && /^[12](?:\.|$)/.test(pack.schemaVersion);
   require(
     pack?.schemaVersion === NOTICE_PACK_SCHEMA_VERSION,
     isLegacyPack
-      ? "Los paquetes 1.x no son compatibles: deben regenerarse con un ámbito explícito."
+      ? "Los paquetes anteriores a 3.x no son compatibles: deben regenerarse con ámbito y locale explícitos."
       : "schemaVersion de paquete inválida."
   );
   require(/^notice-pack-[0-9a-f]{16}$/.test(pack?.packageId ?? ""), "packageId inválido.");

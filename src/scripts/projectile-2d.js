@@ -1,4 +1,5 @@
-import { getSimulationModelById } from "../data/simulation-models.js";
+import { getSimulationModelById, localizeSimulationModel } from "../data/simulation-models.js";
+import { formatNumber, t } from "../i18n/index.js";
 import {
   normalizeSimulationExperience,
   validateSimulationExperience,
@@ -11,7 +12,6 @@ import {
   sampleProjectile,
   validateProjectileParameters,
 } from "../utils/projectile-2d.js";
-import { formatProjectileNumber } from "../utils/projectile-canvas.js";
 import { createProjectileP5Renderer } from "./p5-projectile-renderer.js";
 
 const runtimes = new WeakMap();
@@ -29,6 +29,8 @@ const parametersEqual = (first, second) =>
   Object.keys(first).every((key) => first[key] === second[key]);
 
 const createRuntime = async (root, suppliedExperience) => {
+  const locale = root.dataset.locale === "en" ? "en" : "es";
+  const displayNumber = (value, digits = 2) => formatNumber(locale, value, { maximumFractionDigits: digits });
   let experience = normalizeSimulationExperience(
     suppliedExperience ?? readEmbeddedExperience(root)
   );
@@ -60,7 +62,7 @@ const createRuntime = async (root, suppliedExperience) => {
     Object.entries(experience.parameters).map(([key, config]) => [key, config.default])
   );
   const parameterDefinitions = () => {
-    const model = getSimulationModelById(experience.modelId);
+    const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
     return Object.entries(model.parameters).map(([key, definition]) => ({
       key,
       ...definition,
@@ -101,22 +103,23 @@ const createRuntime = async (root, suppliedExperience) => {
     renderer = await createProjectileP5Renderer({
       container: canvasContainer,
       getFrame: () => state.frame,
+      locale,
     });
   } catch (error) {
     if (rendererError instanceof HTMLElement) {
       rendererError.hidden = false;
-      rendererError.textContent = "No fue posible cargar el renderer p5. El contenido académico y las lecturas siguen disponibles.";
+      rendererError.textContent = t(locale, "projectile.rendererError");
     }
     throw error;
   }
 
   const setPlaybackPresentation = () => {
     toggleButton.setAttribute("aria-pressed", String(state.playing));
-    playbackLabel.textContent = state.playing ? "Pausar" : "Reproducir";
+    playbackLabel.textContent = state.playing ? t(locale, "simulation.pause") : t(locale, "simulation.play");
     playbackIcon.textContent = state.playing ? "❚❚" : "▶";
-    playbackState.textContent = state.playing ? "En reproducción" : "En pausa";
+    playbackState.textContent = state.playing ? t(locale, "simulation.playing") : t(locale, "simulation.paused");
   };
-  const pause = ({ shouldAnnounce = false, reason = "Simulación en pausa." } = {}) => {
+  const pause = ({ shouldAnnounce = false, reason = t(locale, "simulation.paused") } = {}) => {
     state.playing = false;
     if (state.frameId !== null) window.cancelAnimationFrame(state.frameId);
     state.frameId = null;
@@ -138,7 +141,7 @@ const createRuntime = async (root, suppliedExperience) => {
     };
     Object.entries(readings).forEach(([key, value]) => {
       const output = root.querySelector(`[data-reading="${key}"]`);
-      if (output) output.textContent = formatProjectileNumber(value);
+      if (output) output.textContent = displayNumber(value);
     });
     Object.entries({
       flightTime: state.frame.summary.flightTime,
@@ -146,20 +149,20 @@ const createRuntime = async (root, suppliedExperience) => {
       maximumHeight: state.frame.summary.maximumHeight,
     }).forEach(([key, value]) => {
       const output = root.querySelector(`[data-summary="${key}"]`);
-      if (output) output.textContent = formatProjectileNumber(value);
+      if (output) output.textContent = displayNumber(value);
     });
-    timeOutput.textContent = `${formatProjectileNumber(physical.time)} s`;
+    timeOutput.textContent = `${displayNumber(physical.time)} s`;
     scrubber.max = String(state.frame.summary.flightTime);
     scrubber.value = String(physical.time);
     const immediate = state.frame.summary.flightTime <= PROJECTILE_EPSILON;
     toggleButton.disabled = immediate;
     scrubber.disabled = immediate;
-    if (immediate) playbackState.textContent = "Contacto inmediato con el suelo";
+    if (immediate) playbackState.textContent = t(locale, "projectile.immediateGround");
   };
   const updateControlOutputs = () => {
     parameterDefinitions().forEach((control) => {
       const output = root.querySelector(`[data-param-output="${control.key}"]`);
-      if (output) output.textContent = `${formatProjectileNumber(state.parameters[control.key])} ${control.unit}`;
+      if (output) output.textContent = `${displayNumber(state.parameters[control.key])} ${control.unit}`;
     });
   };
   const updatePresetState = () => {
@@ -188,7 +191,7 @@ const createRuntime = async (root, suppliedExperience) => {
       if (!Number.isFinite(value) || value < control.minimum || value > control.maximum) {
         issues.push({
           field: control.key,
-          message: `${control.label} debe estar entre ${control.minimum} y ${control.maximum} ${control.unit}.`,
+          message: t(locale, "simulation.valueOutOfRange", { label: control.label, minimum: control.minimum, maximum: control.maximum, unit: control.unit }),
         });
       }
     });
@@ -203,7 +206,7 @@ const createRuntime = async (root, suppliedExperience) => {
       if (output) output.textContent = issue.message;
     });
   };
-  const applyParameters = (parameters, message = "Parámetros actualizados.") => {
+  const applyParameters = (parameters, message = t(locale, "simulation.updated")) => {
     pause();
     state.parameters = { ...parameters };
     state.time = Math.min(state.time, summary().flightTime);
@@ -227,8 +230,8 @@ const createRuntime = async (root, suppliedExperience) => {
       const limits = root.querySelector(`[data-param-limits="${control.key}"]`);
       if (limits) {
         limits.textContent = control.editable
-          ? `Rango: ${control.minimum} a ${control.maximum} ${control.unit}`
-          : `Valor fijo: ${formatProjectileNumber(control.default)} ${control.unit}`;
+          ? t(locale, "simulation.range", { minimum: control.minimum, maximum: control.maximum, unit: control.unit })
+          : t(locale, "simulation.fixed", { value: displayNumber(control.default), unit: control.unit });
       }
     });
   };
@@ -262,8 +265,8 @@ const createRuntime = async (root, suppliedExperience) => {
     updateFrame();
     if (state.time >= summary().flightTime - PROJECTILE_EPSILON) {
       pause();
-      playbackState.textContent = "Impacto con el suelo";
-      announce("El proyectil llegó al suelo.");
+      playbackState.textContent = t(locale, "projectile.groundImpact");
+      announce(t(locale, "projectile.reachedGround"));
       return;
     }
     state.frameId = window.requestAnimationFrame(animationFrame);
@@ -271,7 +274,7 @@ const createRuntime = async (root, suppliedExperience) => {
   const play = () => {
     const flightTime = summary().flightTime;
     if (flightTime <= PROJECTILE_EPSILON) {
-      announce("La configuración representa contacto inmediato con el suelo.");
+      announce(t(locale, "projectile.immediateAnnounce"));
       return;
     }
     if (state.time >= flightTime - PROJECTILE_EPSILON) state.time = 0;
@@ -279,7 +282,7 @@ const createRuntime = async (root, suppliedExperience) => {
     state.frameStart = null;
     state.playStartTime = state.time;
     setPlaybackPresentation();
-    announce("Simulación en reproducción.");
+    announce(t(locale, "simulation.started"));
     state.frameId = window.requestAnimationFrame(animationFrame);
   };
 
@@ -288,7 +291,7 @@ const createRuntime = async (root, suppliedExperience) => {
       const source = event.currentTarget;
       const key = source.dataset.paramRange ?? source.dataset.paramNumber;
       if (!key || experience.parameters[key]?.editable !== true) return;
-      pause({ shouldAnnounce: state.playing, reason: "La simulación se pausó para cambiar parámetros." });
+      pause({ shouldAnnounce: state.playing, reason: t(locale, "simulation.pausedForParameters") });
       if (source.matches("[data-param-range]")) {
         const number = root.querySelector(`[data-param-number="${key}"]`);
         if (number instanceof HTMLInputElement) number.value = source.value;
@@ -317,7 +320,7 @@ const createRuntime = async (root, suppliedExperience) => {
       }
     });
     state.time = 0;
-    applyParameters(preset.parameters, `Caso “${preset.label}” cargado.`);
+    applyParameters(preset.parameters, t(locale, "simulation.presetLoaded", { label: preset.label }));
   }, listenerOptions);
   toggleButton.addEventListener("click", () => {
     if (state.playing) pause({ shouldAnnounce: true });
@@ -327,10 +330,10 @@ const createRuntime = async (root, suppliedExperience) => {
     pause();
     state.time = 0;
     updateFrame();
-    announce("Tiempo reiniciado a cero segundos.");
+    announce(t(locale, "simulation.resetAnnounce"));
   }, listenerOptions);
   scrubber.addEventListener("input", () => {
-    pause({ shouldAnnounce: state.playing, reason: "La simulación se pausó para mover el tiempo." });
+    pause({ shouldAnnounce: state.playing, reason: t(locale, "simulation.pausedForTime") });
     if (Number.isFinite(scrubber.valueAsNumber)) {
       state.time = Math.max(0, Math.min(summary().flightTime, scrubber.valueAsNumber));
       updateFrame();
@@ -338,7 +341,7 @@ const createRuntime = async (root, suppliedExperience) => {
   }, listenerOptions);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && state.playing) {
-      pause({ shouldAnnounce: true, reason: "La simulación se pausó porque la página dejó de estar visible." });
+      pause({ shouldAnnounce: true, reason: t(locale, "simulation.pausedHidden") });
     }
   }, listenerOptions);
 
@@ -362,7 +365,7 @@ const createRuntime = async (root, suppliedExperience) => {
       updateFrame();
       updateControlOutputs();
       updatePresetState();
-      announce("Previsualización actualizada.");
+      announce(t(locale, "simulation.previewUpdated"));
       return experience;
     },
     destroy() {

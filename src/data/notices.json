@@ -1,8 +1,9 @@
 [
   {
-    "schemaVersion": "2.0.0",
+    "schemaVersion": "3.0.0",
     "id": "notice-2026-08-10-0a4c10d40778",
     "version": 1,
+    "locale": "es",
     "scope": {
       "type": "global"
     },
@@ -16,9 +17,10 @@
     "status": "published"
   },
   {
-    "schemaVersion": "2.0.0",
+    "schemaVersion": "3.0.0",
     "id": "notice-2026-08-10-db5501b8e261",
     "version": 1,
+    "locale": "es",
     "scope": {
       "type": "course",
       "courseId": "fisica-basica-1"

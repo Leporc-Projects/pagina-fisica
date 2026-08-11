@@ -1,4 +1,5 @@
-import { getSimulationModelById } from "../data/simulation-models.js";
+import { getSimulationModelById, localizeSimulationModel } from "../data/simulation-models.js";
+import { formatNumber, t } from "../i18n/index.js";
 import {
   normalizeSimulationExperience,
   validateSimulationExperience,
@@ -13,7 +14,6 @@ import {
   KINEMATICS_MOTION_VIEW,
   createKinematicsChartGeometry,
   createKinematicsMotionGeometry,
-  formatKinematicsNumber,
 } from "../utils/kinematics-svg.js";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
@@ -49,6 +49,8 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     return existing;
   }
 
+  const locale = root.dataset.locale === "en" ? "en" : "es";
+  const displayNumber = (value, digits = 2) => formatNumber(locale, value, { maximumFractionDigits: digits });
   let experience = normalizeSimulationExperience(
     suppliedExperience ?? readEmbeddedExperience(root)
   );
@@ -82,7 +84,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     Object.entries(experience.parameters).map(([key, config]) => [key, config.default])
   );
   const parameterDefinitions = () => {
-    const model = getSimulationModelById(experience.modelId);
+    const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
     return Object.entries(model.parameters).map(([key, definition]) => ({
       key,
       ...definition,
@@ -110,12 +112,12 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
 
   const setPlaybackPresentation = () => {
     toggleButton.setAttribute("aria-pressed", String(state.playing));
-    playbackLabel.textContent = state.playing ? "Pausar" : "Reproducir";
+    playbackLabel.textContent = state.playing ? t(locale, "simulation.pause") : t(locale, "simulation.play");
     playbackIcon.textContent = state.playing ? "❚❚" : "▶";
-    playbackState.textContent = state.playing ? "En reproducción" : "En pausa";
+    playbackState.textContent = state.playing ? t(locale, "simulation.playing") : t(locale, "simulation.paused");
   };
 
-  const pause = ({ shouldAnnounce = false, reason = "Simulación pausada." } = {}) => {
+  const pause = ({ shouldAnnounce = false, reason = t(locale, "simulation.paused") } = {}) => {
     const wasPlaying = state.playing;
     state.playing = false;
     state.frameStart = null;
@@ -138,11 +140,12 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
       "acceleration",
     ]) {
       const element = root.querySelector(`[data-reading="${key}"]`);
-      if (element) element.textContent = formatKinematicsNumber(physicalState[key]);
+      if (element) element.textContent = displayNumber(physicalState[key]);
     }
     const direction = root.querySelector('[data-reading="direction"]');
-    if (direction) direction.textContent = `Sentido: ${physicalState.direction}`;
-    timeOutput.textContent = `${formatKinematicsNumber(physicalState.time)} s`;
+    const directionKey = physicalState.direction === "hacia +x" ? "positive" : physicalState.direction === "hacia −x" ? "negative" : "stationary";
+    if (direction) direction.textContent = t(locale, "kinematics.direction", { direction: t(locale, `simulation.direction.${directionKey}`) });
+    timeOutput.textContent = `${displayNumber(physicalState.time)} s`;
   };
 
   const updateFrame = () => {
@@ -180,7 +183,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
       );
       motionCurrent.setAttribute("cx", String(x));
       motionCurrentLabel.setAttribute("x", String(labelX));
-      motionCurrentLabel.textContent = `x = ${formatKinematicsNumber(physicalState.position)} m`;
+      motionCurrentLabel.textContent = `x = ${displayNumber(physicalState.position)} m`;
     }
   };
 
@@ -223,13 +226,13 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
           x: geometry.transform.x(tick),
           y: KINEMATICS_CHART_VIEW.plot.top + KINEMATICS_CHART_VIEW.plot.height + 18,
           "text-anchor": "middle",
-        }, formatKinematicsNumber(tick, 1))),
+        }, displayNumber(tick, 1))),
         ...geometry.yTicks.map((tick) => createSvgElement("text", {
           x: KINEMATICS_CHART_VIEW.plot.left - 9,
           y: geometry.transform.y(tick),
           "text-anchor": "end",
           "dominant-baseline": "middle",
-        }, formatKinematicsNumber(tick, 1)))
+        }, displayNumber(tick, 1)))
       );
     }
 
@@ -273,7 +276,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
             x: geometry.transform.x(tick),
             y: KINEMATICS_MOTION_VIEW.axisY + 30,
             "text-anchor": "middle",
-          }, formatKinematicsNumber(tick, 1))
+          }, displayNumber(tick, 1))
         );
         return group;
       }));
@@ -297,7 +300,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
             x: geometry.originX,
             y: KINEMATICS_MOTION_VIEW.axisY - 45,
             "text-anchor": "middle",
-          }, "origen")
+          }, t(locale, "kinematics.origin"))
         );
         origin.replaceChildren(group);
       }
@@ -314,8 +317,8 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     if (!turning) return;
     const time = container.querySelector("[data-turn-time]");
     const position = container.querySelector("[data-turn-position]");
-    if (time) time.textContent = formatKinematicsNumber(turning.time);
-    if (position) position.textContent = formatKinematicsNumber(turning.position);
+    if (time) time.textContent = displayNumber(turning.time);
+    if (position) position.textContent = displayNumber(turning.position);
   };
 
   const rebuildVisuals = () => {
@@ -359,18 +362,18 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
           input.valueAsNumber > control.maximum) {
         inputIssues.push({
           field: control.key,
-          message: `${control.label} debe estar entre ${control.minimum} y ${control.maximum} ${control.unit}.`,
+          message: t(locale, "simulation.valueOutOfRange", { label: control.label, minimum: control.minimum, maximum: control.maximum, unit: control.unit }),
         });
       } else if (input.validity.stepMismatch) {
         inputIssues.push({
           field: control.key,
-          message: `${control.label} debe usar incrementos de ${control.step} ${control.unit}.`,
+          message: t(locale, "simulation.invalidStep", { label: control.label, step: control.step, unit: control.unit }),
         });
       }
     }
     return {
       parameters,
-      issues: [...inputIssues, ...validateKinematicsParameters(parameters).issues],
+      issues: inputIssues.length === 0 ? validateKinematicsParameters(parameters).issues : inputIssues,
     };
   };
 
@@ -390,12 +393,12 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     for (const control of parameterDefinitions()) {
       const output = root.querySelector(`[data-param-output="${control.key}"]`);
       if (output) {
-        output.textContent = `${formatKinematicsNumber(state.parameters[control.key])} ${control.unit}`;
+        output.textContent = `${displayNumber(state.parameters[control.key])} ${control.unit}`;
       }
     }
   };
 
-  const applyParameters = (parameters, message = "Parámetros actualizados.") => {
+  const applyParameters = (parameters, message = t(locale, "simulation.updated")) => {
     pause();
     state.parameters = { ...parameters };
     state.time = Math.min(state.time, state.parameters.T);
@@ -422,8 +425,8 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
       const limits = root.querySelector(`[data-param-limits="${control.key}"]`);
       if (limits) {
         limits.textContent = control.editable
-          ? `Rango: ${control.minimum} a ${control.maximum} ${control.unit}`
-          : `Valor fijo: ${formatKinematicsNumber(control.default)} ${control.unit}`;
+          ? t(locale, "simulation.range", { minimum: control.minimum, maximum: control.maximum, unit: control.unit })
+          : t(locale, "simulation.fixed", { value: displayNumber(control.default), unit: control.unit });
       }
     }
   };
@@ -468,7 +471,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     if (!key || experience.parameters[key]?.editable !== true) return;
     pause({
       shouldAnnounce: state.playing,
-      reason: "La simulación se pausó para cambiar parámetros.",
+      reason: t(locale, "simulation.pausedForParameters"),
     });
     if (source.matches("[data-param-range]")) {
       const number = root.querySelector(`[data-param-number="${key}"]`);
@@ -494,8 +497,8 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     updateFrame();
     if (state.time >= state.parameters.T) {
       pause();
-      playbackState.textContent = "Intervalo completo";
-      announce("La simulación llegó al final del intervalo.");
+      playbackState.textContent = t(locale, "simulation.completeInterval");
+      announce(t(locale, "simulation.finished"));
       return;
     }
     state.frameId = window.requestAnimationFrame(animationFrame);
@@ -507,7 +510,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     state.frameStart = null;
     state.playStartTime = state.time;
     setPlaybackPresentation();
-    announce("Simulación en reproducción.");
+    announce(t(locale, "simulation.started"));
     state.frameId = window.requestAnimationFrame(animationFrame);
   };
 
@@ -527,7 +530,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
       }
     }
     state.time = 0;
-    applyParameters(preset.parameters, `Caso “${preset.label}” cargado.`);
+    applyParameters(preset.parameters, t(locale, "simulation.presetLoaded", { label: preset.label }));
   }, listenerOptions);
   toggleButton.addEventListener("click", () => {
     if (state.playing) pause({ shouldAnnounce: true });
@@ -537,12 +540,12 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     pause();
     state.time = 0;
     updateFrame();
-    announce("Tiempo reiniciado a cero segundos.");
+    announce(t(locale, "simulation.resetAnnounce"));
   }, listenerOptions);
   scrubber.addEventListener("input", () => {
     pause({
       shouldAnnounce: state.playing,
-      reason: "La simulación se pausó para mover el tiempo.",
+      reason: t(locale, "simulation.pausedForTime"),
     });
     if (Number.isFinite(scrubber.valueAsNumber)) {
       state.time = Math.min(state.parameters.T, Math.max(0, scrubber.valueAsNumber));
@@ -553,7 +556,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     if (document.hidden && state.playing) {
       pause({
         shouldAnnounce: true,
-        reason: "La simulación se pausó porque la página dejó de estar visible.",
+        reason: t(locale, "simulation.pausedHidden"),
       });
     }
   }, listenerOptions);
@@ -583,7 +586,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
       updateFrame();
       updateControlOutputs();
       updatePresetState();
-      announce("Previsualización actualizada.");
+      announce(t(locale, "simulation.previewUpdated"));
       return experience;
     },
     destroy() {

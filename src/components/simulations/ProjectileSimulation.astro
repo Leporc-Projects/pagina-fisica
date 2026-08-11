@@ -1,6 +1,7 @@
 ---
-import { getSimulationExperienceById } from "../../data/simulation-experiences.js";
-import { getSimulationModelById } from "../../data/simulation-models.js";
+import { getSimulationExperienceById, localizeSimulationExperience } from "../../data/simulation-experiences.js";
+import { getSimulationModelById, localizeSimulationModel } from "../../data/simulation-models.js";
+import { formatNumber, t } from "../../i18n/index.js";
 import {
   normalizeSimulationExperience,
   validateSimulationExperience,
@@ -9,24 +10,26 @@ import {
   getProjectileState,
   getProjectileSummary,
 } from "../../utils/projectile-2d.js";
-import { formatProjectileNumber } from "../../utils/projectile-canvas.js";
 import "../../styles/projectile-simulation.css";
 
 interface Props {
   experience?: Record<string, unknown>;
   preview?: boolean;
+  locale?: "es" | "en";
 }
 
 const {
   experience: suppliedExperience = getSimulationExperienceById("projectile-2d"),
   preview = false,
+  locale = "es",
 } = Astro.props;
-const experience = normalizeSimulationExperience(suppliedExperience);
-const validation = validateSimulationExperience(experience);
+const canonicalExperience = normalizeSimulationExperience(suppliedExperience);
+const validation = validateSimulationExperience(canonicalExperience);
 if (!validation.valid) {
   throw new TypeError(`Experiencia de proyectil inválida: ${validation.errors.join(" ")}`);
 }
-const model = getSimulationModelById(experience.modelId);
+const experience = localizeSimulationExperience(canonicalExperience, locale);
+const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
 if (model?.rendererId !== "p5-projectile-2d") {
   throw new TypeError("ProjectileSimulation requiere el renderer p5-projectile-2d.");
 }
@@ -46,33 +49,35 @@ const initialPreset = experience.presets.find((preset) =>
 const shouldRender = (view) => preview || experience.views[view];
 const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
 const readings = [
-  { key: "time", label: "Instante", symbol: "t", unit: "s", value: initialState.time },
-  { key: "x", label: "Posición horizontal", symbol: "x", unit: "m", value: initialState.position.x },
-  { key: "y", label: "Posición vertical", symbol: "y", unit: "m", value: initialState.position.y },
-  { key: "vx", label: "Velocidad horizontal", symbol: "vx", unit: "m/s", value: initialState.velocity.x },
-  { key: "vy", label: "Velocidad vertical", symbol: "vy", unit: "m/s", value: initialState.velocity.y },
-  { key: "speed", label: "Rapidez", symbol: "|v|", unit: "m/s", value: initialState.speed },
-  { key: "ax", label: "Aceleración horizontal", symbol: "ax", unit: "m/s²", value: initialState.acceleration.x },
-  { key: "ay", label: "Aceleración vertical", symbol: "ay", unit: "m/s²", value: initialState.acceleration.y },
+  { key: "time", label: t(locale, "simulation.reading.time"), symbol: "t", unit: "s", value: initialState.time },
+  { key: "x", label: t(locale, "simulation.reading.horizontalPosition"), symbol: "x", unit: "m", value: initialState.position.x },
+  { key: "y", label: t(locale, "simulation.reading.verticalPosition"), symbol: "y", unit: "m", value: initialState.position.y },
+  { key: "vx", label: t(locale, "simulation.reading.horizontalVelocity"), symbol: "vx", unit: "m/s", value: initialState.velocity.x },
+  { key: "vy", label: t(locale, "simulation.reading.verticalVelocity"), symbol: "vy", unit: "m/s", value: initialState.velocity.y },
+  { key: "speed", label: t(locale, "simulation.reading.speed"), symbol: "|v|", unit: "m/s", value: initialState.speed },
+  { key: "ax", label: t(locale, "simulation.reading.horizontalAcceleration"), symbol: "ax", unit: "m/s²", value: initialState.acceleration.x },
+  { key: "ay", label: t(locale, "simulation.reading.verticalAcceleration"), symbol: "ay", unit: "m/s²", value: initialState.acceleration.y },
 ];
+const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { maximumFractionDigits: digits });
 ---
 
 <section
   class="projectile-simulation"
   data-projectile-simulation
   data-experience={serializedExperience}
+  data-locale={locale}
   data-preview={preview ? "true" : undefined}
 >
   <div class="projectile-simulation__workspace">
     <aside class="projectile-controls" aria-labelledby="projectile-controls-title">
       <div class="projectile-controls__header">
-        <p class="academic-label">Parámetros</p>
-        <h2 id="projectile-controls-title">Configura el lanzamiento</h2>
-        <p>Cualquier cambio pausa el movimiento y recalcula todo el vuelo.</p>
+        <p class="academic-label">{t(locale, "simulation.parameters")}</p>
+        <h2 id="projectile-controls-title">{t(locale, "projectile.configure")}</h2>
+        <p>{t(locale, "projectile.changeHelp")}</p>
       </div>
 
       <fieldset class="projectile-presets" data-presets-fieldset hidden={experience.presets.length === 0}>
-        <legend>Casos de estudio</legend>
+        <legend>{t(locale, "simulation.studyCases")}</legend>
         <div data-presets-list>
           {experience.presets.map((preset) => (
             <button
@@ -93,7 +98,7 @@ const readings = [
             <div class="projectile-field" data-param-field={control.key}>
               <div class="projectile-field__heading">
                 <label for={numberId}>{control.label} <span>{control.symbol}</span></label>
-                <output data-param-output={control.key}>{formatProjectileNumber(value)} {control.unit}</output>
+                <output data-param-output={control.key}>{displayNumber(value)} {control.unit}</output>
               </div>
               <input
                 type="range"
@@ -102,7 +107,7 @@ const readings = [
                 step={control.step}
                 value={value}
                 disabled={!control.editable}
-                aria-label={`${control.label}, control deslizante`}
+                aria-label={t(locale, "simulation.slider", { label: control.label })}
                 aria-describedby={errorId}
                 data-param-range={control.key}
               />
@@ -126,8 +131,8 @@ const readings = [
               <small id={errorId} data-param-error={control.key}></small>
               <small class="projectile-field__limits" data-param-limits={control.key}>
                 {control.editable
-                  ? `Rango: ${control.minimum} a ${control.maximum} ${control.unit}`
-                  : `Valor fijo: ${formatProjectileNumber(value)} ${control.unit}`}
+                  ? t(locale, "simulation.range", { minimum: control.minimum, maximum: control.maximum, unit: control.unit })
+                  : t(locale, "simulation.fixed", { value: displayNumber(value), unit: control.unit })}
               </small>
             </div>
           );
@@ -139,47 +144,47 @@ const readings = [
       <figure class="projectile-canvas theme-canvas" data-projectile-canvas-figure>
         <figcaption>
           <div>
-            <p class="academic-label">Canvas 2D</p>
-            <h2>Trayectoria en el plano cartesiano</h2>
-            <p>La geometría usa +y hacia arriba; los vectores tienen escalas visuales independientes.</p>
+            <p class="academic-label">{t(locale, "projectile.canvas")}</p>
+            <h2>{t(locale, "projectile.canvasTitle")}</h2>
+            <p>{t(locale, "projectile.canvasHelp")}</p>
           </div>
-          <ul aria-label="Leyenda del proyectil">
-            <li><span class="projectile-canvas__legend-trajectory" aria-hidden="true"></span>Trayectoria completa</li>
-            <li><span class="projectile-canvas__legend-current" aria-hidden="true"></span>Posición actual</li>
+          <ul aria-label={t(locale, "projectile.legend")}>
+            <li><span class="projectile-canvas__legend-trajectory" aria-hidden="true"></span>{t(locale, "projectile.trajectory")}</li>
+            <li><span class="projectile-canvas__legend-current" aria-hidden="true"></span>{t(locale, "projectile.currentPosition")}</li>
           </ul>
         </figcaption>
         <div
           class="projectile-canvas__surface"
           data-projectile-canvas
           role="img"
-          aria-label="Escena cartesiana accesible del movimiento de un proyectil"
+          aria-label={t(locale, "projectile.sceneAria")}
           aria-describedby="projectile-canvas-description"
         ></div>
         <p id="projectile-canvas-description" class="sr-only">
-          El Canvas representa suelo, ejes, trayectoria completa y posición instantánea. Las lecturas numéricas equivalentes aparecen después de la escena.
+          {t(locale, "projectile.sceneDescription")}
         </p>
-        <p class="projectile-canvas__scale-note">Los vectores se escalan para facilitar la comparación; su longitud en píxeles no comparte la escala espacial de los ejes.</p>
+        <p class="projectile-canvas__scale-note">{t(locale, "projectile.scaleNote")}</p>
         <div class="projectile-canvas__error" data-projectile-renderer-error role="status" hidden></div>
       </figure>
 
       {shouldRender("readings") && (
         <section class="projectile-readings" aria-labelledby="projectile-readings-title" data-view-section="readings">
           <div>
-            <p class="academic-label">Alternativa textual al Canvas</p>
-            <h2 id="projectile-readings-title">Estado físico</h2>
+            <p class="academic-label">{t(locale, "projectile.textAlternative")}</p>
+            <h2 id="projectile-readings-title">{t(locale, "simulation.physicalState")}</h2>
           </div>
           <dl class="projectile-readings__instant">
             {readings.map((reading) => (
               <div>
                 <dt>{reading.label} <span>{reading.symbol}</span></dt>
-                <dd><span data-reading={reading.key}>{formatProjectileNumber(reading.value)}</span> <small>{reading.unit}</small></dd>
+                <dd><span data-reading={reading.key}>{displayNumber(reading.value)}</span> <small>{reading.unit}</small></dd>
               </div>
             ))}
           </dl>
-          <dl class="projectile-readings__global" aria-label="Magnitudes del vuelo completo">
-            <div><dt>Tiempo de vuelo</dt><dd><span data-summary="flightTime">{formatProjectileNumber(initialSummary.flightTime)}</span> <small>s</small></dd></div>
-            <div><dt>Alcance</dt><dd><span data-summary="range">{formatProjectileNumber(initialSummary.range)}</span> <small>m</small></dd></div>
-            <div><dt>Altura máxima</dt><dd><span data-summary="maximumHeight">{formatProjectileNumber(initialSummary.maximumHeight)}</span> <small>m</small></dd></div>
+          <dl class="projectile-readings__global" aria-label={t(locale, "projectile.fullFlight")}>
+            <div><dt>{t(locale, "projectile.flightTime")}</dt><dd><span data-summary="flightTime">{displayNumber(initialSummary.flightTime)}</span> <small>s</small></dd></div>
+            <div><dt>{t(locale, "projectile.range")}</dt><dd><span data-summary="range">{displayNumber(initialSummary.range)}</span> <small>m</small></dd></div>
+            <div><dt>{t(locale, "projectile.maximumHeight")}</dt><dd><span data-summary="maximumHeight">{displayNumber(initialSummary.maximumHeight)}</span> <small>m</small></dd></div>
           </dl>
         </section>
       )}
@@ -189,20 +194,20 @@ const readings = [
   <section class="projectile-playback" aria-labelledby="projectile-playback-title">
     <div class="projectile-playback__heading">
       <div>
-        <p class="academic-label">Tiempo físico</p>
-        <h2 id="projectile-playback-title">Reproducción</h2>
+        <p class="academic-label">{t(locale, "projectile.physicalTime")}</p>
+        <h2 id="projectile-playback-title">{t(locale, "simulation.playback")}</h2>
       </div>
-      <p data-playback-state>{initialSummary.flightTime === 0 ? "Contacto inmediato" : "En pausa"}</p>
+      <p data-playback-state>{initialSummary.flightTime === 0 ? t(locale, "projectile.immediate") : t(locale, "simulation.paused")}</p>
     </div>
     <div class="projectile-playback__controls">
       <button type="button" data-action="toggle" aria-pressed="false" disabled={initialSummary.flightTime === 0}>
         <span data-playback-icon aria-hidden="true">▶</span>
-        <span data-playback-label>Reproducir</span>
+        <span data-playback-label>{t(locale, "simulation.play")}</span>
       </button>
-      <button type="button" data-action="reset"><span aria-hidden="true">↺</span> Reiniciar</button>
+      <button type="button" data-action="reset"><span aria-hidden="true">↺</span> {t(locale, "simulation.reset")}</button>
       <label for="projectile-time">
-        Instante
-        <output data-time-output>{formatProjectileNumber(initialState.time)} s</output>
+        {t(locale, "simulation.instant")}
+        <output data-time-output>{displayNumber(initialState.time)} s</output>
       </label>
       <input
         id="projectile-time"
@@ -211,7 +216,7 @@ const readings = [
         max={initialSummary.flightTime}
         step="0.01"
         value="0"
-        aria-label="Instante del vuelo"
+        aria-label={t(locale, "simulation.flightTimeAria")}
         data-time-scrubber
       />
     </div>
@@ -220,8 +225,8 @@ const readings = [
 
   <noscript>
     <div class="projectile-noscript" role="note">
-      <strong>La simulación interactiva requiere JavaScript.</strong>
-      <p>El modelo, sus ecuaciones, límites y guía de exploración permanecen disponibles en esta página.</p>
+      <strong>{t(locale, "simulation.javascriptRequired")}</strong>
+      <p>{t(locale, "simulation.javascriptFallback")}</p>
     </div>
   </noscript>
 </section>

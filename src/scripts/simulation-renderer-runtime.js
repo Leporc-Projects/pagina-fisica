@@ -1,5 +1,6 @@
 import { getSimulationModelById } from "../data/simulation-models.js";
 import { getSimulationRendererById } from "../data/simulation-renderers.js";
+import { localizeSimulationExperience } from "../data/simulation-experiences.js";
 import {
   normalizeSimulationExperience,
   validateSimulationExperience,
@@ -42,7 +43,8 @@ export const mountSimulationExperienceRenderer = async (root, suppliedExperience
 
   const existing = mountedRenderers.get(root);
   if (existing?.rendererId === renderer.id) {
-    await existing.api.updateExperience(experience);
+    const locale = existing.rendererRoot.dataset.locale === "en" ? "en" : "es";
+    await existing.api.updateExperience(localizeSimulationExperience(experience, locale));
     return existing.api;
   }
   if (existing) {
@@ -62,7 +64,11 @@ export const mountSimulationExperienceRenderer = async (root, suppliedExperience
   }
 
   const implementation = await client.load();
-  const api = await implementation.initialize(rendererRoot, experience);
+  const locale = rendererRoot.dataset.locale === "en" ? "en" : "es";
+  const api = await implementation.initialize(
+    rendererRoot,
+    localizeSimulationExperience(experience, locale)
+  );
   if (!api) throw new Error(`No fue posible montar ${renderer.id}.`);
   root.dataset.activeRenderer = renderer.id;
   mountedRenderers.set(root, { rendererId: renderer.id, api, rendererRoot });

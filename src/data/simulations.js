@@ -3,6 +3,7 @@
 
 import {
   getSimulationExperienceById,
+  localizeSimulationExperience,
 } from "./simulation-experiences.js";
 import { getSimulationModelById } from "./simulation-models.js";
 import {
@@ -20,7 +21,18 @@ export const SIMULATION_CATEGORIES = Object.freeze([
   "Oscilaciones",
 ]);
 
-const SIMULATION_CATALOG = Object.freeze([
+export const SIMULATION_CATEGORY_KEYS = Object.freeze({
+  Vectores: "simulation.category.vectors",
+  Cinemática: "simulation.category.kinematics",
+  Dinámica: "simulation.category.dynamics",
+  "Trabajo y energía": "simulation.category.workEnergy",
+  "Momento lineal": "simulation.category.momentum",
+  Rotación: "simulation.category.rotation",
+  Gravitación: "simulation.category.gravitation",
+  Oscilaciones: "simulation.category.oscillations",
+});
+
+export const SIMULATION_CATALOG = Object.freeze([
   Object.freeze({
     experienceId: "kinematics-1d",
     route: "/simulaciones/cinematica-1d",
@@ -34,7 +46,8 @@ const SIMULATION_CATALOG = Object.freeze([
 ]);
 
 export const SIMULATIONS = Object.freeze(SIMULATION_CATALOG.map((catalogEntry) => {
-  const experience = getSimulationExperienceById(catalogEntry.experienceId);
+  const canonicalExperience = getSimulationExperienceById(catalogEntry.experienceId);
+  const experience = localizeSimulationExperience(canonicalExperience, "es");
   if (!experience) {
     throw new Error(`Experiencia de catálogo inexistente: ${catalogEntry.experienceId}.`);
   }
@@ -73,12 +86,37 @@ export const KINEMATICS_1D_PRESETS = kinematicsExperience.presets;
 export const getSimulationById = (simulationId) =>
   SIMULATIONS.find((simulation) => simulation.id === simulationId);
 
-export const getPublishedSimulations = () =>
-  SIMULATIONS.filter((simulation) => simulation.status === "published");
+export const getPublishedSimulations = (locale = "es") =>
+  getPublishedSimulationsForLocale(locale);
 
-export const getSimulationsByCategory = (category) =>
-  getPublishedSimulations().filter(
-    (simulation) => simulation.category === category
+export const getPublishedSimulationsForLocale = (locale = "es") =>
+  SIMULATION_CATALOG.map((catalogEntry) => {
+    const experience = localizeSimulationExperience(
+      getSimulationExperienceById(catalogEntry.experienceId),
+      locale
+    );
+    const model = getSimulationModelById(experience.modelId);
+    const route = locale === "en"
+      ? `/en/simulations/${experience.id}`
+      : catalogEntry.route;
+    return {
+      id: experience.id,
+      modelId: experience.modelId,
+      title: experience.title,
+      route,
+      category: locale === "en" ? model.translations.en.category : catalogEntry.category,
+      status: experience.status,
+      description: experience.summary,
+      contexts: experience.contexts,
+      experience,
+    };
+  }).filter((simulation) => simulation.status === "published");
+
+export const getSimulationsByCategory = (category, locale = "es") =>
+  getPublishedSimulationsForLocale(locale).filter(
+    (simulation) => SIMULATION_CATALOG.some(
+      (catalogEntry) => catalogEntry.experienceId === simulation.id && catalogEntry.category === category
+    )
   );
 
 export const getSimulationsForCourseTopic = (

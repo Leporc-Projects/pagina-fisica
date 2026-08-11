@@ -51,7 +51,7 @@ const viewOptions = Object.entries(model.views);
     <div class="simulation-lab__editor">
       <form data-simulation-lab-form novalidate>
         <fieldset>
-          <legend>Modelo y propósito</legend>
+          <legend>Modelo y textos en español</legend>
           <label>
             <span>Modelo</span>
             <select name="model" aria-describedby="simulation-lab-model-help">
@@ -80,6 +80,30 @@ const viewOptions = Object.entries(model.views);
               required
             >{experience.summary}</textarea>
             <small>Texto plano; explica qué podrá explorar el estudiante.</small>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>English text</legend>
+          <p class="simulation-lab__fieldset-help">Completa la versión inglesa junto con la española; los parámetros y las vistas siguen siendo compartidos.</p>
+          <label>
+            <span>Title</span>
+            <input
+              name="title-en"
+              value={experience.translations.en.title}
+              maxlength={SIMULATION_EXPERIENCE_LIMITS.maximumTitleLength}
+              required
+              autocomplete="off"
+            />
+          </label>
+          <label>
+            <span>Summary</span>
+            <textarea
+              name="summary-en"
+              rows="4"
+              maxlength={SIMULATION_EXPERIENCE_LIMITS.maximumSummaryLength}
+              required
+            >{experience.translations.en.summary}</textarea>
           </label>
         </fieldset>
 

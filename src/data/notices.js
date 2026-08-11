@@ -10,29 +10,29 @@ import { getActiveCourses, getCourseById } from "./courses.js";
 
 export const NOTICES = storedNotices;
 
-export const getPublishedNotices = (notices = NOTICES) =>
-  sortNoticesByDate(notices.filter((notice) => notice.status === "published"));
+export const getPublishedNotices = (notices = NOTICES, locale = "es") =>
+  sortNoticesByDate(notices.filter((notice) => notice.status === "published" && notice.locale === locale));
 
-export const getGlobalNotices = (notices = NOTICES) =>
-  getPublishedNotices(notices).filter(
+export const getGlobalNotices = (notices = NOTICES, locale = "es") =>
+  getPublishedNotices(notices, locale).filter(
     (notice) => validateContentScope(notice.scope).valid && notice.scope.type === "global"
   );
 
-export const getCourseNotices = (courseId, notices = NOTICES) => {
+export const getCourseNotices = (courseId, notices = NOTICES, locale = "es") => {
   if (!getCourseById(courseId)) {
     throw new RangeError(`Curso no registrado: ${String(courseId)}`);
   }
 
-  return getPublishedNotices(notices).filter(
+  return getPublishedNotices(notices, locale).filter(
     (notice) => validateContentScope(notice.scope).valid &&
       notice.scope.type === "course" &&
       notice.scope.courseId === courseId
   );
 };
 
-export const getHomepageNotices = (limit = 3, notices = NOTICES) =>
+export const getHomepageNotices = (limit = 3, notices = NOTICES, locale = "es") =>
   selectHomepageNotices(
-    getPublishedNotices(notices).filter((notice) => {
+    getPublishedNotices(notices, locale).filter((notice) => {
       if (!validateContentScope(notice.scope).valid) return false;
       if (notice.scope?.type === "global") return true;
       if (notice.scope?.type !== "course") return false;

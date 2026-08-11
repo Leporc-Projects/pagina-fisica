@@ -2,8 +2,8 @@
 import {
   KINEMATICS_CHART_VIEW,
   createKinematicsChartGeometry,
-  formatKinematicsNumber,
 } from "../../utils/kinematics-svg.js";
+import { formatNumber, t } from "../../i18n/index.js";
 
 interface Parameters {
   x0: number;
@@ -18,14 +18,17 @@ interface Props {
   viewKey?: "positionGraph" | "velocityGraph" | "accelerationGraph";
   parameters: Parameters;
   relation: string;
+  locale?: "es" | "en";
 }
 
-const { id, quantity, parameters, relation, viewKey } = Astro.props;
+const { id, quantity, parameters, relation, viewKey, locale = "es" } = Astro.props;
 const geometry = createKinematicsChartGeometry(parameters, quantity);
 const { plot, width, height } = KINEMATICS_CHART_VIEW;
 const descriptionId = `${id}-description`;
 const clipId = `${id}-clip`;
-const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
+const quantityLabel = t(locale, `simulation.reading.${quantity}`);
+const axisLabel = `${quantityLabel} (${geometry.quantity.unit})`;
+const displayNumber = (value, digits = 2) => formatNumber(locale, value, { maximumFractionDigits: digits });
 ---
 
 <figure
@@ -45,7 +48,7 @@ const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
   <svg
     viewBox={`0 0 ${width} ${height}`}
     role="img"
-    aria-label={`${geometry.quantity.label} en función del tiempo`}
+    aria-label={t(locale, "kinematics.chartAria", { quantity: quantityLabel })}
     aria-describedby={descriptionId}
     data-chart-svg
     data-plot-left={plot.left}
@@ -54,8 +57,7 @@ const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
     data-plot-height={plot.height}
   >
     <desc id={descriptionId}>
-      Gráfica completa de {geometry.quantity.label.toLowerCase()} contra tiempo.
-      La línea vertical y el punto indican el instante actual de la simulación.
+      {t(locale, "kinematics.chartDescription", { quantity: quantityLabel.toLocaleLowerCase(locale) })}
     </desc>
 
     <defs>
@@ -108,7 +110,7 @@ const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
           x={geometry.transform.x(tick)}
           y={plot.top + plot.height + 18}
           text-anchor="middle"
-        >{formatKinematicsNumber(tick, 1)}</text>
+        >{displayNumber(tick, 1)}</text>
       ))}
       {geometry.yTicks.map((tick) => (
         <text
@@ -116,7 +118,7 @@ const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
           y={geometry.transform.y(tick)}
           text-anchor="end"
           dominant-baseline="middle"
-        >{formatKinematicsNumber(tick, 1)}</text>
+        >{displayNumber(tick, 1)}</text>
       ))}
     </g>
 
@@ -126,7 +128,7 @@ const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
         x={plot.left + plot.width / 2}
         y={height - 7}
         text-anchor="middle"
-      >Tiempo (s)</text>
+      >{t(locale, "kinematics.timeAxis")}</text>
       <text
         class="kinematics-chart__axis-label"
         x="15"

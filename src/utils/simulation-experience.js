@@ -1,9 +1,10 @@
 import { getCourseById } from "../data/courses.js";
 import { getAcademicUnitForContext } from "../data/physics/index.js";
 import { getSimulationModelById } from "../data/simulation-models.js";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "../i18n/config.js";
 
-export const SIMULATION_EXPERIENCE_SCHEMA_VERSION = "1.0.0";
-export const SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION = "1.0.0";
+export const SIMULATION_EXPERIENCE_SCHEMA_VERSION = "2.0.0";
+export const SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION = "2.0.0";
 export const SIMULATION_EXPERIENCE_STATUSES = Object.freeze([
   "draft",
   "review",
@@ -27,6 +28,7 @@ const EXPERIENCE_KEYS = [
   "title",
   "summary",
   "status",
+  "translations",
   "parameters",
   "views",
   "presets",
@@ -35,6 +37,7 @@ const EXPERIENCE_KEYS = [
 ];
 const PARAMETER_KEYS = ["default", "minimum", "maximum", "step", "editable"];
 const PRESET_KEYS = ["id", "label", "parameters"];
+const TRANSLATION_KEYS = ["title", "summary", "presetLabels", "observations"];
 const CONTEXT_KEYS = ["courseId", "unit", "topics"];
 const ID_PATTERN = /^[a-z][a-z0-9-]{1,95}$/;
 const CONTROL_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u;
@@ -134,6 +137,29 @@ export const validateSimulationExperience = (
     issue(issues, "status", "invalid-status", "El estado editorial no está permitido.");
   }
 
+  const translatedLocales = SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE);
+  if (!validateKeys(experience.translations, translatedLocales, "translations", issues)) {
+    // validateKeys ya registra el problema estructural.
+  } else {
+    translatedLocales.forEach((locale) => {
+      const translation = experience.translations[locale];
+      const path = `translations.${locale}`;
+      if (!validateKeys(translation, TRANSLATION_KEYS, path, issues)) return;
+      if (!validText(translation.title, SIMULATION_EXPERIENCE_LIMITS.maximumTitleLength)) {
+        issue(issues, `${path}.title`, "invalid-translated-title", `El título ${locale} no es válido.`);
+      }
+      if (!validText(translation.summary, SIMULATION_EXPERIENCE_LIMITS.maximumSummaryLength)) {
+        issue(issues, `${path}.summary`, "invalid-translated-summary", `El resumen ${locale} no es válido.`);
+      }
+      if (!isPlainObject(translation.presetLabels)) {
+        issue(issues, `${path}.presetLabels`, "invalid-preset-labels", `Las etiquetas ${locale} deben formar un objeto.`);
+      }
+      if (!Array.isArray(translation.observations)) {
+        issue(issues, `${path}.observations`, "invalid-translated-observations", `Las observaciones ${locale} deben ser una lista.`);
+      }
+    });
+  }
+
   const parameterDefinitions = model?.parameters ?? {};
   const parameterKeys = Object.keys(parameterDefinitions);
   if (validateKeys(experience.parameters, parameterKeys, "parameters", issues)) {
@@ -229,6 +255,20 @@ export const validateSimulationExperience = (
         }
       });
     });
+    translatedLocales.forEach((locale) => {
+      const labels = experience.translations?.[locale]?.presetLabels;
+      if (!isPlainObject(labels)) return;
+      const expected = [...presetIds].sort();
+      const actual = Object.keys(labels).sort();
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        issue(issues, `translations.${locale}.presetLabels`, "translated-preset-parity", `Las etiquetas ${locale} deben corresponder exactamente con los casos de estudio.`);
+      }
+      Object.entries(labels).forEach(([presetId, label]) => {
+        if (!validText(label, SIMULATION_EXPERIENCE_LIMITS.maximumPresetLabelLength)) {
+          issue(issues, `translations.${locale}.presetLabels.${presetId}`, "invalid-translated-preset-label", `La etiqueta ${locale} del caso no es válida.`);
+        }
+      });
+    });
   }
 
   if (!Array.isArray(experience.observations) ||
@@ -239,6 +279,18 @@ export const validateSimulationExperience = (
       if (!validText(observation, SIMULATION_EXPERIENCE_LIMITS.maximumObservationLength)) {
         issue(issues, `observations[${index}]`, "invalid-observation", "Cada observación debe ser texto plano y no superar 320 caracteres.");
       }
+    });
+    translatedLocales.forEach((locale) => {
+      const observations = experience.translations?.[locale]?.observations;
+      if (!Array.isArray(observations)) return;
+      if (observations.length !== experience.observations.length) {
+        issue(issues, `translations.${locale}.observations`, "translated-observation-parity", `La guía ${locale} debe conservar el mismo número de observaciones.`);
+      }
+      observations.forEach((observation, index) => {
+        if (!validText(observation, SIMULATION_EXPERIENCE_LIMITS.maximumObservationLength)) {
+          issue(issues, `translations.${locale}.observations[${index}]`, "invalid-translated-observation", `La observación ${locale} no es válida.`);
+        }
+      });
     });
   }
 
@@ -282,6 +334,20 @@ export const normalizeSimulationExperience = (
     title: String(experience?.title ?? "").trim(),
     summary: String(experience?.summary ?? "").trim(),
     status,
+    translations: Object.fromEntries(
+      SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => {
+        const translation = experience?.translations?.[locale] ?? {};
+        return [locale, {
+          title: String(translation.title ?? "").trim(),
+          summary: String(translation.summary ?? "").trim(),
+          presetLabels: Object.fromEntries(
+            Object.entries(translation.presetLabels ?? {}).map(([key, value]) => [key, String(value).trim()])
+          ),
+          observations: (Array.isArray(translation.observations) ? translation.observations : [])
+            .map((observation) => String(observation).trim()),
+        }];
+      })
+    ),
     parameters: normalizeParameters(experience?.parameters, model),
     views: Object.fromEntries(Object.keys(model?.views ?? {}).map((key) => [key, experience?.views?.[key] === true])),
     presets: (Array.isArray(experience?.presets) ? experience.presets : []).map((preset) => ({

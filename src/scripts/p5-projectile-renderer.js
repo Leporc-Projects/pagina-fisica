@@ -1,8 +1,8 @@
 import {
   createProjectileCanvasTransform,
   createProjectileVectorScales,
-  formatProjectileNumber,
 } from "../utils/projectile-canvas.js";
+import { formatNumber, t } from "../i18n/index.js";
 
 let p5ConstructorPromise;
 
@@ -48,7 +48,7 @@ const drawArrow = (p, start, vector, color, label) => {
   p.text(label, end.x + 5, end.y - 5);
 };
 
-const drawScene = (p, frame, container) => {
+const drawScene = (p, frame, container, locale) => {
   const { state, summary, samples, domains, views } = frame;
   const colors = readThemeTokens(container);
   const transform = createProjectileCanvasTransform({
@@ -87,7 +87,7 @@ const drawScene = (p, frame, container) => {
     drawArrow(p, { x: yAxisX, y: transform.plot.top + 22 }, { x: 0, y: -20 }, colors.axis, "+y");
     p.noStroke();
     p.fill(colors.label);
-    p.text("suelo · y = 0 m", transform.plot.left + 8, groundY - 8);
+    p.text(t(locale, "projectile.groundLabel"), transform.plot.left + 8, groundY - 8);
     p.text("x (m)", transform.plot.right - 24, groundY + 28);
     p.text("y (m)", transform.x(0) + 9, transform.plot.top + 13);
   }
@@ -106,9 +106,9 @@ const drawScene = (p, frame, container) => {
 
   if (views.keyPoints) {
     const points = [
-      [launch, "lanzamiento"],
-      [vertex, "vértice"],
-      [impact, "impacto"],
+      [launch, t(locale, "projectile.launch")],
+      [vertex, t(locale, "projectile.apex")],
+      [impact, t(locale, "projectile.impact")],
     ];
     points.forEach(([point, label]) => {
       p.fill(colors.background);
@@ -158,12 +158,12 @@ const drawScene = (p, frame, container) => {
   p.noStroke();
   p.fill(colors.label);
   p.textStyle(p.BOLD);
-  const positionLabel = `(${formatProjectileNumber(state.position.x)}, ${formatProjectileNumber(state.position.y)}) m`;
+  const positionLabel = `(${formatNumber(locale, state.position.x)}, ${formatNumber(locale, state.position.y)}) m`;
   p.text(positionLabel, Math.min(current.x + 10, p.width - 120), Math.max(18, current.y - 11));
   p.textStyle(p.NORMAL);
 };
 
-export const createProjectileP5Renderer = async ({ container, getFrame }) => {
+export const createProjectileP5Renderer = async ({ container, getFrame, locale = "es" }) => {
   if (!(container instanceof HTMLElement) || typeof getFrame !== "function") {
     throw new TypeError("El renderer p5 requiere contenedor y fuente de estado.");
   }
@@ -179,14 +179,14 @@ export const createProjectileP5Renderer = async ({ container, getFrame }) => {
       p.pixelDensity(Math.min(2, Math.max(1, window.devicePixelRatio || 1)));
       p.createCanvas(size.width, size.height);
       p.noLoop();
-      p.describe("Plano cartesiano con el movimiento ideal de un proyectil sobre el suelo y vectores físicos opcionales.");
-      p.describeElement("Trayectoria", "Curva completa desde el punto de lanzamiento hasta el impacto con el suelo.");
-      p.describeElement("Partícula", "Marcador circular que indica la posición correspondiente al instante seleccionado.");
+      p.describe(t(locale, "projectile.canvasDescribe"));
+      p.describeElement(t(locale, "projectile.trajectory"), t(locale, "projectile.trajectoryDescribe"));
+      p.describeElement(t(locale, "projectile.particle"), t(locale, "projectile.particleDescribe"));
       resolveReady();
     };
     p.draw = () => {
       const frame = getFrame();
-      if (frame) drawScene(p, frame, container);
+      if (frame) drawScene(p, frame, container, locale);
     };
   }, container);
 

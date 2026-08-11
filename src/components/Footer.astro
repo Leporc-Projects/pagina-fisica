@@ -1,6 +1,9 @@
 ---
 // Pie compartido y declaración explícita del carácter personal e independiente.
 import { SITE } from "../data/site.js";
+import { t } from "../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
 
 const year = new Date().getFullYear();
 ---
@@ -19,7 +22,7 @@ const year = new Date().getFullYear();
 
     <div class="footer-meta">
       <p>
-        Sitio docente personal e independiente. No constituye un sitio oficial de la Universidad de Antioquia.
+        {t(locale, "footer.independent")}
       </p>
       <p>{year}</p>
     </div>

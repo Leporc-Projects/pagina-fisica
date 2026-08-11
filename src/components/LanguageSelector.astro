@@ -1,0 +1,35 @@
+---
+import { LOCALES, SUPPORTED_LOCALES } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
+import { getRouteCounterpart } from "../i18n/routes.js";
+import { withBase } from "../utils/paths.js";
+
+interface Props {
+  locale: "es" | "en";
+  pathname: string;
+}
+
+const { locale, pathname } = Astro.props;
+---
+
+<nav class="language-selector" aria-label={t(locale, "language.label")}>
+  <ul role="list">
+    {SUPPORTED_LOCALES.map((targetLocale) => {
+      const target = getRouteCounterpart(pathname, targetLocale);
+      const current = targetLocale === locale;
+      const language = LOCALES[targetLocale];
+      const label = current
+        ? t(locale, "language.current", { language: language.label })
+        : target
+          ? t(locale, "language.changeTo", { language: language.label })
+          : t(locale, "language.unavailable", { language: language.label });
+      return (
+        <li>
+          {target && !current
+            ? <a href={withBase(target)} hreflang={language.htmlLang} lang={language.htmlLang} aria-label={label}>{language.short}</a>
+            : <span aria-current={current ? "true" : undefined} aria-disabled={!current ? "true" : undefined} title={label}>{language.short}<span class="sr-only"> · {label}</span></span>}
+        </li>
+      );
+    })}
+  </ul>
+</nav>

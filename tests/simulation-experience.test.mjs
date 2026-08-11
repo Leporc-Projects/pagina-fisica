@@ -34,7 +34,7 @@ const fixedCrypto = {
 };
 const validDraft = () => ({ ...clone(), id: "teacher-kinematics-draft", status: "draft" });
 
-test("la experiencia publicada satisface el contrato 1.0.0", () => {
+test("la experiencia publicada satisface el contrato 2.0.0", () => {
   assert.equal(published.schemaVersion, SIMULATION_EXPERIENCE_SCHEMA_VERSION);
   assert.deepEqual(validateSimulationExperience(published), {
     valid: true,
@@ -58,7 +58,7 @@ test("la migración declarativa conserva retorno, final y distancia aprobados", 
 
 test("rechaza schemaVersion y estados desconocidos", () => {
   const schema = clone();
-  schema.schemaVersion = "2.0.0";
+  schema.schemaVersion = "1.0.0";
   assert.equal(validateSimulationExperience(schema).issues[0].code, "invalid-schema");
   const status = clone();
   status.status = "approved";
@@ -176,6 +176,7 @@ test("las observaciones son texto plano y respetan su máximo", () => {
   assert.ok(validateSimulationExperience(html).issues.some((entry) => entry.code === "invalid-observation"));
   const valid = clone();
   valid.observations = [];
+  valid.translations.en.observations = [];
   assert.equal(validateSimulationExperience(valid).valid, true);
 });
 
@@ -209,7 +210,7 @@ test("crea un borrador con ID seguro sin identidad personal", () => {
   assert.equal("author" in draft, false);
 });
 
-test("crea y valida un paquete docente 1.0.0", () => {
+test("crea y valida un paquete docente 2.0.0", () => {
   const pack = createSimulationExperiencePack([validDraft()], {
     cryptoApi: fixedCrypto,
     createdAt: "2026-08-11T12:00:00.000Z",
@@ -290,5 +291,6 @@ test("los cuatro parámetros aceptan rangos pedagógicos restringidos", () => {
   Object.assign(restricted.parameters.a, { minimum: -4, maximum: 4, default: 0 });
   Object.assign(restricted.parameters.T, { minimum: 2, maximum: 10, default: 5 });
   restricted.presets = [];
+  restricted.translations.en.presetLabels = {};
   assert.equal(validateSimulationExperience(restricted).valid, true);
 });

@@ -1,5 +1,6 @@
 ---
-import { SITE } from "../data/site.js";
+import { getLocaleConfig } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
 import { contentScopeLabel } from "../utils/content-scope.js";
 import { noticeHrefForRender, validateNoticeHref } from "../utils/notices.js";
 import { withBase } from "../utils/paths.js";
@@ -10,6 +11,7 @@ const {
   compact = false,
   idPrefix = "notice",
   showScope = false,
+  locale = "es",
 } = Astro.props;
 const Heading = headingLevel;
 const titleId = `${idPrefix}-${notice.id}`;
@@ -17,7 +19,7 @@ const hrefValidation = validateNoticeHref(notice.href);
 const href = noticeHrefForRender(notice.href, withBase);
 const external = hrefValidation.kind === "external";
 const formattedDate = new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateString(
-  SITE.locale,
+  getLocaleConfig(locale).intlLocale,
   { day: "2-digit", month: "long", year: "numeric" }
 );
 ---
@@ -35,7 +37,7 @@ const formattedDate = new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateStr
     <Heading id={titleId}>{notice.title}</Heading>
     {
       notice.featured && !compact && (
-        <span class="status-label status-label--featured">Destacado</span>
+        <span class="status-label status-label--featured">{t(locale, "notice.featured")}</span>
       )
     }
   </div>
@@ -51,7 +53,7 @@ const formattedDate = new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateStr
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
     >
-      Consultar información
+      {t(locale, "notice.viewInformation")}
       <span aria-hidden="true">→</span>
     </a>
   )

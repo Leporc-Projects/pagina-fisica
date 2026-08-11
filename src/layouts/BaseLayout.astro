@@ -4,6 +4,9 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 import { SITE } from "../data/site.js";
+import { getLocaleConfig, getLocaleFromPath } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
+import { getLanguageMetadata } from "../i18n/metadata.js";
 import { withBase } from "../utils/paths.js";
 import {
   THEME_COLORS,
@@ -15,16 +18,27 @@ interface Props {
   title: string;
   description?: string;
   fullWidth?: boolean;
+  locale?: "es" | "en";
+  routeId?: string;
 }
 
 const {
   title,
-  description = SITE.description,
+  description,
   fullWidth = false,
+  locale = getLocaleFromPath(Astro.url.pathname),
+  routeId,
 } = Astro.props;
 
 const fullTitle =
-  title === "Inicio" ? SITE.name : `${title} · ${SITE.name}`;
+  title === t(locale, "meta.homeTitle") ? SITE.name : `${title} · ${SITE.name}`;
+const pageDescription = description ?? t(locale, "meta.defaultDescription");
+const localeConfig = getLocaleConfig(locale);
+const languageMetadata = routeId ? getLanguageMetadata(locale, routeId) : null;
+const canonicalPath = languageMetadata?.canonicalPath ?? Astro.url.pathname;
+const canonicalUrl = new URL(withBase(canonicalPath ?? Astro.url.pathname), Astro.site);
+const alternates = languageMetadata?.alternates ?? [];
+const xDefaultPath = languageMetadata?.xDefaultPath ?? null;
 
 const themeValues = THEME_PREFERENCES.map((option) => option.value);
 const lightThemeColor = THEME_COLORS.light;
@@ -33,14 +47,19 @@ const themeStorageKey = THEME_STORAGE_KEY;
 ---
 
 <!doctype html>
-<html lang={SITE.lang}>
+<html lang={localeConfig.htmlLang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
     <title>{fullTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+    {alternates.map((entry) => (
+      <link rel="alternate" hreflang={entry.hreflang} href={new URL(withBase(entry.path), Astro.site)} />
+    ))}
+    {xDefaultPath && <link rel="alternate" hreflang="x-default" href={new URL(withBase(xDefaultPath), Astro.site)} />}
     <meta name="theme-color" content={lightThemeColor} />
 
     <!-- Se ejecuta antes de cargar estilos para evitar mostrar el tema equivocado. -->
@@ -91,10 +110,10 @@ const themeStorageKey = THEME_STORAGE_KEY;
 
   <body>
     <a class="skip-link" href="#main-content">
-      Saltar al contenido
+      {t(locale, "shell.skip")}
     </a>
 
-    <Header />
+    <Header locale={locale} />
 
     <main id="main-content" tabindex="-1">
       {
@@ -105,6 +124,6 @@ const themeStorageKey = THEME_STORAGE_KEY;
       }
     </main>
 
-    <Footer />
+    <Footer locale={locale} />
   </body>
 </html>

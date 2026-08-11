@@ -15,9 +15,10 @@ interface Props {
   experience: Record<string, unknown>;
   preview?: boolean;
   includeAllRenderers?: boolean;
+  locale?: "es" | "en";
 }
 
-const { experience: suppliedExperience, preview = false, includeAllRenderers = false } = Astro.props;
+const { experience: suppliedExperience, preview = false, includeAllRenderers = false, locale = "es" } = Astro.props;
 const experience = normalizeSimulationExperience(suppliedExperience);
 const validation = validateSimulationExperience(experience);
 const model = getSimulationModelById(experience.modelId);
@@ -42,12 +43,12 @@ const renderProjectile = includeAllRenderers || renderer.id === "p5-projectile-2
 >
   {renderKinematics && (
     <div data-renderer-slot="svg-kinematics-1d" hidden={renderer.id !== "svg-kinematics-1d"}>
-      <KinematicsSimulation experience={kinematicsExperience} preview={preview} />
+      <KinematicsSimulation experience={kinematicsExperience} preview={preview} locale={locale} />
     </div>
   )}
   {renderProjectile && (
     <div data-renderer-slot="p5-projectile-2d" hidden={renderer.id !== "p5-projectile-2d"}>
-      <ProjectileSimulation experience={projectileExperience} preview={preview} />
+      <ProjectileSimulation experience={projectileExperience} preview={preview} locale={locale} />
     </div>
   )}
 </div>

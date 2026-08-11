@@ -2,8 +2,8 @@
 import {
   KINEMATICS_MOTION_VIEW,
   createKinematicsMotionGeometry,
-  formatKinematicsNumber,
 } from "../../utils/kinematics-svg.js";
+import { formatNumber, t } from "../../i18n/index.js";
 
 interface Parameters {
   x0: number;
@@ -14,11 +14,13 @@ interface Parameters {
 
 interface Props {
   parameters: Parameters;
+  locale?: "es" | "en";
 }
 
-const { parameters } = Astro.props;
+const { parameters, locale = "es" } = Astro.props;
 const geometry = createKinematicsMotionGeometry(parameters);
 const { plot, width, height, axisY } = KINEMATICS_MOTION_VIEW;
+const displayNumber = (value, digits = 2) => formatNumber(locale, value, { maximumFractionDigits: digits });
 ---
 
 <figure
@@ -30,27 +32,26 @@ const { plot, width, height, axisY } = KINEMATICS_MOTION_VIEW;
 >
   <figcaption>
     <div>
-      <h2>Movimiento sobre el eje x</h2>
-      <p>El marcador circular muestra la posición actual.</p>
+      <h2>{t(locale, "kinematics.motionTitle")}</h2>
+      <p>{t(locale, "kinematics.motionHelp")}</p>
     </div>
-    <ul aria-label="Leyenda del eje de movimiento">
-      <li><span class="kinematics-motion__legend-initial" aria-hidden="true"></span>Inicio</li>
-      <li><span class="kinematics-motion__legend-current" aria-hidden="true"></span>Posición actual</li>
+    <ul aria-label={t(locale, "kinematics.motionLegend")}>
+      <li><span class="kinematics-motion__legend-initial" aria-hidden="true"></span>{t(locale, "kinematics.start")}</li>
+      <li><span class="kinematics-motion__legend-current" aria-hidden="true"></span>{t(locale, "kinematics.currentPosition")}</li>
     </ul>
   </figcaption>
 
   <svg
     viewBox={`0 0 ${width} ${height}`}
     role="img"
-    aria-label="Movimiento unidimensional sobre un eje horizontal"
+    aria-label={t(locale, "kinematics.motionAria")}
     aria-describedby="kinematics-motion-description"
     data-motion-svg
     data-plot-left={plot.left}
     data-plot-width={plot.width}
   >
     <desc id="kinematics-motion-description">
-      Eje de posición en metros con origen cuando pertenece al dominio, posición
-      inicial, posición actual y flecha que indica el sentido positivo x.
+      {t(locale, "kinematics.motionDescription")}
     </desc>
 
     <defs>
@@ -89,7 +90,7 @@ const { plot, width, height, axisY } = KINEMATICS_MOTION_VIEW;
             x={geometry.transform.x(tick)}
             y={axisY + 30}
             text-anchor="middle"
-          >{formatKinematicsNumber(tick, 1)}</text>
+          >{displayNumber(tick, 1)}</text>
         </g>
       ))}
     </g>
@@ -104,7 +105,7 @@ const { plot, width, height, axisY } = KINEMATICS_MOTION_VIEW;
             x2={geometry.originX}
             y2={axisY + 35}
           />
-          <text x={geometry.originX} y={axisY - 45} text-anchor="middle">origen</text>
+          <text x={geometry.originX} y={axisY - 45} text-anchor="middle">{t(locale, "kinematics.origin")}</text>
         </g>
       )}
     </g>
@@ -130,12 +131,12 @@ const { plot, width, height, axisY } = KINEMATICS_MOTION_VIEW;
       x={geometry.initialX}
       y={axisY - 25}
       text-anchor="middle"
-    >x = {formatKinematicsNumber(parameters.x0)} m</text>
+    >x = {displayNumber(parameters.x0)} m</text>
     <text
       class="kinematics-motion__unit"
       x={plot.left + plot.width}
       y={height - 8}
       text-anchor="end"
-    >posición x (m) · +x</text>
+    >{t(locale, "kinematics.positionAxis")}</text>
   </svg>
 </figure>

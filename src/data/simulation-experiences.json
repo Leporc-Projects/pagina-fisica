@@ -1,12 +1,29 @@
 [
   {
-    "schemaVersion": "1.0.0",
+    "schemaVersion": "2.0.0",
     "id": "kinematics-1d",
     "version": 1,
     "modelId": "kinematics-1d",
     "title": "Cinemática en una dimensión",
     "summary": "Explora posición, velocidad y aceleración constante sobre un eje, con gráficas sincronizadas y lectura física del cambio de sentido.",
     "status": "published",
+    "translations": {
+      "en": {
+        "title": "One-dimensional kinematics",
+        "summary": "Explore position, velocity, and constant acceleration along an axis with synchronized graphs and a physical reading of changes in direction.",
+        "presetLabels": {
+          "uniform": "Uniform motion",
+          "rest": "Starts from rest",
+          "return": "Slows down and returns"
+        },
+        "observations": [
+          "Change only v₀ and compare the initial slope of x(t) with the initial value of v(t).",
+          "Use “Slows down and returns”: when v crosses zero, x reaches an extreme and distance stops matching |Δx|.",
+          "Compare the signs of v and a. Opposite signs reduce speed; equal signs increase it.",
+          "Move the time control and verify that all three graphs mark exactly the same instant."
+        ]
+      }
+    },
     "parameters": {
       "x0": {
         "default": -4,
@@ -95,13 +112,32 @@
     ]
   },
   {
-    "schemaVersion": "1.0.0",
+    "schemaVersion": "2.0.0",
     "id": "projectile-2d",
     "version": 1,
     "modelId": "projectile-2d",
     "title": "Movimiento de un proyectil",
     "summary": "Explora cómo las componentes horizontal y vertical de la velocidad producen una trayectoria parabólica ideal bajo gravedad uniforme.",
     "status": "published",
+    "translations": {
+      "en": {
+        "title": "Projectile motion",
+        "summary": "Explore how horizontal and vertical velocity components produce an ideal parabolic trajectory under uniform gravity.",
+        "presetLabels": {
+          "classic-range": "Classic range",
+          "low-angle": "Low-angle launch",
+          "high-angle": "High-angle launch",
+          "horizontal-launch": "Horizontal launch"
+        },
+        "observations": [
+          "Keep v₀ fixed and compare 25°, 45°, and 70° while observing range and flight time.",
+          "Verify that vx remains constant while vy changes linearly under gravity.",
+          "At the highest point, vy is zero, but vx generally remains nonzero.",
+          "Compare a horizontal launch from a height with launches from ground level.",
+          "Change g while holding all other conditions fixed and analyze how range and maximum height vary."
+        ]
+      }
+    },
     "parameters": {
       "y0": {
         "default": 0,

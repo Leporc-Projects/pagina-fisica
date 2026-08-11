@@ -55,6 +55,7 @@ export const initializeSimulationLab = async () => {
   let parameterKeys = Object.keys(model.parameters);
   let presets = structuredClone(initialExperience.presets);
   let observations = [...initialExperience.observations];
+  let translations = structuredClone(initialExperience.translations);
   let currentId;
   let nextPresetNumber = presets.length + 1;
 
@@ -92,17 +93,36 @@ export const initializeSimulationLab = async () => {
   }));
 
   const readObservations = () => [...root.querySelectorAll("[data-lab-observation]")]
-    .map((entry) => String(entry.querySelector("textarea")?.value ?? "").trim());
+    .map((entry) => String(entry.querySelector("textarea[data-observation-es]")?.value ?? "").trim());
+
+  const readEnglishPresetLabels = () => Object.fromEntries(
+    [...root.querySelectorAll("[data-lab-preset]")].map((fieldset) => [
+      fieldset.dataset.presetId,
+      String(fieldset.querySelector("[data-preset-label-en]")?.value ?? "").trim(),
+    ])
+  );
+
+  const readEnglishObservations = () => [...root.querySelectorAll("[data-lab-observation]")]
+    .map((entry) => String(entry.querySelector("textarea[data-observation-en]")?.value ?? "").trim());
 
   const collectFields = () => {
     presets = readPresets();
     observations = readObservations();
+    translations = {
+      en: {
+        title: String(form.elements.namedItem("title-en")?.value ?? "").trim(),
+        summary: String(form.elements.namedItem("summary-en")?.value ?? "").trim(),
+        presetLabels: readEnglishPresetLabels(),
+        observations: readEnglishObservations(),
+      },
+    };
     const topics = [...form.querySelectorAll('input[name="context-topic"]:checked')]
       .map((input) => input.value);
     return {
       modelId: model.id,
       title: String(form.elements.namedItem("title")?.value ?? "").trim(),
       summary: String(form.elements.namedItem("summary")?.value ?? "").trim(),
+      translations,
       parameters: parameterConfigFromForm(),
       views: Object.fromEntries(
         [...root.querySelectorAll("[data-lab-view]")].map((input) => [
@@ -282,6 +302,16 @@ export const initializeSimulationLab = async () => {
       labelInput.dataset.presetLabel = "";
       label.append(labelInput);
       fieldset.append(label);
+      const englishLabel = create("label");
+      englishLabel.append(create("span", "Name in English"));
+      const englishLabelInput = create("input");
+      englishLabelInput.type = "text";
+      englishLabelInput.required = true;
+      englishLabelInput.maxLength = SIMULATION_EXPERIENCE_LIMITS.maximumPresetLabelLength;
+      englishLabelInput.value = translations.en.presetLabels[preset.id] ?? "";
+      englishLabelInput.dataset.presetLabelEn = "";
+      englishLabel.append(englishLabelInput);
+      fieldset.append(englishLabel);
       const grid = create("div", undefined, "simulation-lab__preset-grid");
       const parameters = parameterConfigFromForm();
       parameterKeys.forEach((key) => {
@@ -324,11 +354,21 @@ export const initializeSimulationLab = async () => {
       textarea.required = true;
       textarea.maxLength = SIMULATION_EXPERIENCE_LIMITS.maximumObservationLength;
       textarea.value = observation;
+      textarea.dataset.observationEs = "";
       label.append(textarea);
+      const englishLabel = create("label");
+      englishLabel.append(create("span", `Observation ${index + 1} in English`));
+      const englishTextarea = create("textarea");
+      englishTextarea.rows = 3;
+      englishTextarea.required = true;
+      englishTextarea.maxLength = SIMULATION_EXPERIENCE_LIMITS.maximumObservationLength;
+      englishTextarea.value = translations.en.observations[index] ?? "";
+      englishTextarea.dataset.observationEn = "";
+      englishLabel.append(englishTextarea);
       const remove = create("button", "Eliminar observación", "simulation-lab__remove");
       remove.type = "button";
       remove.dataset.removeLabObservation = String(index);
-      entry.append(label, remove);
+      entry.append(label, englishLabel, remove);
       return entry;
     }));
     if (addButton instanceof HTMLButtonElement) {
@@ -375,10 +415,13 @@ export const initializeSimulationLab = async () => {
     parameterKeys = Object.keys(model.parameters);
     presets = structuredClone(source.presets);
     observations = [...source.observations];
+    translations = structuredClone(source.translations);
     currentId = undefined;
     nextPresetNumber = presets.length + 1;
     form.elements.namedItem("title").value = source.title;
     form.elements.namedItem("summary").value = source.summary;
+    form.elements.namedItem("title-en").value = source.translations.en.title;
+    form.elements.namedItem("summary-en").value = source.translations.en.summary;
     renderParameters(source);
     renderViews(source);
     renderPresets();
@@ -397,13 +440,16 @@ export const initializeSimulationLab = async () => {
 
   root.querySelector("[data-add-lab-preset]")?.addEventListener("click", () => {
     presets = readPresets();
+    translations.en.presetLabels = readEnglishPresetLabels();
     if (presets.length >= SIMULATION_EXPERIENCE_LIMITS.maximumPresets) return;
     const parameters = parameterConfigFromForm();
+    const id = `case-study-${nextPresetNumber}`;
     presets.push({
-      id: `case-study-${nextPresetNumber}`,
+      id,
       label: `Caso ${nextPresetNumber}`,
       parameters: Object.fromEntries(parameterKeys.map((key) => [key, parameters[key].default])),
     });
+    translations.en.presetLabels[id] = "";
     nextPresetNumber += 1;
     renderPresets();
     evaluate({ showErrors: !errorPanel.hidden });
@@ -414,14 +460,20 @@ export const initializeSimulationLab = async () => {
       ? event.target.closest("[data-remove-lab-preset]")
       : null;
     if (!(button instanceof HTMLButtonElement)) return;
-    presets = readPresets().filter((_, index) => index !== Number(button.dataset.removeLabPreset));
+    const currentPresets = readPresets();
+    translations.en.presetLabels = readEnglishPresetLabels();
+    const removed = currentPresets[Number(button.dataset.removeLabPreset)];
+    presets = currentPresets.filter((_, index) => index !== Number(button.dataset.removeLabPreset));
+    if (removed) delete translations.en.presetLabels[removed.id];
     renderPresets();
     evaluate({ showErrors: !errorPanel.hidden });
   });
   root.querySelector("[data-add-lab-observation]")?.addEventListener("click", () => {
     observations = readObservations();
+    translations.en.observations = readEnglishObservations();
     if (observations.length >= SIMULATION_EXPERIENCE_LIMITS.maximumObservations) return;
     observations.push("");
+    translations.en.observations.push("");
     renderObservations();
     evaluate({ showErrors: !errorPanel.hidden });
     root.querySelector("[data-lab-observation]:last-child textarea")?.focus();
@@ -431,7 +483,9 @@ export const initializeSimulationLab = async () => {
       ? event.target.closest("[data-remove-lab-observation]")
       : null;
     if (!(button instanceof HTMLButtonElement)) return;
-    observations = readObservations().filter((_, index) => index !== Number(button.dataset.removeLabObservation));
+    const removedIndex = Number(button.dataset.removeLabObservation);
+    observations = readObservations().filter((_, index) => index !== removedIndex);
+    translations.en.observations = readEnglishObservations().filter((_, index) => index !== removedIndex);
     renderObservations();
     evaluate({ showErrors: !errorPanel.hidden });
   });

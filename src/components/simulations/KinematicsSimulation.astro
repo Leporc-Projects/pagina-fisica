@@ -1,8 +1,9 @@
 ---
 import KinematicsChart from "./KinematicsChart.astro";
 import KinematicsMotion from "./KinematicsMotion.astro";
-import { getSimulationExperienceById } from "../../data/simulation-experiences.js";
-import { getSimulationModelById } from "../../data/simulation-models.js";
+import { getSimulationExperienceById, localizeSimulationExperience } from "../../data/simulation-experiences.js";
+import { getSimulationModelById, localizeSimulationModel } from "../../data/simulation-models.js";
+import { formatNumber, t } from "../../i18n/index.js";
 import {
   normalizeSimulationExperience,
   validateSimulationExperience,
@@ -11,24 +12,26 @@ import {
   getKinematicsState,
   getTurningPoint,
 } from "../../utils/kinematics-1d.js";
-import { formatKinematicsNumber } from "../../utils/kinematics-svg.js";
 import "../../styles/kinematics-simulation.css";
 
 interface Props {
   experience?: Record<string, unknown>;
   preview?: boolean;
+  locale?: "es" | "en";
 }
 
 const {
   experience: suppliedExperience = getSimulationExperienceById("kinematics-1d"),
   preview = false,
+  locale = "es",
 } = Astro.props;
-const experience = normalizeSimulationExperience(suppliedExperience);
-const validation = validateSimulationExperience(experience);
+const canonicalExperience = normalizeSimulationExperience(suppliedExperience);
+const validation = validateSimulationExperience(canonicalExperience);
 if (!validation.valid) {
   throw new TypeError(`Experiencia de Cinemática inválida: ${validation.errors.join(" ")}`);
 }
-const model = getSimulationModelById(experience.modelId);
+const experience = localizeSimulationExperience(canonicalExperience, locale);
+const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
 if (model?.rendererId !== "svg-kinematics-1d") {
   throw new TypeError("KinematicsSimulation requiere el renderer svg-kinematics-1d.");
 }
@@ -52,32 +55,35 @@ const hasCharts = preview || experience.views.positionGraph || experience.views.
 const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
 
 const readings = [
-  { key: "time", label: "Instante", symbol: "t", unit: "s" },
-  { key: "position", label: "Posición", symbol: "x", unit: "m" },
-  { key: "displacement", label: "Desplazamiento", symbol: "Δx", unit: "m" },
-  { key: "distance", label: "Distancia", symbol: "d", unit: "m" },
-  { key: "velocity", label: "Velocidad", symbol: "v", unit: "m/s" },
-  { key: "speed", label: "Rapidez", symbol: "|v|", unit: "m/s" },
-  { key: "acceleration", label: "Aceleración", symbol: "a", unit: "m/s²" },
+  { key: "time", label: t(locale, "simulation.reading.time"), symbol: "t", unit: "s" },
+  { key: "position", label: t(locale, "simulation.reading.position"), symbol: "x", unit: "m" },
+  { key: "displacement", label: t(locale, "simulation.reading.displacement"), symbol: "Δx", unit: "m" },
+  { key: "distance", label: t(locale, "simulation.reading.distance"), symbol: "d", unit: "m" },
+  { key: "velocity", label: t(locale, "simulation.reading.velocity"), symbol: "v", unit: "m/s" },
+  { key: "speed", label: t(locale, "simulation.reading.speed"), symbol: "|v|", unit: "m/s" },
+  { key: "acceleration", label: t(locale, "simulation.reading.acceleration"), symbol: "a", unit: "m/s²" },
 ];
+const directionKey = initialState.direction === "hacia +x" ? "positive" : initialState.direction === "hacia −x" ? "negative" : "stationary";
+const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { maximumFractionDigits: digits });
 ---
 
 <section
   class="kinematics-simulation"
   data-kinematics-simulation
   data-experience={serializedExperience}
+  data-locale={locale}
   data-preview={preview ? "true" : undefined}
 >
   <div class="kinematics-simulation__workspace">
     <aside class="kinematics-controls" aria-labelledby="kinematics-controls-title">
       <div class="kinematics-controls__header">
-        <p class="academic-label">Parámetros</p>
-        <h2 id="kinematics-controls-title">Configura el movimiento</h2>
-        <p>Cualquier cambio pausa la reproducción y recalcula la trayectoria completa.</p>
+        <p class="academic-label">{t(locale, "simulation.parameters")}</p>
+        <h2 id="kinematics-controls-title">{t(locale, "kinematics.configure")}</h2>
+        <p>{t(locale, "kinematics.changeHelp")}</p>
       </div>
 
       <fieldset class="kinematics-presets" data-presets-fieldset hidden={experience.presets.length === 0}>
-        <legend>Casos de estudio</legend>
+        <legend>{t(locale, "simulation.studyCases")}</legend>
         <div data-presets-list>
           {experience.presets.map((preset) => (
             <button
@@ -101,7 +107,7 @@ const readings = [
                   {control.label} <span>{control.symbol}</span>
                 </label>
                 <output data-param-output={control.key}>
-                  {formatKinematicsNumber(value)} {control.unit}
+                  {displayNumber(value)} {control.unit}
                 </output>
               </div>
               <input
@@ -111,7 +117,7 @@ const readings = [
                 step={control.step}
                 value={value}
                 disabled={!control.editable}
-                aria-label={`${control.label}, control deslizante`}
+                aria-label={t(locale, "simulation.slider", { label: control.label })}
                 aria-describedby={errorId}
                 data-param-range={control.key}
               />
@@ -134,7 +140,9 @@ const readings = [
               </div>
               <small id={errorId} data-param-error={control.key}></small>
               <small class="kinematics-field__limits" data-param-limits={control.key}>
-                {control.editable ? `Rango: ${control.minimum} a ${control.maximum} ${control.unit}` : `Valor fijo: ${formatKinematicsNumber(value)} ${control.unit}`}
+                {control.editable
+                  ? t(locale, "simulation.range", { minimum: control.minimum, maximum: control.maximum, unit: control.unit })
+                  : t(locale, "simulation.fixed", { value: displayNumber(value), unit: control.unit })}
               </small>
             </div>
           );
@@ -144,18 +152,18 @@ const readings = [
 
     {hasStage && (
       <div class="kinematics-stage" data-stage-section>
-        {shouldRender("motion") && <KinematicsMotion parameters={initialParameters} />}
+        {shouldRender("motion") && <KinematicsMotion parameters={initialParameters} locale={locale} />}
 
         {(preview || experience.views.readings || experience.views.turningPoint) && (
           <section class="kinematics-readings" aria-labelledby="kinematics-readings-title" data-readings-section>
             <div class="kinematics-readings__header">
               <div>
-                <p class="academic-label">Lecturas sincronizadas</p>
-                <h2 id="kinematics-readings-title">Estado físico</h2>
+                <p class="academic-label">{t(locale, "simulation.syncedReadings")}</p>
+                <h2 id="kinematics-readings-title">{t(locale, "simulation.physicalState")}</h2>
               </div>
               {shouldRender("readings") && (
                 <p class="kinematics-direction" data-view-section="readings" data-reading="direction">
-                  Sentido: {initialState.direction}
+                  {t(locale, "kinematics.direction", { direction: t(locale, `simulation.direction.${directionKey}`) })}
                 </p>
               )}
             </div>
@@ -167,7 +175,7 @@ const readings = [
                     <dt>{reading.label} <span>{reading.symbol}</span></dt>
                     <dd>
                       <span data-reading={reading.key}>
-                        {formatKinematicsNumber(initialState[reading.key])}
+                        {displayNumber(initialState[reading.key])}
                       </span>
                       <small>{reading.unit}</small>
                     </dd>
@@ -183,9 +191,9 @@ const readings = [
                 data-turning-reading
                 hidden={!initialTurningPoint}
               >
-                Cambio de sentido previsto en
-                <strong>t = <span data-turn-time>{formatKinematicsNumber(initialTurningPoint?.time)}</span> s</strong>,
-                <strong>x = <span data-turn-position>{formatKinematicsNumber(initialTurningPoint?.position)}</span> m</strong>.
+                {t(locale, "kinematics.turning")}
+                <strong>t = <span data-turn-time>{displayNumber(initialTurningPoint?.time)}</span> s</strong>,
+                <strong>x = <span data-turn-position>{displayNumber(initialTurningPoint?.position)}</span> m</strong>.
               </p>
             )}
           </section>
@@ -197,24 +205,24 @@ const readings = [
   <section class="kinematics-playback" aria-labelledby="kinematics-playback-title">
     <div class="kinematics-playback__heading">
       <div>
-        <p class="academic-label">Tiempo</p>
-        <h2 id="kinematics-playback-title">Reproducción</h2>
+        <p class="academic-label">{t(locale, "simulation.time")}</p>
+        <h2 id="kinematics-playback-title">{t(locale, "simulation.playback")}</h2>
       </div>
-      <p data-playback-state>En pausa</p>
+      <p data-playback-state>{t(locale, "simulation.paused")}</p>
     </div>
 
     <div class="kinematics-playback__controls">
       <button type="button" data-action="toggle" aria-pressed="false">
         <span data-playback-icon aria-hidden="true">▶</span>
-        <span data-playback-label>Reproducir</span>
+        <span data-playback-label>{t(locale, "simulation.play")}</span>
       </button>
       <button type="button" data-action="reset">
         <span aria-hidden="true">↺</span>
-        Reiniciar tiempo
+        {t(locale, "simulation.resetTime")}
       </button>
       <label for="kinematics-time">
-        Instante
-        <output data-time-output>{formatKinematicsNumber(initialState.time)} s</output>
+        {t(locale, "simulation.instant")}
+        <output data-time-output>{displayNumber(initialState.time)} s</output>
       </label>
       <input
         id="kinematics-time"
@@ -223,7 +231,7 @@ const readings = [
         max={initialParameters.T}
         step="0.01"
         value="0"
-        aria-label="Instante de la simulación"
+        aria-label={t(locale, "simulation.timeAria")}
         data-time-scrubber
       />
     </div>
@@ -234,10 +242,10 @@ const readings = [
     <section class="kinematics-charts" aria-labelledby="kinematics-charts-title" data-charts-section>
       <div class="kinematics-charts__header">
         <div>
-          <p class="academic-label">Gráficas vinculadas</p>
-          <h2 id="kinematics-charts-title">Tres lecturas del mismo movimiento</h2>
+          <p class="academic-label">{t(locale, "kinematics.linkedCharts")}</p>
+          <h2 id="kinematics-charts-title">{t(locale, "kinematics.chartsTitle")}</h2>
         </div>
-        <p>Las curvas muestran todo el intervalo; el cursor común señala el instante actual.</p>
+        <p>{t(locale, "kinematics.chartsHelp")}</p>
       </div>
       <div class="kinematics-charts__grid">
         {shouldRender("positionGraph") && (
@@ -246,7 +254,8 @@ const readings = [
             quantity="position"
             viewKey="positionGraph"
             parameters={initialParameters}
-            relation="Su pendiente es la velocidad."
+            relation={t(locale, "kinematics.positionRelation")}
+            locale={locale}
           />
         )}
         {shouldRender("velocityGraph") && (
@@ -255,7 +264,8 @@ const readings = [
             quantity="velocity"
             viewKey="velocityGraph"
             parameters={initialParameters}
-            relation="Su pendiente es a; su área algebraica es Δx."
+            relation={t(locale, "kinematics.velocityRelation")}
+            locale={locale}
           />
         )}
         {shouldRender("accelerationGraph") && (
@@ -264,7 +274,8 @@ const readings = [
             quantity="acceleration"
             viewKey="accelerationGraph"
             parameters={initialParameters}
-            relation="Su área algebraica es el cambio de velocidad."
+            relation={t(locale, "kinematics.accelerationRelation")}
+            locale={locale}
           />
         )}
       </div>
@@ -273,8 +284,8 @@ const readings = [
 
   <noscript>
     <div class="kinematics-noscript" role="note">
-      <strong>La interacción requiere JavaScript.</strong>
-      <p>Sin JavaScript puedes consultar el estado inicial y las representaciones configuradas en esta experiencia.</p>
+      <strong>{t(locale, "kinematics.noJsTitle")}</strong>
+      <p>{t(locale, "kinematics.noJsText")}</p>
     </div>
   </noscript>
 </section>

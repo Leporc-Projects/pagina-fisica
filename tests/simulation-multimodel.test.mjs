@@ -61,7 +61,7 @@ test("cada vista declara label docente y condición visual", () => {
   });
 });
 
-test("las dos experiencias publicadas cumplen el contrato 1.0.0", () => {
+test("las dos experiencias publicadas cumplen el contrato 2.0.0", () => {
   assert.deepEqual(SIMULATION_EXPERIENCES.map((experience) => experience.id), [
     "kinematics-1d",
     "projectile-2d",
