@@ -35,6 +35,10 @@ import {
   getSimulationModelById,
 } from "../src/data/simulation-models.js";
 import {
+  SIMULATION_RENDERERS,
+  getSimulationRendererById,
+} from "../src/data/simulation-renderers.js";
+import {
   SIMULATION_EXPERIENCES,
   getSimulationExperienceById,
 } from "../src/data/simulation-experiences.js";
@@ -48,6 +52,7 @@ import {
   getTurningPoint,
 } from "../src/utils/kinematics-1d.js";
 import { createKinematicsChartGeometry } from "../src/utils/kinematics-svg.js";
+import { getProjectileSummary } from "../src/utils/projectile-2d.js";
 import {
   NOTICES,
   getCourseNotices,
@@ -464,12 +469,16 @@ const simulationRoutes = SIMULATIONS.map((simulation) => simulation.route);
 const unit1TopicSet = new Set(UNIT_1.topics.map((topic) => topic.slug));
 const simulationModelIds = SIMULATION_MODELS.map((model) => model.id);
 const simulationExperienceIds = SIMULATION_EXPERIENCES.map((experience) => experience.id);
+const simulationRendererIds = SIMULATION_RENDERERS.map((renderer) => renderer.id);
 
 check(
   duplicates(simulationModelIds).length === 0 &&
+    duplicates(simulationRendererIds).length === 0 &&
+    simulationRendererIds.join(",") === SIMULATION_RENDERER_IDS.join(",") &&
     SIMULATION_MODELS.every((model) =>
       /^[a-z][a-z0-9-]*$/.test(model.id) &&
       SIMULATION_RENDERER_IDS.includes(model.rendererId) &&
+      getSimulationRendererById(model.rendererId)?.modelId === model.id &&
       Object.values(model.parameters).every((parameter) =>
         parameter.type === "number" &&
         parameter.label &&
@@ -480,9 +489,15 @@ check(
         parameter.hardMinimum < parameter.hardMaximum &&
         Number.isFinite(parameter.defaultStep) &&
         parameter.defaultStep > 0
-      )
+      ) &&
+      Object.values(model.views).length > 0 &&
+      Object.values(model.views).every((view) =>
+        typeof view.label === "string" && view.label.length > 0 &&
+        typeof view.visual === "boolean"
+      ) &&
+      Object.values(model.views).some((view) => view.visual)
     ),
-  "Los modelos tienen IDs únicos, renderer conocido y límites numéricos confiables."
+  "Los modelos tienen IDs únicos, renderer conocido, vistas declarativas y límites confiables."
 );
 
 check(
@@ -514,8 +529,8 @@ check(
 );
 
 check(
-  getPublishedSimulations().length === 1 &&
-    getPublishedSimulations()[0]?.id === "kinematics-1d" &&
+  getPublishedSimulations().map((simulation) => simulation.id).join(",") ===
+    "kinematics-1d,projectile-2d" &&
     getSimulationsForCourseTopic(
       COURSE.id,
       UNIT_1.number,
@@ -526,6 +541,11 @@ check(
       UNIT_1.number,
       "ecuaciones-movimiento"
     )[0]?.id === "kinematics-1d" &&
+    getSimulationsForCourseTopic(
+      COURSE.id,
+      UNIT_1.number,
+      "movimiento-2d"
+    )[0]?.id === "projectile-2d" &&
     SIMULATIONS.every((simulation) =>
       simulation.contexts.every((context) =>
         getCourseById(context.courseId) &&
@@ -533,7 +553,28 @@ check(
         context.topics.every((topic) => unit1TopicSet.has(topic))
       )
     ),
-  "La simulación 1D es el único recurso publicado y sus contextos académicos existen."
+  "Las simulaciones 1D y de proyectil están publicadas en sus contextos académicos reales."
+);
+
+const projectileExperience = getSimulationExperienceById("projectile-2d");
+const projectileParameters = projectileExperience
+  ? Object.fromEntries(Object.entries(projectileExperience.parameters)
+    .map(([key, config]) => [key, config.default]))
+  : null;
+const projectileSummary = projectileParameters
+  ? getProjectileSummary(projectileParameters)
+  : null;
+
+check(
+  projectileExperience?.presets.map((preset) => preset.id).join(",") ===
+    "classic-range,low-angle,high-angle,horizontal-launch" &&
+    projectileSummary &&
+    Number.isFinite(projectileSummary.flightTime) &&
+    Number.isFinite(projectileSummary.range) &&
+    Number.isFinite(projectileSummary.maximumHeight) &&
+    projectileSummary.range > 0 &&
+    projectileSummary.maximumHeight > 0,
+  "El proyectil conserva cuatro casos pedagógicos y magnitudes globales finitas."
 );
 
 const returnPreset = KINEMATICS_1D_PRESETS.find(
@@ -1668,6 +1709,26 @@ const kinematicsStyleSource = fs.readFileSync(
   path.join(projectRoot, "src/styles/kinematics-simulation.css"),
   "utf8"
 );
+const projectileComponentSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/simulations/ProjectileSimulation.astro"),
+  "utf8"
+);
+const projectileScriptSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/projectile-2d.js"),
+  "utf8"
+);
+const projectileRendererSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/p5-projectile-renderer.js"),
+  "utf8"
+);
+const projectileStyleSource = fs.readFileSync(
+  path.join(projectRoot, "src/styles/projectile-simulation.css"),
+  "utf8"
+);
+const astroConfigSource = fs.readFileSync(
+  path.join(projectRoot, "astro.config.mjs"),
+  "utf8"
+);
 const simulationLabComponentSource = fs.readFileSync(
   path.join(projectRoot, "src/components/simulations/SimulationLab.astro"),
   "utf8"
@@ -1718,14 +1779,66 @@ check(
 );
 
 check(
+  packageData.dependencies?.p5 === "2.3.1" &&
+    projectileComponentSource.includes("data-projectile-simulation") &&
+    projectileComponentSource.includes('role="img"') &&
+    projectileComponentSource.includes("<noscript>") &&
+    projectileComponentSource.includes('aria-live="polite"') &&
+    projectileComponentSource.includes("data-time-scrubber") &&
+    projectileComponentSource.includes("Alternativa textual al Canvas"),
+  "El proyectil fija p5 local y conserva controles, lecturas y alternativa accesible."
+);
+
+check(
+  projectileRendererSource.includes('import("p5")') &&
+    projectileRendererSource.includes("new P5") &&
+    projectileRendererSource.includes("p.noLoop()") &&
+    projectileRendererSource.includes("new ResizeObserver") &&
+    projectileRendererSource.includes('window.addEventListener("themechange"') &&
+    projectileRendererSource.includes("instance.remove()") &&
+    projectileRendererSource.includes("p.describe(") &&
+    !projectileRendererSource.includes("WEBGL") &&
+    !/(?:https?:\/\/|fetch\(|localStorage|sessionStorage|indexedDB|eval\(|Function\()/.test(
+      projectileRendererSource
+    ),
+  "El renderer p5 usa modo instancia, Canvas 2D, carga local diferida y ciclo de vida completo."
+);
+
+check(
+  projectileScriptSource.includes("requestAnimationFrame") &&
+    projectileScriptSource.includes("cancelAnimationFrame") &&
+    projectileScriptSource.includes("visibilitychange") &&
+    projectileScriptSource.includes("pagehide") &&
+    projectileScriptSource.includes("destroy()") &&
+    !/(?:innerHTML|outerHTML\s*=|fetch\(|localStorage|sessionStorage|indexedDB|eval\(|Function\()/.test(
+      projectileScriptSource
+    ),
+  "El runtime del proyectil mantiene un solo frame, se limpia y no persiste ni ejecuta entrada."
+);
+
+check(
+  projectileStyleSource.includes("@media (max-width: 920px)") &&
+    projectileStyleSource.includes("@media (max-width: 720px)") &&
+    projectileStyleSource.includes("@media (max-width: 480px)") &&
+    projectileStyleSource.includes("prefers-reduced-motion") &&
+    !/(?:#[0-9a-f]{3,8}\b|\brgba?\s*\()/i.test(projectileStyleSource) &&
+    astroConfigSource.includes("codeSplitting") &&
+    astroConfigSource.includes('name: "p5"') &&
+    astroConfigSource.includes("node_modules\\/p5\\/"),
+  "El proyectil es responsive, usa tokens y aísla el chunk de p5 del resto del sitio."
+);
+
+check(
   simulationLabComponentSource.includes("<fieldset") &&
     simulationLabComponentSource.includes("<legend") &&
     simulationLabComponentSource.includes("data-preview-simulation") &&
     simulationLabComponentSource.includes("data-export-simulation") &&
-    simulationLabComponentSource.includes("<KinematicsSimulation") &&
-    simulationLabComponentSource.includes("contextTopics.map") &&
-    simulationLabScriptSource.includes("initializeKinematicsSimulation") &&
-    simulationLabScriptSource.includes("destroyKinematicsSimulation") &&
+    simulationLabComponentSource.includes("<SimulationExperienceRenderer") &&
+    simulationLabComponentSource.includes("SIMULATION_MODELS.map") &&
+    simulationLabComponentSource.includes("Object.entries(model.views)") &&
+    simulationLabComponentSource.includes("UNIT_1.topics.map") &&
+    simulationLabScriptSource.includes("mountSimulationExperienceRenderer") &&
+    simulationLabScriptSource.includes("destroySimulationExperienceRenderer") &&
     simulationLabScriptSource.includes("textContent") &&
     simulationLabScriptSource.includes("replaceChildren") &&
     !/(?:innerHTML|outerHTML\s*=|fetch\(|localStorage|sessionStorage|indexedDB|eval\(|Function\()/.test(

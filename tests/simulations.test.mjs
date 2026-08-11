@@ -33,12 +33,13 @@ test("categorías y estados pertenecen a taxonomías válidas", () => {
 
 test("la consulta pública excluye estados no publicados", () => {
   assert.ok(getPublishedSimulations().every((item) => item.status === "published"));
-  assert.equal(getPublishedSimulations().length, 1);
+  assert.equal(getPublishedSimulations().length, 2);
 });
 
 test("la consulta por categoría encuentra Cinemática y no inventa recursos", () => {
   assert.deepEqual(getSimulationsByCategory("Cinemática").map((item) => item.id), [
     "kinematics-1d",
+    "projectile-2d",
   ]);
   assert.deepEqual(getSimulationsByCategory("Dinámica"), []);
 });
@@ -63,9 +64,11 @@ test("la consulta contextual aparece solo en los dos temas declarados", () => {
       1,
       topic.slug
     ).map((item) => item.id);
-    const expected = ["movimiento-1d", "ecuaciones-movimiento"].includes(topic.slug)
-      ? ["kinematics-1d"]
-      : [];
+    const expected = topic.slug === "movimiento-2d"
+      ? ["projectile-2d"]
+      : ["movimiento-1d", "ecuaciones-movimiento"].includes(topic.slug)
+        ? ["kinematics-1d"]
+        : [];
     assert.deepEqual(ids, expected);
   }
 });
