@@ -26,10 +26,11 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 
 `src/data/` contiene estructuras JavaScript exportadas:
 
-- `course.js`: contrato académico del curso, navegación interna, siete unidades, evaluación, bibliografía y cronograma.
+- `courses.js`: registro mínimo de identidades estables, rutas y estado activo de los cursos reales.
+- `course.js`: contrato académico de Física Básica I; deriva su identidad de `courses.js` y añade navegación interna, siete unidades, evaluación, bibliografía y cronograma.
 - `site.js`: identidad editorial, navegación global, accesos de portada y categorías generales de simulaciones.
 - `notices.json`: almacenamiento editorial actual de avisos; puede contener los cuatro estados.
-- `notices.js`: adaptador de consultas; `getPublishedNotices()` es la frontera que consumen portada y `/avisos`.
+- `notices.js`: adaptador de consultas publicadas por ámbito; separa el archivo general, cada curso y la selección combinada de portada.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
@@ -86,6 +87,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
 - `bank/QuestionBankEditor.astro`: formulario docente local para previsualizar preguntas fijas y preparar un paquete JSON de borradores; no modifica el banco público.
 - `notices/NoticeEditor.astro`: formulario local para preparar y previsualizar avisos como texto, sin publicar ni enviar datos.
+- `NoticeCard.astro`: presentación pública compartida; conserva enlaces internos y HTTPS seguros también en su variante compacta.
 - `teacher/TeacherToolsNav.astro`: navegación común del hub, los dos editores, el Centro de revisión y el Organizador.
 - `participation/`: selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
 - `review/`: importación accesible, agregados descriptivos, listado paginado, revisión de propuestas, incidencias y exportación de una sesión docente local. La ruta de la herramienta los compone sin incorporar lógica de contratos.
@@ -97,6 +99,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `src/utils/bonus-audit.js`: audita candidatos por slot y simula diversidad de tandas sin modificar blueprints.
 - `src/utils/question-pack.js`: contrato versionado, normalización y validación compartida por el editor y el importador del repositorio.
 - `src/utils/notices.js`: contrato canónico de avisos, estados, categorías, enlaces seguros, orden, paquetes e importación.
+- `src/utils/content-scope.js`: contrato puro y reutilizable de ámbito global o curso registrado; no conoce páginas ni almacenamiento de avisos.
 - `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, delimitadores semánticos, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
 - `src/utils/participation.js`: núcleo puro para crear, validar y serializar una respuesta. No conoce formularios ni nodos del DOM y es la única fuente para TXT, JSON y CSV.
 - `src/scripts/participation.js`: adaptación pequeña entre formularios y contrato. Conserva una sola respuesta en memoria, controla la previsualización, descarga archivos, copia texto y abre la impresión nativa.
@@ -135,6 +138,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/herramientas.astro` | `/herramientas` |
 | `src/pages/actividades.astro` | `/actividades` |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
+| `src/pages/fisica-basica-1/avisos.astro` | `/fisica-basica-1/avisos` |
 | `src/pages/fisica-basica-1/cronograma.astro` | `/fisica-basica-1/cronograma` |
 | `src/pages/fisica-basica-1/unidades.astro` | `/fisica-basica-1/unidades` |
 | `src/pages/fisica-basica-1/ejercicios.astro` | `/fisica-basica-1/ejercicios` |
@@ -435,15 +439,27 @@ editor local → paquete docente JSON → importador del repositorio
 ### Avisos y flujo editorial
 
 `notices.json` conserva los datos y `notices.js` oculta su representación física.
-Las páginas solo llaman `getPublishedNotices()` o `getHomepageNotices()`; una
-fuente futura puede sustituir el JSON sin cambiar consumidores. La portada
-prioriza los destacados y desaparece por completo cuando la consulta está
-vacía. `/avisos` conserva un estado vacío compacto.
+El esquema vigente `2.0.0` exige un `scope` validado por el contrato compartido:
 
-El Editor de avisos genera ID, versiones y estado `draft`, muestra el contenido
-con las mismas clases públicas y exporta `aula-fisica-notice-pack-*.json`. El
-importador acepta solo JSON, valida fechas, categorías, duplicados, texto y
-enlaces, y fuerza `review`:
+```json
+{ "type": "global" }
+{ "type": "course", "courseId": "fisica-basica-1" }
+```
+
+`courseId` siempre se resuelve contra `courses.js`. Un ámbito global no admite
+esa propiedad y no existe inferencia por categoría, enlace o ubicación del
+editor. Las páginas consumen `getGlobalNotices()` o
+`getCourseNotices(courseId)`. `getPublishedNotices()` conserva la frontera de
+todos los publicados y `getHomepageNotices()` combina globales con cursos
+activos, prioriza destacados, deduplica y devuelve como máximo tres. `/avisos`
+es el archivo general; cada curso puede tener su archivo contextual, hoy
+`/fisica-basica-1/avisos`, ambos con estado vacío válido.
+
+El Editor de avisos genera ID, versiones y estado `draft`, obtiene los destinos
+del registro canónico, muestra contenido y ámbito en la previsualización y
+exporta `aula-fisica-notice-pack-*.json` con esquema `2.0.0`. El importador
+acepta solo JSON, valida ámbito, fechas, categorías, duplicados, texto y enlaces,
+y fuerza `review`:
 
 ```text
 editor local → notice pack (draft) → npm run import:notices
@@ -454,6 +470,10 @@ editor local → notice pack (draft) → npm run import:notices
 cambio de disponibilidad requiere un build. La transición completa es `draft →
 review → published → archived`; en esta fase, cambiar de `review` a `published`
 es una acción editorial revisada en el repositorio.
+
+Los paquetes `1.x` se rechazan de forma explícita. Carecen de ámbito y el
+importador no intenta deducirlo; cada aviso debe abrirse en el editor vigente,
+recibir un destino y volver a pasar por revisión.
 
 La revisión de fuentes afines conserva fronteras pequeñas: videos ofrece
 `getVideos*()`, Bonos ofrece `getBonuses*()`, y las preguntas docentes entran al
@@ -595,22 +615,24 @@ duplica títulos o rutas. En móvil, el mismo `ol` abandona la geometría radial
 se presenta como un camino vertical; en impresión se convierte en una lista.
 La API (`unitLabel`, `unitTitle`, `topics`) permite reutilizarlo en Unidades 2–7.
 
-### Ruta base de publicación
+### Dominio y rutas de publicación
 
-`astro.config.mjs` configura la Project Page provisional:
+`astro.config.mjs` configura el origen canónico vigente:
 
 ```js
 site: "https://aulafisica.com",
 ```
 
-`site` identifica el origen canónico y `base` indica que la aplicación no vive en la raíz del dominio. Por eso una ruta lógica como `/fisica-basica-1/videos` debe renderizarse como `/pagina-fisica/fisica-basica-1/videos`.
+No se declara `base`, de modo que una ruta lógica como
+`/fisica-basica-1/videos` se publica con esa misma ruta bajo
+`https://aulafisica.com`.
 
 La función `withBase()` realiza esa conversión al renderizar. Su núcleo puro, `resolveBasePath()`, permite comprobar el comportamiento desde `validate.mjs` sin simular el entorno de Astro. La regla de mantenimiento es:
 
 - guardar rutas internas en datos desde la raíz lógica;
 - llamar `withBase()` en todo `href` o `src` interno que Astro no gestione automáticamente;
 - conservar anclas como `#unidad-1` y enlaces externos como URL completas;
-- no escribir `/pagina-fisica` en componentes, páginas ni datos.
+- no escribir el dominio ni un prefijo histórico en componentes, páginas o datos.
 
 Los imports CSS y los recursos generados por Astro reciben `base` durante el build. Los archivos servidos directamente desde `public/`, como el logotipo, deben pasar por `withBase()` cuando se referencian.
 
@@ -850,9 +872,10 @@ El trigger automático apunta a `main`. El workflow usa permisos de lectura del
 repositorio, escritura de Pages e identificación OIDC para el despliegue; no
 necesita secretos propios.
 
-En desarrollo y `preview`, la página inicial está en `/pagina-fisica/`, igual que en producción. Esto hace que la prueba local cubra el mismo prefijo que GitHub Pages.
-
-Para migrar a un dominio personalizado se debe crear `public/CNAME`, cambiar `site`, retirar `base` y configurar DNS/HTTPS en GitHub. `withBase()` pasará a devolver las rutas lógicas sin prefijo, de modo que no se reescriben los componentes.
+En desarrollo y `preview`, la página inicial está en `/`, igual que bajo el
+dominio personalizado de producción. `withBase()` conserva la disciplina de
+rutas lógicas y permite validar el resolvedor también con prefijos hipotéticos
+sin introducirlos en el contenido.
 
 ## Cómo añadir una página
 

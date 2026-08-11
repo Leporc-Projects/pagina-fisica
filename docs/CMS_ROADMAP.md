@@ -14,8 +14,11 @@ de una publicación programada: cualquier cambio público en GitHub Pages requie
 un build y despliegue.
 
 El CMS sustituirá las fuentes detrás de consultas como
-`getPublishedNotices()`, `getVideos*()` y `getBonuses*()`. Las páginas públicas
-no deben conocer si el origen es JSON, Git, una API o una base de datos.
+`getPublishedNotices()`, `getGlobalNotices()`, `getCourseNotices(courseId)`,
+`getVideos*()` y `getBonuses*()`. Las páginas públicas no deben conocer si el
+origen es JSON, Git, una API o una base de datos. El registro canónico de cursos
+y el contrato de ámbito global/curso seguirán siendo fronteras estables, aunque
+su almacenamiento cambie.
 
 ## Roles conceptuales
 
@@ -37,6 +40,10 @@ inyección, validación compartida servidor/cliente, sesiones seguras, mínimo
 privilegio, rate limits donde proceda, trazabilidad de cambios y restauración
 ensayada. Tokens, contraseñas y claves vivirán en un gestor de secretos, nunca
 en contenido, código cliente ni archivos exportados.
+
+La autorización deberá evaluar también el ámbito del recurso: poder preparar
+avisos generales no implica poder publicar en todos los cursos, y un `courseId`
+solo será válido si pertenece al registro de cursos disponible para esa cuenta.
 
 Antes de migrar se deberá definir retención, propiedad de datos, exportación,
 backups, recuperación ante fallos y el mecanismo que dispara builds. No se

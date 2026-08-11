@@ -48,10 +48,11 @@ pagina-fisica/
 
 ## Rutas actuales
 
-Las rutas siguientes son rutas lógicas del proyecto. En GitHub Pages se publican bajo el prefijo `/pagina-fisica`; por ejemplo, `/avisos` se visita como `/pagina-fisica/avisos`.
+Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raíz de `https://aulafisica.com`.
 
 - `/`: portada y avisos recientes.
 - `/fisica-basica-1`: información general del curso.
+- `/fisica-basica-1/avisos`: avisos publicados específicamente para el curso.
 - `/fisica-basica-1/cronograma`: sesiones del semestre 2026-2.
 - `/fisica-basica-1/unidades`: siete unidades y sus temas.
 - `/fisica-basica-1/ejercicios`: catálogo futuro de práctica y tutorías.
@@ -74,7 +75,7 @@ Después de instalar las dependencias declaradas en el proyecto con `npm ci`:
 npm run dev
 ```
 
-Con la configuración provisional activa, el sitio se sirve en `http://localhost:4321/pagina-fisica/`. Astro aplica el mismo `base` durante desarrollo y compilación, por lo que esta URL permite detectar problemas antes de publicar.
+El sitio se sirve por defecto en `http://localhost:4321/`. La configuración usa el dominio personalizado y no añade un prefijo `base`.
 
 La compilación estática se genera con:
 
@@ -88,7 +89,7 @@ Para revisar localmente el resultado de `dist/`:
 npm run preview
 ```
 
-La vista previa también se abre bajo `/pagina-fisica/`.
+La vista previa también se abre desde `/`.
 
 ## Rutas internas y `base`
 
@@ -126,17 +127,12 @@ Las anclas (`#contenido`) y las URL externas no necesitan el prefijo. `withBase(
 
 Para habilitar la primera publicación, en GitHub hay que abrir **Settings → Pages → Build and deployment → Source** y seleccionar **GitHub Actions**. Después puede ejecutarse manualmente el workflow **Deploy to GitHub Pages** desde la pestaña **Actions**, o hacerse un nuevo push a `main`.
 
-### Migración futura a un dominio personalizado
+### Dominio personalizado
 
-Cuando exista un dominio aprobado:
-
-1. configurar sus registros DNS según GitHub Pages;
-2. crear `public/CNAME` con el nombre del dominio, sin protocolo;
-3. cambiar `site` en `astro.config.mjs` por la URL completa del dominio;
-4. eliminar `base: "/pagina-fisica"` de `astro.config.mjs`;
-5. registrar el dominio en **Settings → Pages** y activar HTTPS cuando esté disponible.
-
-Como los componentes dependen de `import.meta.env.BASE_URL`, no será necesario editar uno por uno los enlaces internos.
+La publicación vigente usa `https://aulafisica.com`, declarado como `site` en
+`astro.config.mjs` y configurado en GitHub Pages. No existe un `base` adicional.
+Los componentes continúan resolviendo enlaces con `import.meta.env.BASE_URL`
+para conservar rutas lógicas portables sin escribir el dominio en cada página.
 
 ## Validación
 
@@ -164,7 +160,11 @@ git status
 
 ### Avisos
 
-Los avisos se almacenan en `src/data/notices.json`; `src/data/notices.js` expone las consultas públicas y solo entrega registros con estado `published`. Los borradores preparados en el editor se importan con `npm run import:notices -- archivo.json` y quedan en `review` hasta su aprobación editorial.
+Los avisos se almacenan en `src/data/notices.json` con esquema `2.0.0` y un ámbito obligatorio: `{ "type": "global" }` o `{ "type": "course", "courseId": "fisica-basica-1" }`. El registro canónico de cursos vive en `src/data/courses.js`; no se deben inventar IDs o rutas en el contenido.
+
+`src/data/notices.js` expone consultas separadas para todos los publicados, los generales, los de un curso y la selección de portada. `/avisos` muestra solo avisos generales; `/fisica-basica-1/avisos` muestra solo los del curso; la portada combina ambos ámbitos para los cursos activos, prioriza destacados y limita la salida a tres registros sin duplicados.
+
+El editor local obtiene sus destinos del registro de cursos. Sus paquetes también usan esquema `2.0.0`. Los borradores se importan con `npm run import:notices -- archivo.json` y quedan en `review` hasta su aprobación editorial. Los paquetes `1.x` se rechazan porque no declaran ámbito; deben regenerarse y revisarse, nunca se infiere su destino.
 
 ### Videos
 
