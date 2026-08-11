@@ -19,6 +19,7 @@ Sitio publicado: [https://aulafisica.com](https://aulafisica.com)
 
 - Astro 7 con generación estática.
 - HTML semántico, CSS y JavaScript.
+- p5.js 2.3.1, fijado localmente y cargado solo por el renderer de proyectiles.
 - Node.js 22.12 o posterior y npm.
 - Sin framework de interfaz, backend, base de datos o dependencias de estilos.
 
@@ -66,6 +67,7 @@ Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raí
 - `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
 - `/simulaciones`: catálogo canónico de simulaciones publicadas y categorías futuras.
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
+- `/simulaciones/proyectil-2d`: simulación propia de movimiento parabólico en Canvas 2D.
 - `/herramientas`: acceso de compatibilidad al hub docente del curso.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
 
@@ -161,21 +163,24 @@ git diff --check
 git status
 ```
 
-## Simulación de cinemática 1D
+## Simulaciones publicadas
 
-La primera experiencia interactiva usa únicamente Astro, JavaScript vanilla y
-SVG. El modelo físico puro vive en `src/utils/kinematics-1d.js`; su definición
-de parámetros, límites duros y renderer vive en `src/data/simulation-models.js`;
-y la configuración pedagógica publicada vive en
+Las experiencias interactivas comparten un contrato declarativo, pero cada
+modelo conserva su renderer. Cinemática 1D usa SVG y el proyectil 2D usa p5.js
+en modo instancia sobre Canvas 2D. Los modelos físicos puros viven en
+`src/utils/kinematics-1d.js` y `src/utils/projectile-2d.js`; sus parámetros,
+límites y vistas se registran en `src/data/simulation-models.js`; la relación
+cerrada modelo/renderer vive en `src/data/simulation-renderers.js`; y la
+configuración pedagógica publicada vive en
 `src/data/simulation-experiences.json`. `src/data/simulations.js` es el adaptador
-de catálogo y conserva únicamente ruta y categoría propias del directorio.
+del catálogo y conserva solo ruta y categoría.
 
 El contrato de experiencia y el de paquete usan esquema `1.0.0`. Una experiencia
 solo contiene datos: defaults y rangos pedagógicos, parámetros editables o
 bloqueados, vistas, hasta cinco casos de estudio, guía en texto plano y
-contextos académicos opcionales. El renderer real se identifica como
-`svg-kinematics-1d`; `kinematics-svg.js` proyecta la salida física y el runtime
-cliente actualiza el DOM sin incorporar ecuaciones nuevas.
+contextos académicos opcionales. Los renderers reales son
+`svg-kinematics-1d` y `p5-projectile-2d`. Ambos reciben estado ya calculado por
+los modelos puros: el dibujo no incorpora ecuaciones físicas nuevas.
 
 Los tres casos publicados son movimiento uniforme (`x₀=-6`, `v₀=2,5`, `a=0`,
 `T=6`), parte del reposo (`x₀=-4`, `v₀=0`, `a=1,5`, `T=6`) y frena y regresa
@@ -185,8 +190,10 @@ iniciales útiles cuando JavaScript está desactivado.
 
 El Laboratorio de simulaciones funciona completamente en memoria, no usa red,
 `localStorage` ni identidad docente. Previsualiza mediante el mismo componente y
-runtime que producción y descarga un `simulation experience pack` en estado
-`draft`. Para incorporarlo al almacenamiento editorial:
+runtime que producción para cualquiera de los dos modelos registrados y descarga
+un `simulation experience pack` en estado `draft`. Al cambiar de modelo reinicia
+parámetros, vistas, presets y contextos incompatibles. Para incorporarlo al
+almacenamiento editorial:
 
 ```sh
 npm run import:simulations -- ruta/al/paquete.json
@@ -194,6 +201,11 @@ npm run import:simulations -- ruta/al/paquete.json
 
 El importador acepta únicamente JSON, valida modelos, límites, vistas, presets,
 texto y contextos, rechaza duplicados y fuerza `review`; nunca publica.
+
+p5.js está fijado en la versión 2.3.1, se distribuye desde el paquete local y se
+carga de forma diferida únicamente al montar el renderer de proyectiles; no hay
+CDN ni globals `setup`/`draw`. Su atribución y licencia LGPL-2.1 están documentadas
+en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Incorporación de contenidos
 

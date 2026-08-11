@@ -556,11 +556,12 @@ gráficas se sincronizan, comparten el valor físico y no una posición SVG.
 
 ### Añadir o relacionar una simulación
 
-Una simulación pública se compone de tres fuentes con responsabilidades
+Una simulación pública se compone de cuatro fuentes con responsabilidades
 distintas:
 
 - `simulation-models.js` registra el modelo disponible, sus parámetros, límites
   duros, capacidades y renderer permitido;
+- `simulation-renderers.js` registra la relación cerrada entre modelo y renderer;
 - `simulation-experiences.json` conserva la configuración pedagógica versionada;
 - `simulations.js` añade únicamente la ruta lógica y la categoría del catálogo.
 
@@ -572,8 +573,9 @@ Una experiencia usa esquema `1.0.0`, solo referencia un `modelId` existente y
 debe contener los parámetros completos. Sus mínimos y máximos permanecen dentro
 de los límites duros, `minimum < maximum`, el default pertenece al rango y el
 paso es positivo. Un parámetro con `editable: false` conserva su valor en todos
-los presets, pero el estudiante no puede modificarlo. Al menos el eje de
-movimiento o una gráfica debe estar activo.
+los presets, pero el estudiante no puede modificarlo. Al menos una vista marcada
+como visual por el modelo debe estar activa. La validación no debe depender de
+nombres de vistas propios de Cinemática 1D.
 
 Los contextos relacionan un recurso global con `courseId`, número de unidad y
 slugs de temas existentes. No son un ámbito de contenido ni una copia de la
@@ -613,9 +615,22 @@ funciones, CSS, renderer arbitrario, URL o expresiones matemáticas ejecutables.
 El constructor actual no es un editor p5 ni un IDE.
 
 No se aceptan capturas raster de gráficas que puedan generarse con esta
-infraestructura. SVG preserva texto, nitidez y posibilidad de impresión. Canvas
-solo se evaluará para simulaciones densas o animadas cuya carga de elementos y
-frecuencia de actualización lo justifique técnicamente.
+infraestructura. SVG preserva texto, nitidez y posibilidad de impresión. El
+renderer de proyectiles usa p5.js en modo instancia sobre Canvas 2D porque la
+escena animada requiere redibujado frecuente. Un nuevo renderer Canvas debe:
+
+1. recibir resultados del modelo puro, sin duplicar ecuaciones físicas;
+2. usar el ciclo `mount/update/destroy` y limpiar canvas, observers y frames;
+3. mantener controles, lecturas y descripción accesible en HTML;
+4. responder a tamaño, densidad de píxel, tema y movimiento reducido;
+5. cargar su dependencia local de forma diferida y nunca desde CDN;
+6. declarar dependencia, versión y licencia en `THIRD_PARTY_NOTICES.md`.
+
+Para una tercera familia se añaden primero el modelo y sus tests; después su
+metadata de parámetros/vistas, el registro del renderer, una experiencia válida,
+el dispatcher y las pruebas del Laboratorio. Cambiar de modelo debe reconstruir
+el borrador desde esa metadata y destruir la preview anterior, sin arrastrar
+parámetros ni vistas incompatibles.
 
 ## Metadatos públicos y editoriales
 

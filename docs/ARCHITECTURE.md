@@ -13,7 +13,7 @@ src/data (contenido + catálogos + contrato de tema)
    ↓
 componentes y páginas + withBase(import.meta.env.BASE_URL)
    ↓
-BaseLayout + ThemeSelector + visualizaciones/simulaciones SVG + estilos
+BaseLayout + ThemeSelector + renderers SVG o p5/Canvas 2D + estilos
    ↓
 astro build → dist → GitHub Pages
 ```
@@ -32,6 +32,8 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `simulation-models.js`: registro confiable de modelos, parámetros, límites
   duros, capacidades de vista e identidad de renderer. No contiene funciones
   físicas, DOM ni configuración docente.
+- `simulation-renderers.js`: registro cerrado que relaciona cada modelo con un
+  renderer real. Impide seleccionar identificadores arbitrarios desde contenido.
 - `simulation-experiences.json` y `simulation-experiences.js`: almacenamiento y
   adaptador de experiencias pedagógicas declarativas. Título, resumen, estado,
   defaults, rangos, vistas, presets, guía y contextos tienen aquí una única
@@ -92,9 +94,14 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
   gráficas del renderer `svg-kinematics-1d`.
 - `simulations/KinematicsMotion.astro` y `KinematicsChart.astro`: renderizan el
   estado estático inicial en SVG y exponen hooks pequeños para la mejora cliente.
+- `simulations/ProjectileSimulation.astro`: conserva controles, lecturas,
+  descripción accesible y estado inicial en HTML; monta el renderer
+  `p5-projectile-2d` sobre Canvas 2D solo cuando la experiencia lo necesita.
+- `simulations/SimulationExperienceRenderer.astro`: dispatcher validado que
+  selecciona el componente real a partir de los registros de modelo y renderer.
 - `simulations/SimulationLab.astro`: constructor visual local de experiencias de
-  Cinemática 1D; usa registros reales, controles nativos y la misma simulación
-  para previsualizar.
+  Cinemática 1D o Proyectil 2D; usa registros reales, controles nativos y los
+  mismos renderers de producción para previsualizar.
 - `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
 - `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
 - `academic/RichText.astro` e `InlineMath.astro`: convierten el contrato mixto texto/MathML en HTML estático; nunca interpretan entrada del navegador.
@@ -165,6 +172,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/recursos.astro` | `/recursos` (redirección compatible) |
 | `src/pages/simulaciones.astro` | `/simulaciones` |
 | `src/pages/simulaciones/cinematica-1d.astro` | `/simulaciones/cinematica-1d` |
+| `src/pages/simulaciones/proyectil-2d.astro` | `/simulaciones/proyectil-2d` |
 | `src/pages/herramientas.astro` | `/herramientas` |
 | `src/pages/actividades.astro` | `/actividades` |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
@@ -851,11 +859,45 @@ solo la ruta y categoría. `UnitTopicPage` consulta
 esa metadata y muestra el CTA solo donde corresponde; no contiene la ruta de la
 simulación ni una lista paralela de temas.
 
+### Simulación de proyectil 2D
+
+La segunda familia conserva la misma separación y cambia únicamente el modelo y
+el renderer:
+
+```text
+projectile-2d.js                    modelo físico puro y casos límite
+   ↓ estado, resumen y muestras
+projectile-canvas.js                proyección visual sin ecuaciones nuevas
+   ↓
+p5-projectile-renderer.js           ciclo mount/update/destroy en modo instancia
+   ↓
+ProjectileSimulation.astro          controles, lecturas y alternativa accesible
+```
+
+El modelo calcula posición, velocidad, aceleración, tiempo de vuelo, alcance,
+altura máxima, vértice, impacto y muestras de trayectoria para `y₀`, `v₀`,
+`θ` y `g`. Cubre lanzamientos oblicuos, horizontales, verticales y el contacto
+inmediato degenerado sin emitir `NaN`, `Infinity` ni puntos bajo el suelo.
+
+`p5-projectile-renderer.js` importa p5.js 2.3.1 de forma dinámica solo al
+montarse. Usa `new p5(...)` en modo instancia y Canvas 2D; no crea funciones
+globales ni usa `WEBGL`. El runtime mantiene el único `requestAnimationFrame` y
+p5 permanece en `noLoop()`, de modo que cambiar parámetros o tamaño no duplica
+bucles. `ResizeObserver` redimensiona el lienzo sin reiniciar la física, el evento
+`themechange` vuelve a leer tokens CSS y `destroy()` desconecta observadores,
+listeners, frames y el canvas.
+
+El Canvas tiene descripción estática mediante p5 y una tabla de lecturas HTML
+equivalente. Los controles, mensajes, presets y explicaciones permanecen fuera
+del lienzo y son utilizables aunque el renderer visual falle. La dependencia se
+sirve desde el bundle local, sin CDN, y se atribuye en
+`THIRD_PARTY_NOTICES.md`.
+
 ### Autoría declarativa de simulaciones
 
 `/fisica-basica-1/herramientas/simulaciones` ofrece el primer constructor visual
-seguro. Solo presenta el modelo real de Cinemática 1D y obtiene los límites y
-etiquetas del registro. Título, resumen, parámetros, bloqueo, vistas, hasta
+seguro. Presenta los modelos reales registrados y obtiene límites, etiquetas,
+vistas y renderer desde metadata. Título, resumen, parámetros, bloqueo, hasta
 cinco presets, hasta seis observaciones y contextos de Unidad 1 se mantienen en
 memoria. Recargar descarta la sesión.
 
@@ -863,7 +905,7 @@ memoria. Recargar descarta la sesión.
 formulario docente
    ↓ createSimulationExperienceDraft() + validación estricta
 experiencia draft
-   ├─ updateExperience() → mismo KinematicsSimulation/svg-kinematics-1d
+   ├─ dispatcher → renderer real del modelo seleccionado
    └─ simulation pack 1.0.0 → descarga JSON explícita
                                   ↓
                      npm run import:simulations
@@ -884,9 +926,10 @@ cuentas, cookies, almacenamiento, dispositivo ni datos estudiantiles. El
 importador solo lee JSON, valida el registro completo, rechaza IDs existentes y
 escribe mediante archivo temporal con estado `review`.
 
-El diseño permite registrar más adelante otros modelos y renderers SVG,
-p5/Canvas o WebGL, pero ninguno de esos renderers adicionales está implementado.
-Tampoco existe editor de código, parser de fórmulas, p5, sandbox, CMS, backend,
+El diseño ya registra un renderer SVG y otro p5/Canvas 2D. Añadir una tercera
+familia requiere modelo puro, metadata, renderer con ciclo de vida, experiencia
+validada y pruebas; el contenido no puede inyectar un renderer arbitrario.
+No existe editor de código o p5, parser de fórmulas, WebGL, sandbox, CMS, backend,
 autenticación ni publicación directa. Un futuro modo avanzado con código
 requerirá un sandbox y un modelo de seguridad distintos.
 
@@ -904,11 +947,10 @@ No se publica una ruta de desarrollo para visualizaciones. El contrato técnico
 de la infraestructura SVG se comprueba mediante `npm run validate` y los tests
 unitarios, sin exponer datos sintéticos en el sitio estable.
 
-Canvas se reserva para simulaciones con miles de elementos, animaciones de alta
-frecuencia o redibujado continuo donde el costo de muchos nodos SVG sea
-significativo. Incluso en ese caso, controles, explicación y alternativa
-accesible seguirán fuera del lienzo. Una curva, diagrama vectorial o gráfica
-imprimible de complejidad moderada debe continuar en SVG.
+Canvas se usa en el proyectil porque la escena animada necesita redibujado
+continuo, vectores y una trayectoria responsive. Controles, explicación y
+alternativa accesible siguen fuera del lienzo. Una curva, diagrama vectorial o
+gráfica imprimible de complejidad moderada debe continuar en SVG.
 
 ## Accesibilidad
 
