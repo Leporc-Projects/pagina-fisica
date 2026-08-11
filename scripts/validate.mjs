@@ -30,6 +30,20 @@ import {
   getSimulationsForCourseTopic,
 } from "../src/data/simulations.js";
 import {
+  SIMULATION_MODELS,
+  SIMULATION_RENDERER_IDS,
+  getSimulationModelById,
+} from "../src/data/simulation-models.js";
+import {
+  SIMULATION_EXPERIENCES,
+  getSimulationExperienceById,
+} from "../src/data/simulation-experiences.js";
+import {
+  SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION,
+  SIMULATION_EXPERIENCE_SCHEMA_VERSION,
+  validateSimulationExperience,
+} from "../src/utils/simulation-experience.js";
+import {
   getKinematicsState,
   getTurningPoint,
 } from "../src/utils/kinematics-1d.js";
@@ -374,6 +388,7 @@ const teacherToolRoutes = [
   "/fisica-basica-1/herramientas",
   "/fisica-basica-1/herramientas/banco",
   "/fisica-basica-1/herramientas/avisos",
+  "/fisica-basica-1/herramientas/simulaciones",
   reviewRoute,
   resultsRoute,
 ];
@@ -383,7 +398,7 @@ check(
     teacherToolRoutes.every((route) =>
       !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === route)
     ),
-  "El hub y sus cuatro herramientas existen fuera del menú estudiantil principal."
+  "El hub y sus cinco herramientas existen fuera del menú estudiantil principal."
 );
 
 check(
@@ -447,6 +462,39 @@ check(
 const simulationIds = SIMULATIONS.map((simulation) => simulation.id);
 const simulationRoutes = SIMULATIONS.map((simulation) => simulation.route);
 const unit1TopicSet = new Set(UNIT_1.topics.map((topic) => topic.slug));
+const simulationModelIds = SIMULATION_MODELS.map((model) => model.id);
+const simulationExperienceIds = SIMULATION_EXPERIENCES.map((experience) => experience.id);
+
+check(
+  duplicates(simulationModelIds).length === 0 &&
+    SIMULATION_MODELS.every((model) =>
+      /^[a-z][a-z0-9-]*$/.test(model.id) &&
+      SIMULATION_RENDERER_IDS.includes(model.rendererId) &&
+      Object.values(model.parameters).every((parameter) =>
+        parameter.type === "number" &&
+        parameter.label &&
+        parameter.symbol &&
+        parameter.unit &&
+        Number.isFinite(parameter.hardMinimum) &&
+        Number.isFinite(parameter.hardMaximum) &&
+        parameter.hardMinimum < parameter.hardMaximum &&
+        Number.isFinite(parameter.defaultStep) &&
+        parameter.defaultStep > 0
+      )
+    ),
+  "Los modelos tienen IDs únicos, renderer conocido y límites numéricos confiables."
+);
+
+check(
+  SIMULATION_EXPERIENCE_SCHEMA_VERSION === "1.0.0" &&
+    SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION === "1.0.0" &&
+    duplicates(simulationExperienceIds).length === 0 &&
+    SIMULATION_EXPERIENCES.every((experience) =>
+      validateSimulationExperience(experience).valid &&
+      getSimulationModelById(experience.modelId)
+    ),
+  "Las experiencias declarativas son únicas, versionadas y válidas para modelos registrados."
+);
 
 check(
   duplicates(simulationIds).length === 0 &&
@@ -455,7 +503,12 @@ check(
       /^[a-z][a-z0-9-]*$/.test(simulation.id) &&
       SIMULATION_CATEGORIES.includes(simulation.category) &&
       SIMULATION_STATUSES.includes(simulation.status) &&
-      routes.has(normalizeRoute(simulation.route))
+      routes.has(normalizeRoute(simulation.route)) &&
+      simulation.experience === getSimulationExperienceById(simulation.id) &&
+      simulation.title === simulation.experience.title &&
+      simulation.description === simulation.experience.summary &&
+      simulation.modelId === simulation.experience.modelId &&
+      simulation.contexts === simulation.experience.contexts
     ),
   "El catálogo de simulaciones conserva IDs, taxonomías y rutas válidas."
 );
@@ -1615,6 +1668,22 @@ const kinematicsStyleSource = fs.readFileSync(
   path.join(projectRoot, "src/styles/kinematics-simulation.css"),
   "utf8"
 );
+const simulationLabComponentSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/simulations/SimulationLab.astro"),
+  "utf8"
+);
+const simulationLabScriptSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/simulation-lab.js"),
+  "utf8"
+);
+const simulationLabStyleSource = fs.readFileSync(
+  path.join(projectRoot, "src/styles/simulation-lab.css"),
+  "utf8"
+);
+const simulationImporterSource = fs.readFileSync(
+  path.join(projectRoot, "scripts/import-simulations.mjs"),
+  "utf8"
+);
 
 check(
   kinematicsComponentSource.includes("data-kinematics-simulation") &&
@@ -1646,6 +1715,43 @@ check(
     kinematicsStyleSource.includes("prefers-reduced-motion") &&
     !/(?:#[0-9a-f]{3,8}\b|\brgba?\s*\()/i.test(kinematicsStyleSource),
   "Los estilos de simulación son responsive, reducen movimiento y consumen tokens."
+);
+
+check(
+  simulationLabComponentSource.includes("<fieldset") &&
+    simulationLabComponentSource.includes("<legend") &&
+    simulationLabComponentSource.includes("data-preview-simulation") &&
+    simulationLabComponentSource.includes("data-export-simulation") &&
+    simulationLabComponentSource.includes("<KinematicsSimulation") &&
+    simulationLabComponentSource.includes("contextTopics.map") &&
+    simulationLabScriptSource.includes("initializeKinematicsSimulation") &&
+    simulationLabScriptSource.includes("destroyKinematicsSimulation") &&
+    simulationLabScriptSource.includes("textContent") &&
+    simulationLabScriptSource.includes("replaceChildren") &&
+    !/(?:innerHTML|outerHTML\s*=|fetch\(|localStorage|sessionStorage|indexedDB|eval\(|Function\()/.test(
+      simulationLabScriptSource
+    ),
+  "El Laboratorio usa formularios accesibles, preview compartida y texto seguro en memoria."
+);
+
+check(
+  simulationLabStyleSource.includes("@media (max-width: 1280px)") &&
+    simulationLabStyleSource.includes("@media (max-width: 800px)") &&
+    simulationLabStyleSource.includes("@media (max-width: 520px)") &&
+    simulationLabStyleSource.includes("prefers-reduced-motion") &&
+    simulationLabStyleSource.includes("[hidden]") &&
+    !/(?:#[0-9a-f]{3,8}\b|\brgba?\s*\()/i.test(simulationLabStyleSource),
+  "El Laboratorio responde a escritorio y móvil, respeta tema y estados ocultos."
+);
+
+check(
+  packageData.scripts?.["import:simulations"] === "node scripts/import-simulations.mjs" &&
+    simulationImporterSource.includes("mergeSimulationExperiencePack") &&
+    simulationImporterSource.includes("estado review") &&
+    simulationImporterSource.includes("Ninguna experiencia fue publicada automáticamente") &&
+    !simulationImporterSource.includes("eval(") &&
+    !simulationImporterSource.includes("Function("),
+  "El importador acepta paquetes JSON, fuerza revisión y nunca publica automáticamente."
 );
 
 const reviewUtilitySource = fs.readFileSync(
