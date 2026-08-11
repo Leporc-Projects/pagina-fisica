@@ -24,10 +24,11 @@ const publishedSimulations = getPublishedSimulations();
   />
 
   <div class="policy-panel page-section" role="note">
-    <h2>Primera simulación disponible</h2>
+    <h2>Dos modelos de cinemática disponibles</h2>
     <p>
-      El catálogo comienza con una experiencia propia de cinemática. Las demás
-      categorías permanecen identificadas como futuras, sin presentar recursos ficticios.
+      El catálogo reúne movimiento en una dimensión y proyectiles en dos
+      dimensiones. Las demás categorías permanecen identificadas como futuras,
+      sin presentar recursos ficticios.
     </p>
   </div>
 
@@ -77,7 +78,7 @@ const publishedSimulations = getPublishedSimulations();
             </span>
             <div>
               <h3>{category}</h3>
-              {available && <p class="publication-row__meta">{simulations.length} recurso publicado</p>}
+              {available && <p class="publication-row__meta">{simulations.length} {simulations.length === 1 ? "recurso publicado" : "recursos publicados"}</p>}
             </div>
             <span class:list={{
               "status-label": true,

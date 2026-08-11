@@ -1,0 +1,53 @@
+---
+import KinematicsSimulation from "./KinematicsSimulation.astro";
+import ProjectileSimulation from "./ProjectileSimulation.astro";
+import {
+  getSimulationExperienceByModelId,
+} from "../../data/simulation-experiences.js";
+import { getSimulationModelById } from "../../data/simulation-models.js";
+import { getSimulationRendererById } from "../../data/simulation-renderers.js";
+import {
+  normalizeSimulationExperience,
+  validateSimulationExperience,
+} from "../../utils/simulation-experience.js";
+
+interface Props {
+  experience: Record<string, unknown>;
+  preview?: boolean;
+  includeAllRenderers?: boolean;
+}
+
+const { experience: suppliedExperience, preview = false, includeAllRenderers = false } = Astro.props;
+const experience = normalizeSimulationExperience(suppliedExperience);
+const validation = validateSimulationExperience(experience);
+const model = getSimulationModelById(experience.modelId);
+const renderer = getSimulationRendererById(model?.rendererId);
+if (!validation.valid || !model || !renderer || renderer.modelId !== model.id) {
+  throw new TypeError(validation.errors.join(" ") || "La experiencia no tiene un renderer registrado compatible.");
+}
+const kinematicsExperience = model.id === "kinematics-1d"
+  ? experience
+  : getSimulationExperienceByModelId("kinematics-1d");
+const projectileExperience = model.id === "projectile-2d"
+  ? experience
+  : getSimulationExperienceByModelId("projectile-2d");
+const renderKinematics = includeAllRenderers || renderer.id === "svg-kinematics-1d";
+const renderProjectile = includeAllRenderers || renderer.id === "p5-projectile-2d";
+---
+
+<div
+  class="simulation-experience-renderer"
+  data-simulation-experience-renderer
+  data-active-renderer={renderer.id}
+>
+  {renderKinematics && (
+    <div data-renderer-slot="svg-kinematics-1d" hidden={renderer.id !== "svg-kinematics-1d"}>
+      <KinematicsSimulation experience={kinematicsExperience} preview={preview} />
+    </div>
+  )}
+  {renderProjectile && (
+    <div data-renderer-slot="p5-projectile-2d" hidden={renderer.id !== "p5-projectile-2d"}>
+      <ProjectileSimulation experience={projectileExperience} preview={preview} />
+    </div>
+  )}
+</div>

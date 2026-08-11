@@ -93,6 +93,111 @@
         ]
       }
     ]
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "projectile-2d",
+    "version": 1,
+    "modelId": "projectile-2d",
+    "title": "Movimiento de un proyectil",
+    "summary": "Explora cómo las componentes horizontal y vertical de la velocidad producen una trayectoria parabólica ideal bajo gravedad uniforme.",
+    "status": "published",
+    "parameters": {
+      "y0": {
+        "default": 0,
+        "minimum": 0,
+        "maximum": 30,
+        "step": 1,
+        "editable": true
+      },
+      "v0": {
+        "default": 20,
+        "minimum": 1,
+        "maximum": 50,
+        "step": 1,
+        "editable": true
+      },
+      "theta": {
+        "default": 45,
+        "minimum": 0,
+        "maximum": 90,
+        "step": 1,
+        "editable": true
+      },
+      "g": {
+        "default": 9.8,
+        "minimum": 1,
+        "maximum": 25,
+        "step": 0.1,
+        "editable": true
+      }
+    },
+    "views": {
+      "scene": true,
+      "readings": true,
+      "trajectory": true,
+      "velocityVector": true,
+      "accelerationVector": true,
+      "velocityComponents": false,
+      "keyPoints": true
+    },
+    "presets": [
+      {
+        "id": "classic-range",
+        "label": "Alcance clásico",
+        "parameters": {
+          "y0": 0,
+          "v0": 20,
+          "theta": 45,
+          "g": 9.8
+        }
+      },
+      {
+        "id": "low-angle",
+        "label": "Tiro bajo",
+        "parameters": {
+          "y0": 0,
+          "v0": 20,
+          "theta": 25,
+          "g": 9.8
+        }
+      },
+      {
+        "id": "high-angle",
+        "label": "Tiro alto",
+        "parameters": {
+          "y0": 0,
+          "v0": 20,
+          "theta": 70,
+          "g": 9.8
+        }
+      },
+      {
+        "id": "horizontal-launch",
+        "label": "Lanzamiento horizontal",
+        "parameters": {
+          "y0": 15,
+          "v0": 15,
+          "theta": 0,
+          "g": 9.8
+        }
+      }
+    ],
+    "observations": [
+      "Mantén v₀ fijo y compara los casos de 25°, 45° y 70° observando alcance y tiempo de vuelo.",
+      "Comprueba que vx permanece constante mientras vy cambia linealmente por efecto de la gravedad.",
+      "En el punto más alto, vy es cero, pero vx generalmente conserva un valor distinto de cero.",
+      "Compara el lanzamiento horizontal desde una altura con los casos que parten del suelo.",
+      "Cambia g manteniendo las demás condiciones y analiza cómo varían el alcance y la altura máxima."
+    ],
+    "contexts": [
+      {
+        "courseId": "fisica-basica-1",
+        "unit": 1,
+        "topics": [
+          "movimiento-2d"
+        ]
+      }
+    ]
   }
 ]
-

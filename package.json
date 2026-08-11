@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "astro": "^7.1.6",
+    "p5": "2.3.1",
     "read-excel-file": "^9.3.4",
     "write-excel-file": "^4.1.1"
   }

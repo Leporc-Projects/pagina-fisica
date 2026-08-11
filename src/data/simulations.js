@@ -26,6 +26,11 @@ const SIMULATION_CATALOG = Object.freeze([
     route: "/simulaciones/cinematica-1d",
     category: "Cinemática",
   }),
+  Object.freeze({
+    experienceId: "projectile-2d",
+    route: "/simulaciones/proyectil-2d",
+    category: "Cinemática",
+  }),
 ]);
 
 export const SIMULATIONS = Object.freeze(SIMULATION_CATALOG.map((catalogEntry) => {

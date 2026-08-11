@@ -1,5 +1,5 @@
 import { getCourseById } from "../data/courses.js";
-import { UNIT_1 } from "../data/physics/unit-1/unit.js";
+import { getAcademicUnitForContext } from "../data/physics/index.js";
 import { getSimulationModelById } from "../data/simulation-models.js";
 
 export const SIMULATION_EXPERIENCE_SCHEMA_VERSION = "1.0.0";
@@ -79,7 +79,8 @@ const validateAcademicContext = (context, index, issues) => {
   if (!course) {
     issue(issues, `${path}.courseId`, "unknown-course", "El contexto referencia un curso inexistente.");
   }
-  if (context.unit !== UNIT_1.number || context.courseId !== "fisica-basica-1") {
+  const academicUnit = getAcademicUnitForContext(context.courseId, context.unit);
+  if (!academicUnit) {
     issue(issues, `${path}.unit`, "unknown-unit", "La unidad no pertenece al registro académico disponible.");
   }
   const topics = Array.isArray(context.topics) ? context.topics : [];
@@ -87,7 +88,7 @@ const validateAcademicContext = (context, index, issues) => {
     issue(issues, `${path}.topics`, "invalid-topics", "El contexto requiere al menos un tema.");
     return;
   }
-  const topicIds = new Set(UNIT_1.topics.map((topic) => topic.slug));
+  const topicIds = new Set((academicUnit?.topics ?? []).map((topic) => topic.slug));
   topics.forEach((topic, topicIndex) => {
     if (!topicIds.has(topic)) {
       issue(issues, `${path}.topics[${topicIndex}]`, "unknown-topic", `El tema “${String(topic)}” no existe.`);
@@ -182,7 +183,8 @@ export const validateSimulationExperience = (
     });
   }
 
-  const viewKeys = model?.views ?? [];
+  const viewDefinitions = model?.views ?? {};
+  const viewKeys = Object.keys(viewDefinitions);
   if (validateKeys(experience.views, viewKeys, "views", issues)) {
     viewKeys.forEach((key) => {
       if (!(key in experience.views)) {
@@ -191,9 +193,9 @@ export const validateSimulationExperience = (
         issue(issues, `views.${key}`, "invalid-view", `La vista ${key} debe ser booleana.`);
       }
     });
-    const visualViews = ["motion", "positionGraph", "velocityGraph", "accelerationGraph"];
+    const visualViews = viewKeys.filter((key) => viewDefinitions[key].visual === true);
     if (!visualViews.some((key) => experience.views[key] === true)) {
-      issue(issues, "views", "empty-visual-experience", "Activa al menos una representación visual: movimiento o una gráfica.");
+      issue(issues, "views", "empty-visual-experience", "Activa al menos una representación visual principal del modelo.");
     }
   }
 
@@ -281,7 +283,7 @@ export const normalizeSimulationExperience = (
     summary: String(experience?.summary ?? "").trim(),
     status,
     parameters: normalizeParameters(experience?.parameters, model),
-    views: Object.fromEntries((model?.views ?? []).map((key) => [key, experience?.views?.[key] === true])),
+    views: Object.fromEntries(Object.keys(model?.views ?? {}).map((key) => [key, experience?.views?.[key] === true])),
     presets: (Array.isArray(experience?.presets) ? experience.presets : []).map((preset) => ({
       id: String(preset?.id ?? "").trim(),
       label: String(preset?.label ?? "").trim(),
@@ -413,4 +415,3 @@ export const simulationExperiencePackFilename = (pack) =>
 
 export const toSimulationExperiencePackJSON = (pack) =>
   `${JSON.stringify(pack, null, 2)}\n`;
-
