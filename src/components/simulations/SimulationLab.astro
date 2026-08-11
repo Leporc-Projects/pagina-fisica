@@ -1,0 +1,239 @@
+---
+import KinematicsSimulation from "./KinematicsSimulation.astro";
+import { getSimulationExperienceById } from "../../data/simulation-experiences.js";
+import { getSimulationModelById } from "../../data/simulation-models.js";
+import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import {
+  SIMULATION_EXPERIENCE_LIMITS,
+} from "../../utils/simulation-experience.js";
+
+const experience = getSimulationExperienceById("kinematics-1d");
+const model = getSimulationModelById(experience.modelId);
+const parameters = Object.entries(model.parameters).map(([key, definition]) => ({
+  key,
+  ...definition,
+  ...experience.parameters[key],
+}));
+const contextTopicIds = new Set(experience.contexts.flatMap((context) => context.topics));
+const contextTopics = UNIT_1.topics.filter((topic) => contextTopicIds.has(topic.slug));
+const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
+const viewOptions = [
+  ["motion", "Movimiento sobre el eje"],
+  ["readings", "Lecturas instantáneas"],
+  ["positionGraph", "Gráfica x(t)"],
+  ["velocityGraph", "Gráfica v(t)"],
+  ["accelerationGraph", "Gráfica a(t)"],
+  ["turningPoint", "Información del cambio de sentido"],
+];
+---
+
+<section
+  class="simulation-lab"
+  data-simulation-lab
+  data-initial-experience={serializedExperience}
+  aria-labelledby="simulation-lab-title"
+>
+  <header class="simulation-lab__intro">
+    <div>
+      <p class="academic-label">Constructor visual seguro</p>
+      <h2 id="simulation-lab-title">Diseña una experiencia</h2>
+      <p>Configura el modelo disponible, comprueba la experiencia real y prepara un borrador para revisión.</p>
+    </div>
+    <div class="simulation-lab__local" role="note">
+      <strong>Sesión local y efímera</strong>
+      <p>No se guarda ni se envía nada. Si recargas la página, los cambios se pierden; el archivo JSON es la copia durable.</p>
+    </div>
+  </header>
+
+  <div class="simulation-lab__layout">
+    <div class="simulation-lab__editor">
+      <form data-simulation-lab-form novalidate>
+        <fieldset>
+          <legend>Modelo y propósito</legend>
+          <label>
+            <span>Modelo</span>
+            <select name="model" disabled aria-describedby="simulation-lab-model-help">
+              <option value={model.id}>{model.name}</option>
+            </select>
+            <small id="simulation-lab-model-help">En esta etapa solo está disponible Cinemática 1D.</small>
+          </label>
+          <label>
+            <span>Título</span>
+            <input
+              name="title"
+              value={experience.title}
+              maxlength={SIMULATION_EXPERIENCE_LIMITS.maximumTitleLength}
+              required
+              autocomplete="off"
+            />
+          </label>
+          <label>
+            <span>Resumen</span>
+            <textarea
+              name="summary"
+              rows="4"
+              maxlength={SIMULATION_EXPERIENCE_LIMITS.maximumSummaryLength}
+              required
+            >{experience.summary}</textarea>
+            <small>Texto plano; explica qué podrá explorar el estudiante.</small>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Parámetros</legend>
+          <p class="simulation-lab__fieldset-help">Los límites de la experiencia pueden ser más estrechos, nunca superar los límites del modelo.</p>
+          <div class="simulation-lab__parameters">
+            {parameters.map((parameter) => (
+              <fieldset class="simulation-lab__parameter" data-lab-parameter={parameter.key}>
+                <legend>{parameter.label} <span>{parameter.symbol}</span></legend>
+                <div class="simulation-lab__parameter-grid">
+                  <label>
+                    <span>Valor inicial</span>
+                    <input
+                      type="number"
+                      inputmode="decimal"
+                      data-parameter-property="default"
+                      value={parameter.default}
+                      min={parameter.hardMinimum}
+                      max={parameter.hardMaximum}
+                      step="any"
+                      required
+                    />
+                  </label>
+                  <label>
+                    <span>Mínimo</span>
+                    <input
+                      type="number"
+                      inputmode="decimal"
+                      data-parameter-property="minimum"
+                      value={parameter.minimum}
+                      min={parameter.hardMinimum}
+                      max={parameter.hardMaximum}
+                      step="any"
+                      required
+                    />
+                  </label>
+                  <label>
+                    <span>Máximo</span>
+                    <input
+                      type="number"
+                      inputmode="decimal"
+                      data-parameter-property="maximum"
+                      value={parameter.maximum}
+                      min={parameter.hardMinimum}
+                      max={parameter.hardMaximum}
+                      step="any"
+                      required
+                    />
+                  </label>
+                  <label>
+                    <span>Paso</span>
+                    <input
+                      type="number"
+                      inputmode="decimal"
+                      data-parameter-property="step"
+                      value={parameter.step}
+                      min="0.0001"
+                      max={parameter.hardMaximum - parameter.hardMinimum}
+                      step="any"
+                      required
+                    />
+                  </label>
+                </div>
+                <label class="simulation-lab__check">
+                  <input
+                    type="checkbox"
+                    data-parameter-editable
+                    checked={parameter.editable}
+                  />
+                  <span>El estudiante puede modificar {parameter.symbol}</span>
+                </label>
+                <small>
+                  Límite del modelo: {parameter.hardMinimum} a {parameter.hardMaximum} {parameter.unit}.
+                </small>
+              </fieldset>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset data-lab-views>
+          <legend>Qué mostrar</legend>
+          <p class="simulation-lab__fieldset-help">Activa al menos el movimiento sobre el eje o una gráfica.</p>
+          <div class="simulation-lab__checks">
+            {viewOptions.map(([key, label]) => (
+              <label class="simulation-lab__check">
+                <input type="checkbox" name={`view-${key}`} checked={experience.views[key]} />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset data-lab-presets-fieldset>
+          <legend>Casos de estudio</legend>
+          <div class="simulation-lab__collection-heading">
+            <p>Prepara hasta {SIMULATION_EXPERIENCE_LIMITS.maximumPresets} combinaciones completas.</p>
+            <button type="button" class="review-button" data-add-lab-preset>Añadir caso de estudio</button>
+          </div>
+          <div data-lab-presets></div>
+        </fieldset>
+
+        <fieldset data-lab-observations-fieldset>
+          <legend>Guía de exploración</legend>
+          <div class="simulation-lab__collection-heading">
+            <p>Añade preguntas o focos de observación en texto plano.</p>
+            <button type="button" class="review-button" data-add-lab-observation>Añadir observación</button>
+          </div>
+          <div data-lab-observations></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Contexto académico</legend>
+          <p class="simulation-lab__fieldset-help">La asociación es opcional. Las opciones proceden de los temas reales de la Unidad 1.</p>
+          <div class="simulation-lab__checks">
+            {contextTopics.map((topic) => (
+              <label class="simulation-lab__check">
+                <input type="checkbox" name="context-topic" value={topic.slug} checked />
+                <span>{topic.title}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div
+          id="simulation-lab-errors"
+          class="simulation-lab__errors"
+          data-simulation-lab-errors
+          tabindex="-1"
+          hidden
+        ></div>
+
+        <div class="simulation-lab__actions">
+          <button type="button" data-preview-simulation>Previsualizar experiencia</button>
+          <button type="button" class="review-button" data-export-simulation disabled>Exportar paquete JSON</button>
+        </div>
+        <output class="simulation-lab__status" data-simulation-lab-status aria-live="polite"></output>
+      </form>
+    </div>
+
+    <aside class="simulation-lab__preview" aria-labelledby="simulation-lab-preview-title">
+      <header>
+        <p class="academic-label">Previsualización real</p>
+        <h2 id="simulation-lab-preview-title" tabindex="-1" data-preview-title>{experience.title}</h2>
+        <p data-preview-summary>{experience.summary}</p>
+      </header>
+      <KinematicsSimulation experience={experience} preview />
+      <section class="simulation-lab__preview-guide" data-preview-guide aria-labelledby="simulation-lab-preview-guide-title">
+        <h3 id="simulation-lab-preview-guide-title">Qué observar</h3>
+        <ol data-preview-observations>
+          {experience.observations.map((observation) => <li>{observation}</li>)}
+        </ol>
+      </section>
+    </aside>
+  </div>
+</section>
+
+<script>
+  import { initializeSimulationLab } from "../../scripts/simulation-lab.js";
+  initializeSimulationLab();
+</script>

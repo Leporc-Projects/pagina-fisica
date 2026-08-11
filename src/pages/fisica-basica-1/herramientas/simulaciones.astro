@@ -1,0 +1,37 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SimulationLab from "../../../components/simulations/SimulationLab.astro";
+import TeacherToolsNav from "../../../components/teacher/TeacherToolsNav.astro";
+import { COURSE } from "../../../data/course.js";
+import { withBase } from "../../../utils/paths.js";
+import "../../../styles/simulation-lab.css";
+---
+
+<BaseLayout
+  title={`Laboratorio de simulaciones · ${COURSE.name}`}
+  description="Herramienta docente local para configurar, previsualizar y exportar experiencias de simulación."
+>
+  <article class="simulation-lab-page">
+    <header class="simulation-lab-page__hero">
+      <nav class="academic-breadcrumb" aria-label="Migas de pan">
+        <a href={withBase("/fisica-basica-1")}>Física Básica I</a>
+        <span aria-hidden="true">/</span>
+        <a href={withBase("/fisica-basica-1/herramientas")}>Herramientas docentes</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Laboratorio de simulaciones</span>
+      </nav>
+      <div>
+        <p class="eyebrow eyebrow--dark">Herramienta docente local</p>
+        <h1>Laboratorio de simulaciones</h1>
+        <p>Configura y previsualiza experiencias interactivas a partir de modelos disponibles, sin modificar código.</p>
+      </div>
+      <aside>
+        <strong>Prepara; no publica</strong>
+        <p>La exportación produce un borrador JSON. Incorporarlo al repositorio lo deja en revisión humana.</p>
+      </aside>
+    </header>
+
+    <TeacherToolsNav current="simulaciones" />
+    <SimulationLab />
+  </article>
+</BaseLayout>
