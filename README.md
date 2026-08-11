@@ -46,6 +46,7 @@ pagina-fisica/
 
 - [Arquitectura y flujo técnico](docs/ARCHITECTURE.md)
 - [Guía para incorporar contenidos](docs/CONTENT_GUIDE.md)
+- [Internacionalización y cobertura bilingüe](docs/I18N.md)
 
 ## Rutas actuales
 
@@ -68,6 +69,10 @@ Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raí
 - `/simulaciones`: catálogo canónico de simulaciones publicadas y categorías futuras.
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
 - `/simulaciones/proyectil-2d`: simulación propia de movimiento parabólico en Canvas 2D.
+- `/en/`: portada completa en inglés.
+- `/en/simulations`: catálogo completo de simulaciones en inglés.
+- `/en/simulations/kinematics-1d`: Cinemática 1D en inglés.
+- `/en/simulations/projectile-2d`: Proyectil 2D en inglés.
 - `/herramientas`: acceso de compatibilidad al hub docente del curso.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
 
@@ -175,7 +180,7 @@ configuración pedagógica publicada vive en
 `src/data/simulation-experiences.json`. `src/data/simulations.js` es el adaptador
 del catálogo y conserva solo ruta y categoría.
 
-El contrato de experiencia y el de paquete usan esquema `1.0.0`. Una experiencia
+El contrato de experiencia y el de paquete usan esquema `2.0.0`. Una experiencia
 solo contiene datos: defaults y rangos pedagógicos, parámetros editables o
 bloqueados, vistas, hasta cinco casos de estudio, guía en texto plano y
 contextos académicos opcionales. Los renderers reales son
@@ -211,11 +216,20 @@ en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ### Avisos
 
-Los avisos se almacenan en `src/data/notices.json` con esquema `2.0.0` y un ámbito obligatorio: `{ "type": "global" }` o `{ "type": "course", "courseId": "fisica-basica-1" }`. El registro canónico de cursos vive en `src/data/courses.js`; no se deben inventar IDs o rutas en el contenido.
+Los avisos se almacenan en `src/data/notices.json` con esquema `3.0.0`, locale explícito y un ámbito obligatorio: `{ "type": "global" }` o `{ "type": "course", "courseId": "fisica-basica-1" }`. Los avisos actuales son exclusivamente españoles y no se publican bajo rutas inglesas.
 
 `src/data/notices.js` expone consultas separadas para todos los publicados, los generales, los de un curso y la selección de portada. `/avisos` muestra solo avisos generales; `/fisica-basica-1/avisos` muestra solo los del curso; la portada combina ambos ámbitos para los cursos activos, prioriza destacados y limita la salida a tres registros sin duplicados.
 
-El editor local obtiene sus destinos del registro de cursos. Sus paquetes también usan esquema `2.0.0`. Los borradores se importan con `npm run import:notices -- archivo.json` y quedan en `review` hasta su aprobación editorial. Los paquetes `1.x` se rechazan porque no declaran ámbito; deben regenerarse y revisarse, nunca se infiere su destino.
+El editor local obtiene sus destinos del registro de cursos. Sus paquetes también usan esquema `3.0.0`. Los borradores se importan con `npm run import:notices -- archivo.json` y quedan en `review` hasta su aprobación editorial. Los paquetes anteriores se rechazan porque no declaran todos los campos obligatorios; deben regenerarse y revisarse, nunca se infiere su destino o idioma.
+
+## Métricas LOC
+
+`npm run stats:loc` cuenta líneas físicas determinísticamente y separa aplicación, tooling, tests, datos editoriales y documentación. Excluye dependencias, builds, caches, binarios, imágenes y `package-lock.json`. Puede medir cualquier commit sin cambiar el checkout:
+
+```sh
+npm run stats:loc
+npm run stats:loc -- --ref HEAD
+```
 
 ### Videos
 

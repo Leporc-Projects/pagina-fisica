@@ -22,9 +22,10 @@ Cada aviso admite:
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "3.0.0",
   "id": "notice-AAAA-MM-DD-sufijo",
   "version": 1,
+  "locale": "es",
   "title": "Título verificado",
   "summary": "Resumen público",
   "content": "Detalle del aviso",
@@ -42,6 +43,7 @@ Reglas:
 - `publishedAt` usa una fecha ISO real `AAAA-MM-DD`; no programa la publicación.
 - Las categorías admitidas son `Curso`, `Evaluación`, `Material`, `Horario` y `General`.
 - Los estados siguen `draft → review → published → archived`; solo `published` es público.
+- `locale` es obligatorio. Un aviso solo puede aparecer en páginas del mismo idioma; no se traduce ni se reutiliza automáticamente bajo otra URL.
 - `href` se omite cuando el aviso no necesita destino. Una ruta interna se
   guarda desde la raíz lógica, sin escribir `/pagina-fisica`; la página de
   avisos añade el `base` activo. Enlaces externos deben usar HTTPS.
@@ -60,6 +62,12 @@ npm run import:notices -- ruta/al/paquete.json
 El importador fuerza `review` y nunca publica. Después se revisa el JSON, se
 cambia explícitamente a `published` si corresponde y se ejecutan validación,
 build y despliegue.
+
+## Añadir o traducir contenido público
+
+La cobertura y el flujo están definidos en [I18N.md](./I18N.md). No se crea una ruta inglesa hasta que toda la página, navegación local, metadata, estados vacíos y contenido asociado estén revisados. La ausencia de traducción se representa con `null` en el mapa de rutas y con el selector deshabilitado; nunca con contenido español bajo `/en/`.
+
+Los textos comunes de interfaz usan claves en los diccionarios `src/i18n/ui/`. Las magnitudes, parámetros, unidades, ecuaciones y límites físicos permanecen compartidos. Las experiencias de simulación añaden texto por locale dentro de su contrato y conservan una única configuración numérica.
 
 ## Registrar un video mediante enlace
 

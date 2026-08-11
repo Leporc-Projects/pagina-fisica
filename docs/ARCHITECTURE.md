@@ -20,6 +20,8 @@ astro build → dist → GitHub Pages
 
 Esta separación evita escribir varias veces el mismo dato académico y permite cambiar contenido sin mezclarlo con la estructura visual.
 
+La internacionalización añade una capa pura entre rutas/datos y presentación. `src/i18n/config.js` registra locales, `ui/` conserva diccionarios con paridad, `routes.js` relaciona IDs estables con slugs humanos y `metadata.js` deriva canonical y alternates. Español permanece en la raíz e inglés usa `/en/`; no hay detección automática ni persistencia del idioma. La cobertura completa y el procedimiento editorial viven en [I18N.md](./I18N.md).
+
 ## Capas del proyecto
 
 ### Datos
@@ -80,6 +82,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 ### Componentes compartidos
 
 - `Header.astro`: marca, navegación global y diálogo de menú. Su script mantiene el foco dentro del menú, permite cerrar con Escape y devuelve el foco al control que lo abrió.
+- `LanguageSelector.astro`: enlaza contrapartes publicadas por ID de ruta; muestra las no disponibles como controles deshabilitados y accesibles.
 - `ThemeSelector.astro`: control reutilizable para elegir claro, oscuro o sistema. Usa radios nativos, sincroniza posibles instancias del control y emite el evento `themechange` para contenido interactivo futuro.
 - `Footer.astro`: identidad personal y declaración de independencia institucional.
 - `PageHeader.astro`: cabecera de páginas generales como Avisos o Simulaciones.
@@ -102,6 +105,8 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `simulations/SimulationLab.astro`: constructor visual local de experiencias de
   Cinemática 1D o Proyectil 2D; usa registros reales, controles nativos y los
   mismos renderers de producción para previsualizar.
+
+Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes y el texto secundario vive en `translations`. Los avisos usan esquema `3.0.0` y exigen locale explícito. Ningún adaptador aplica fallback editorial entre idiomas.
 - `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
 - `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
 - `academic/RichText.astro` e `InlineMath.astro`: convierten el contrato mixto texto/MathML en HTML estático; nunca interpretan entrada del navegador.
