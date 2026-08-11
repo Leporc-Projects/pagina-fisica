@@ -20,6 +20,12 @@ origen es JSON, Git, una API o una base de datos. El registro canónico de curso
 y el contrato de ámbito global/curso seguirán siendo fronteras estables, aunque
 su almacenamiento cambie.
 
+También podría sustituir el almacenamiento detrás de
+`getPublishedSimulationExperiences()`, sin mezclarlo con el registro confiable
+de modelos o con los renderers versionados. Un CMS futuro podrá editar la capa
+de experiencia pedagógica, pero no debe convertir el modelo físico ni el
+renderer en código arbitrario suministrado desde contenido.
+
 ## Roles conceptuales
 
 | Rol | Alcance provisional |
@@ -48,3 +54,13 @@ solo será válido si pertenece al registro de cursos disponible para esa cuenta
 Antes de migrar se deberá definir retención, propiedad de datos, exportación,
 backups, recuperación ante fallos y el mecanismo que dispara builds. No se
 incorporará información estudiantil a un CMS editorial por defecto.
+
+## Autoría avanzada de simulaciones
+
+El constructor visual local, los packs `1.0.0`, el renderer SVG y el importador
+en revisión sí están implementados. No están implementados un editor p5/Canvas,
+un editor de código, una galería de renderers, ejecución remota ni publicación
+desde el navegador. Si una etapa futura admite código docente, necesitará un
+sandbox aislado, límites de recursos, política de red, revisión de dependencias,
+versionado, auditoría y separación completa del sitio público. Es una frontera
+de seguridad distinta, no una ampliación implícita del JSON declarativo.

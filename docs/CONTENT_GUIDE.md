@@ -556,10 +556,24 @@ gráficas se sincronizan, comparten el valor físico y no una posición SVG.
 
 ### Añadir o relacionar una simulación
 
-Una simulación pública debe registrarse primero en `src/data/simulations.js` con
-ID estable, título, ruta lógica, categoría admitida, estado, descripción y
-contextos reales. No se añaden tarjetas o categorías con recursos ficticios.
-`published` es el único estado que puede aparecer como disponible.
+Una simulación pública se compone de tres fuentes con responsabilidades
+distintas:
+
+- `simulation-models.js` registra el modelo disponible, sus parámetros, límites
+  duros, capacidades y renderer permitido;
+- `simulation-experiences.json` conserva la configuración pedagógica versionada;
+- `simulations.js` añade únicamente la ruta lógica y la categoría del catálogo.
+
+No se repiten ID, título, descripción, modelId o contextos entre esas fuentes.
+No se añaden tarjetas, modelos o categorías con recursos ficticios. `published`
+es el único estado que puede aparecer como disponible.
+
+Una experiencia usa esquema `1.0.0`, solo referencia un `modelId` existente y
+debe contener los parámetros completos. Sus mínimos y máximos permanecen dentro
+de los límites duros, `minimum < maximum`, el default pertenece al rango y el
+paso es positivo. Un parámetro con `editable: false` conserva su valor en todos
+los presets, pero el estudiante no puede modificarlo. Al menos el eje de
+movimiento o una gráfica debe estar activo.
 
 Los contextos relacionan un recurso global con `courseId`, número de unidad y
 slugs de temas existentes. No son un ámbito de contenido ni una copia de la
@@ -578,6 +592,25 @@ Antes de publicar una experiencia interactiva:
 - cancelar bucles al pausar, terminar, ocultar o abandonar la página;
 - comprobar claro y oscuro a 1440, 1024, 768, 390 y 320 px;
 - no usar red, persistencia, HTML dinámico, evaluación de código ni datos estudiantiles.
+
+El Laboratorio local de `/fisica-basica-1/herramientas/simulaciones` prepara una
+experiencia sin código. Su sesión existe solo en memoria y la preview usa el
+mismo renderer/runtime de producción. Exporta un paquete `1.0.0` con fuente
+`teacher` y estado `draft`. Para incorporarlo:
+
+```sh
+npm run import:simulations -- ruta/al/paquete.json
+```
+
+El importador rechaza esquemas, modelos, propiedades, rangos, vistas, presets,
+textos, contextos o IDs inválidos y fuerza `review`. Después deben revisarse la
+intención académica, unidades, límites, accesibilidad y comportamiento; solo una
+edición explícita en el repositorio puede cambiar a `published`.
+
+El texto de título, resumen, labels y guía es texto plano: no admite HTML ni se
+interpreta como Markdown. Una experiencia no puede contener JavaScript,
+funciones, CSS, renderer arbitrario, URL o expresiones matemáticas ejecutables.
+El constructor actual no es un editor p5 ni un IDE.
 
 No se aceptan capturas raster de gráficas que puedan generarse con esta
 infraestructura. SVG preserva texto, nitidez y posibilidad de impresión. Canvas

@@ -29,8 +29,15 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 - `courses.js`: registro mínimo de identidades estables, rutas y estado activo de los cursos reales.
 - `course.js`: contrato académico de Física Básica I; deriva su identidad de `courses.js` y añade navegación interna, siete unidades, evaluación, bibliografía y cronograma.
 - `site.js`: identidad editorial, navegación global y accesos de portada.
-- `simulations.js`: catálogo canónico de simulaciones, taxonomía, estados,
-  controles, presets y contextos declarativos por curso, unidad y tema.
+- `simulation-models.js`: registro confiable de modelos, parámetros, límites
+  duros, capacidades de vista e identidad de renderer. No contiene funciones
+  físicas, DOM ni configuración docente.
+- `simulation-experiences.json` y `simulation-experiences.js`: almacenamiento y
+  adaptador de experiencias pedagógicas declarativas. Título, resumen, estado,
+  defaults, rangos, vistas, presets, guía y contextos tienen aquí una única
+  fuente de verdad.
+- `simulations.js`: adaptador del catálogo público. Conserva ruta y categoría y
+  deriva identidad, texto, estado, modelo y contextos de la experiencia.
 - `notices.json`: almacenamiento editorial actual de avisos; puede contener los cuatro estados.
 - `notices.js`: adaptador de consultas publicadas por ámbito; separa el archivo general, cada curso y la selección combinada de portada.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
@@ -80,10 +87,14 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `visualization/CartesianChart.astro`: traduce dominios, series y geometría física a un SVG cartesiano accesible y responsive.
 - `visualization/AcademicDiagram.astro`: compone diagramas vectoriales y geométricos con escala física isotrópica y etiquetas posicionables.
 - `visualization/AcademicVisualization.astro`: resuelve una entrada del registro central como gráfica o diagrama para que temas y ejercicios no dupliquen SVG.
-- `simulations/KinematicsSimulation.astro`: compone controles, lecturas,
-  reproducción, eje físico y tres gráficas de la simulación 1D.
+- `simulations/KinematicsSimulation.astro`: recibe una experiencia validada y
+  compone controles editables o fijos, vistas habilitadas, reproducción, eje y
+  gráficas del renderer `svg-kinematics-1d`.
 - `simulations/KinematicsMotion.astro` y `KinematicsChart.astro`: renderizan el
   estado estático inicial en SVG y exponen hooks pequeños para la mejora cliente.
+- `simulations/SimulationLab.astro`: constructor visual local de experiencias de
+  Cinemática 1D; usa registros reales, controles nativos y la misma simulación
+  para previsualizar.
 - `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
 - `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
 - `academic/RichText.astro` e `InlineMath.astro`: convierten el contrato mixto texto/MathML en HTML estático; nunca interpretan entrada del navegador.
@@ -106,8 +117,12 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `src/utils/kinematics-svg.js`: frontera datos físicos → transformación →
   geometría SVG para el eje de movimiento y las tres gráficas sincronizadas.
 - `src/scripts/kinematics-1d.js`: adaptación vanilla de controles y reproducción.
-  Mantiene estado efímero en memoria, usa `requestAnimationFrame` y no reconstruye
-  curvas durante cada frame.
+  Mantiene estado efímero, admite actualizar/destruir una experiencia, usa
+  `requestAnimationFrame` y no reconstruye curvas durante cada frame.
+- `src/utils/simulation-experience.js`: normalización, validación estricta,
+  serialización, IDs, packs y merge editorial de configuraciones no confiables.
+- `src/scripts/simulation-lab.js`: adapta formulario, preview y descarga al
+  contrato puro; no persiste ni interpreta código.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
 - `src/utils/exercise-families.js`: valida familias, genera parámetros con aleatoriedad criptográfica, evita combinaciones recientes en memoria y materializa una instancia determinista.
 - `src/utils/bonus-audit.js`: audita candidatos por slot y simula diversidad de tandas sin modificar blueprints.
@@ -162,6 +177,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/recursos.astro` | `/fisica-basica-1/recursos` |
 | `src/pages/fisica-basica-1/participa.astro` | `/fisica-basica-1/participa` |
 | `src/pages/fisica-basica-1/herramientas/index.astro` | `/fisica-basica-1/herramientas` |
+| `src/pages/fisica-basica-1/herramientas/simulaciones.astro` | `/fisica-basica-1/herramientas/simulaciones` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/index.astro` | `/fisica-basica-1/unidades/unidad-1` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/herramientas.astro` | `/fisica-basica-1/unidades/unidad-1/herramientas` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/vectores.astro` | `/fisica-basica-1/unidades/unidad-1/vectores` |
@@ -793,20 +809,28 @@ tema.
 
 ### Simulación de cinemática 1D
 
-La primera simulación concreta conserva la misma frontera de visualizaciones y
-añade un bucle cliente pequeño:
+La primera simulación concreta separa cinco responsabilidades:
 
 ```text
-simulations.js (catálogo + controles + presets + contextos)
+kinematics-1d.js                    modelo físico confiable y versionado
+   ↓ resultados físicos
+simulation-models.js               definición, límites y renderer permitido
+   ↓ valida capacidades
+simulation-experiences.json        experiencia pedagógica sin código
    ↓
-kinematics-1d.js (x, v, a, Δx, distancia, retorno, muestras, dominios)
+kinematics-svg.js + chart.js       renderer SVG: geometría finita
    ↓
-kinematics-svg.js + chart.js (transformaciones y paths SVG finitos)
-   ↓
-componentes simulations/* (HTML y SVG inicial durante el build)
-   ↓ mejora progresiva
-scripts/kinematics-1d.js (estado efímero + requestAnimationFrame + DOM)
+KinematicsSimulation.astro + runtime cliente (interacción y DOM)
 ```
+
+El modelo físico implementa `x(t)`, `v(t)`, `a(t)`, desplazamiento, distancia y
+cambio de sentido; no conoce SVG ni la experiencia. La definición
+`kinematics-1d` expone `x0`, `v0`, `a` y `T`, con límites duros respectivos
+`[-50,50]`, `[-20,20]`, `[-10,10]` y `[1,20]`, y señala únicamente el renderer
+permitido `svg-kinematics-1d`. La experiencia `kinematics-1d` usa esquema
+`1.0.0` y configura rangos pedagógicos, defaults, bloqueo, vistas, presets,
+observaciones y contextos; no admite funciones, HTML, CSS, URL, fórmulas ni
+propiedades silenciosas.
 
 `x₀`, `v₀`, `a` y `T` se validan antes de modificar el estado. Una entrada
 inválida pausa la reproducción, marca el campo y conserva la última geometría
@@ -821,10 +845,50 @@ el frame pendiente. `pagehide` también limpia el bucle. No se utiliza red,
 `localStorage`, `sessionStorage`, Canvas ni HTML dinámico; los nodos SVG que
 cambian se crean con `createElementNS` y el texto con `textContent`.
 
-El catálogo declara la simulación como recurso global publicado y relaciona sus
-contextos con `movimiento-1d` y `ecuaciones-movimiento`. `UnitTopicPage` consulta
+La experiencia declara la simulación como recurso global publicado y relaciona
+sus contextos con `movimiento-1d` y `ecuaciones-movimiento`; el catálogo añade
+solo la ruta y categoría. `UnitTopicPage` consulta
 esa metadata y muestra el CTA solo donde corresponde; no contiene la ruta de la
 simulación ni una lista paralela de temas.
+
+### Autoría declarativa de simulaciones
+
+`/fisica-basica-1/herramientas/simulaciones` ofrece el primer constructor visual
+seguro. Solo presenta el modelo real de Cinemática 1D y obtiene los límites y
+etiquetas del registro. Título, resumen, parámetros, bloqueo, vistas, hasta
+cinco presets, hasta seis observaciones y contextos de Unidad 1 se mantienen en
+memoria. Recargar descarta la sesión.
+
+```text
+formulario docente
+   ↓ createSimulationExperienceDraft() + validación estricta
+experiencia draft
+   ├─ updateExperience() → mismo KinematicsSimulation/svg-kinematics-1d
+   └─ simulation pack 1.0.0 → descarga JSON explícita
+                                  ↓
+                     npm run import:simulations
+                                  ↓ fuerza review
+                     revisión humana en Git → published → build
+```
+
+La preview no inserta JSON en un script ejecutable ni usa `innerHTML`: Astro
+escapa el atributo de datos inicial, el contrato rechaza marcado y el cliente
+crea nodos con `createElement`, `textContent` y `replaceChildren`. Cada cambio
+válido reconstruye la geometría una vez. El runtime mantiene un solo
+`requestAnimationFrame`, lo cancela al pausar y expone `destroy()` para abandonar
+la herramienta sin dejar listeners o animaciones activos.
+
+El pack y la experiencia usan esquemas separados `1.0.0`. El pack declara ID
+aleatorio, `createdAt`, `source: teacher` y experiencias `draft`; no incluye
+cuentas, cookies, almacenamiento, dispositivo ni datos estudiantiles. El
+importador solo lee JSON, valida el registro completo, rechaza IDs existentes y
+escribe mediante archivo temporal con estado `review`.
+
+El diseño permite registrar más adelante otros modelos y renderers SVG,
+p5/Canvas o WebGL, pero ninguno de esos renderers adicionales está implementado.
+Tampoco existe editor de código, parser de fórmulas, p5, sandbox, CMS, backend,
+autenticación ni publicación directa. Un futuro modo avanzado con código
+requerirá un sandbox y un modelo de seguridad distintos.
 
 Para añadir una gráfica estática:
 

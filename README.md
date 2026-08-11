@@ -61,6 +61,7 @@ Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raí
 - `/fisica-basica-1/recursos`: guías, bibliografía y recursos externos del curso.
 - `/fisica-basica-1/herramientas`: hub de herramientas docentes locales.
 - `/fisica-basica-1/herramientas/avisos`: editor local de avisos.
+- `/fisica-basica-1/herramientas/simulaciones`: Laboratorio local para configurar, previsualizar y exportar experiencias declarativas.
 - `/avisos`: archivo público de avisos.
 - `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
 - `/simulaciones`: catálogo canónico de simulaciones publicadas y categorías futuras.
@@ -163,16 +164,36 @@ git status
 ## Simulación de cinemática 1D
 
 La primera experiencia interactiva usa únicamente Astro, JavaScript vanilla y
-SVG. El modelo puro vive en `src/utils/kinematics-1d.js`; el catálogo y los
-casos de estudio viven en `src/data/simulations.js`; la proyección reutiliza las
-transformaciones de `src/utils/chart.js`; y el script cliente solo adapta esos
-resultados al DOM.
+SVG. El modelo físico puro vive en `src/utils/kinematics-1d.js`; su definición
+de parámetros, límites duros y renderer vive en `src/data/simulation-models.js`;
+y la configuración pedagógica publicada vive en
+`src/data/simulation-experiences.json`. `src/data/simulations.js` es el adaptador
+de catálogo y conserva únicamente ruta y categoría propias del directorio.
+
+El contrato de experiencia y el de paquete usan esquema `1.0.0`. Una experiencia
+solo contiene datos: defaults y rangos pedagógicos, parámetros editables o
+bloqueados, vistas, hasta cinco casos de estudio, guía en texto plano y
+contextos académicos opcionales. El renderer real se identifica como
+`svg-kinematics-1d`; `kinematics-svg.js` proyecta la salida física y el runtime
+cliente actualiza el DOM sin incorporar ecuaciones nuevas.
 
 Los tres casos publicados son movimiento uniforme (`x₀=-6`, `v₀=2,5`, `a=0`,
 `T=6`), parte del reposo (`x₀=-4`, `v₀=0`, `a=1,5`, `T=6`) y frena y regresa
 (`x₀=-4`, `v₀=6`, `a=-2`, `T=6`). La experiencia no reproduce automáticamente,
 no persiste parámetros o progreso, no usa red y conserva contenido y gráficas
 iniciales útiles cuando JavaScript está desactivado.
+
+El Laboratorio de simulaciones funciona completamente en memoria, no usa red,
+`localStorage` ni identidad docente. Previsualiza mediante el mismo componente y
+runtime que producción y descarga un `simulation experience pack` en estado
+`draft`. Para incorporarlo al almacenamiento editorial:
+
+```sh
+npm run import:simulations -- ruta/al/paquete.json
+```
+
+El importador acepta únicamente JSON, valida modelos, límites, vistas, presets,
+texto y contextos, rechaza duplicados y fuerza `review`; nunca publica.
 
 ## Incorporación de contenidos
 

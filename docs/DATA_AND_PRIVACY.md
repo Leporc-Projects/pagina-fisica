@@ -195,6 +195,15 @@ ID, versión y fecha técnica de creación. El importador interpreta JSON como
 datos, rechaza contenido o enlaces no permitidos y deja cada aviso en `review`.
 No existe envío, persistencia en navegador ni publicación automática.
 
+El Laboratorio de simulaciones mantiene en memoria título, resumen, parámetros,
+vistas, casos de estudio, observaciones y contextos académicos. No solicita
+identidad, no lee cookies, no usa `localStorage` o IndexedDB y no envía la
+configuración. Recargar descarta la sesión. Solo la acción explícita “Exportar
+paquete JSON” crea un archivo con `source: teacher`, ID aleatorio, fecha técnica
+y una experiencia `draft`; no incluye datos del navegador ni estudiantiles. El
+importador del repositorio trata ese archivo como entrada no confiable y fuerza
+`review`.
+
 Un ID aleatorio por respuesta no vuelve pseudónima la respuesta porque no se
 reutiliza como identidad ni existe una tabla de correspondencia. Esta condición
 deberá reevaluarse si un envío futuro asocia el archivo con una sesión, cuenta o
