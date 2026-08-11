@@ -1,0 +1,160 @@
+---
+import {
+  KINEMATICS_CHART_VIEW,
+  createKinematicsChartGeometry,
+  formatKinematicsNumber,
+} from "../../utils/kinematics-svg.js";
+
+interface Parameters {
+  x0: number;
+  v0: number;
+  a: number;
+  T: number;
+}
+
+interface Props {
+  id: string;
+  quantity: "position" | "velocity" | "acceleration";
+  parameters: Parameters;
+  relation: string;
+}
+
+const { id, quantity, parameters, relation } = Astro.props;
+const geometry = createKinematicsChartGeometry(parameters, quantity);
+const { plot, width, height } = KINEMATICS_CHART_VIEW;
+const descriptionId = `${id}-description`;
+const clipId = `${id}-clip`;
+const axisLabel = `${geometry.quantity.label} (${geometry.quantity.unit})`;
+---
+
+<figure
+  class="kinematics-chart theme-canvas"
+  data-kinematics-chart={quantity}
+  data-x-min={geometry.xDomain[0]}
+  data-x-max={geometry.xDomain[1]}
+  data-y-min={geometry.yDomain[0]}
+  data-y-max={geometry.yDomain[1]}
+>
+  <figcaption>
+    <h3>{geometry.quantity.symbol}</h3>
+    <p>{relation}</p>
+  </figcaption>
+
+  <svg
+    viewBox={`0 0 ${width} ${height}`}
+    role="img"
+    aria-label={`${geometry.quantity.label} en función del tiempo`}
+    aria-describedby={descriptionId}
+    data-chart-svg
+    data-plot-left={plot.left}
+    data-plot-top={plot.top}
+    data-plot-width={plot.width}
+    data-plot-height={plot.height}
+  >
+    <desc id={descriptionId}>
+      Gráfica completa de {geometry.quantity.label.toLowerCase()} contra tiempo.
+      La línea vertical y el punto indican el instante actual de la simulación.
+    </desc>
+
+    <defs>
+      <clipPath id={clipId}>
+        <rect x={plot.left} y={plot.top} width={plot.width} height={plot.height} />
+      </clipPath>
+    </defs>
+
+    <rect
+      class="kinematics-chart__plot"
+      x={plot.left}
+      y={plot.top}
+      width={plot.width}
+      height={plot.height}
+    />
+
+    <g class="kinematics-chart__grid" data-chart-grid aria-hidden="true">
+      {geometry.xTicks.map((tick) => (
+        <line
+          x1={geometry.transform.x(tick)}
+          y1={plot.top}
+          x2={geometry.transform.x(tick)}
+          y2={plot.top + plot.height}
+        />
+      ))}
+      {geometry.yTicks.map((tick) => (
+        <line
+          x1={plot.left}
+          y1={geometry.transform.y(tick)}
+          x2={plot.left + plot.width}
+          y2={geometry.transform.y(tick)}
+        />
+      ))}
+    </g>
+
+    <g class="kinematics-chart__zero" data-chart-zero aria-hidden="true">
+      {geometry.zeroY !== null && (
+        <line
+          x1={plot.left}
+          y1={geometry.zeroY}
+          x2={plot.left + plot.width}
+          y2={geometry.zeroY}
+        />
+      )}
+    </g>
+
+    <g class="kinematics-chart__ticks" data-chart-ticks aria-hidden="true">
+      {geometry.xTicks.map((tick) => (
+        <text
+          x={geometry.transform.x(tick)}
+          y={plot.top + plot.height + 18}
+          text-anchor="middle"
+        >{formatKinematicsNumber(tick, 1)}</text>
+      ))}
+      {geometry.yTicks.map((tick) => (
+        <text
+          x={plot.left - 9}
+          y={geometry.transform.y(tick)}
+          text-anchor="end"
+          dominant-baseline="middle"
+        >{formatKinematicsNumber(tick, 1)}</text>
+      ))}
+    </g>
+
+    <g class="kinematics-chart__ticks" aria-hidden="true">
+      <text
+        class="kinematics-chart__axis-label"
+        x={plot.left + plot.width / 2}
+        y={height - 7}
+        text-anchor="middle"
+      >Tiempo (s)</text>
+      <text
+        class="kinematics-chart__axis-label"
+        x="15"
+        y={plot.top + plot.height / 2}
+        text-anchor="middle"
+        transform={`rotate(-90 15 ${plot.top + plot.height / 2})`}
+      >{axisLabel}</text>
+    </g>
+
+    <g clip-path={`url(#${clipId})`}>
+      <path
+        class="kinematics-chart__curve"
+        data-chart-curve
+        d={geometry.linePath}
+      />
+      <line
+        class="kinematics-chart__cursor"
+        data-chart-cursor
+        x1={geometry.initialPoint.x}
+        y1={plot.top}
+        x2={geometry.initialPoint.x}
+        y2={plot.top + plot.height}
+      />
+      <circle
+        class="kinematics-chart__current"
+        data-chart-current
+        cx={geometry.initialPoint.x}
+        cy={geometry.initialPoint.y}
+        r="5"
+      />
+    </g>
+  </svg>
+</figure>

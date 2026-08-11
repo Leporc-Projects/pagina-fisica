@@ -1,0 +1,140 @@
+---
+import {
+  KINEMATICS_MOTION_VIEW,
+  createKinematicsMotionGeometry,
+  formatKinematicsNumber,
+} from "../../utils/kinematics-svg.js";
+
+interface Parameters {
+  x0: number;
+  v0: number;
+  a: number;
+  T: number;
+}
+
+interface Props {
+  parameters: Parameters;
+}
+
+const { parameters } = Astro.props;
+const geometry = createKinematicsMotionGeometry(parameters);
+const { plot, width, height, axisY } = KINEMATICS_MOTION_VIEW;
+---
+
+<figure
+  class="kinematics-motion theme-canvas"
+  data-kinematics-motion
+  data-x-min={geometry.xDomain[0]}
+  data-x-max={geometry.xDomain[1]}
+>
+  <figcaption>
+    <div>
+      <h2>Movimiento sobre el eje x</h2>
+      <p>El marcador circular muestra la posición actual.</p>
+    </div>
+    <ul aria-label="Leyenda del eje de movimiento">
+      <li><span class="kinematics-motion__legend-initial" aria-hidden="true"></span>Inicio</li>
+      <li><span class="kinematics-motion__legend-current" aria-hidden="true"></span>Posición actual</li>
+    </ul>
+  </figcaption>
+
+  <svg
+    viewBox={`0 0 ${width} ${height}`}
+    role="img"
+    aria-label="Movimiento unidimensional sobre un eje horizontal"
+    aria-describedby="kinematics-motion-description"
+    data-motion-svg
+    data-plot-left={plot.left}
+    data-plot-width={plot.width}
+  >
+    <desc id="kinematics-motion-description">
+      Eje de posición en metros con origen cuando pertenece al dominio, posición
+      inicial, posición actual y flecha que indica el sentido positivo x.
+    </desc>
+
+    <defs>
+      <marker
+        id="kinematics-positive-arrow"
+        viewBox="0 0 10 10"
+        refX="8"
+        refY="5"
+        markerWidth="7"
+        markerHeight="7"
+        orient="auto"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 Z" />
+      </marker>
+    </defs>
+
+    <line
+      class="kinematics-motion__axis"
+      x1={plot.left}
+      y1={axisY}
+      x2={plot.left + plot.width}
+      y2={axisY}
+      marker-end="url(#kinematics-positive-arrow)"
+    />
+
+    <g class="kinematics-motion__ticks" data-motion-ticks aria-hidden="true">
+      {geometry.ticks.map((tick) => (
+        <g>
+          <line
+            x1={geometry.transform.x(tick)}
+            y1={axisY - 8}
+            x2={geometry.transform.x(tick)}
+            y2={axisY + 8}
+          />
+          <text
+            x={geometry.transform.x(tick)}
+            y={axisY + 30}
+            text-anchor="middle"
+          >{formatKinematicsNumber(tick, 1)}</text>
+        </g>
+      ))}
+    </g>
+
+    <g data-motion-origin aria-hidden="true">
+      {geometry.originX !== null && (
+        <g>
+          <line
+            class="kinematics-motion__origin"
+            x1={geometry.originX}
+            y1={axisY - 35}
+            x2={geometry.originX}
+            y2={axisY + 35}
+          />
+          <text x={geometry.originX} y={axisY - 45} text-anchor="middle">origen</text>
+        </g>
+      )}
+    </g>
+
+    <line
+      class="kinematics-motion__initial"
+      data-motion-initial
+      x1={geometry.initialX}
+      y1={axisY - 25}
+      x2={geometry.initialX}
+      y2={axisY + 25}
+    />
+    <circle
+      class="kinematics-motion__current"
+      data-motion-current
+      cx={geometry.initialX}
+      cy={axisY}
+      r="12"
+    />
+    <text
+      class="kinematics-motion__current-label"
+      data-motion-current-label
+      x={geometry.initialX}
+      y={axisY - 25}
+      text-anchor="middle"
+    >x = {formatKinematicsNumber(parameters.x0)} m</text>
+    <text
+      class="kinematics-motion__unit"
+      x={plot.left + plot.width}
+      y={height - 8}
+      text-anchor="end"
+    >posición x (m) · +x</text>
+  </svg>
+</figure>
