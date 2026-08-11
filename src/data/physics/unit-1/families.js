@@ -4,6 +4,7 @@ import {
   PARAMETERIZED_FAMILY_SCHEMA_VERSION,
   roundTo,
 } from "../../../utils/exercise-families.js";
+import { t } from "../../../i18n/index.js";
 
 const singleChoice = (options, correctOptionId) => ({
   kind: "singleChoice",
@@ -34,8 +35,8 @@ const family = (definition) => ({
   estimatedMinutes: 5,
   commonErrors: [],
   feedback: {
-    correct: "La respuesta coincide con la instancia generada.",
-    incorrect: "Revisa el modelo, los signos y las unidades antes de recalcular.",
+    correct: t("es", "exercise.familyFeedback.correct"),
+    incorrect: t("es", "exercise.familyFeedback.incorrect"),
     commonErrors: {},
   },
   ...definition,

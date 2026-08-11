@@ -2,6 +2,7 @@
 // una parte de estos metadatos; tutorías y Bonos consumen el contrato.
 import { UNIT_1_ADDITIONAL_EXERCISE_DEFINITIONS } from "./additional-exercises.js";
 import teacherQuestions from "./teacher-questions.json" with { type: "json" };
+import { t } from "../../../i18n/index.js";
 export {
   EXERCISE_COGNITIVE_LEVELS,
   EXERCISE_EXPOSURES,
@@ -14,9 +15,8 @@ export {
 } from "./exercise-schema.js";
 
 const DEFAULT_FEEDBACK = {
-  correct: "La respuesta coincide con el resultado esperado.",
-  incorrect:
-    "Compara tu razonamiento con el enunciado, las pistas y la solución antes de intentarlo de nuevo.",
+  correct: t("es", "exercise.feedback.correct"),
+  incorrect: t("es", "exercise.feedback.incorrect"),
   commonErrors: {},
 };
 
@@ -26,7 +26,7 @@ const numericInteraction = (exercise) => {
       kind: "number",
       field: {
         id: "value",
-        label: "Respuesta",
+        label: t("es", "exercise.answer"),
         unit: exercise.expectedUnit,
       },
     };

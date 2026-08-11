@@ -5,30 +5,33 @@ import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import { localizeCourseData } from "../../data/course-localize.js";
 import { UNIT_1_EXERCISES } from "../../data/physics/unit-1/exercises.js";
 import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { localizeUnit1 } from "../../data/physics/unit-1/localize.js";
 import { ROUTE_IDS } from "../../i18n/routes.js";
+import { t } from "../../i18n/index.js";
 import { withBase } from "../../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
 const { COURSE, UNITS } = localizeCourseData(locale);
+const localizedUnit1 = localizeUnit1(locale);
 const materialTypes = [
-  "Diagnósticos",
-  "Práctica guiada",
-  "Ejercicios",
-  "Retos",
-  "Tutorías interactivas",
+  "practice.material.diagnostics",
+  "practice.material.guided",
+  "practice.material.exercises",
+  "practice.material.challenges",
+  "practice.material.tutorials",
 ];
 ---
 
 <BaseLayout
-  title={`Ejercicios y tutorías · ${COURSE.name}`}
-  description={`Catálogo de práctica y tutorías de ${COURSE.name}.`}
+  title={`${t(locale, "practice.catalogTitle")} · ${COURSE.name}`}
+  description={t(locale, "practice.catalogDescription", { course: COURSE.name })}
   locale={locale}
   routeId={ROUTE_IDS.COURSE_PRACTICE}
 >
   <article class="course-subpage">
     <CoursePageHeader
-      title="Ejercicios y tutorías"
-      description="Catálogo y hoja de ruta de los materiales de práctica que se publicarán por unidad."
+      title={t(locale, "practice.catalogTitle")}
+      description={t(locale, "practice.catalogHeaderDescription")}
       locale={locale}
     />
 
@@ -38,31 +41,24 @@ const materialTypes = [
       aria-labelledby="exercise-model-title"
     >
       <div>
-        <p class="course-section__index">Modelo de trabajo</p>
+        <p class="course-section__index">{t(locale, "practice.workModel")}</p>
         <h2 id="exercise-model-title">
-          Práctica diseñada por el docente
+          {t(locale, "practice.teacherDesigned")}
         </h2>
       </div>
 
       <div class="course-section__body">
-        <p class="course-lead">
-          Los materiales se incorporarán de forma progresiva después de su revisión académica.
-          No se publicarán preguntas, pistas o soluciones provisionales.
-        </p>
+        <p class="course-lead">{t(locale, "practice.reviewPolicy")}</p>
 
         <div class="policy-panel">
-          <h3>Tutorías interactivas</h3>
-          <p>
-            Las tutorías serán progresivas y deterministas. Sus preguntas,
-            rutas de ayuda y retroalimentaciones serán definidas por el docente,
-            sin procesamiento mediante inteligencia artificial.
-          </p>
+          <h3>{t(locale, "practice.tutorials")}</h3>
+          <p>{t(locale, "practice.tutorialPolicy")}</p>
         </div>
       </div>
     </section>
 
     <!-- Los anclajes reutilizan el número estable de cada unidad. -->
-    <nav class="unit-index" aria-label="Unidades del catálogo de práctica">
+    <nav class="unit-index" aria-label={t(locale, "practice.catalogUnits")}>
       {
         UNITS.map((unit) => (
           <a href={`#ejercicios-unidad-${unit.number}`}>
@@ -76,12 +72,12 @@ const materialTypes = [
     <section class="course-section" aria-labelledby="exercise-catalog-title">
       <header class="course-section__header">
         <div>
-          <p class="course-section__index">Catálogo</p>
-          <h2 id="exercise-catalog-title">Materiales por unidad</h2>
+          <p class="course-section__index">{t(locale, "practice.catalog")}</p>
+          <h2 id="exercise-catalog-title">{t(locale, "practice.materialsByUnit")}</h2>
         </div>
 
         <p>
-          La Unidad 1 ofrece un banco aprobado. Las demás categorías permanecen en preparación.
+          {t(locale, "practice.unitOneAvailable")}
         </p>
       </header>
 
@@ -104,25 +100,25 @@ const materialTypes = [
                 </h3>
                 <p class="publication-row__meta">{unit.chapters}</p>
 
-                <ul class="publication-tags" aria-label="Tipos previstos">
-                  {materialTypes.map((type) => <li>{type}</li>)}
+                <ul class="publication-tags" aria-label={t(locale, "practice.plannedTypes")}>
+                  {materialTypes.map((type) => <li>{t(locale, type)}</li>)}
                 </ul>
               </div>
 
               {unit.number === UNIT_1.number
                 ? <div class="publication-row__action">
                     <span class="status-label status-label--featured">
-                      {UNIT_1_EXERCISES.length} ejercicios
+                      {t(locale, "practice.exerciseCount", { count: UNIT_1_EXERCISES.length })}
                     </span>
-                    <a class="text-link" href={withBase(UNIT_1.practiceRoute)}>
-                      Abrir práctica
+                    <a class="text-link" href={withBase(localizedUnit1.practiceRoute)}>
+                      {t(locale, "practice.openPractice")}
                     </a>
-                    <a class="text-link" href={withBase(UNIT_1.bonusRoute)}>
-                      Abrir Bonos
+                    <a class="text-link" href={withBase(localizedUnit1.bonusRoute)}>
+                      {t(locale, "practice.openBonuses")}
                     </a>
                   </div>
                 : <span class="status-label status-label--preparing">
-                    En preparación
+                    {t(locale, "practice.preparing")}
                   </span>}
             </article>
           ))

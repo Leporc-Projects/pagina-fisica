@@ -2,6 +2,7 @@
 // Todo el banco permanece en HTML; JavaScript elige una tanda local, aplica
 // filtros y sincroniza el hash sin evaluar ni conservar actividad personal.
 import ExerciseCard from "./ExerciseCard.astro";
+import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -10,6 +11,7 @@ interface Props {
   topics: Array<{ slug: string; shortTitle: string }>;
   visualizations: Record<string, any>;
   present?: (value: string) => RichContent;
+  locale?: "es" | "en";
 }
 
 const {
@@ -17,6 +19,7 @@ const {
   topics,
   visualizations,
   present = (value) => value,
+  locale = "es",
 } = Astro.props;
 const fixedExercises = exercises.filter((exercise) =>
   exercise.itemKind !== "parameterizedFamily"
@@ -27,61 +30,53 @@ const exerciseFamilies = exercises.filter((exercise) =>
 const topicLabels = Object.fromEntries(
   topics.map((topic) => [topic.slug, topic.shortTitle])
 );
-const typeLabels = {
-  conceptual: "Conceptual",
-  numerical: "Numérico",
-  graphical: "Gráfico",
-  symbolic: "Simbólico",
-  estimation: "Estimación",
-  application: "Aplicación",
-  integrative: "Integrador",
-};
+const typeLabel = (type) => t(locale, `exercise.type.${type}`);
 const availableTypes = [...new Set(exercises.map((exercise) => exercise.type))];
 const availableDifficulties = [...new Set(exercises.map((exercise) => exercise.difficulty))]
   .sort((a, b) => a - b);
 ---
 
-<section class="open-practice" data-open-practice aria-labelledby="open-practice-title">
+<section class="open-practice" data-open-practice data-locale={locale} aria-labelledby="open-practice-title">
   <header class="open-practice__header">
     <div>
-      <p class="academic-label">Práctica abierta</p>
-      <h2 id="open-practice-title">Haz algunos ejercicios y sigue si quieres</h2>
-      <p>La página propone una tanda breve y variada. No existe una meta global que completar.</p>
+      <p class="academic-label">{t(locale, "practice.open")}</p>
+      <h2 id="open-practice-title">{t(locale, "practice.openTitle")}</h2>
+      <p>{t(locale, "practice.openDescription")}</p>
     </div>
     <p class="open-practice__status" data-practice-status aria-live="polite">
-      Selección local sin seguimiento
+      {t(locale, "practice.localStatus")}
     </p>
   </header>
 
   <form class="open-practice__filters" data-practice-filters>
     <label>
-      <span>Tema</span>
+      <span>{t(locale, "practice.topic")}</span>
       <select name="topic" data-practice-filter="topic">
-        <option value="all">Todos</option>
+        <option value="all">{t(locale, "practice.allTopics")}</option>
         {topics.map((topic) => <option value={topic.slug}>{topic.shortTitle}</option>)}
       </select>
     </label>
     <label>
-      <span>Dificultad</span>
+      <span>{t(locale, "exercise.difficulty")}</span>
       <select name="difficulty" data-practice-filter="difficulty">
-        <option value="all">Todas</option>
+        <option value="all">{t(locale, "practice.allDifficulties")}</option>
         {availableDifficulties.map((difficulty) => (
-          <option value={difficulty}>{difficulty} de 5</option>
+          <option value={difficulty}>{t(locale, "practice.difficultyOption", { difficulty })}</option>
         ))}
       </select>
     </label>
     <label>
-      <span>Tipo</span>
+      <span>{t(locale, "exercise.type")}</span>
       <select name="type" data-practice-filter="type">
-        <option value="all">Todos</option>
+        <option value="all">{t(locale, "practice.allTypes")}</option>
         {availableTypes.map((type) => (
-          <option value={type}>{typeLabels[type] ?? type}</option>
+          <option value={type}>{typeLabel(type)}</option>
         ))}
       </select>
     </label>
   </form>
 
-  <nav class="open-practice__batch-nav" aria-label="Ejercicios de la tanda" data-batch-nav></nav>
+  <nav class="open-practice__batch-nav" aria-label={t(locale, "practice.batchNavigation")} data-batch-nav></nav>
 
   <div class="open-practice__slides">
     {fixedExercises.map((exercise) => (
@@ -101,6 +96,7 @@ const availableDifficulties = [...new Set(exercises.map((exercise) => exercise.d
             ? visualizations[exercise.visualizationId]
             : undefined}
           present={present}
+          locale={locale}
         />
       </div>
     ))}
@@ -122,24 +118,23 @@ const availableDifficulties = [...new Set(exercises.map((exercise) => exercise.d
     ))}
   </div>
 
-  <nav class="open-practice__controls" aria-label="Cambiar ejercicio o tanda">
+  <nav class="open-practice__controls" aria-label={t(locale, "practice.controls")}>
     <button type="button" data-practice-previous>
-      <span aria-hidden="true">←</span> Anterior
+      <span aria-hidden="true">←</span> {t(locale, "practice.previous")}
     </button>
     <div class="open-practice__continue">
-      <button type="button" data-practice-new-batch>Otros 5</button>
-      <button type="button" class="button-link" data-focus-filter="topic">Cambiar tema</button>
-      <button type="button" class="button-link" data-focus-filter="difficulty">Cambiar dificultad</button>
+      <button type="button" data-practice-new-batch>{t(locale, "practice.anotherFive")}</button>
+      <button type="button" class="button-link" data-focus-filter="topic">{t(locale, "practice.changeTopic")}</button>
+      <button type="button" class="button-link" data-focus-filter="difficulty">{t(locale, "practice.changeDifficulty")}</button>
     </div>
     <button type="button" data-practice-next>
-      Siguiente <span aria-hidden="true">→</span>
+      {t(locale, "practice.next")} <span aria-hidden="true">→</span>
     </button>
   </nav>
 
   <noscript>
     <p class="open-practice__fallback">
-      JavaScript está desactivado: todos los ejercicios públicos permanecen
-      disponibles como una lista continua, sin selección de tandas.
+      {t(locale, "practice.noScript")}
     </p>
   </noscript>
 </section>

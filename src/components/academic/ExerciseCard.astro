@@ -3,6 +3,7 @@
 // completos permanecen en el banco y no saturan la experiencia de estudio.
 import RichText from "./RichText.astro";
 import AcademicVisualization from "../visualization/AcademicVisualization.astro";
+import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -22,44 +23,38 @@ interface Props {
   exercise: Exercise;
   visualization?: any;
   present?: (value: string) => RichContent;
+  locale?: "es" | "en";
 }
 
 const {
   exercise,
   visualization,
   present = (value) => value,
+  locale = "es",
 } = Astro.props;
-const typeLabels = {
-  conceptual: "Conceptual",
-  numerical: "Numérico",
-  graphical: "Gráfico",
-  symbolic: "Simbólico",
-  estimation: "Estimación",
-  application: "Aplicación",
-  integrative: "Integrador",
-};
+const typeLabel = (type) => t(locale, `exercise.type.${type}`);
 ---
 
 <article class="exercise-card" id={exercise.id} aria-labelledby={`${exercise.id}-title`}>
   <header class="exercise-card__header">
     <div>
       <p class="academic-label">
-        Ejercicio para explorar
+        {t(locale, "exercise.explore")}
       </p>
       <h3 id={`${exercise.id}-title`} tabindex="-1">{exercise.title}</h3>
     </div>
 
     <dl class="exercise-card__meta">
       <div>
-        <dt>Tipo</dt>
-        <dd>{typeLabels[exercise.type] ?? exercise.type}</dd>
+        <dt>{t(locale, "exercise.type")}</dt>
+        <dd>{typeLabel(exercise.type)}</dd>
       </div>
       <div>
-        <dt>Dificultad</dt>
+        <dt>{t(locale, "exercise.difficulty")}</dt>
         <dd>{exercise.difficulty}/5</dd>
       </div>
       <div>
-        <dt>Tiempo</dt>
+        <dt>{t(locale, "exercise.time")}</dt>
         <dd>{exercise.estimatedMinutes} min</dd>
       </div>
     </dl>
@@ -72,13 +67,14 @@ const typeLabels = {
       <AcademicVisualization
         visualization={visualization}
         present={present}
+        locale={locale}
       />
     </div>
   )}
 
   {exercise.hints.length > 0 && (
     <details class="exercise-card__hint">
-      <summary>Solicitar una pista</summary>
+      <summary>{t(locale, "exercise.hint")}</summary>
       <ul class="academic-bullet-list">
         {exercise.hints.map((hint) => <li><RichText content={present(hint)} /></li>)}
       </ul>
@@ -86,7 +82,7 @@ const typeLabels = {
   )}
 
   <details class="exercise-card__solution">
-    <summary>Revisar solución</summary>
+    <summary>{t(locale, "exercise.solution")}</summary>
     <ol>
       {exercise.solution.map((item) => (
         <li>

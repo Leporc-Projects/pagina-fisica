@@ -2,17 +2,22 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import OpenPractice from "../../../components/academic/OpenPractice.astro";
 import UnitOneNav from "../../../components/academic/UnitOneNav.astro";
-import { UNIT_1_BANK_ITEMS } from "../../../data/physics/unit-1/bank.js";
+import { getLocalizedUnit1BankItems } from "../../../data/physics/unit-1/exercise-localize.js";
 import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
-import { localizeUnit1 } from "../../../data/physics/unit-1/localize.js";
+import { getLocalizedUnit1Visualization, localizeUnit1 } from "../../../data/physics/unit-1/localize.js";
 import { UNIT_1_VISUALIZATIONS } from "../../../data/physics/unit-1/visualizations.js";
-import { ROUTE_IDS } from "../../../i18n/routes.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../../i18n/routes.js";
+import { t } from "../../../i18n/index.js";
 import { withBase } from "../../../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
 const UNIT_1 = localizeUnit1(locale);
+const localizedBankItems = getLocalizedUnit1BankItems(locale);
+const localizedVisualizations = Object.fromEntries(
+  Object.keys(UNIT_1_VISUALIZATIONS).map((id) => [id, getLocalizedUnit1Visualization(id, locale)])
+);
 
-const publicLearningExercises = UNIT_1_BANK_ITEMS.filter(
+const publicLearningExercises = localizedBankItems.filter(
   (exercise) =>
     exercise.status !== "draft" &&
     exercise.purpose === "learning" &&
@@ -21,34 +26,28 @@ const publicLearningExercises = UNIT_1_BANK_ITEMS.filter(
 ---
 
 <BaseLayout
-  title={`Práctica · ${UNIT_1.shortTitle}`}
-  description={`Banco de ejercicios originales de ${UNIT_1.title}.`}
+  title={t(locale, "practice.pageTitle", { unit: UNIT_1.shortTitle })}
+  description={t(locale, "practice.pageDescription", { unitTitle: UNIT_1.title })}
   locale={locale}
   routeId={ROUTE_IDS.COURSE_UNIT_1_PRACTICE}
 >
   <article class="unit-practice-page">
     <header class="unit-topic-hero">
-      <nav class="academic-breadcrumb" aria-label="Migas de pan">
-        <a href={withBase("/fisica-basica-1/ejercicios")}>Ejercicios y tutorías</a>
+      <nav class="academic-breadcrumb" aria-label={t(locale, "unitPage.breadcrumb")}>
+        <a href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_PRACTICE, locale))}>{t(locale, "practice.catalogBreadcrumb")}</a>
         <span aria-hidden="true">/</span>
         <a href={withBase(UNIT_1.route)}>{UNIT_1.shortTitle}</a>
       </nav>
 
       <div class="unit-topic-hero__heading">
-        <p class="eyebrow eyebrow--dark">Práctica · {UNIT_1.shortTitle}</p>
-        <h1>Ejercicios de vectores y cinemática</h1>
-        <p>
-          Banco original para practicar de forma abierta. No es un motor
-          evaluativo ni conserva respuestas o actividad personal.
-        </p>
+        <p class="eyebrow eyebrow--dark">{t(locale, "practice.eyebrow", { unit: UNIT_1.shortTitle })}</p>
+        <h1>{t(locale, "practice.unitTitle")}</h1>
+        <p>{t(locale, "practice.unitDescription")}</p>
       </div>
 
       <aside class="practice-policy">
-        <strong>Práctica sin seguimiento personal</strong>
-        <p>
-          Las pistas y soluciones se revelan con controles nativos. No se usa
-          inteligencia artificial, backend, seguimiento ni almacenamiento local.
-        </p>
+        <strong>{t(locale, "practice.policyTitle")}</strong>
+        <p>{t(locale, "practice.policyText")}</p>
       </aside>
     </header>
 
@@ -57,8 +56,9 @@ const publicLearningExercises = UNIT_1_BANK_ITEMS.filter(
     <OpenPractice
       exercises={publicLearningExercises}
       topics={UNIT_1.topics}
-      visualizations={UNIT_1_VISUALIZATIONS}
+      visualizations={localizedVisualizations}
       present={presentUnit1RichText}
+      locale={locale}
     />
 
   </article>

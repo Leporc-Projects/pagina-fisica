@@ -4,18 +4,9 @@ import { selectExerciseBatch } from "../utils/exercise-batches.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "../data/physics/unit-1/families.js";
 import {
   createCryptoRandom,
-  generateFamilyInstance,
 } from "../utils/exercise-families.js";
-
-const TYPE_LABELS = {
-  conceptual: "Conceptual",
-  numerical: "Numérico",
-  graphical: "Gráfico",
-  symbolic: "Simbólico",
-  estimation: "Estimación",
-  application: "Aplicación",
-  integrative: "Integrador",
-};
+import { generateLocalizedUnit1FamilyInstance } from "../data/physics/unit-1/family-localize.js";
+import { t } from "../i18n/index.js";
 
 const element = (tag, text, className) => {
   const target = document.createElement(tag);
@@ -24,22 +15,22 @@ const element = (tag, text, className) => {
   return target;
 };
 
-const renderGeneratedCard = (target, exercise) => {
+const renderGeneratedCard = (target, exercise, locale) => {
   const card = element("article", undefined, "exercise-card");
   const titleId = `${exercise.instanceId}-practice-title`;
   card.setAttribute("aria-labelledby", titleId);
   const header = element("header", undefined, "exercise-card__header");
   const heading = element("div");
-  heading.append(element("p", "Ejercicio para explorar", "academic-label"));
+  heading.append(element("p", t(locale, "exercise.explore"), "academic-label"));
   const title = element("h3", exercise.title);
   title.id = titleId;
   title.tabIndex = -1;
   heading.append(title);
   const metadata = element("dl", undefined, "exercise-card__meta");
   [
-    ["Tipo", TYPE_LABELS[exercise.type] ?? exercise.type],
-    ["Dificultad", `${exercise.difficulty}/5`],
-    ["Tiempo", `${exercise.estimatedMinutes} min`],
+    [t(locale, "exercise.type"), t(locale, `exercise.type.${exercise.type}`)],
+    [t(locale, "exercise.difficulty"), `${exercise.difficulty}/5`],
+    [t(locale, "exercise.time"), `${exercise.estimatedMinutes} min`],
   ].forEach(([label, value]) => {
     const group = element("div");
     group.append(element("dt", label), element("dd", value));
@@ -50,7 +41,7 @@ const renderGeneratedCard = (target, exercise) => {
 
   if (exercise.hints.length > 0) {
     const hints = element("details", undefined, "exercise-card__hint");
-    hints.append(element("summary", "Solicitar una pista"));
+    hints.append(element("summary", t(locale, "exercise.hint")));
     const list = element("ul", undefined, "academic-bullet-list");
     exercise.hints.forEach((hint) => list.append(element("li", hint)));
     hints.append(list);
@@ -58,7 +49,7 @@ const renderGeneratedCard = (target, exercise) => {
   }
 
   const solution = element("details", undefined, "exercise-card__solution");
-  solution.append(element("summary", "Revisar solución"));
+  solution.append(element("summary", t(locale, "exercise.solution")));
   const steps = element("ol");
   exercise.solution.forEach((step) => {
     const item = element("li");
@@ -70,11 +61,11 @@ const renderGeneratedCard = (target, exercise) => {
   target.replaceChildren(card);
 };
 
-const createBatchButton = (index, select) => {
+const createBatchButton = (index, select, locale) => {
   const button = document.createElement("button");
   button.type = "button";
   button.textContent = String(index + 1);
-  button.setAttribute("aria-label", `Ir al ejercicio ${index + 1} de esta tanda`);
+  button.setAttribute("aria-label", t(locale, "practice.goToExercise", { number: index + 1 }));
   button.addEventListener("click", () => select(index, { updateHash: true, focus: true }));
   return button;
 };
@@ -82,6 +73,7 @@ const createBatchButton = (index, select) => {
 export const initializeOpenPractice = () => {
   document.querySelectorAll("[data-open-practice]").forEach((practice) => {
     if (!(practice instanceof HTMLElement) || practice.dataset.enhanced === "true") return;
+    const locale = practice.dataset.locale === "en" ? "en" : "es";
 
     const slides = [...practice.querySelectorAll("[data-exercise-slide]")]
       .filter((slide) => slide instanceof HTMLElement);
@@ -124,9 +116,9 @@ export const initializeOpenPractice = () => {
       const family = familyMap.get(exercise.id);
       const target = exercise.slide.querySelector("[data-generated-practice-card]");
       if (!family || !(target instanceof HTMLElement)) return;
-      const instance = generateFamilyInstance(family, { random, recentParameterKeys });
+      const instance = generateLocalizedUnit1FamilyInstance(family, locale, { random, recentParameterKeys });
       recentParameterKeys.add(`${family.id}:${instance.parameterKey}`);
-      renderGeneratedCard(target, instance);
+      renderGeneratedCard(target, instance, locale);
       exercise.generatedForRotation = rotation;
     };
 
@@ -150,7 +142,7 @@ export const initializeOpenPractice = () => {
       next.disabled = activeIndex === batch.length - 1;
 
       if (status) {
-        status.textContent = `Ejercicio ${activeIndex + 1} de esta tanda`;
+        status.textContent = t(locale, "practice.batchPosition", { current: activeIndex + 1 });
       }
       if (updateHash && current.id) {
         history.pushState({ exerciseId: current.id }, "", `#${current.id}`);
@@ -183,10 +175,10 @@ export const initializeOpenPractice = () => {
         exercise.slide.dataset.inBatch = "true";
       });
       batchNav.replaceChildren();
-      batch.forEach((_, index) => batchNav.append(createBatchButton(index, show)));
+      batch.forEach((_, index) => batchNav.append(createBatchButton(index, show, locale)));
 
       if (batch.length === 0) {
-        if (status) status.textContent = "No hay ejercicios para esta combinación de filtros.";
+        if (status) status.textContent = t(locale, "practice.empty");
         previous.disabled = true;
         next.disabled = true;
         return;

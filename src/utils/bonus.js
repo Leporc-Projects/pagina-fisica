@@ -366,7 +366,12 @@ const expectedResponseText = (exercise) => {
   }
   if (exercise.answer.kind === "number") return exercise.answer.display;
   return exercise.answer.values
-    .map((value) => `${value.symbol} = ${value.value}${value.unit ? ` ${value.unit}` : ""}`)
+    .map((value, index) => {
+      const field = exercise.interaction.fields[index];
+      const label = field?.label ?? value.symbol;
+      const unit = field?.unitLabel ?? value.unit;
+      return `${label} = ${value.value}${unit ? ` ${unit}` : ""}`;
+    })
     .join("; ");
 };
 
