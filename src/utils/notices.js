@@ -1,5 +1,10 @@
-export const NOTICE_SCHEMA_VERSION = "1.0.0";
-export const NOTICE_PACK_SCHEMA_VERSION = "1.0.0";
+import {
+  normalizeContentScope,
+  validateContentScope,
+} from "./content-scope.js";
+
+export const NOTICE_SCHEMA_VERSION = "2.0.0";
+export const NOTICE_PACK_SCHEMA_VERSION = "2.0.0";
 export const NOTICE_STATUSES = ["draft", "review", "published", "archived"];
 export const NOTICE_CATEGORIES = [
   "Curso",
@@ -77,6 +82,7 @@ export const normalizeNotice = (notice, { status = notice?.status ?? "draft" } =
   schemaVersion: NOTICE_SCHEMA_VERSION,
   id: String(notice?.id ?? "").trim(),
   version: Number.isInteger(notice?.version) ? notice.version : 1,
+  scope: normalizeContentScope(notice?.scope),
   title: String(notice?.title ?? "").trim(),
   summary: String(notice?.summary ?? "").trim(),
   content: String(notice?.content ?? "").trim(),
@@ -94,6 +100,8 @@ export const validateNotice = (notice, { existingIds = [] } = {}) => {
   require(/^notice-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$/.test(notice?.id ?? ""), "ID de aviso inválido.");
   require(!new Set(existingIds).has(notice?.id), "El ID del aviso ya existe.");
   require(Number.isInteger(notice?.version) && notice.version >= 1, "La versión debe ser un entero positivo.");
+  const scopeValidation = validateContentScope(notice?.scope);
+  scopeValidation.errors.forEach((error) => errors.push(`Ámbito: ${error}`));
   require(validText(notice?.title), "Falta el título.");
   require(validText(notice?.summary), "Falta el resumen.");
   require(validText(notice?.content), "Falta el contenido.");
@@ -117,10 +125,11 @@ export const sortNoticesByDate = (notices) => [...notices].sort((first, second) 
 
 export const selectHomepageNotices = (notices, limit = 3) => {
   const sorted = sortNoticesByDate(notices);
+  const unique = [...new Map(sorted.map((notice) => [notice.id, notice])).values()];
   return [
-    ...sorted.filter((notice) => notice.featured),
-    ...sorted.filter((notice) => !notice.featured),
-  ].slice(0, Math.max(0, limit));
+    ...unique.filter((notice) => notice.featured),
+    ...unique.filter((notice) => !notice.featured),
+  ].slice(0, Number.isInteger(limit) ? Math.max(0, limit) : 0);
 };
 
 export const createNoticePack = (
@@ -145,16 +154,24 @@ export const createNoticePack = (
 export const validateNoticePack = (pack, { existingIds = [] } = {}) => {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
-  require(pack?.schemaVersion === NOTICE_PACK_SCHEMA_VERSION, "schemaVersion de paquete inválida.");
+  const isLegacyPack = typeof pack?.schemaVersion === "string" && /^1(?:\.|$)/.test(pack.schemaVersion);
+  require(
+    pack?.schemaVersion === NOTICE_PACK_SCHEMA_VERSION,
+    isLegacyPack
+      ? "Los paquetes 1.x no son compatibles: deben regenerarse con un ámbito explícito."
+      : "schemaVersion de paquete inválida."
+  );
   require(/^notice-pack-[0-9a-f]{16}$/.test(pack?.packageId ?? ""), "packageId inválido.");
   const createdDate = new Date(pack?.createdAt);
   require(validText(pack?.createdAt) && !Number.isNaN(createdDate.valueOf()) &&
     createdDate.toISOString() === pack.createdAt, "createdAt debe usar ISO 8601.");
   require(pack?.source === "teacher", "La fuente del paquete debe ser teacher.");
   require(Array.isArray(pack?.notices) && pack.notices.length > 0, "El paquete no contiene avisos.");
-  const ids = pack?.notices?.map((notice) => notice.id) ?? [];
+  const ids = Array.isArray(pack?.notices)
+    ? pack.notices.map((notice) => notice.id)
+    : [];
   require(new Set(ids).size === ids.length, "El paquete contiene IDs duplicados.");
-  pack?.notices?.forEach((notice, index) => {
+  if (Array.isArray(pack?.notices)) pack.notices.forEach((notice, index) => {
     const validation = validateNotice(notice, { existingIds });
     validation.errors.forEach((error) => errors.push(`Aviso ${index + 1}: ${error}`));
     require(notice?.status === "draft", `Aviso ${index + 1}: el paquete solo admite estado draft.`);

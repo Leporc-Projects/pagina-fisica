@@ -13,9 +13,18 @@ import {
   SCHEDULE,
   UNITS,
 } from "../src/data/course.js";
+import {
+  COURSES,
+  COURSE_IDS,
+  getActiveCourses,
+  getCourseById,
+} from "../src/data/courses.js";
 import { HOME_LINKS, NAV, SITE } from "../src/data/site.js";
 import {
   NOTICES,
+  getCourseNotices,
+  getGlobalNotices,
+  getHomepageNotices,
   getPublishedNotices,
 } from "../src/data/notices.js";
 import { BONUSES } from "../src/data/bonuses/index.js";
@@ -86,9 +95,12 @@ import { auditAllBonusBlueprints } from "../src/utils/bonus-audit.js";
 import { validateFamilyDefinition } from "../src/utils/exercise-families.js";
 import {
   NOTICE_CATEGORIES,
+  NOTICE_PACK_SCHEMA_VERSION,
+  NOTICE_SCHEMA_VERSION,
   NOTICE_STATUSES,
   validateNotice,
 } from "../src/utils/notices.js";
+import { validateContentScope } from "../src/utils/content-scope.js";
 
 const projectRoot = fileURLToPath(
   new URL("../", import.meta.url)
@@ -235,6 +247,16 @@ check(
 );
 
 check(
+  duplicates(COURSES.map((course) => course.id)).length === 0 &&
+    duplicates(COURSES.map((course) => course.href)).length === 0 &&
+    COURSE_IDS.PHYSICS_BASIC_1 === "fisica-basica-1" &&
+    getCourseById(COURSE.id)?.name === COURSE.name &&
+    getCourseById(COURSE.id)?.href === COURSE.href &&
+    getActiveCourses().some((course) => course.id === COURSE.id),
+  "El registro de cursos conserva IDs, rutas e identidad canónica sin duplicados."
+);
+
+check(
   NAV.map((item) => item.label).join("|") ===
     ["Inicio", COURSE.name, "Simulaciones", "Avisos"].join("|"),
   "La navegación global contiene solo las cuatro secciones vigentes."
@@ -244,6 +266,7 @@ check(
   COURSE_NAV.map((item) => item.label).join("|") ===
     [
       "Curso",
+      "Avisos",
       "Cronograma",
       "Unidades y apuntes",
       "Ejercicios y tutorías",
@@ -255,7 +278,7 @@ check(
     ].join("|") &&
     COURSE_NAV.at(-1)?.href === "/fisica-basica-1/participa" &&
     COURSE_NAV.at(-1)?.includeInGlobalMenu === false,
-  "La navegación interna incluye Participa y la excluye del menú global."
+  "La navegación interna incluye Avisos tras la raíz y mantiene Participa fuera del menú global."
 );
 
 check(
@@ -434,6 +457,14 @@ check(
 );
 
 check(
+  NOTICE_SCHEMA_VERSION === "2.0.0" &&
+    NOTICE_PACK_SCHEMA_VERSION === "2.0.0" &&
+    NOTICES.every((notice) => notice.schemaVersion === NOTICE_SCHEMA_VERSION) &&
+    NOTICES.every((notice) => validateContentScope(notice.scope).valid),
+  "Avisos y paquetes usan el esquema 2.0.0 con ámbito explícito válido."
+);
+
+check(
   NOTICE_STATUSES.join(",") === "draft,review,published,archived" &&
     !NOTICE_STATUSES.includes("new") &&
     NOTICE_CATEGORIES.length === 5,
@@ -444,6 +475,39 @@ check(
   getPublishedNotices().every((notice) => notice.status === "published") &&
     getPublishedNotices().length === NOTICES.filter((notice) => notice.status === "published").length,
   "La consulta pública de avisos excluye draft, review y archived."
+);
+
+const homepageNotices = getHomepageNotices(3);
+const firstHomepageRegular = homepageNotices.findIndex((notice) => !notice.featured);
+
+check(
+  getGlobalNotices().every((notice) => notice.scope.type === "global") &&
+    getCourseNotices(COURSE.id).every(
+      (notice) => notice.scope.type === "course" && notice.scope.courseId === COURSE.id
+    ) &&
+    homepageNotices.length <= 3 &&
+    homepageNotices.every((notice) => notice.status === "published") &&
+    new Set(homepageNotices.map((notice) => notice.id)).size === homepageNotices.length &&
+    (firstHomepageRegular < 0 || homepageNotices
+      .slice(firstHomepageRegular)
+      .every((notice) => !notice.featured)),
+  "Las consultas separan ámbitos y la portada prioriza destacados sin duplicar ni exceder tres avisos."
+);
+
+const generalMigratedNotice = NOTICES.find(
+  (notice) => notice.title === "¿Cómo sabemos cuanto mide un segundo?"
+);
+const courseMigratedNotice = NOTICES.find(
+  (notice) => notice.title === "Universo Mecánico: la caída de los cuerpos"
+);
+
+check(
+  generalMigratedNotice?.scope.type === "global" &&
+    courseMigratedNotice?.scope.type === "course" &&
+    courseMigratedNotice?.scope.courseId === COURSE.id &&
+    courseMigratedNotice?.featured === true &&
+    courseMigratedNotice?.status === "published",
+  "Los dos avisos existentes conservan la migración editorial de ámbito aprobada."
 );
 
 check(
@@ -1475,6 +1539,18 @@ const noticeEditorComponent = fs.readFileSync(
   path.join(projectRoot, "src/components/notices/NoticeEditor.astro"),
   "utf8"
 );
+const noticeCardSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/NoticeCard.astro"),
+  "utf8"
+);
+const generalNoticesPageSource = fs.readFileSync(
+  path.join(projectRoot, "src/pages/avisos.astro"),
+  "utf8"
+);
+const courseNoticesPageSource = fs.readFileSync(
+  path.join(projectRoot, "src/pages/fisica-basica-1/avisos.astro"),
+  "utf8"
+);
 const publicPageSource = pageFiles
   .map((file) => fs.readFileSync(file, "utf8"))
   .join("\n");
@@ -1485,8 +1561,21 @@ check(
     !noticeEditorSource.includes("localStorage") &&
     noticeEditorSource.includes("textContent") &&
     noticeEditorComponent.includes('name="title"') &&
-    noticeEditorComponent.includes('name="publishedAt"'),
+    noticeEditorComponent.includes('name="publishedAt"') &&
+    noticeEditorComponent.includes('name="scope"') &&
+    noticeEditorComponent.includes("COURSES.map") &&
+    noticeEditorSource.includes("contentScopeLabel"),
   "El Editor de avisos usa texto seguro, no envía datos y expone campos accesibles."
+);
+
+check(
+  generalNoticesPageSource.includes("getGlobalNotices") &&
+    courseNoticesPageSource.includes("getCourseNotices(COURSE.id)") &&
+    courseNoticesPageSource.includes('withBase("/avisos")') &&
+    noticeCardSource.includes("href &&") &&
+    noticeCardSource.includes('rel={external ? "noopener noreferrer"') &&
+    !noticeCardSource.includes("!compact && href"),
+  "Las rutas de avisos separan ámbitos y NoticeCard conserva enlaces seguros en modo compacto."
 );
 
 check(

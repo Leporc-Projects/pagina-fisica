@@ -29,6 +29,14 @@ try {
   process.exit(1);
 }
 
+if (typeof pack?.schemaVersion === "string" && /^1(?:\.|$)/.test(pack.schemaVersion)) {
+  console.error(
+    "El paquete fue rechazado: los paquetes 1.x no declaran ámbito. " +
+    "Ábrelo de nuevo en el editor vigente y elige dónde publicar cada aviso."
+  );
+  process.exit(1);
+}
+
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const targetPath = targetArgument
   ? path.resolve(process.cwd(), targetArgument)

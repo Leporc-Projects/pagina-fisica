@@ -1,0 +1,55 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
+import NoticeCard from "../../components/NoticeCard.astro";
+import { COURSE } from "../../data/course.js";
+import { getCourseNotices } from "../../data/notices.js";
+import { withBase } from "../../utils/paths.js";
+
+const notices = getCourseNotices(COURSE.id);
+---
+
+<BaseLayout
+  title={`Avisos · ${COURSE.name}`}
+  description={`Actualizaciones publicadas para ${COURSE.name}.`}
+>
+  <article class="course-subpage">
+    <CoursePageHeader
+      title="Avisos del curso"
+      description={`Información, materiales y cambios que corresponden específicamente a ${COURSE.name}.`}
+    />
+
+    <section class="course-section" aria-labelledby="course-notices-title">
+      <header class="course-section__header">
+        <div>
+          <p class="course-section__index">Actualizaciones</p>
+          <h2 id="course-notices-title">Archivo de {COURSE.name}</h2>
+        </div>
+        <div class="course-section__body">
+          <p>Los avisos se presentan del más reciente al más antiguo.</p>
+          <a class="notice-context-link" href={withBase("/avisos")}>
+            Ver avisos generales de Aula Física
+          </a>
+        </div>
+      </header>
+
+      {
+        notices.length === 0
+          ? (
+            <div class="empty-state">
+              <p class="empty-state__label">Estado actual</p>
+              <h3>No hay avisos publicados para este curso.</h3>
+              <p>Las novedades generales siguen disponibles en Aula Física.</p>
+            </div>
+          )
+          : (
+            <div class="notice-list notice-list--archive">
+              {notices.map((notice) => (
+                <NoticeCard notice={notice} idPrefix="course-notice-title" />
+              ))}
+            </div>
+          )
+      }
+    </section>
+  </article>
+</BaseLayout>

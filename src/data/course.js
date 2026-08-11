@@ -3,13 +3,21 @@
 // plan clase a clase 2026-2. Las páginas consumen estas exportaciones para no
 // repetir información ni introducir versiones contradictorias.
 
+import { COURSE_IDS, getCourseById } from "./courses.js";
+
+const courseIdentity = getCourseById(COURSE_IDS.PHYSICS_BASIC_1);
+
+if (!courseIdentity) {
+    throw new Error("Física Básica I no está registrada en src/data/courses.js.");
+}
+
 /**
  * Identidad, carga académica y resultados estables del curso.
  * La consumen las cabeceras y las páginas académicas. No debe incorporar
  * contacto, oficina, horarios ni información del profesor del taller.
  */
 export const COURSE = {
-    name: "Física Básica I",
+    ...courseIdentity,
     code: "0302270",
     semester: "2026-2",
     group: "2",
@@ -54,7 +62,11 @@ export const COURSE = {
 export const COURSE_NAV = [
     {
         label: "Curso",
-        href: "/fisica-basica-1",
+        href: COURSE.href,
+    },
+    {
+        label: "Avisos",
+        href: `${COURSE.href}/avisos`,
     },
     {
         label: "Cronograma",

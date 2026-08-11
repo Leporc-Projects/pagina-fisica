@@ -1,8 +1,11 @@
 [
   {
-    "schemaVersion": "1.0.0",
+    "schemaVersion": "2.0.0",
     "id": "notice-2026-08-10-0a4c10d40778",
     "version": 1,
+    "scope": {
+      "type": "global"
+    },
     "title": "¿Cómo sabemos cuanto mide un segundo?",
     "summary": "Les comparto este video porque me pareció interesante y creo que vale la pena verlo.",
     "content": "Muchachos, les recomiendo este video. No es necesario verlo como parte de una tarea; simplemente me pareció bacano y creo que puede despertar algunas ideas o preguntas interesantes alrededor de la física. Si tienen un rato, échenle una miradita.",
@@ -13,9 +16,13 @@
     "status": "published"
   },
   {
-    "schemaVersion": "1.0.0",
+    "schemaVersion": "2.0.0",
     "id": "notice-2026-08-10-db5501b8e261",
     "version": 1,
+    "scope": {
+      "type": "course",
+      "courseId": "fisica-basica-1"
+    },
     "title": "Universo Mecánico: la caída de los cuerpos",
     "summary": "Para complementar lo que estamos viendo en el curso, les recomiendo el segundo capítulo de Universo Mecánico sobre la caída de los cuerpos.",
     "content": "Muchachos, este sí se los recomiendo especialmente para acompañar lo que estamos trabajando. Es el segundo capítulo de Universo Mecánico y gira alrededor de la caída de los cuerpos, Galileo, la aceleración y la forma en que se fue entendiendo matemáticamente el movimiento. Si pueden, véanlo con calma; conecta muy bien con varios conceptos de esta unidad.",

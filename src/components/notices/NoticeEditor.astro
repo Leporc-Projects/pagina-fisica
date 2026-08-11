@@ -1,5 +1,9 @@
 ---
-import { NOTICE_CATEGORIES } from "../../utils/notices.js";
+import {
+  NOTICE_CATEGORIES,
+  NOTICE_PACK_SCHEMA_VERSION,
+} from "../../utils/notices.js";
+import { COURSES } from "../../data/courses.js";
 ---
 
 <section class="notice-editor" data-notice-editor aria-labelledby="notice-editor-title">
@@ -34,6 +38,16 @@ import { NOTICE_CATEGORIES } from "../../utils/notices.js";
       <legend>Publicación editorial</legend>
       <div class="notice-editor__grid">
         <label>
+          <span>Publicar en</span>
+          <select name="scope" required>
+            {COURSES.map((course) => (
+              <option value={course.id}>{course.name}</option>
+            ))}
+            <option value="global">Aula Física · avisos generales</option>
+          </select>
+          <small>El ámbito decide en qué archivo público aparecerá.</small>
+        </label>
+        <label>
           <span>Categoría</span>
           <select name="category" required>
             {NOTICE_CATEGORIES.map((category) => <option value={category}>{category}</option>)}
@@ -62,6 +76,7 @@ import { NOTICE_CATEGORIES } from "../../utils/notices.js";
       </label>
       <div class="notice-editor__generated" aria-label="Metadatos automáticos">
         <span>Estado inicial: <strong>draft</strong></span>
+        <span>Esquema: <strong>{NOTICE_PACK_SCHEMA_VERSION}</strong></span>
         <span>ID y versiones: <strong>automáticos</strong></span>
       </div>
     </fieldset>

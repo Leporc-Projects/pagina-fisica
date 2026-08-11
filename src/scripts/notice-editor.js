@@ -7,6 +7,7 @@ import {
   validateNotice,
   validateNoticePack,
 } from "../utils/notices.js";
+import { contentScopeLabel } from "../utils/content-scope.js";
 import { SITE } from "../data/site.js";
 import { withBase } from "../utils/paths.js";
 import { downloadLocalFile } from "./local-export.js";
@@ -20,6 +21,9 @@ const create = (tag, text, className) => {
 };
 
 const readDraft = (form, id) => createNoticeDraft({
+  scope: fieldValue(form, "scope") === "global"
+    ? { type: "global" }
+    : { type: "course", courseId: fieldValue(form, "scope") },
   title: fieldValue(form, "title"),
   summary: fieldValue(form, "summary"),
   content: fieldValue(form, "content"),
@@ -44,7 +48,7 @@ const renderPreview = (panel, notice) => {
   card.replaceChildren();
 
   const meta = create("div", undefined, "notice-meta");
-  meta.append(create("span", notice.category));
+  meta.append(create("span", `${notice.category} · ${contentScopeLabel(notice.scope)}`));
   const time = create("time", new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateString(SITE.locale, {
     day: "2-digit", month: "long", year: "numeric",
   }));
@@ -122,7 +126,10 @@ export const initializeNoticeEditor = () => {
     list.replaceChildren();
     notices.forEach((notice, index) => {
       const item = create("li");
-      item.append(create("span", `${notice.title} · ${notice.category}`));
+      item.append(create(
+        "span",
+        `${notice.title} · ${notice.category} · ${contentScopeLabel(notice.scope)}`
+      ));
       const remove = create("button", "Quitar");
       remove.type = "button";
       remove.addEventListener("click", () => {

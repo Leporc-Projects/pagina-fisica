@@ -1,9 +1,16 @@
 ---
 import { SITE } from "../data/site.js";
+import { contentScopeLabel } from "../utils/content-scope.js";
 import { noticeHrefForRender, validateNoticeHref } from "../utils/notices.js";
 import { withBase } from "../utils/paths.js";
 
-const { notice, headingLevel = "h3", compact = false, idPrefix = "notice" } = Astro.props;
+const {
+  notice,
+  headingLevel = "h3",
+  compact = false,
+  idPrefix = "notice",
+  showScope = false,
+} = Astro.props;
 const Heading = headingLevel;
 const titleId = `${idPrefix}-${notice.id}`;
 const hrefValidation = validateNoticeHref(notice.href);
@@ -17,7 +24,10 @@ const formattedDate = new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateStr
 
 <article class="notice-entry" id={compact ? undefined : notice.id} aria-labelledby={titleId}>
   <div class="notice-meta">
-    <span>{notice.category}</span>
+    <span>
+      {notice.category}
+      {showScope ? ` · ${contentScopeLabel(notice.scope)}` : ""}
+    </span>
     <time datetime={notice.publishedAt}>{formattedDate}</time>
   </div>
 

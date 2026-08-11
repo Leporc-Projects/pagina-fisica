@@ -162,12 +162,18 @@ const recentNotices = getHomepageNotices(3);
 
           <div class="notice-list">
             {recentNotices.map((notice) => (
-              <NoticeCard notice={notice} compact idPrefix="home-notice" />
+              <NoticeCard notice={notice} compact showScope idPrefix="home-notice" />
             ))}
-            <a class="notice-list__more" href={withBase("/avisos")}>
-              Consultar todos los avisos
-              <span aria-hidden="true">→</span>
-            </a>
+            <div class="notice-list__links" aria-label="Archivos de avisos">
+              <a class="notice-list__more" href={withBase("/avisos")}>
+                Avisos generales
+                <span aria-hidden="true">→</span>
+              </a>
+              <a class="notice-list__more" href={withBase(`${COURSE.href}/avisos`)}>
+                Avisos de {COURSE.name}
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
           </div>
         </div>
       </section>

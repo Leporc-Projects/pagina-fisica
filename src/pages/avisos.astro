@@ -3,25 +3,25 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import NoticeCard from "../components/NoticeCard.astro";
-import { getPublishedNotices } from "../data/notices.js";
+import { getGlobalNotices } from "../data/notices.js";
 
-const notices = getPublishedNotices();
+const notices = getGlobalNotices();
 ---
 
 <BaseLayout
-  title="Avisos"
-  description="Actualizaciones públicas de Aula Física."
+  title="Avisos generales"
+  description="Actualizaciones generales de Aula Física."
 >
   <PageHeader
-    eyebrow="Actualizaciones"
-    title="Avisos"
-    description="Información académica y cambios de disponibilidad del curso."
+    eyebrow="Actualizaciones generales"
+    title="Avisos de Aula Física"
+    description="Información general del sitio, novedades y recursos compartidos más allá de un curso particular."
   />
 
   <!-- Mantiene un estado vacío válido si la fuente editorial no tiene registros. -->
   <section class="page-section" aria-labelledby="notice-archive-title">
     <div class="section-heading">
-      <h2 id="notice-archive-title">Archivo de avisos</h2>
+      <h2 id="notice-archive-title">Archivo general</h2>
       <p>Los avisos se presentan del más reciente al más antiguo.</p>
       <div class="section-divider" aria-hidden="true"></div>
     </div>
@@ -31,7 +31,7 @@ const notices = getPublishedNotices();
         ? (
           <div class="empty-state">
             <p class="empty-state__label">Estado actual</p>
-            <h3>No hay avisos publicados en este momento.</h3>
+            <h3>No hay avisos generales publicados en este momento.</h3>
           </div>
         )
         : (
