@@ -8,6 +8,9 @@ import {
   SCHEDULE,
   SCHEDULE_TYPES,
 } from "../../data/course.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
+
+const { locale = "es" } = Astro.props;
 
 type ScheduleEntry = (typeof SCHEDULE)[number];
 
@@ -90,11 +93,14 @@ const eventsCount = SCHEDULE.filter(
 <BaseLayout
   title={`Cronograma · ${COURSE.name}`}
   description={`Cronograma académico de ${COURSE.name} para el semestre ${COURSE.semester}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_SCHEDULE}
 >
   <article class="course-subpage">
     <CoursePageHeader
       title="Cronograma"
       description={`Plan de clases, repasos, evaluaciones y eventos académicos del semestre ${COURSE.semester}.`}
+      locale={locale}
     />
 
     <!-- Las métricas se derivan de SCHEDULE para que nunca se desfasen del calendario. -->

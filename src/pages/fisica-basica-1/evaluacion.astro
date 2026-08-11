@@ -2,9 +2,12 @@
 // Presentación pública de EVALUATION y del contrato de privacidad de las notas.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
-import { COURSE, EVALUATION } from "../../data/course.js";
+import { localizeCourseData } from "../../data/course-localize.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
+const { locale = "es" } = Astro.props;
+const { COURSE, EVALUATION } = localizeCourseData(locale);
 const totalPercentage = EVALUATION.reduce(
   (total, item) => total + item.percentage,
   0
@@ -14,11 +17,14 @@ const totalPercentage = EVALUATION.reduce(
 <BaseLayout
   title={`Evaluación y notas · ${COURSE.name}`}
   description={`Sistema de evaluación y principios de privacidad de ${COURSE.name}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_ASSESSMENT}
 >
   <article class="course-subpage">
     <CoursePageHeader
       title="Evaluación y notas"
       description="Componentes oficiales de evaluación y principios para el tratamiento local y privado de la información."
+      locale={locale}
     />
 
     <!-- El total se calcula desde la fuente oficial y también lo comprueba validate.mjs. -->

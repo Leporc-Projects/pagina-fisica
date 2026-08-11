@@ -1,6 +1,7 @@
 ---
 // Presenta retroalimentación editorial por ID estable sin convertirla en Bono.
 import RichText from "./RichText.astro";
+import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -15,20 +16,18 @@ interface CommonError {
 interface Props {
   errors: CommonError[];
   present?: (value: string) => RichContent;
+  locale?: "es" | "en";
 }
 
-const { errors, present = (value) => value } = Astro.props;
+const { errors, present = (value) => value, locale = "es" } = Astro.props;
 ---
 
 {errors.length > 0 && (
   <section class="common-errors" aria-labelledby="common-errors-title">
     <header>
-      <p class="academic-label">Revisión conceptual</p>
-      <h2 id="common-errors-title">Errores frecuentes</h2>
-      <p>
-        Cada advertencia incluye una forma concreta de revisar el razonamiento,
-        no solo una marca de respuesta incorrecta.
-      </p>
+      <p class="academic-label">{t(locale, "academic.conceptReview")}</p>
+      <h2 id="common-errors-title">{t(locale, "academic.commonErrors")}</h2>
+      <p>{t(locale, "academic.commonErrorsDescription")}</p>
     </header>
 
     <div class="common-errors__list">

@@ -1,0 +1,156 @@
+// Only linguistic paths live here; geometry, scales, series values, and IDs stay
+// in visualizations.js and are never duplicated by locale.
+export default Object.freeze({
+  "vector-components": {
+    explanation: "Vector A does not change when it is decomposed: Aₓ and Aᵧ are signed projections on the chosen axes and form the same resultant displacement.",
+    "props.title": "Vector A and its Cartesian components",
+    "props.description": "Vector A starts at the origin and ends in the first quadrant. Component A x is horizontal and component A y completes the vector vertically.",
+    "props.vectors.1.ariaLabel": "x component of A",
+    "props.vectors.2.ariaLabel": "y component of A",
+  },
+  "vector-sum": {
+    explanation: "The head-to-tail rule preserves each vector. The resultant A+B connects the first vector's origin to the second vector's head.",
+    "props.title": "Geometric sum of vectors A and B",
+    "props.description": "A starts at the origin. B starts at the head of A. The resultant A plus B connects the origin to the final head.",
+  },
+  "dot-projection": {
+    explanation: "The projection of A onto the direction of B measures the part of A aligned with B. The dot product multiplies this projection by the magnitude of B.",
+    "props.title": "Dot product interpreted as a projection",
+    "props.description": "Vector B lies on the horizontal axis. Vector A forms an acute angle, and a perpendicular guide shows its projection onto B.",
+    "props.vectors.2.label": "proj_B A",
+    "props.vectors.2.mathLabel.base": "proj",
+    "props.vectors.2.ariaLabel": "projection of A onto B",
+  },
+  "position-time": {
+    relationLabel: "x(t) — its slope is v(t)",
+    explanation: "The position curve becomes progressively steeper: velocity is positive and increases with time.",
+    "props.title": "Position as a function of time",
+    "props.description": "Curve x of t equals one plus two t plus one half t squared between zero and five seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Position",
+  },
+  "velocity-time": {
+    relationLabel: "v(t) — slope: a; signed area: Δx",
+    explanation: "Velocity increases linearly. Its constant slope is 1 m/s², and the accumulated signed area equals the displacement.",
+    "props.title": "Velocity as a function of time",
+    "props.description": "Line v of t equals two plus t between zero and five seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Velocity",
+  },
+  "acceleration-time": {
+    relationLabel: "a(t) — its signed area is Δv",
+    explanation: "Acceleration is constant and positive. The rectangle's area between two instants represents the increase in velocity over that interval.",
+    "props.title": "Acceleration as a function of time",
+    "props.description": "Horizontal line at an acceleration of one metre per second squared between zero and five seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Acceleration",
+  },
+  "constant-acceleration": {
+    explanation: "Velocity v(t)=4−1.2t crosses zero: the positive area before the crossing contributes displacement toward +x, while the later area contributes displacement toward −x.",
+    "props.title": "Velocity with constant acceleration and a change of direction",
+    "props.description": "A velocity line starts positive, crosses zero, and becomes negative. The areas on either side of the axis have opposite signs.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Velocity",
+  },
+  "free-fall-position": {
+    relationLabel: "y(t) during a vertical launch",
+    explanation: "Height increases until the slope becomes zero and then decreases. The downward concavity reflects aᵧ = −g throughout the interval.",
+    "props.title": "Height of an ideal vertical launch",
+    "props.description": "A height parabola rises from eighteen metres, reaches a maximum, and returns to the ground with constant negative vertical acceleration.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Height",
+  },
+  "free-fall-velocity": {
+    relationLabel: "vᵧ(t) under gravitational acceleration",
+    explanation: "Vertical velocity decreases linearly. It crosses zero at maximum height, but its slope remains −g.",
+    "props.title": "Vertical velocity of an ideal launch",
+    "props.description": "A line with negative slope starts at six metres per second, crosses zero, and then becomes negative.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Vertical velocity", "props.references.0.label": "maximum height",
+  },
+  "projectile-motion": {
+    explanation: "Each point corresponds to the same time in x and y. Uniform horizontal spacing reflects constant vₓ; vertical curvature reflects aᵧ = −g.",
+    "props.title": "Trajectory of an ideal projectile",
+    "props.description": "A parabolic trajectory starts at the ground and returns to it, with points advancing at equal time intervals.",
+    "props.xAxis.label": "Horizontal position", "props.yAxis.label": "Height", "props.series.0.label": "Trajectory", "props.references.0.label": "ground",
+  },
+  "circular-motion": {
+    explanation: "Velocity is tangent to the circle. Radial acceleration is perpendicular to velocity and points toward the centre, even when speed is constant.",
+    "props.title": "Tangential velocity and radial acceleration",
+    "props.description": "A particle is in the first quadrant of a circle. Its velocity is tangent and its acceleration points toward the centre.",
+    "props.circles.0.label": "circular path", "props.vectors.0.label": "tangent v", "props.vectors.1.ariaLabel": "radial acceleration", "props.points.0.label": "particle", "props.points.1.label": "centre",
+  },
+  "relative-velocity": {
+    explanation: "The head-to-tail construction represents v_A/C = v_A/B + v_B/C. The labels retain object and frame to avoid adding ambiguous quantities.",
+    "props.title": "Composition of relative velocities",
+    "props.description": "Two relative velocities are placed head to tail and produce a resultant velocity between the first object and the final frame.",
+    "props.vectors.0.ariaLabel": "velocity of A relative to B", "props.vectors.1.ariaLabel": "velocity of B relative to C", "props.vectors.2.ariaLabel": "velocity of A relative to C",
+  },
+  "polar-basis": {
+    explanation: "r̂ points from the origin toward the particle and θ̂ is perpendicular in the direction of increasing θ. Both unit vectors rotate when the angle changes.",
+    "props.title": "Radial and transverse basis in polar coordinates",
+    "props.description": "A particle lies on a ray at forty-five degrees. The radial unit vector points outward and the transverse unit vector is perpendicular.",
+    "props.curves.0.label": "theta angle",
+  },
+  "exercise-position-slope": {
+    explanation: "The required information is in the axes and line; the prompt does not repeat their coordinates.",
+    "props.title": "Position-versus-time line", "props.description": "A position-versus-time graph: a line descends from two metres at zero seconds to minus four metres at three seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Position",
+  },
+  "vis-position-segments": {
+    relationLabel: "The slope of each x(t) segment represents its velocity.",
+    explanation: "Read coordinates and slopes directly from the polyline before distinguishing net change from total path length.",
+    "props.title": "Piecewise position", "props.description": "Position goes from zero metres at zero seconds to four metres at two seconds, remains at four metres until five seconds, and ends at minus two metres at seven seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Position",
+  },
+  "vis-velocity-areas": {
+    relationLabel: "Slope: acceleration. Signed area: displacement.",
+    explanation: "The segment below the axis contributes negative displacement; add its magnitude when calculating distance.",
+    "props.title": "Piecewise velocity and areas", "props.description": "Velocity passes through zero, four, four, zero, and minus two metres per second at times zero, two, five, seven, and nine seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Velocity",
+  },
+  "vis-vector-grid": {
+    explanation: "The grid is the source of the components; no numerical values are shown beside the arrow.",
+    "props.title": "Vector A on a Cartesian grid", "props.description": "A vector starts at the origin and ends three units to the left and four units upward.",
+  },
+  "vis-vector-sum-grid": {
+    explanation: "Both arrows retain their components in the head-to-tail translation; the resultant is left for the student.",
+    "props.title": "Head-to-tail construction of A plus B", "props.description": "A goes from the origin to the point four comma one. From there B moves one unit left and three units up. The resultant is not drawn.",
+  },
+  "vis-projectile-strobe": {
+    explanation: "The markers correspond to equal time intervals; the figure does not draw vectors that would reveal the answers.",
+    "props.title": "Projectile positions at equal times", "props.description": "Eleven horizontally equidistant positions form a parabolic path from the ground back to the ground.",
+    "props.xAxis.label": "Horizontal position", "props.yAxis.label": "Height", "props.series.0.label": "Positions",
+  },
+  "vis-circular-directions": {
+    explanation: "The circle and point establish the geometry; the velocity and acceleration arrows that the student must infer are not drawn.",
+    "props.title": "Particle in counterclockwise circular motion", "props.description": "A circle with its centre marked and a particle at a point in the first quadrant. Motion is stated to be counterclockwise.",
+    "props.circles.0.label": "circular path", "props.points.0.label": "particle", "props.points.1.label": "centre", "props.annotations.0.label": "counterclockwise",
+  },
+  "vis-boat-current": {
+    explanation: "The construction separates velocity relative to the water, current, and velocity relative to the ground through object and frame.",
+    "props.title": "Vector composition of boat and current", "props.description": "The current points east. The boat's velocity relative to the water points northwest, and the resultant relative to the ground points due north.",
+    "props.vectors.0.label": "boat/water", "props.vectors.0.ariaLabel": "boat velocity relative to water, 2.5 metres per second", "props.vectors.1.label": "current 1.5 m/s", "props.vectors.2.label": "relative to ground",
+  },
+  "vis-vertical-launch-velocity": {
+    relationLabel: "The signed area under v(t) represents displacement.",
+    explanation: "The line and axes contain the velocity law; the prompt does not provide it as the main expression.",
+    "props.title": "Velocity of a vertical launch", "props.description": "Velocity decreases linearly from twenty metres per second at zero seconds to minus twenty metres per second at four seconds and crosses zero at two seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Vertical velocity",
+  },
+  "vis-elevator-profile": {
+    relationLabel: "Slope indicates acceleration; area indicates displacement.",
+    explanation: "The profile distinguishes acceleration, constant-speed travel, and braking without giving the area decomposition.",
+    "props.title": "Elevator velocity profile", "props.description": "Velocity increases linearly from zero to two metres per second between zero and two seconds, stays constant until eight seconds, and falls to zero at ten seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Velocity",
+  },
+  "vis-stroboscopic-spacing": {
+    explanation: "Each mark corresponds to one additional second; use the sequence's geometry as the source of information.",
+    "props.title": "Stroboscopic positions on the x axis", "props.description": "Five positions at zero, one, three, six, and ten metres, taken at one-second intervals, show increasing spacing to the right.",
+  },
+  "vis-acceleration-segments": {
+    relationLabel: "The signed area under a(t) is the change in velocity.",
+    explanation: "The jumps separate three constant-acceleration intervals; the initial velocity must be combined with the accumulated areas.",
+    "props.title": "Piecewise acceleration", "props.description": "Acceleration is two metres per second squared from zero to two seconds, zero from two to five, and minus one from five to nine seconds.",
+    "props.xAxis.label": "Time", "props.yAxis.label": "Acceleration",
+  },
+  "vis-parametric-trajectory": {
+    explanation: "The curve preserves physical scale in x and y; its local orientation is interpreted through its tangent, not by distorting the viewBox.",
+    "props.title": "Parametric trajectory in the plane", "props.description": "A parabolic trajectory starts at the origin, reaches the point four comma four at two seconds, and ends on the x axis at eight metres after four seconds.",
+    "props.curves.0.label": "trajectory r of t",
+  },
+});

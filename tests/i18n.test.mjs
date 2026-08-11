@@ -72,7 +72,7 @@ test("las rutas bilingües son humanas, reversibles y no crean prefijo /es", () 
   assert.equal(getRouteIdFromPath("/en/simulations/projectile-2d/"), ROUTE_IDS.PROJECTILE_2D);
   assert.equal(getRouteCounterpart("/simulaciones/proyectil-2d", "en"), "/en/simulations/projectile-2d");
   assert.equal(getRouteCounterpart("/en/simulations/projectile-2d", "es"), "/simulaciones/proyectil-2d");
-  assert.equal(getRouteCounterpart("/fisica-basica-1", "en"), null);
+  assert.equal(getRouteCounterpart("/fisica-basica-1", "en"), "/en/basic-physics-1");
   assert.ok(Object.values(LOCALIZED_ROUTES).every((routes) => !String(routes.es).startsWith("/es")));
 });
 

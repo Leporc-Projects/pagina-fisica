@@ -655,7 +655,7 @@ check(
   requiredLocalizedRoutes.every((route) => routes.has(route)) &&
     !requiredLocalizedRoutes.some((route) => route.startsWith("/es/")) &&
     getRouteCounterpart("/simulaciones/cinematica-1d", "en") === "/en/simulations/kinematics-1d" &&
-    getRouteCounterpart("/fisica-basica-1", "en") === null &&
+    getRouteCounterpart("/fisica-basica-1", "en") === "/en/basic-physics-1" &&
     getLanguageMetadata("en", ROUTE_IDS.PROJECTILE_2D).canonicalPath === "/en/simulations/projectile-2d",
   "Las rutas bilingües, contrapartes y metadatos existen sin publicar un prefijo /es."
 );
@@ -674,7 +674,8 @@ check(
   NOTICE_SCHEMA_VERSION === "3.0.0" &&
     NOTICE_PACK_SCHEMA_VERSION === "3.0.0" &&
     NOTICES.every((notice) => notice.schemaVersion === NOTICE_SCHEMA_VERSION) &&
-    NOTICES.every((notice) => notice.locale === "es") &&
+    NOTICES.some((notice) => notice.locale === "es") &&
+    NOTICES.some((notice) => notice.locale === "en") &&
     NOTICES.every((notice) => validateContentScope(notice.scope).valid),
   "Avisos y paquetes usan el esquema 3.0.0 con ámbito y locale explícitos."
 );
@@ -687,8 +688,12 @@ check(
 );
 
 check(
-  getPublishedNotices().every((notice) => notice.status === "published") &&
-    getPublishedNotices().length === NOTICES.filter((notice) => notice.status === "published").length,
+  ["es", "en"].every((locale) =>
+    getPublishedNotices(undefined, locale).every((notice) => notice.status === "published") &&
+    getPublishedNotices(undefined, locale).length === NOTICES.filter(
+      (notice) => notice.status === "published" && notice.locale === locale
+    ).length
+  ),
   "La consulta pública de avisos excluye draft, review y archived."
 );
 
@@ -1988,7 +1993,7 @@ check(
 
 check(
   generalNoticesPageSource.includes("getGlobalNotices") &&
-    courseNoticesPageSource.includes("getCourseNotices(COURSE.id)") &&
+    courseNoticesPageSource.includes("getCourseNotices(COURSE.id") &&
     courseNoticesPageSource.includes('withBase("/avisos")') &&
     noticeCardSource.includes("href &&") &&
     noticeCardSource.includes('rel={external ? "noopener noreferrer"') &&

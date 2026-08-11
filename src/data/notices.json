@@ -18,6 +18,23 @@
   },
   {
     "schemaVersion": "3.0.0",
+    "id": "notice-2026-08-10-8f3e9c7d2a61",
+    "version": 1,
+    "locale": "en",
+    "scope": {
+      "type": "global"
+    },
+    "title": "How do we know how long a second is?",
+    "summary": "I am sharing this video because I found it interesting and think it is worth watching.",
+    "content": "I recommend this video. Watching it is not required for an assignment; it may simply prompt useful ideas or questions about physics. If you have some time, take a look.",
+    "category": "General",
+    "publishedAt": "2026-08-10",
+    "featured": false,
+    "href": "https://www.youtube.com/watch?v=GGDMi7za85s",
+    "status": "published"
+  },
+  {
+    "schemaVersion": "3.0.0",
     "id": "notice-2026-08-10-db5501b8e261",
     "version": 1,
     "locale": "es",
@@ -28,6 +45,24 @@
     "title": "Universo Mecánico: la caída de los cuerpos",
     "summary": "Para complementar lo que estamos viendo en el curso, les recomiendo el segundo capítulo de Universo Mecánico sobre la caída de los cuerpos.",
     "content": "Muchachos, este sí se los recomiendo especialmente para acompañar lo que estamos trabajando. Es el segundo capítulo de Universo Mecánico y gira alrededor de la caída de los cuerpos, Galileo, la aceleración y la forma en que se fue entendiendo matemáticamente el movimiento. Si pueden, véanlo con calma; conecta muy bien con varios conceptos de esta unidad.",
+    "category": "Material",
+    "publishedAt": "2026-08-10",
+    "featured": true,
+    "href": "https://www.youtube.com/watch?v=ZzMOztjKxMw&list=PLiD-IJzweXR9WOeQj7zTVbDvQfqxE4ssA&index=2",
+    "status": "published"
+  },
+  {
+    "schemaVersion": "3.0.0",
+    "id": "notice-2026-08-10-ea72c9f0d31b",
+    "version": 1,
+    "locale": "en",
+    "scope": {
+      "type": "course",
+      "courseId": "fisica-basica-1"
+    },
+    "title": "The Mechanical Universe: falling bodies",
+    "summary": "To complement our course work, I recommend the second Mechanical Universe episode on falling bodies.",
+    "content": "I especially recommend this episode to accompany our current work. It addresses falling bodies, Galileo, acceleration, and the mathematical development of motion, connecting well with several concepts from this unit.",
     "category": "Material",
     "publishedAt": "2026-08-10",
     "featured": true,

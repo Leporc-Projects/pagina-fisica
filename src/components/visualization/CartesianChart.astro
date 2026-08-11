@@ -81,6 +81,7 @@ interface Props {
   grid?: boolean | "x" | "y" | "both";
   legend?: boolean;
   aspectRatio?: number;
+  legendLabel?: string;
 }
 
 const {
@@ -97,6 +98,7 @@ const {
   grid = true,
   legend = true,
   aspectRatio = 0.64,
+  legendLabel = "Leyenda de la gráfica",
 } = Astro.props;
 
 if (!/^[a-z][a-z0-9-]*$/.test(id)) {
@@ -512,7 +514,7 @@ const visibleAnnotations = annotations
   </svg>
 
   {legend && configuredSeries.length > 0 && (
-    <ul class="academic-chart__legend" aria-label="Leyenda de la gráfica">
+    <ul class="academic-chart__legend" aria-label={legendLabel}>
       {configuredSeries.map((item) => (
         <li>
           <span

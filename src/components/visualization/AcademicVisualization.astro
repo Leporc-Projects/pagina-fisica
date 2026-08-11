@@ -4,6 +4,7 @@
 import AcademicDiagram from "./AcademicDiagram.astro";
 import CartesianChart from "./CartesianChart.astro";
 import RichText from "../academic/RichText.astro";
+import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -19,12 +20,14 @@ interface Props {
   visualization: Visualization;
   present?: (value: string) => RichContent;
   showExplanation?: boolean;
+  locale?: "es" | "en";
 }
 
 const {
   visualization,
   present = (value) => value,
   showExplanation = true,
+  locale = "es",
 } = Astro.props;
 ---
 
@@ -36,7 +39,7 @@ const {
   )}
 
   {visualization.kind === "cartesian"
-    ? <CartesianChart {...visualization.props} />
+    ? <CartesianChart {...visualization.props} legendLabel={t(locale, "visualization.chartLegend")} />
     : <AcademicDiagram {...visualization.props} />}
 
   {showExplanation && visualization.explanation && (

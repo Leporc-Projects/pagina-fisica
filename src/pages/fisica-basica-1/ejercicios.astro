@@ -2,11 +2,14 @@
 // Hoja de ruta editorial: combina UNITS con tipos previstos, sin crear ejercicios.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
-import { COURSE, UNITS } from "../../data/course.js";
+import { localizeCourseData } from "../../data/course-localize.js";
 import { UNIT_1_EXERCISES } from "../../data/physics/unit-1/exercises.js";
 import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
+const { locale = "es" } = Astro.props;
+const { COURSE, UNITS } = localizeCourseData(locale);
 const materialTypes = [
   "Diagnósticos",
   "Práctica guiada",
@@ -19,11 +22,14 @@ const materialTypes = [
 <BaseLayout
   title={`Ejercicios y tutorías · ${COURSE.name}`}
   description={`Catálogo de práctica y tutorías de ${COURSE.name}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_PRACTICE}
 >
   <article class="course-subpage">
     <CoursePageHeader
       title="Ejercicios y tutorías"
       description="Catálogo y hoja de ruta de los materiales de práctica que se publicarán por unidad."
+      locale={locale}
     />
 
     <!-- Separa el modelo pedagógico del catálogo para no confundir estados con contenido disponible. -->

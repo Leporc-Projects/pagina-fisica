@@ -2,12 +2,16 @@
 // Biblioteca basada en metadatos; los archivos audiovisuales viven fuera del repositorio.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
-import { COURSE, UNITS } from "../../data/course.js";
+import { localizeCourseData } from "../../data/course-localize.js";
 import {
   getVideos,
   getVideosByUnit,
   VIDEO_CONTENT_TYPES,
 } from "../../data/videos.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
+
+const { locale = "es" } = Astro.props;
+const { COURSE, UNITS } = localizeCourseData(locale);
 
 // Cada unidad se conserva visible aunque aún no tenga publicaciones asociadas.
 const videosByUnit = UNITS.map((unit) => ({
@@ -20,11 +24,14 @@ const videos = getVideos();
 <BaseLayout
   title={`Videos · ${COURSE.name}`}
   description={`Biblioteca audiovisual de ${COURSE.name}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_VIDEOS}
 >
   <article class="course-subpage">
     <CoursePageHeader
       title="Videos"
       description="Biblioteca audiovisual preparada para organizar materiales propios y aprobados por unidad."
+      locale={locale}
     />
 
     <!-- Documenta el contrato del catálogo sin presentar publicaciones inexistentes. -->

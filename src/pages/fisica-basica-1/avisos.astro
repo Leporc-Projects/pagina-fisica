@@ -4,19 +4,24 @@ import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import NoticeCard from "../../components/NoticeCard.astro";
 import { COURSE } from "../../data/course.js";
 import { getCourseNotices } from "../../data/notices.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
-const notices = getCourseNotices(COURSE.id);
+const { locale = "es" } = Astro.props;
+const notices = getCourseNotices(COURSE.id, undefined, locale);
 ---
 
 <BaseLayout
   title={`Avisos · ${COURSE.name}`}
   description={`Actualizaciones publicadas para ${COURSE.name}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_NOTICES}
 >
   <article class="course-subpage">
     <CoursePageHeader
       title="Avisos del curso"
       description={`Información, materiales y cambios que corresponden específicamente a ${COURSE.name}.`}
+      locale={locale}
     />
 
     <section class="course-section" aria-labelledby="course-notices-title">
@@ -45,7 +50,7 @@ const notices = getCourseNotices(COURSE.id);
           : (
             <div class="notice-list notice-list--archive">
               {notices.map((notice) => (
-                <NoticeCard notice={notice} idPrefix="course-notice-title" />
+                <NoticeCard notice={notice} idPrefix="course-notice-title" locale={locale} />
               ))}
             </div>
           )

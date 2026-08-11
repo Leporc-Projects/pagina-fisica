@@ -3,18 +3,25 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
-import { BIBLIOGRAPHY, COURSE } from "../../data/course.js";
+import { localizeCourseData } from "../../data/course-localize.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
+
+const { locale = "es" } = Astro.props;
+const { BIBLIOGRAPHY, COURSE } = localizeCourseData(locale);
 ---
 
 <BaseLayout
   title={`Recursos · ${COURSE.name}`}
   description={`Guías, bibliografía y recursos de consulta para ${COURSE.name}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_RESOURCES}
 >
   <article class="course-subpage">
     <CoursePageHeader
       title="Recursos"
       description="Materiales propios y referencias públicas seleccionadas para acompañar el estudio."
+      locale={locale}
     />
 
     <section class="page-section" aria-labelledby="guides-title">

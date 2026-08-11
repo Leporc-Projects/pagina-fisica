@@ -4,9 +4,13 @@ import OpenPractice from "../../../components/academic/OpenPractice.astro";
 import UnitOneNav from "../../../components/academic/UnitOneNav.astro";
 import { UNIT_1_BANK_ITEMS } from "../../../data/physics/unit-1/bank.js";
 import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
-import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
+import { localizeUnit1 } from "../../../data/physics/unit-1/localize.js";
 import { UNIT_1_VISUALIZATIONS } from "../../../data/physics/unit-1/visualizations.js";
+import { ROUTE_IDS } from "../../../i18n/routes.js";
 import { withBase } from "../../../utils/paths.js";
+
+const { locale = "es" } = Astro.props;
+const UNIT_1 = localizeUnit1(locale);
 
 const publicLearningExercises = UNIT_1_BANK_ITEMS.filter(
   (exercise) =>
@@ -19,6 +23,8 @@ const publicLearningExercises = UNIT_1_BANK_ITEMS.filter(
 <BaseLayout
   title={`Práctica · ${UNIT_1.shortTitle}`}
   description={`Banco de ejercicios originales de ${UNIT_1.title}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_UNIT_1_PRACTICE}
 >
   <article class="unit-practice-page">
     <header class="unit-topic-hero">
@@ -46,7 +52,7 @@ const publicLearningExercises = UNIT_1_BANK_ITEMS.filter(
       </aside>
     </header>
 
-    <UnitOneNav />
+    <UnitOneNav locale={locale} />
 
     <OpenPractice
       exercises={publicLearningExercises}

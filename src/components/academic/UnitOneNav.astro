@@ -1,39 +1,42 @@
 ---
 // Navegación única de Unidad 1; deriva rutas y estado activo de UNIT_1.
-import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { localizeUnit1 } from "../../data/physics/unit-1/localize.js";
+import { t } from "../../i18n/index.js";
 import { withBase } from "../../utils/paths.js";
 
 interface Props {
   activeSlug?: string | null;
+  locale?: "es" | "en";
 }
 
 // Las páginas auxiliares, como la práctica, omiten el estado activo porque no
 // representan ninguno de los destinos incluidos en esta navegación.
-const { activeSlug = null } = Astro.props;
-const activeTopic = UNIT_1.topics.find((topic) => topic.slug === activeSlug);
+const { activeSlug = null, locale = "es" } = Astro.props;
+const unit = localizeUnit1(locale);
+const activeTopic = unit.topics.find((topic) => topic.slug === activeSlug);
 const currentLabel = activeSlug === "index"
-  ? "Índice de la unidad"
-  : activeTopic?.shortTitle ?? "Explorar temas";
+  ? t(locale, "unitNav.index")
+  : activeTopic?.shortTitle ?? t(locale, "unitNav.explore");
 ---
 
 <details class="unit-context-nav">
   <summary>
-    <span>{UNIT_1.shortTitle}</span>
+    <span>{unit.shortTitle}</span>
     <strong>{currentLabel}</strong>
-    <small>Abrir navegación</small>
+    <small>{t(locale, "unitNav.open")}</small>
   </summary>
 
-  <nav class="unit-topic-nav" aria-label={`Navegación de ${UNIT_1.shortTitle}`}>
+  <nav class="unit-topic-nav" aria-label={t(locale, "unitNav.label", { unit: unit.shortTitle })}>
     <a
       class="unit-topic-nav__link"
-      href={withBase(UNIT_1.route)}
+      href={withBase(unit.route)}
       aria-current={activeSlug === "index" ? "page" : undefined}
     >
       <span>00</span>
-      <strong>Índice</strong>
+      <strong>{t(locale, "unitNav.index")}</strong>
     </a>
 
-    {UNIT_1.topics.map((topic) => (
+    {unit.topics.map((topic) => (
       <a
         class:list={[
           "unit-topic-nav__link",

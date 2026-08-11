@@ -1,6 +1,7 @@
 ---
 // Organiza una idea por profundidad sin ocultar la explicación esencial.
 import RichText from "./RichText.astro";
+import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
 
@@ -17,9 +18,10 @@ interface Props {
   section: SectionContent;
   index?: number;
   present?: (value: string) => RichContent;
+  locale?: "es" | "en";
 }
 
-const { section, index, present = (value) => value } = Astro.props;
+const { section, index, present = (value) => value, locale = "es" } = Astro.props;
 ---
 
 <section
@@ -29,25 +31,25 @@ const { section, index, present = (value) => value } = Astro.props;
 >
   <header class="academic-section__header">
     <p class="academic-label">
-      {index ? `Concepto ${String(index).padStart(2, "0")}` : "Concepto"}
+      {index ? t(locale, "academic.conceptNumber", { number: String(index).padStart(2, "0") }) : t(locale, "academic.concept")}
     </p>
     <h2 id={`${section.id}-title`}>{section.title}</h2>
   </header>
 
   <div class="academic-layer academic-layer--essential">
-    <h3><span>Esencial</span> Lo mínimo que debes conservar</h3>
+    <h3><span>{t(locale, "academic.essential")}</span> {t(locale, "academic.essentialDescription")}</h3>
     {section.essential.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
   </div>
 
   <div class="academic-layer academic-layer--understand">
-    <h3><span>Comprende</span> Interpreta y conecta</h3>
+    <h3><span>{t(locale, "academic.understand")}</span> {t(locale, "academic.understandDescription")}</h3>
     {section.understand.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
   </div>
 
   <details class="academic-details academic-details--deepen">
     <summary>
-      <span>Profundiza</span>
-      <strong>Formulación y condiciones</strong>
+        <span>{t(locale, "academic.deepen")}</span>
+        <strong>{t(locale, "academic.deepenDescription")}</strong>
     </summary>
     <div class="academic-details__body">
       {section.deepen.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
@@ -57,8 +59,8 @@ const { section, index, present = (value) => value } = Astro.props;
   {section.explore && (
     <details class="academic-details academic-details--explore">
       <summary>
-        <span>Explora</span>
-        <strong>Conexiones para continuar</strong>
+        <span>{t(locale, "academic.explore")}</span>
+        <strong>{t(locale, "academic.exploreDescription")}</strong>
       </summary>
       <div class="academic-details__body">
         {section.explore.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}

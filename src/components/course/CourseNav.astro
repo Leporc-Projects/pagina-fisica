@@ -1,9 +1,24 @@
 ---
 // Navegación compartida por todas las páginas internas del curso.
-import { COURSE, COURSE_NAV } from "../../data/course.js";
+import { COURSE } from "../../data/course.js";
+import { t } from "../../i18n/index.js";
+import { ROUTE_IDS, getLocalizedPath } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
+const { locale = "es" } = Astro.props;
 const { pathname } = Astro.url;
+const navigationItems = [
+  [ROUTE_IDS.COURSE, "course"],
+  [ROUTE_IDS.COURSE_NOTICES, "notices"],
+  [ROUTE_IDS.COURSE_SCHEDULE, "schedule"],
+  [ROUTE_IDS.COURSE_UNITS, "units"],
+  [ROUTE_IDS.COURSE_PRACTICE, "practice"],
+  [ROUTE_IDS.COURSE_BONUSES, "bonuses"],
+  [ROUTE_IDS.COURSE_VIDEOS, "videos"],
+  [ROUTE_IDS.COURSE_ASSESSMENT, "assessment"],
+  [ROUTE_IDS.COURSE_RESOURCES, "resources"],
+  [ROUTE_IDS.COURSE_PARTICIPATE, "participate"],
+];
 
 // Astro puede entregar la URL con slash final; normalizar evita falsos inactivos.
 const normalizePath = (path: string) => {
@@ -19,13 +34,13 @@ const currentPath = normalizePath(pathname);
 
 <nav
   class="course-nav"
-  aria-label={`Secciones de ${COURSE.name}`}
+  aria-label={t(locale, "course.navLabel", { course: locale === "es" ? COURSE.name : "Basic Physics I" })}
 >
   <!-- El track conserva el ancho de sus enlaces y el contenedor permite desplazamiento horizontal. -->
   <div class="course-nav__track">
     {
-      COURSE_NAV.map((item, index) => {
-        const href = withBase(item.href);
+      navigationItems.map(([routeId, label], index) => {
+        const href = withBase(getLocalizedPath(routeId, locale));
         const isCurrent =
           currentPath === normalizePath(href);
 
@@ -39,7 +54,7 @@ const currentPath = normalizePath(pathname);
               {String(index + 1).padStart(2, "0")}
             </span>
 
-            <span>{item.label}</span>
+            <span>{t(locale, `course.nav.${label}`)}</span>
           </a>
         );
       })

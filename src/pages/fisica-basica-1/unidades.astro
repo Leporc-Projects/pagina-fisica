@@ -2,22 +2,26 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
 
-import {
-  COURSE,
-  UNITS,
-} from "../../data/course.js";
+import { localizeCourseData } from "../../data/course-localize.js";
 import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
+
+const { locale = "es" } = Astro.props;
+const { COURSE, UNITS } = localizeCourseData(locale);
 ---
 
 <BaseLayout
   title={`Unidades y apuntes · ${COURSE.name}`}
   description={`Unidades temáticas y contenidos de ${COURSE.name}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_UNITS}
 >
   <article class="course-subpage">
     <CoursePageHeader
       title="Unidades y apuntes"
       description="Organización temática del curso y espacio destinado a los materiales preparados para cada unidad."
+      locale={locale}
     />
 
     <section

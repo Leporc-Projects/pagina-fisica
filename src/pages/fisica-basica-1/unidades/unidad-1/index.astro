@@ -1,16 +1,21 @@
 ---
 import BaseLayout from "../../../../layouts/BaseLayout.astro";
 import UnitLearningMap from "../../../../components/academic/UnitLearningMap.astro";
-import { UNIT_1 } from "../../../../data/physics/unit-1/unit.js";
+import { localizeUnit1 } from "../../../../data/physics/unit-1/localize.js";
 import { UNIT_1_EXERCISES } from "../../../../data/physics/unit-1/exercises.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../../../i18n/routes.js";
+import { t } from "../../../../i18n/index.js";
 import { withBase } from "../../../../utils/paths.js";
+
+const { locale = "es" } = Astro.props;
+const UNIT_1 = localizeUnit1(locale);
 ---
 
-<BaseLayout title={`${UNIT_1.shortTitle} · ${UNIT_1.title}`} description={UNIT_1.description}>
+<BaseLayout title={`${UNIT_1.shortTitle} · ${UNIT_1.title}`} description={UNIT_1.description} locale={locale} routeId={ROUTE_IDS.COURSE_UNIT_1}>
   <article class="unit-landing">
     <header class="unit-landing__hero">
-      <nav class="academic-breadcrumb" aria-label="Migas de pan">
-        <a href={withBase("/fisica-basica-1/unidades")}>Unidades y apuntes</a>
+      <nav class="academic-breadcrumb" aria-label={t(locale, "unitPage.breadcrumb")}>
+        <a href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_UNITS, locale))}>{t(locale, "unitPage.units")}</a>
         <span aria-hidden="true">/</span>
         <span aria-current="page">{UNIT_1.shortTitle}</span>
       </nav>
@@ -23,16 +28,16 @@ import { withBase } from "../../../../utils/paths.js";
 
       <dl class="unit-landing__facts">
         <div>
-          <dt>Temas</dt>
+          <dt>{t(locale, "unitPage.topics")}</dt>
           <dd>{UNIT_1.topics.length}</dd>
         </div>
         <div>
-          <dt>Ejercicios</dt>
+          <dt>{t(locale, "unitPage.exercises")}</dt>
           <dd>{UNIT_1_EXERCISES.length}</dd>
         </div>
         <div>
-          <dt>Estado</dt>
-          <dd>Disponible</dd>
+          <dt>{t(locale, "unitPage.status")}</dt>
+          <dd>{t(locale, "unitPage.available")}</dd>
         </div>
       </dl>
     </header>
@@ -41,75 +46,59 @@ import { withBase } from "../../../../utils/paths.js";
       unitLabel={UNIT_1.shortTitle}
       unitTitle={UNIT_1.title}
       topics={UNIT_1.topics}
+      locale={locale}
     />
 
     <section class="unit-study-guide" aria-labelledby="study-guide-title">
       <div>
-        <p class="academic-label">Profundidad progresiva</p>
-        <h2 id="study-guide-title">Lee primero lo esencial</h2>
-        <p>
-          No necesitas elegir un modo. La definición mínima y su interpretación
-          están visibles; los desarrollos rigurosos y ampliaciones pueden abrirse
-          cuando aporten a tu objetivo de estudio.
-        </p>
+        <p class="academic-label">{t(locale, "unitPage.progressiveDepth")}</p>
+        <h2 id="study-guide-title">{t(locale, "unitPage.readEssential")}</h2>
+        <p>{t(locale, "unitPage.studyGuide")}</p>
       </div>
 
       <ol>
-        <li><strong>Esencial</strong><span>Idea mínima correcta y autocontenida.</span></li>
-        <li><strong>Comprende</strong><span>Interpretación física y conexiones.</span></li>
-        <li><strong>Profundiza</strong><span>Derivaciones, condiciones y rigor.</span></li>
-        <li><strong>Explora</strong><span>Ampliaciones para continuar.</span></li>
+        <li><strong>{t(locale, "academic.essential")}</strong><span>{t(locale, "unitPage.essentialSummary")}</span></li>
+        <li><strong>{t(locale, "academic.understand")}</strong><span>{t(locale, "unitPage.understandSummary")}</span></li>
+        <li><strong>{t(locale, "academic.deepen")}</strong><span>{t(locale, "unitPage.deepenSummary")}</span></li>
+        <li><strong>{t(locale, "academic.explore")}</strong><span>{t(locale, "unitPage.exploreSummary")}</span></li>
       </ol>
     </section>
 
     <section class="unit-source-note" aria-labelledby="unit-source-title">
       <div>
-        <p class="academic-label">Alcance académico</p>
-        <h2 id="unit-source-title">Fuentes y modelos</h2>
+        <p class="academic-label">{t(locale, "unitPage.academicScope")}</p>
+        <h2 id="unit-source-title">{t(locale, "unitPage.sourcesModels")}</h2>
       </div>
       <div>
-        <p>
-          El programa oficial gobierna el alcance curricular estable y el plan
-          2026-2 organiza el orden y la profundidad del semestre. Los ejemplos,
-          ejercicios y diagramas de esta implementación son originales.
-        </p>
-        <p>
-          Las ecuaciones se presentan con sus condiciones de aplicación. Una
-          relación matemática no sustituye la elección explícita del modelo.
-        </p>
+        <p>{t(locale, "unitPage.sourceText")}</p>
+        <p>{t(locale, "unitPage.modelText")}</p>
       </div>
     </section>
 
     <aside class="unit-practice-cta">
       <div>
-        <p class="academic-label">Banco de ejercicios</p>
-        <h2>{UNIT_1_EXERCISES.length} ejercicios para practicar los conceptos de la unidad</h2>
-        <p>
-          Incluyen práctica conceptual, numérica, simbólica, gráfica y de
-          estimación, con dificultad y retroalimentación editorial.
-        </p>
+        <p class="academic-label">{t(locale, "unitPage.exerciseBank")}</p>
+        <h2>{t(locale, "unitPage.practiceTitle", { count: UNIT_1_EXERCISES.length })}</h2>
+        <p>{t(locale, "unitPage.practiceDescription")}</p>
       </div>
       <div class="unit-practice-cta__links">
         <a class="text-link" href={withBase(UNIT_1.practiceRoute)}>
-          Abrir práctica de la Unidad 1
+          {t(locale, "unitPage.openPractice")}
         </a>
         <a class="text-link" href={withBase(UNIT_1.bonusRoute)}>
-          Comprobar cómo voy con un Bono
+          {t(locale, "unitPage.openBonus")}
         </a>
       </div>
     </aside>
 
     <aside class="unit-practice-cta unit-feedback-link">
       <div>
-        <p class="academic-label">Participación</p>
-        <h2>¿Algo no quedó claro?</h2>
-        <p>
-          Puedes preparar localmente una dificultad, una pregunta o una sugerencia,
-          sin nombre ni correo.
-        </p>
+        <p class="academic-label">{t(locale, "unitPage.participation")}</p>
+        <h2>{t(locale, "unitPage.unclear")}</h2>
+        <p>{t(locale, "unitPage.participationDescription")}</p>
       </div>
-      <a class="text-link" href={withBase("/fisica-basica-1/participa")}>
-        Ir a Participa
+      <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_PARTICIPATE, locale))}>
+        {t(locale, "unitPage.openParticipation")}
       </a>
     </aside>
   </article>

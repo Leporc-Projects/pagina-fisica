@@ -4,13 +4,17 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import NoticeCard from "../components/NoticeCard.astro";
 import { getGlobalNotices } from "../data/notices.js";
+import { ROUTE_IDS } from "../i18n/routes.js";
 
-const notices = getGlobalNotices();
+const { locale = "es" } = Astro.props;
+const notices = getGlobalNotices(undefined, locale);
 ---
 
 <BaseLayout
   title="Avisos generales"
   description="Actualizaciones generales de Aula Física."
+  locale={locale}
+  routeId={ROUTE_IDS.NOTICES}
 >
   <PageHeader
     eyebrow="Actualizaciones generales"
@@ -38,7 +42,7 @@ const notices = getGlobalNotices();
           <div class="notice-list notice-list--archive">
             <!-- Los IDs ARIA derivan del identificador editorial, que validate.mjs exige único. -->
             {
-              notices.map((notice) => <NoticeCard notice={notice} idPrefix="notice-title" />)
+              notices.map((notice) => <NoticeCard notice={notice} idPrefix="notice-title" locale={locale} />)
             }
           </div>
         )

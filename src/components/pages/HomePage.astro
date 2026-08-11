@@ -9,13 +9,13 @@ import { ROUTE_IDS, getLocalizedPath } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
-const recentNotices = locale === "es" ? getHomepageNotices(3, undefined, locale) : [];
+const recentNotices = getHomepageNotices(3, undefined, locale);
 const links = [
   {
     number: "01",
-    label: COURSE.name,
+    label: locale === "es" ? COURSE.name : "Basic Physics I",
     description: t(locale, "home.courseDescription"),
-    href: getLocalizedPath(ROUTE_IDS.COURSE, "es"),
+    href: getLocalizedPath(ROUTE_IDS.COURSE, locale),
   },
   {
     number: "02",
@@ -49,14 +49,14 @@ const links = [
     <div class="container">
       <header class="editorial-heading">
         <p class="eyebrow eyebrow--dark">{t(locale, "home.activeCourse")}</p>
-        <div><h2>{COURSE.name}</h2><p>{t(locale, "home.courseIntro")}</p></div>
-        <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE, "es"))} hreflang="es">
+        <div><h2>{locale === "es" ? COURSE.name : "Basic Physics I"}</h2><p>{t(locale, "home.courseIntro")}</p></div>
+        <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE, locale))}>
           {t(locale, "home.enterCourse")}<span aria-hidden="true">→</span>
         </a>
       </header>
       <div class="home-directory" aria-label={t(locale, "home.featured")}>
         {links.map((item) => (
-          <a class="directory-row" href={withBase(item.href)} hreflang={item.number === "01" && locale === "en" ? "es" : undefined}>
+          <a class="directory-row" href={withBase(item.href)}>
             <span class="directory-number">{item.number}</span>
             <span class="directory-copy"><strong>{item.label}</strong><span>{item.description}</span></span>
             <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
@@ -73,8 +73,8 @@ const links = [
         <div class="notice-list">
           {recentNotices.map((notice) => <NoticeCard notice={notice} compact showScope idPrefix="home-notice" locale={locale} />)}
           <div class="notice-list__links" aria-label={t(locale, "home.notices")}>
-            <a class="notice-list__more" href={withBase("/avisos")}>{t(locale, "home.generalNotices")}<span aria-hidden="true">→</span></a>
-            <a class="notice-list__more" href={withBase(`${COURSE.href}/avisos`)}>{t(locale, "home.courseNotices", { course: COURSE.name })}<span aria-hidden="true">→</span></a>
+            <a class="notice-list__more" href={withBase(getLocalizedPath(ROUTE_IDS.NOTICES, locale))}>{t(locale, "home.generalNotices")}<span aria-hidden="true">→</span></a>
+            <a class="notice-list__more" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_NOTICES, locale))}>{t(locale, "home.courseNotices", { course: locale === "es" ? COURSE.name : "Basic Physics I" })}<span aria-hidden="true">→</span></a>
           </div>
         </div>
       </div>

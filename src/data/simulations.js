@@ -122,8 +122,9 @@ export const getSimulationsByCategory = (category, locale = "es") =>
 export const getSimulationsForCourseTopic = (
   courseId,
   unit,
-  topicSlug
-) => getPublishedSimulations().filter((simulation) =>
+  topicSlug,
+  locale = "es"
+) => getPublishedSimulations(locale).filter((simulation) =>
   simulation.contexts.some((context) =>
     context.courseId === courseId &&
     context.unit === unit &&

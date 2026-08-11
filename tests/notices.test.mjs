@@ -187,8 +187,9 @@ test("rechaza paquetes inválidos y duplicados dentro o fuera del paquete", () =
 });
 
 test("los avisos reales conservan sus datos y tienen el ámbito editorial esperado", () => {
-  assert.equal(NOTICES.length, 2);
+  assert.equal(NOTICES.length, 4);
   assert.equal(NOTICES.every((entry) => validateNotice(entry).valid), true);
+  assert.equal(NOTICES.filter((entry) => entry.locale === "en").length, 2);
   const globalNotice = NOTICES.find((entry) => entry.title === "¿Cómo sabemos cuanto mide un segundo?");
   const courseNotice = NOTICES.find((entry) => entry.title === "Universo Mecánico: la caída de los cuerpos");
   assert.deepEqual(globalNotice?.scope, { type: "global" });
@@ -268,7 +269,7 @@ test("las rutas públicas y la tarjeta compacta conservan enlaces seguros y ámb
   const card = fs.readFileSync(new URL("../src/components/NoticeCard.astro", import.meta.url), "utf8");
   assert.match(generalPage, /getGlobalNotices/);
   assert.doesNotMatch(generalPage, /getPublishedNotices/);
-  assert.match(coursePage, /getCourseNotices\(COURSE\.id\)/);
+  assert.match(coursePage, /getCourseNotices\(COURSE\.id/);
   assert.match(coursePage, /\/avisos/);
   assert.match(homepage, /showScope/);
   assert.match(homepage, /getHomepageNotices\(3/);

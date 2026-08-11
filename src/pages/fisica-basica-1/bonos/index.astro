@@ -3,22 +3,27 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../../components/course/CoursePageHeader.astro";
 import BonusCatalogCard from "../../../components/bonus/BonusCatalogCard.astro";
 import { COURSE } from "../../../data/course.js";
-import { getBonusesByUnit } from "../../../data/bonuses/index.js";
-import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
+import { getLocalizedUnit1Bonuses, localizeUnit1 } from "../../../data/physics/unit-1/localize.js";
+import { ROUTE_IDS } from "../../../i18n/routes.js";
 import { withBase } from "../../../utils/paths.js";
 import "../../../styles/bonus.css";
 
-const bonuses = getBonusesByUnit(1);
+const { locale = "es" } = Astro.props;
+const UNIT_1 = localizeUnit1(locale);
+const bonuses = getLocalizedUnit1Bonuses(locale);
 ---
 
 <BaseLayout
   title={`Bonos · ${COURSE.name}`}
   description={`Actividades breves de autodiagnóstico y preparación para ${COURSE.name}.`}
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_BONUSES}
 >
   <article class="course-subpage bonus-catalog-page">
     <CoursePageHeader
       title="Bonos"
       description="Actividades cortas para comprobar cómo vas, identificar qué conviene repasar y prepararte para las evaluaciones del curso."
+      locale={locale}
     />
 
     <section class="bonus-purpose" aria-labelledby="bonus-purpose-title">
@@ -48,7 +53,7 @@ const bonuses = getBonusesByUnit(1);
       </header>
 
       <div class="bonus-catalog__grid">
-        {bonuses.map((bonus) => <BonusCatalogCard bonus={bonus} />)}
+        {bonuses.map((bonus) => <BonusCatalogCard bonus={bonus} locale={locale} />)}
       </div>
     </section>
 

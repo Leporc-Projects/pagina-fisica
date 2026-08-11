@@ -2,6 +2,7 @@
 // Mapa reutilizable de una unidad. Las posiciones se derivan del número y orden
 // de temas; el DOM conserva una secuencia lineal útil para teclado y lectores.
 import { withBase } from "../../utils/paths.js";
+import { t } from "../../i18n/index.js";
 
 interface Topic {
   order: number;
@@ -17,9 +18,10 @@ interface Props {
   unitLabel: string;
   unitTitle: string;
   topics: Topic[];
+  locale?: "es" | "en";
 }
 
-const { unitLabel, unitTitle, topics } = Astro.props;
+const { unitLabel, unitTitle, topics, locale = "es" } = Astro.props;
 const center = { x: 50, y: 50 };
 const startAngle = -145;
 const sweep = topics.length > 1 ? 290 / (topics.length - 1) : 0;
@@ -38,12 +40,9 @@ const routePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
 
 <nav class="learning-map" aria-labelledby="learning-map-title">
   <header class="learning-map__header">
-    <p class="academic-label">Mapa de aprendizaje</p>
-    <h2 id="learning-map-title">Un recorrido conectado</h2>
-    <p>
-      Cada nodo abre un tema. La secuencia propone una ruta de lectura, pero
-      puedes entrar directamente al concepto que necesitas revisar.
-    </p>
+    <p class="academic-label">{t(locale, "unitPage.learningMap")}</p>
+    <h2 id="learning-map-title">{t(locale, "unitPage.connectedRoute")}</h2>
+    <p>{t(locale, "unitPage.mapDescription")}</p>
   </header>
 
   <div class="learning-map__canvas">
@@ -79,7 +78,7 @@ const routePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
               {String(topic.order).padStart(2, "0")}
             </span>
             <strong>{topic.shortTitle}</strong>
-            {topic.priority === "extension" && <small>Ampliación</small>}
+            {topic.priority === "extension" && <small>{t(locale, "unitPage.extension")}</small>}
             <span class="sr-only" id={`map-summary-${topic.slug}`}>
               {topic.title}. {topic.summary}
             </span>
@@ -89,4 +88,3 @@ const routePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
     </ol>
   </div>
 </nav>
-

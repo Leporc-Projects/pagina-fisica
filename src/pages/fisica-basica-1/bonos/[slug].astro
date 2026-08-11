@@ -4,8 +4,9 @@ import BonusAttempt from "../../../components/bonus/BonusAttempt.astro";
 import { getBonusesByUnit } from "../../../data/bonuses/index.js";
 import { UNIT_1_BANK_ITEMS } from "../../../data/physics/unit-1/bank.js";
 import { presentUnit1RichText } from "../../../data/physics/unit-1/math-content.js";
-import { UNIT_1 } from "../../../data/physics/unit-1/unit.js";
+import { localizeUnit1, localizeUnit1Bonus } from "../../../data/physics/unit-1/localize.js";
 import { UNIT_1_VISUALIZATIONS } from "../../../data/physics/unit-1/visualizations.js";
+import { ROUTE_IDS } from "../../../i18n/routes.js";
 import { eligiblePoolForBonus } from "../../../utils/bonus.js";
 import { withBase } from "../../../utils/paths.js";
 import "../../../styles/bonus.css";
@@ -20,11 +21,13 @@ export function getStaticPaths() {
   }));
 }
 
-const { bonus, exercises } = Astro.props;
+const { bonus: sourceBonus, exercises, locale = "es" } = Astro.props;
+const bonus = localizeUnit1Bonus(sourceBonus, locale);
+const UNIT_1 = localizeUnit1(locale);
 const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
 ---
 
-<BaseLayout title={`${bonus.title} · Física Básica I`} description={bonus.description}>
+<BaseLayout title={`${bonus.title} · Física Básica I`} description={bonus.description} locale={locale} routeId={ROUTE_IDS.COURSE_BONUSES}>
   <article class="bonus-page">
     <header class="bonus-page__hero">
       <nav class="academic-breadcrumb" aria-label="Migas de pan">

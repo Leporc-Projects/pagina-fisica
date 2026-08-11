@@ -7,17 +7,23 @@ import QuestionProposalForm from "../../components/participation/QuestionProposa
 import FeedbackForm from "../../components/participation/FeedbackForm.astro";
 import ResponsePreview from "../../components/participation/ResponsePreview.astro";
 import { COURSE } from "../../data/course.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
 import "../../styles/participation.css";
+
+const { locale = "es" } = Astro.props;
 ---
 
 <BaseLayout
   title={`Participa · ${COURSE.name}`}
   description="Herramientas locales para expresar dificultades, proponer preguntas y mejorar Física Básica I."
+  locale={locale}
+  routeId={ROUTE_IDS.COURSE_PARTICIPATE}
 >
   <article class="course-subpage participation-shell" data-participation-app>
     <CoursePageHeader
       title="Participa"
       description="Expresa una dificultad, construye una pregunta o sugiere una mejora. Tú decides si copias o exportas la respuesta."
+      locale={locale}
     />
 
     <section class="participation-intro" aria-labelledby="participation-local-title">
