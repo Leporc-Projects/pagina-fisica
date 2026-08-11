@@ -16,6 +16,7 @@
     "import:notices": "node scripts/import-notices.mjs",
     "import:questions": "node scripts/import-questions.mjs",
     "import:simulations": "node scripts/import-simulations.mjs",
+    "stats:loc": "node scripts/loc-stats.mjs",
     "astro": "astro"
   },
   "dependencies": {
