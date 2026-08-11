@@ -15,6 +15,7 @@
     "preview": "astro preview",
     "import:notices": "node scripts/import-notices.mjs",
     "import:questions": "node scripts/import-questions.mjs",
+    "import:simulations": "node scripts/import-simulations.mjs",
     "astro": "astro"
   },
   "dependencies": {

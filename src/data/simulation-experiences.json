@@ -1,0 +1,98 @@
+[
+  {
+    "schemaVersion": "1.0.0",
+    "id": "kinematics-1d",
+    "version": 1,
+    "modelId": "kinematics-1d",
+    "title": "Cinemática en una dimensión",
+    "summary": "Explora posición, velocidad y aceleración constante sobre un eje, con gráficas sincronizadas y lectura física del cambio de sentido.",
+    "status": "published",
+    "parameters": {
+      "x0": {
+        "default": -4,
+        "minimum": -50,
+        "maximum": 50,
+        "step": 1,
+        "editable": true
+      },
+      "v0": {
+        "default": 6,
+        "minimum": -20,
+        "maximum": 20,
+        "step": 0.5,
+        "editable": true
+      },
+      "a": {
+        "default": -2,
+        "minimum": -10,
+        "maximum": 10,
+        "step": 0.5,
+        "editable": true
+      },
+      "T": {
+        "default": 6,
+        "minimum": 1,
+        "maximum": 20,
+        "step": 0.5,
+        "editable": true
+      }
+    },
+    "views": {
+      "motion": true,
+      "readings": true,
+      "positionGraph": true,
+      "velocityGraph": true,
+      "accelerationGraph": true,
+      "turningPoint": true
+    },
+    "presets": [
+      {
+        "id": "uniform",
+        "label": "Movimiento uniforme",
+        "parameters": {
+          "x0": -6,
+          "v0": 2.5,
+          "a": 0,
+          "T": 6
+        }
+      },
+      {
+        "id": "rest",
+        "label": "Parte del reposo",
+        "parameters": {
+          "x0": -4,
+          "v0": 0,
+          "a": 1.5,
+          "T": 6
+        }
+      },
+      {
+        "id": "return",
+        "label": "Frena y regresa",
+        "parameters": {
+          "x0": -4,
+          "v0": 6,
+          "a": -2,
+          "T": 6
+        }
+      }
+    ],
+    "observations": [
+      "Cambia solo v₀ y compara la pendiente inicial de x(t) con el valor inicial de v(t).",
+      "Usa “Frena y regresa”: cuando v cruza cero, x alcanza un extremo y la distancia deja de coincidir con |Δx|.",
+      "Compara el signo de v y a. Signos opuestos reducen la rapidez; signos iguales la aumentan.",
+      "Mueve el control de tiempo y verifica que las tres gráficas señalan exactamente el mismo instante."
+    ],
+    "contexts": [
+      {
+        "courseId": "fisica-basica-1",
+        "unit": 1,
+        "topics": [
+          "movimiento-1d",
+          "ecuaciones-movimiento"
+        ]
+      }
+    ]
+  }
+]
+
