@@ -3,7 +3,14 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import SectionHeading from "../components/SectionHeading.astro";
-import { SIM_CATEGORIES } from "../data/site.js";
+import {
+  SIMULATION_CATEGORIES,
+  getSimulationsByCategory,
+  getPublishedSimulations,
+} from "../data/simulations.js";
+import { withBase } from "../utils/paths.js";
+
+const publishedSimulations = getPublishedSimulations();
 ---
 
 <BaseLayout
@@ -17,31 +24,69 @@ import { SIM_CATEGORIES } from "../data/site.js";
   />
 
   <div class="policy-panel page-section" role="note">
-    <h2>Simulaciones en preparación</h2>
+    <h2>Primera simulación disponible</h2>
     <p>
-      No hay simulaciones operativas publicadas. Cada recurso aparecerá aquí
-      cuando su comportamiento, contenido y uso educativo hayan sido revisados.
+      El catálogo comienza con una experiencia propia de cinemática. Las demás
+      categorías permanecen identificadas como futuras, sin presentar recursos ficticios.
     </p>
   </div>
+
+  <section class="page-section" aria-labelledby="published-simulations-title">
+    <SectionHeading
+      id="published-simulations-title"
+      title="Disponibles"
+      desc="Recursos interactivos publicados y revisados para el estudio."
+    />
+
+    <ul class="publication-list" role="list">
+      {publishedSimulations.map((simulation, index) => (
+        <li class="publication-row">
+          <span class="publication-row__number">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <div>
+            <h3><a href={withBase(simulation.route)}>{simulation.title}</a></h3>
+            <p class="publication-row__meta">{simulation.category}</p>
+            <p>{simulation.description}</p>
+          </div>
+          <div class="publication-row__action">
+            <span class="status-label status-label--available">Disponible</span>
+            <a class="text-link" href={withBase(simulation.route)}>Abrir simulación</a>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
 
   <section class="page-section" aria-labelledby="simulation-categories-title">
     <SectionHeading
       id="simulation-categories-title"
       title="Categorías"
-      desc="Organización temática prevista para el catálogo."
+      desc="Estado real de la organización temática del catálogo."
     />
 
     <ul class="publication-list" role="list">
       {
-        SIM_CATEGORIES.map((category, index) => (
+        SIMULATION_CATEGORIES.map((category, index) => {
+          const simulations = getSimulationsByCategory(category);
+          const available = simulations.length > 0;
+          return (
           <li class="publication-row">
             <span class="publication-row__number">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <div><h3>{category}</h3></div>
-            <span class="status-label status-label--preparing">En preparación</span>
+            <div>
+              <h3>{category}</h3>
+              {available && <p class="publication-row__meta">{simulations.length} recurso publicado</p>}
+            </div>
+            <span class:list={{
+              "status-label": true,
+              "status-label--available": available,
+              "status-label--preparing": !available,
+            }}>{available ? "Disponible" : "En preparación"}</span>
           </li>
-        ))
+          );
+        })
       }
     </ul>
   </section>

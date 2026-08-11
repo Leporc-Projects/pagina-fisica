@@ -60,18 +60,3 @@ export const HOME_LINKS = [
     href: "/simulaciones",
   },
 ];
-
-/**
- * Taxonomía visual del futuro catálogo de simulaciones.
- * No equivale a UNITS ni debe utilizarse como fuente académica del curso.
- */
-export const SIM_CATEGORIES = [
-  "Vectores",
-  "Cinemática",
-  "Dinámica",
-  "Trabajo y energía",
-  "Momento lineal",
-  "Rotación",
-  "Gravitación",
-  "Oscilaciones",
-];

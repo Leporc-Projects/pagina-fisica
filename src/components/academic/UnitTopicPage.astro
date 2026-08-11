@@ -12,6 +12,8 @@ import { getUnit1ErrorsByTopics } from "../../data/physics/unit-1/common-errors.
 import { getUnit1Formula } from "../../data/physics/unit-1/formulas.js";
 import { presentUnit1RichText } from "../../data/physics/unit-1/math-content.js";
 import { UNIT_1_VISUALIZATIONS } from "../../data/physics/unit-1/visualizations.js";
+import { COURSE } from "../../data/course.js";
+import { getSimulationsForCourseTopic } from "../../data/simulations.js";
 import {
   UNIT_1,
   getUnit1Topic,
@@ -33,6 +35,11 @@ if (!topic || !content) {
 
 const { previous, next } = getUnit1TopicNeighbors(slug);
 const errors = getUnit1ErrorsByTopics(content.errorTopics);
+const relatedSimulations = getSimulationsForCourseTopic(
+  COURSE.id,
+  UNIT_1.number,
+  slug
+);
 let checkNumber = 0;
 ---
 
@@ -135,6 +142,19 @@ let checkNumber = 0;
         </div>
       </div>
     </div>
+
+    {relatedSimulations.map((simulation) => (
+      <aside class="unit-practice-cta unit-simulation-cta">
+        <div>
+          <p class="academic-label">Simulación relacionada</p>
+          <h2>{simulation.title}</h2>
+          <p>{simulation.description}</p>
+        </div>
+        <a class="text-link" href={withBase(simulation.route)}>
+          Explorar el modelo interactivo
+        </a>
+      </aside>
+    ))}
 
     <nav class="unit-topic-pagination" aria-label="Navegación anterior y siguiente">
       {previous

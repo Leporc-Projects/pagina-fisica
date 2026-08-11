@@ -1368,6 +1368,12 @@ main {
   color: var(--status-info-text);
 }
 
+.status-label--available {
+  border-color: var(--status-success-border);
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+}
+
 .notice-list__more {
   display: inline-flex;
   align-items: center;
@@ -3277,6 +3283,10 @@ main {
 
 .unit-practice-cta {
   align-items: end;
+}
+
+.unit-simulation-cta {
+  margin-top: clamp(3rem, 7vw, 5rem);
 }
 
 .unit-practice-cta .text-link {
