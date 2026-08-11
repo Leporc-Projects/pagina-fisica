@@ -8,10 +8,11 @@ import {
   validateSimulationExperience,
   validateSimulationExperiencePack,
 } from "../utils/simulation-experience.js";
+import { createSimulationLabBaseConfiguration } from "../utils/simulation-authoring.js";
 import {
-  destroyKinematicsSimulation,
-  initializeKinematicsSimulation,
-} from "./kinematics-1d.js";
+  destroySimulationExperienceRenderer,
+  mountSimulationExperienceRenderer,
+} from "./simulation-renderer-runtime.js";
 import { downloadLocalFile } from "./local-export.js";
 
 const create = (tag, text, className) => {
@@ -29,10 +30,11 @@ const readInitialExperience = (root) => {
   }
 };
 
-export const initializeSimulationLab = () => {
+export const initializeSimulationLab = async () => {
   const root = document.querySelector("[data-simulation-lab]");
   if (!(root instanceof HTMLElement) || root.dataset.initialized === "true") return;
   const form = root.querySelector("[data-simulation-lab-form]");
+  const modelSelect = form?.elements.namedItem("model");
   const errorPanel = root.querySelector("[data-simulation-lab-errors]");
   const status = root.querySelector("[data-simulation-lab-status]");
   const exportButton = root.querySelector("[data-export-simulation]");
@@ -40,26 +42,29 @@ export const initializeSimulationLab = () => {
   const previewSummary = root.querySelector("[data-preview-summary]");
   const previewGuide = root.querySelector("[data-preview-guide]");
   const previewObservations = root.querySelector("[data-preview-observations]");
-  const simulationRoot = root.querySelector("[data-kinematics-simulation]");
+  const rendererRoot = root.querySelector("[data-simulation-experience-renderer]");
   const initialExperience = readInitialExperience(root);
-  if (
-    !(form instanceof HTMLFormElement) ||
-    !(errorPanel instanceof HTMLElement) ||
-    !(exportButton instanceof HTMLButtonElement) ||
-    !(simulationRoot instanceof HTMLElement) ||
-    !initialExperience
-  ) return;
+  if (!(form instanceof HTMLFormElement) ||
+      !(modelSelect instanceof HTMLSelectElement) ||
+      !(errorPanel instanceof HTMLElement) ||
+      !(exportButton instanceof HTMLButtonElement) ||
+      !(rendererRoot instanceof HTMLElement) ||
+      !initialExperience) return;
 
-  const model = getSimulationModelById("kinematics-1d");
-  const parameterKeys = Object.keys(model.parameters);
+  let model = getSimulationModelById(initialExperience.modelId);
+  let parameterKeys = Object.keys(model.parameters);
   let presets = structuredClone(initialExperience.presets);
   let observations = [...initialExperience.observations];
   let currentId;
   let nextPresetNumber = presets.length + 1;
 
-  root.querySelectorAll("input, textarea, select").forEach((control) => {
-    control.dataset.baseDescribedBy = control.getAttribute("aria-describedby") ?? "";
-  });
+  const registerDescribedBy = (scope = root) => {
+    scope.querySelectorAll("input, textarea, select").forEach((control) => {
+      if (control.dataset.baseDescribedBy === undefined) {
+        control.dataset.baseDescribedBy = control.getAttribute("aria-describedby") ?? "";
+      }
+    });
+  };
 
   const parameterConfigFromForm = () => Object.fromEntries(
     [...root.querySelectorAll("[data-lab-parameter]")].map((fieldset) => {
@@ -77,15 +82,14 @@ export const initializeSimulationLab = () => {
     })
   );
 
-  const readPresets = () => [...root.querySelectorAll("[data-lab-preset]")]
-    .map((fieldset) => ({
-      id: fieldset.dataset.presetId,
-      label: String(fieldset.querySelector("[data-preset-label]")?.value ?? "").trim(),
-      parameters: Object.fromEntries(parameterKeys.map((key) => [
-        key,
-        fieldset.querySelector(`[data-preset-parameter="${key}"]`)?.valueAsNumber,
-      ])),
-    }));
+  const readPresets = () => [...root.querySelectorAll("[data-lab-preset]")].map((fieldset) => ({
+    id: fieldset.dataset.presetId,
+    label: String(fieldset.querySelector("[data-preset-label]")?.value ?? "").trim(),
+    parameters: Object.fromEntries(parameterKeys.map((key) => [
+      key,
+      fieldset.querySelector(`[data-preset-parameter="${key}"]`)?.valueAsNumber,
+    ])),
+  }));
 
   const readObservations = () => [...root.querySelectorAll("[data-lab-observation]")]
     .map((entry) => String(entry.querySelector("textarea")?.value ?? "").trim());
@@ -96,18 +100,16 @@ export const initializeSimulationLab = () => {
     const topics = [...form.querySelectorAll('input[name="context-topic"]:checked')]
       .map((input) => input.value);
     return {
-      modelId: "kinematics-1d",
+      modelId: model.id,
       title: String(form.elements.namedItem("title")?.value ?? "").trim(),
       summary: String(form.elements.namedItem("summary")?.value ?? "").trim(),
       parameters: parameterConfigFromForm(),
-      views: {
-        motion: form.elements.namedItem("view-motion")?.checked === true,
-        readings: form.elements.namedItem("view-readings")?.checked === true,
-        positionGraph: form.elements.namedItem("view-positionGraph")?.checked === true,
-        velocityGraph: form.elements.namedItem("view-velocityGraph")?.checked === true,
-        accelerationGraph: form.elements.namedItem("view-accelerationGraph")?.checked === true,
-        turningPoint: form.elements.namedItem("view-turningPoint")?.checked === true,
-      },
+      views: Object.fromEntries(
+        [...root.querySelectorAll("[data-lab-view]")].map((input) => [
+          input.dataset.labView,
+          input.checked === true,
+        ])
+      ),
       presets,
       observations,
       contexts: topics.length === 0 ? [] : [{
@@ -140,29 +142,23 @@ export const initializeSimulationLab = () => {
     const parameterMatch = entry.path.match(/^parameters\.([^.]+)(?:\.([^.]+))?/);
     if (parameterMatch) {
       const fieldset = root.querySelector(`[data-lab-parameter="${parameterMatch[1]}"]`);
-      const property = parameterMatch[2];
-      return property
-        ? [fieldset?.querySelector(`[data-parameter-property="${property}"]`)].filter(Boolean)
+      return parameterMatch[2]
+        ? [fieldset?.querySelector(`[data-parameter-property="${parameterMatch[2]}"]`)].filter(Boolean)
         : [...(fieldset?.querySelectorAll("input") ?? [])];
     }
-    if (entry.path.startsWith("views")) {
-      return [...root.querySelectorAll("[data-lab-views] input")];
-    }
+    if (entry.path.startsWith("views")) return [...root.querySelectorAll("[data-lab-view]")];
     const presetMatch = entry.path.match(/^presets\[(\d+)\](?:\.label|\.parameters\.([^.]+))?/);
     if (presetMatch) {
       const fieldset = root.querySelectorAll("[data-lab-preset]")[Number(presetMatch[1])];
-      const parameter = presetMatch[2];
-      return [parameter
-        ? fieldset?.querySelector(`[data-preset-parameter="${parameter}"]`)
+      return [presetMatch[2]
+        ? fieldset?.querySelector(`[data-preset-parameter="${presetMatch[2]}"]`)
         : fieldset?.querySelector("[data-preset-label]")].filter(Boolean);
     }
     const observationMatch = entry.path.match(/^observations\[(\d+)\]/);
     if (observationMatch) {
       return [root.querySelectorAll("[data-lab-observation] textarea")[Number(observationMatch[1])]].filter(Boolean);
     }
-    if (entry.path.startsWith("contexts")) {
-      return [...form.querySelectorAll('input[name="context-topic"]')];
-    }
+    if (entry.path.startsWith("contexts")) return [...form.querySelectorAll('input[name="context-topic"]')];
     return [];
   };
 
@@ -180,10 +176,7 @@ export const initializeSimulationLab = () => {
       controlsForIssue(entry).forEach((control) => {
         control.setAttribute("aria-invalid", "true");
         const base = control.dataset.baseDescribedBy ?? "";
-        control.setAttribute(
-          "aria-describedby",
-          [base, errorPanel.id].filter(Boolean).join(" ")
-        );
+        control.setAttribute("aria-describedby", [base, errorPanel.id].filter(Boolean).join(" "));
       });
     });
     errorPanel.append(list);
@@ -206,6 +199,66 @@ export const initializeSimulationLab = () => {
     }
   };
 
+  const renderParameters = (experience) => {
+    const container = root.querySelector("[data-lab-parameters]");
+    if (!(container instanceof HTMLElement)) return;
+    container.replaceChildren(...parameterKeys.map((key) => {
+      const definition = model.parameters[key];
+      const config = experience.parameters[key];
+      const fieldset = create("fieldset", undefined, "simulation-lab__parameter");
+      fieldset.dataset.labParameter = key;
+      const legend = create("legend", `${definition.label} `);
+      legend.append(create("span", definition.symbol));
+      fieldset.append(legend);
+      const grid = create("div", undefined, "simulation-lab__parameter-grid");
+      for (const [property, label] of [["default", "Valor inicial"], ["minimum", "Mínimo"], ["maximum", "Máximo"], ["step", "Paso"]]) {
+        const wrapper = create("label");
+        wrapper.append(create("span", label));
+        const input = create("input");
+        input.type = "number";
+        input.inputMode = "decimal";
+        input.required = true;
+        input.step = "any";
+        input.min = property === "step" ? "0.0001" : String(definition.hardMinimum);
+        input.max = property === "step"
+          ? String(definition.hardMaximum - definition.hardMinimum)
+          : String(definition.hardMaximum);
+        input.value = String(config[property]);
+        input.dataset.parameterProperty = property;
+        wrapper.append(input);
+        grid.append(wrapper);
+      }
+      fieldset.append(grid);
+      const check = create("label", undefined, "simulation-lab__check");
+      const editable = create("input");
+      editable.type = "checkbox";
+      editable.checked = config.editable;
+      editable.dataset.parameterEditable = "";
+      check.append(editable, create("span", `El estudiante puede modificar ${definition.symbol}`));
+      fieldset.append(check, create(
+        "small",
+        `Límite del modelo: ${definition.hardMinimum} a ${definition.hardMaximum} ${definition.unit}.`
+      ));
+      return fieldset;
+    }));
+    registerDescribedBy(container);
+  };
+
+  const renderViews = (experience) => {
+    const container = root.querySelector("[data-lab-view-options]");
+    if (!(container instanceof HTMLElement)) return;
+    container.replaceChildren(...Object.entries(model.views).map(([key, definition]) => {
+      const label = create("label", undefined, "simulation-lab__check");
+      const input = create("input");
+      input.type = "checkbox";
+      input.checked = experience.views[key] === true;
+      input.dataset.labView = key;
+      label.append(input, create("span", `${definition.label}${definition.visual ? " · visual principal" : ""}`));
+      return label;
+    }));
+    registerDescribedBy(container);
+  };
+
   const renderPresets = () => {
     const container = root.querySelector("[data-lab-presets]");
     const addButton = root.querySelector("[data-add-lab-preset]");
@@ -219,7 +272,6 @@ export const initializeSimulationLab = () => {
       remove.type = "button";
       remove.dataset.removeLabPreset = String(index);
       fieldset.append(remove);
-
       const label = create("label");
       label.append(create("span", "Nombre"));
       const labelInput = create("input");
@@ -230,11 +282,10 @@ export const initializeSimulationLab = () => {
       labelInput.dataset.presetLabel = "";
       label.append(labelInput);
       fieldset.append(label);
-
       const grid = create("div", undefined, "simulation-lab__preset-grid");
+      const parameters = parameterConfigFromForm();
       parameterKeys.forEach((key) => {
         const definition = model.parameters[key];
-        const parameter = parameterConfigFromForm()[key];
         const inputLabel = create("label");
         inputLabel.append(create("span", `${definition.symbol} (${definition.unit})`));
         const input = create("input");
@@ -245,7 +296,7 @@ export const initializeSimulationLab = () => {
         input.max = String(definition.hardMaximum);
         input.step = "any";
         input.value = String(preset.parameters[key]);
-        input.disabled = !parameter.editable;
+        input.disabled = !parameters[key].editable;
         input.dataset.presetParameter = key;
         inputLabel.append(input);
         grid.append(inputLabel);
@@ -256,6 +307,7 @@ export const initializeSimulationLab = () => {
     if (addButton instanceof HTMLButtonElement) {
       addButton.disabled = presets.length >= SIMULATION_EXPERIENCE_LIMITS.maximumPresets;
     }
+    registerDescribedBy(container);
   };
 
   const renderObservations = () => {
@@ -282,9 +334,18 @@ export const initializeSimulationLab = () => {
     if (addButton instanceof HTMLButtonElement) {
       addButton.disabled = observations.length >= SIMULATION_EXPERIENCE_LIMITS.maximumObservations;
     }
+    registerDescribedBy(container);
+  };
+
+  const renderContexts = (experience) => {
+    const selected = new Set(experience.contexts.flatMap((context) => context.topics));
+    form.querySelectorAll('input[name="context-topic"]').forEach((input) => {
+      input.checked = selected.has(input.value);
+    });
   };
 
   const syncLockedParameter = (fieldset) => {
+    if (!(fieldset instanceof HTMLElement)) return;
     const key = fieldset.dataset.labParameter;
     const editable = fieldset.querySelector("[data-parameter-editable]")?.checked === true;
     const defaultValue = fieldset.querySelector('[data-parameter-property="default"]')?.value;
@@ -292,6 +353,46 @@ export const initializeSimulationLab = () => {
       input.disabled = !editable;
       if (!editable) input.value = defaultValue;
     });
+  };
+
+  const renderPreview = async (experience) => {
+    await mountSimulationExperienceRenderer(rendererRoot, experience);
+    if (previewHeading) previewHeading.textContent = experience.title;
+    if (previewSummary) previewSummary.textContent = experience.summary;
+    if (previewObservations) {
+      previewObservations.replaceChildren(...experience.observations.map((observation) => create("li", observation)));
+    }
+    if (previewGuide instanceof HTMLElement) previewGuide.hidden = experience.observations.length === 0;
+  };
+
+  const switchModel = async (modelId) => {
+    const nextModel = getSimulationModelById(modelId);
+    const source = createSimulationLabBaseConfiguration(modelId);
+    if (!nextModel || !source) return;
+    modelSelect.disabled = true;
+    if (status) status.textContent = `Cargando ${nextModel.name}…`;
+    model = nextModel;
+    parameterKeys = Object.keys(model.parameters);
+    presets = structuredClone(source.presets);
+    observations = [...source.observations];
+    currentId = undefined;
+    nextPresetNumber = presets.length + 1;
+    form.elements.namedItem("title").value = source.title;
+    form.elements.namedItem("summary").value = source.summary;
+    renderParameters(source);
+    renderViews(source);
+    renderPresets();
+    renderObservations();
+    renderContexts(source);
+    const result = evaluate({ showErrors: true });
+    try {
+      if (result.valid) await renderPreview(result.experience);
+      if (status) status.textContent = `${nextModel.name} está listo para editar y previsualizar.`;
+    } catch {
+      if (status) status.textContent = "El renderer no pudo cargarse; revisa el mensaje localizado en la previsualización.";
+    } finally {
+      modelSelect.disabled = false;
+    }
   };
 
   root.querySelector("[data-add-lab-preset]")?.addEventListener("click", () => {
@@ -308,16 +409,15 @@ export const initializeSimulationLab = () => {
     evaluate({ showErrors: !errorPanel.hidden });
     if (status) status.textContent = "Caso de estudio añadido a la sesión local.";
   });
-
   root.querySelector("[data-lab-presets]")?.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-remove-lab-preset]");
+    const button = event.target instanceof Element
+      ? event.target.closest("[data-remove-lab-preset]")
+      : null;
     if (!(button instanceof HTMLButtonElement)) return;
     presets = readPresets().filter((_, index) => index !== Number(button.dataset.removeLabPreset));
     renderPresets();
     evaluate({ showErrors: !errorPanel.hidden });
-    if (status) status.textContent = "Caso de estudio eliminado de la sesión local.";
   });
-
   root.querySelector("[data-add-lab-observation]")?.addEventListener("click", () => {
     observations = readObservations();
     if (observations.length >= SIMULATION_EXPERIENCE_LIMITS.maximumObservations) return;
@@ -325,49 +425,38 @@ export const initializeSimulationLab = () => {
     renderObservations();
     evaluate({ showErrors: !errorPanel.hidden });
     root.querySelector("[data-lab-observation]:last-child textarea")?.focus();
-    if (status) status.textContent = "Observación añadida a la sesión local.";
   });
-
   root.querySelector("[data-lab-observations]")?.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-remove-lab-observation]");
+    const button = event.target instanceof Element
+      ? event.target.closest("[data-remove-lab-observation]")
+      : null;
     if (!(button instanceof HTMLButtonElement)) return;
-    observations = readObservations().filter((_, index) =>
-      index !== Number(button.dataset.removeLabObservation)
-    );
+    observations = readObservations().filter((_, index) => index !== Number(button.dataset.removeLabObservation));
     renderObservations();
     evaluate({ showErrors: !errorPanel.hidden });
-    if (status) status.textContent = "Observación eliminada de la sesión local.";
   });
-
+  modelSelect.addEventListener("change", () => { switchModel(modelSelect.value); });
   form.addEventListener("input", (event) => {
+    if (!(event.target instanceof Element) || event.target === modelSelect) return;
     const editable = event.target.closest("[data-parameter-editable]");
     if (editable) syncLockedParameter(editable.closest("[data-lab-parameter]"));
     evaluate({ showErrors: !errorPanel.hidden });
   });
-
-  root.querySelector("[data-preview-simulation]")?.addEventListener("click", () => {
+  root.querySelector("[data-preview-simulation]")?.addEventListener("click", async () => {
     const result = evaluate({ showErrors: true });
     if (!result.valid) {
       errorPanel.focus();
       if (status) status.textContent = "La configuración necesita ajustes antes de previsualizarse.";
       return;
     }
-    const runtime = initializeKinematicsSimulation(simulationRoot);
-    runtime?.updateExperience(result.experience);
-    if (previewHeading) previewHeading.textContent = result.experience.title;
-    if (previewSummary) previewSummary.textContent = result.experience.summary;
-    if (previewObservations) {
-      previewObservations.replaceChildren(...result.experience.observations.map((observation) =>
-        create("li", observation)
-      ));
+    try {
+      await renderPreview(result.experience);
+      previewHeading?.focus({ preventScroll: true });
+      if (status) status.textContent = "Previsualización actualizada con la configuración válida.";
+    } catch {
+      if (status) status.textContent = "No fue posible actualizar el renderer seleccionado.";
     }
-    if (previewGuide instanceof HTMLElement) {
-      previewGuide.hidden = result.experience.observations.length === 0;
-    }
-    previewHeading?.focus({ preventScroll: true });
-    if (status) status.textContent = "Previsualización actualizada con la configuración válida.";
   });
-
   exportButton.addEventListener("click", () => {
     const result = evaluate({ showErrors: true });
     if (!result.valid) {
@@ -389,10 +478,14 @@ export const initializeSimulationLab = () => {
     if (status) status.textContent = "Paquete descargado como borrador. No se publicó ni se envió.";
   });
 
+  registerDescribedBy();
   renderPresets();
   renderObservations();
   root.querySelectorAll("[data-lab-parameter]").forEach(syncLockedParameter);
   evaluate();
+  await mountSimulationExperienceRenderer(rendererRoot, initialExperience);
   root.dataset.initialized = "true";
-  window.addEventListener("pagehide", () => destroyKinematicsSimulation(simulationRoot), { once: true });
+  window.addEventListener("pagehide", () => {
+    destroySimulationExperienceRenderer(rendererRoot);
+  }, { once: true });
 };

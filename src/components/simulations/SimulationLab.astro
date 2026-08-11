@@ -1,7 +1,13 @@
 ---
-import KinematicsSimulation from "./KinematicsSimulation.astro";
-import { getSimulationExperienceById } from "../../data/simulation-experiences.js";
-import { getSimulationModelById } from "../../data/simulation-models.js";
+import SimulationExperienceRenderer from "./SimulationExperienceRenderer.astro";
+import {
+  SIMULATION_EXPERIENCES,
+  getSimulationExperienceById,
+} from "../../data/simulation-experiences.js";
+import {
+  SIMULATION_MODELS,
+  getSimulationModelById,
+} from "../../data/simulation-models.js";
 import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
 import {
   SIMULATION_EXPERIENCE_LIMITS,
@@ -15,29 +21,25 @@ const parameters = Object.entries(model.parameters).map(([key, definition]) => (
   ...experience.parameters[key],
 }));
 const contextTopicIds = new Set(experience.contexts.flatMap((context) => context.topics));
-const contextTopics = UNIT_1.topics.filter((topic) => contextTopicIds.has(topic.slug));
 const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
-const viewOptions = [
-  ["motion", "Movimiento sobre el eje"],
-  ["readings", "Lecturas instantáneas"],
-  ["positionGraph", "Gráfica x(t)"],
-  ["velocityGraph", "Gráfica v(t)"],
-  ["accelerationGraph", "Gráfica a(t)"],
-  ["turningPoint", "Información del cambio de sentido"],
-];
+const serializedModels = JSON.stringify(SIMULATION_MODELS).replaceAll("<", "\\u003c");
+const serializedExperiences = JSON.stringify(SIMULATION_EXPERIENCES).replaceAll("<", "\\u003c");
+const viewOptions = Object.entries(model.views);
 ---
 
 <section
   class="simulation-lab"
   data-simulation-lab
   data-initial-experience={serializedExperience}
+  data-models={serializedModels}
+  data-experiences={serializedExperiences}
   aria-labelledby="simulation-lab-title"
 >
   <header class="simulation-lab__intro">
     <div>
       <p class="academic-label">Constructor visual seguro</p>
       <h2 id="simulation-lab-title">Diseña una experiencia</h2>
-      <p>Configura el modelo disponible, comprueba la experiencia real y prepara un borrador para revisión.</p>
+      <p>Selecciona un modelo, comprueba su renderer real y prepara un borrador para revisión.</p>
     </div>
     <div class="simulation-lab__local" role="note">
       <strong>Sesión local y efímera</strong>
@@ -52,10 +54,12 @@ const viewOptions = [
           <legend>Modelo y propósito</legend>
           <label>
             <span>Modelo</span>
-            <select name="model" disabled aria-describedby="simulation-lab-model-help">
-              <option value={model.id}>{model.name}</option>
+            <select name="model" aria-describedby="simulation-lab-model-help">
+              {SIMULATION_MODELS.map((option) => (
+                <option value={option.id} selected={option.id === model.id}>{option.name}</option>
+              ))}
             </select>
-            <small id="simulation-lab-model-help">En esta etapa solo está disponible Cinemática 1D.</small>
+            <small id="simulation-lab-model-help">Cada modelo usa únicamente su renderer registrado y sus límites físicos.</small>
           </label>
           <label>
             <span>Título</span>
@@ -82,7 +86,7 @@ const viewOptions = [
         <fieldset>
           <legend>Parámetros</legend>
           <p class="simulation-lab__fieldset-help">Los límites de la experiencia pueden ser más estrechos, nunca superar los límites del modelo.</p>
-          <div class="simulation-lab__parameters">
+          <div class="simulation-lab__parameters" data-lab-parameters>
             {parameters.map((parameter) => (
               <fieldset class="simulation-lab__parameter" data-lab-parameter={parameter.key}>
                 <legend>{parameter.label} <span>{parameter.symbol}</span></legend>
@@ -158,12 +162,12 @@ const viewOptions = [
 
         <fieldset data-lab-views>
           <legend>Qué mostrar</legend>
-          <p class="simulation-lab__fieldset-help">Activa al menos el movimiento sobre el eje o una gráfica.</p>
-          <div class="simulation-lab__checks">
-            {viewOptions.map(([key, label]) => (
+          <p class="simulation-lab__fieldset-help">Activa al menos una representación visual principal del modelo.</p>
+          <div class="simulation-lab__checks" data-lab-view-options>
+            {viewOptions.map(([key, definition]) => (
               <label class="simulation-lab__check">
-                <input type="checkbox" name={`view-${key}`} checked={experience.views[key]} />
-                <span>{label}</span>
+                <input type="checkbox" data-lab-view={key} checked={experience.views[key]} />
+                <span>{definition.label}{definition.visual ? " · visual principal" : ""}</span>
               </label>
             ))}
           </div>
@@ -190,10 +194,10 @@ const viewOptions = [
         <fieldset>
           <legend>Contexto académico</legend>
           <p class="simulation-lab__fieldset-help">La asociación es opcional. Las opciones proceden de los temas reales de la Unidad 1.</p>
-          <div class="simulation-lab__checks">
-            {contextTopics.map((topic) => (
+          <div class="simulation-lab__checks" data-lab-context-topics>
+            {UNIT_1.topics.map((topic) => (
               <label class="simulation-lab__check">
-                <input type="checkbox" name="context-topic" value={topic.slug} checked />
+                <input type="checkbox" name="context-topic" value={topic.slug} checked={contextTopicIds.has(topic.slug)} />
                 <span>{topic.title}</span>
               </label>
             ))}
@@ -222,7 +226,7 @@ const viewOptions = [
         <h2 id="simulation-lab-preview-title" tabindex="-1" data-preview-title>{experience.title}</h2>
         <p data-preview-summary>{experience.summary}</p>
       </header>
-      <KinematicsSimulation experience={experience} preview />
+      <SimulationExperienceRenderer experience={experience} preview includeAllRenderers />
       <section class="simulation-lab__preview-guide" data-preview-guide aria-labelledby="simulation-lab-preview-guide-title">
         <h3 id="simulation-lab-preview-guide-title">Qué observar</h3>
         <ol data-preview-observations>
@@ -235,5 +239,8 @@ const viewOptions = [
 
 <script>
   import { initializeSimulationLab } from "../../scripts/simulation-lab.js";
-  initializeSimulationLab();
+  initializeSimulationLab().catch(() => {
+    const status = document.querySelector("[data-simulation-lab-status]");
+    if (status) status.textContent = "No fue posible iniciar el Laboratorio de simulaciones.";
+  });
 </script>

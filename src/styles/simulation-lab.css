@@ -301,8 +301,18 @@
   gap: 2rem;
 }
 
-.simulation-lab__preview .kinematics-simulation__workspace {
+.simulation-lab__preview .projectile-simulation {
+  gap: 2rem;
+}
+
+.simulation-lab__preview .kinematics-simulation__workspace,
+.simulation-lab__preview .projectile-simulation__workspace {
   grid-template-columns: 1fr;
+}
+
+.simulation-lab__preview .projectile-readings__instant,
+.simulation-lab__preview .projectile-readings__global {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .simulation-lab__preview .kinematics-charts__grid {
