@@ -1,6 +1,7 @@
 ---
 import KinematicsChart from "./KinematicsChart.astro";
 import KinematicsMotion from "./KinematicsMotion.astro";
+import SimulationFloatingPlayback from "./SimulationFloatingPlayback.astro";
 import { getSimulationExperienceById, localizeSimulationExperience } from "../../data/simulation-experiences.js";
 import { getSimulationModelById, localizeSimulationModel } from "../../data/simulation-models.js";
 import { formatNumber, t } from "../../i18n/index.js";
@@ -202,7 +203,7 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
     )}
   </div>
 
-  <section class="kinematics-playback" aria-labelledby="kinematics-playback-title">
+  <section class="kinematics-playback" aria-labelledby="kinematics-playback-title" data-playback-section>
     <div class="kinematics-playback__heading">
       <div>
         <p class="academic-label">{t(locale, "simulation.time")}</p>
@@ -237,6 +238,8 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
     </div>
     <p class="sr-only" aria-live="polite" aria-atomic="true" data-simulation-live></p>
   </section>
+
+  {!preview && <SimulationFloatingPlayback locale={locale} />}
 
   {hasCharts && (
     <section class="kinematics-charts" aria-labelledby="kinematics-charts-title" data-charts-section>

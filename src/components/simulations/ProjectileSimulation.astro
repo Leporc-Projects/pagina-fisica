@@ -10,6 +10,7 @@ import {
   getProjectileState,
   getProjectileSummary,
 } from "../../utils/projectile-2d.js";
+import SimulationFloatingPlayback from "./SimulationFloatingPlayback.astro";
 import "../../styles/projectile-simulation.css";
 
 interface Props {
@@ -191,7 +192,7 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
     </div>
   </div>
 
-  <section class="projectile-playback" aria-labelledby="projectile-playback-title">
+  <section class="projectile-playback" aria-labelledby="projectile-playback-title" data-playback-section>
     <div class="projectile-playback__heading">
       <div>
         <p class="academic-label">{t(locale, "projectile.physicalTime")}</p>
@@ -222,6 +223,8 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
     </div>
     <p class="sr-only" aria-live="polite" aria-atomic="true" data-simulation-live></p>
   </section>
+
+  {!preview && <SimulationFloatingPlayback locale={locale} />}
 
   <noscript>
     <div class="projectile-noscript" role="note">

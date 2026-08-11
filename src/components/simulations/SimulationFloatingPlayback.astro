@@ -1,0 +1,28 @@
+---
+import { t } from "../../i18n/index.js";
+import "../../styles/simulation-floating-playback.css";
+
+interface Props {
+  locale?: "es" | "en";
+}
+
+const { locale = "es" } = Astro.props;
+const initialTime = "0 s";
+---
+
+<div
+  class="simulation-floating-playback"
+  data-floating-playback
+  role="group"
+  aria-label={t(locale, "simulation.floatingPlayback")}
+  hidden
+>
+  <button type="button" data-floating-toggle aria-label={t(locale, "simulation.playSimulation")} aria-pressed="false">
+    <span data-floating-icon aria-hidden="true">▶</span>
+    <span class="sr-only" data-floating-label>{t(locale, "simulation.play")}</span>
+  </button>
+  <output data-floating-time aria-label={t(locale, "simulation.currentTime", { time: initialTime })}>{initialTime}</output>
+  <button type="button" data-floating-reset aria-label={t(locale, "simulation.resetSimulation")}>
+    <span aria-hidden="true">↺</span>
+  </button>
+</div>

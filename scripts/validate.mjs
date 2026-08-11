@@ -1778,6 +1778,18 @@ const simulationImporterSource = fs.readFileSync(
   path.join(projectRoot, "scripts/import-simulations.mjs"),
   "utf8"
 );
+const floatingPlaybackComponentSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/simulations/SimulationFloatingPlayback.astro"),
+  "utf8"
+);
+const floatingPlaybackScriptSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/simulation-floating-playback.js"),
+  "utf8"
+);
+const floatingPlaybackStyleSource = fs.readFileSync(
+  path.join(projectRoot, "src/styles/simulation-floating-playback.css"),
+  "utf8"
+);
 
 check(
   kinematicsComponentSource.includes("data-kinematics-simulation") &&
@@ -1859,6 +1871,26 @@ check(
     astroConfigSource.includes('name: "p5"') &&
     astroConfigSource.includes("node_modules\\/p5\\/"),
   "El proyectil es responsive, usa tokens y aísla el chunk de p5 del resto del sitio."
+);
+
+check(
+  floatingPlaybackComponentSource.includes("data-floating-playback") &&
+    floatingPlaybackComponentSource.includes('data-floating-toggle') &&
+    floatingPlaybackComponentSource.includes('data-floating-reset') &&
+    floatingPlaybackComponentSource.includes('t(locale, "simulation.playSimulation")') &&
+    kinematicsComponentSource.includes("<SimulationFloatingPlayback") &&
+    projectileComponentSource.includes("<SimulationFloatingPlayback") &&
+    kinematicsComponentSource.includes("!preview") &&
+    projectileComponentSource.includes("!preview") &&
+    kinematicsScriptSource.includes("initializeSimulationFloatingPlayback") &&
+    projectileScriptSource.includes("initializeSimulationFloatingPlayback") &&
+    floatingPlaybackScriptSource.includes("IntersectionObserver") &&
+    floatingPlaybackScriptSource.includes("observer?.disconnect()") &&
+    !/(?:requestAnimationFrame|setInterval|setTimeout)/.test(floatingPlaybackScriptSource) &&
+    floatingPlaybackStyleSource.includes("env(safe-area-inset-bottom)") &&
+    floatingPlaybackStyleSource.includes("z-index: 100") &&
+    !/(?:#[0-9a-f]{3,8}\b|\brgba?\s*\()/i.test(floatingPlaybackStyleSource),
+  "El transporte flotante comparte runtime, se oculta en previews y no añade ciclos de animación."
 );
 
 check(

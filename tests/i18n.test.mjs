@@ -53,6 +53,13 @@ test("los errores visibles de simulación se localizan sin cambiar sus valores",
   assert.match(t("es", "simulation.valueOutOfRange", params), /debe estar entre -50 y 50 m/);
 });
 
+test("los controles flotantes conservan labels accesibles bilingües", () => {
+  assert.equal(t("es", "simulation.playSimulation"), "Reproducir simulación");
+  assert.equal(t("en", "simulation.pauseSimulation"), "Pause simulation");
+  assert.equal(t("en", "simulation.resetSimulation"), "Reset simulation");
+  assert.equal(t("es", "simulation.currentTime", { time: "1,25 s" }), "Tiempo actual: 1,25 s");
+});
+
 test("el formato numérico usa Intl sin alterar los inputs computacionales", () => {
   assert.equal(formatNumber("es", 9.8), "9,8");
   assert.equal(formatNumber("en", 9.8), "9.8");

@@ -15,6 +15,7 @@ import {
   createKinematicsChartGeometry,
   createKinematicsMotionGeometry,
 } from "../utils/kinematics-svg.js";
+import { initializeSimulationFloatingPlayback } from "./simulation-floating-playback.js";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const quantityViews = Object.freeze({
@@ -68,6 +69,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
   const playbackState = root.querySelector("[data-playback-state]");
   const timeOutput = root.querySelector("[data-time-output]");
   const liveRegion = root.querySelector("[data-simulation-live]");
+  const playbackSection = root.querySelector("[data-playback-section]");
   if (
     !(scrubber instanceof HTMLInputElement) ||
     !(toggleButton instanceof HTMLButtonElement) ||
@@ -102,6 +104,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     chartGeometries: new Map(),
     motionGeometry: null,
   };
+  let floatingPlayback = null;
 
   const announce = (message) => {
     liveRegion.textContent = "";
@@ -115,6 +118,15 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     playbackLabel.textContent = state.playing ? t(locale, "simulation.pause") : t(locale, "simulation.play");
     playbackIcon.textContent = state.playing ? "❚❚" : "▶";
     playbackState.textContent = state.playing ? t(locale, "simulation.playing") : t(locale, "simulation.paused");
+    syncFloatingPlayback();
+  };
+
+  const syncFloatingPlayback = () => {
+    floatingPlayback?.sync({
+      playing: state.playing,
+      timeText: timeOutput.textContent,
+      disabled: toggleButton.disabled,
+    });
   };
 
   const pause = ({ shouldAnnounce = false, reason = t(locale, "simulation.paused") } = {}) => {
@@ -146,6 +158,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     const directionKey = physicalState.direction === "hacia +x" ? "positive" : physicalState.direction === "hacia −x" ? "negative" : "stationary";
     if (direction) direction.textContent = t(locale, "kinematics.direction", { direction: t(locale, `simulation.direction.${directionKey}`) });
     timeOutput.textContent = `${displayNumber(physicalState.time)} s`;
+    syncFloatingPlayback();
   };
 
   const updateFrame = () => {
@@ -514,6 +527,18 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     state.frameId = window.requestAnimationFrame(animationFrame);
   };
 
+  const togglePlayback = () => {
+    if (state.playing) pause({ shouldAnnounce: true });
+    else play();
+  };
+
+  const resetPlayback = () => {
+    pause();
+    state.time = 0;
+    updateFrame();
+    announce(t(locale, "simulation.resetAnnounce"));
+  };
+
   root.querySelectorAll("[data-param-range], [data-param-number]").forEach((input) => {
     input.addEventListener("input", handleParameterInput, listenerOptions);
   });
@@ -532,16 +557,8 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     state.time = 0;
     applyParameters(preset.parameters, t(locale, "simulation.presetLoaded", { label: preset.label }));
   }, listenerOptions);
-  toggleButton.addEventListener("click", () => {
-    if (state.playing) pause({ shouldAnnounce: true });
-    else play();
-  }, listenerOptions);
-  root.querySelector('[data-action="reset"]')?.addEventListener("click", () => {
-    pause();
-    state.time = 0;
-    updateFrame();
-    announce(t(locale, "simulation.resetAnnounce"));
-  }, listenerOptions);
+  toggleButton.addEventListener("click", togglePlayback, listenerOptions);
+  root.querySelector('[data-action="reset"]')?.addEventListener("click", resetPlayback, listenerOptions);
   scrubber.addEventListener("input", () => {
     pause({
       shouldAnnounce: state.playing,
@@ -560,7 +577,13 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
       });
     }
   }, listenerOptions);
-  window.addEventListener("pagehide", () => pause(), { ...listenerOptions, once: true });
+  floatingPlayback = initializeSimulationFloatingPlayback({
+    root,
+    playbackSection,
+    locale,
+    onToggle: togglePlayback,
+    onReset: resetPlayback,
+  });
 
   const api = {
     get experience() {
@@ -591,6 +614,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
     },
     destroy() {
       pause();
+      floatingPlayback?.destroy();
       abortController.abort();
       root.removeAttribute("data-initialized");
       runtimes.delete(root);
@@ -606,6 +630,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
   updateFrame();
   updateControlOutputs();
   setPlaybackPresentation();
+  window.addEventListener("pagehide", () => api.destroy(), { ...listenerOptions, once: true });
   return api;
 };
 

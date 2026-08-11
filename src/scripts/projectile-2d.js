@@ -13,6 +13,7 @@ import {
   validateProjectileParameters,
 } from "../utils/projectile-2d.js";
 import { createProjectileP5Renderer } from "./p5-projectile-renderer.js";
+import { initializeSimulationFloatingPlayback } from "./simulation-floating-playback.js";
 
 const runtimes = new WeakMap();
 const pendingRuntimes = new WeakMap();
@@ -48,6 +49,7 @@ const createRuntime = async (root, suppliedExperience) => {
   const playbackState = root.querySelector("[data-playback-state]");
   const timeOutput = root.querySelector("[data-time-output]");
   const liveRegion = root.querySelector("[data-simulation-live]");
+  const playbackSection = root.querySelector("[data-playback-section]");
   const rendererError = root.querySelector("[data-projectile-renderer-error]");
   if (!(canvasContainer instanceof HTMLElement) ||
       !(scrubber instanceof HTMLInputElement) ||
@@ -78,6 +80,7 @@ const createRuntime = async (root, suppliedExperience) => {
     playStartTime: 0,
     frame: null,
   };
+  let floatingPlayback = null;
 
   const announce = (message) => {
     liveRegion.textContent = "";
@@ -118,6 +121,14 @@ const createRuntime = async (root, suppliedExperience) => {
     playbackLabel.textContent = state.playing ? t(locale, "simulation.pause") : t(locale, "simulation.play");
     playbackIcon.textContent = state.playing ? "❚❚" : "▶";
     playbackState.textContent = state.playing ? t(locale, "simulation.playing") : t(locale, "simulation.paused");
+    syncFloatingPlayback();
+  };
+  const syncFloatingPlayback = () => {
+    floatingPlayback?.sync({
+      playing: state.playing,
+      timeText: timeOutput.textContent,
+      disabled: toggleButton.disabled,
+    });
   };
   const pause = ({ shouldAnnounce = false, reason = t(locale, "simulation.paused") } = {}) => {
     state.playing = false;
@@ -158,6 +169,7 @@ const createRuntime = async (root, suppliedExperience) => {
     toggleButton.disabled = immediate;
     scrubber.disabled = immediate;
     if (immediate) playbackState.textContent = t(locale, "projectile.immediateGround");
+    syncFloatingPlayback();
   };
   const updateControlOutputs = () => {
     parameterDefinitions().forEach((control) => {
@@ -286,6 +298,18 @@ const createRuntime = async (root, suppliedExperience) => {
     state.frameId = window.requestAnimationFrame(animationFrame);
   };
 
+  const togglePlayback = () => {
+    if (state.playing) pause({ shouldAnnounce: true });
+    else play();
+  };
+
+  const resetPlayback = () => {
+    pause();
+    state.time = 0;
+    updateFrame();
+    announce(t(locale, "simulation.resetAnnounce"));
+  };
+
   root.querySelectorAll("[data-param-range], [data-param-number]").forEach((input) => {
     input.addEventListener("input", (event) => {
       const source = event.currentTarget;
@@ -322,16 +346,8 @@ const createRuntime = async (root, suppliedExperience) => {
     state.time = 0;
     applyParameters(preset.parameters, t(locale, "simulation.presetLoaded", { label: preset.label }));
   }, listenerOptions);
-  toggleButton.addEventListener("click", () => {
-    if (state.playing) pause({ shouldAnnounce: true });
-    else play();
-  }, listenerOptions);
-  root.querySelector('[data-action="reset"]')?.addEventListener("click", () => {
-    pause();
-    state.time = 0;
-    updateFrame();
-    announce(t(locale, "simulation.resetAnnounce"));
-  }, listenerOptions);
+  toggleButton.addEventListener("click", togglePlayback, listenerOptions);
+  root.querySelector('[data-action="reset"]')?.addEventListener("click", resetPlayback, listenerOptions);
   scrubber.addEventListener("input", () => {
     pause({ shouldAnnounce: state.playing, reason: t(locale, "simulation.pausedForTime") });
     if (Number.isFinite(scrubber.valueAsNumber)) {
@@ -344,6 +360,14 @@ const createRuntime = async (root, suppliedExperience) => {
       pause({ shouldAnnounce: true, reason: t(locale, "simulation.pausedHidden") });
     }
   }, listenerOptions);
+
+  floatingPlayback = initializeSimulationFloatingPlayback({
+    root,
+    playbackSection,
+    locale,
+    onToggle: togglePlayback,
+    onReset: resetPlayback,
+  });
 
   const api = {
     get experience() { return experience; },
@@ -370,6 +394,7 @@ const createRuntime = async (root, suppliedExperience) => {
     },
     destroy() {
       pause();
+      floatingPlayback?.destroy();
       abortController.abort();
       renderer.destroy();
       root.removeAttribute("data-initialized");
