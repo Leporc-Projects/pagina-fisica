@@ -29,6 +29,10 @@ Consult these guides before working on related tasks:
 - Keep `Aula Física` and `Leporc Projects` unchanged. Keep physics, units, equations, parameters, and numeric configuration shared across locales.
 - Shared interface strings belong in dictionaries and use `t(locale, key, params)`. Do not add scattered locale conditionals or HTML interpolation.
 - Visible numbers use the registered `Intl` locale; numeric HTML inputs keep computational dot semantics.
+- Build every new core public feature in Spanish and English from the start.
+- Do not merge a core public feature with missing translations or an incomplete locale route.
+- Locale-specific editorial content must declare its locale explicitly; never infer it or fall back silently.
+- Public/student-facing coverage is complete in ES and EN. English parity for teacher authoring tools remains pending Block 6B.
 
 ## Code comments
 

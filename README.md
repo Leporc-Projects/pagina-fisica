@@ -52,6 +52,8 @@ pagina-fisica/
 
 Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raíz de `https://aulafisica.com`.
 
+La cobertura pública y estudiantil actual está completa en español e inglés. Las rutas inglesas equivalentes viven bajo `/en/`; esto incluye curso, avisos, cronograma, Unidad 1, práctica, Bonos, videos, evaluación, recursos y Participa. Las herramientas de autoría docente continúan en español y su paridad inglesa queda pendiente para el Bloque 6B.
+
 - `/`: portada y avisos recientes.
 - `/fisica-basica-1`: información general del curso.
 - `/fisica-basica-1/avisos`: avisos publicados específicamente para el curso.
@@ -69,7 +71,7 @@ Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raí
 - `/simulaciones`: catálogo canónico de simulaciones publicadas y categorías futuras.
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
 - `/simulaciones/proyectil-2d`: simulación propia de movimiento parabólico en Canvas 2D.
-- `/en/`: portada completa en inglés.
+- `/en/`: portada y recorrido público completo en inglés.
 - `/en/simulations`: catálogo completo de simulaciones en inglés.
 - `/en/simulations/kinematics-1d`: Cinemática 1D en inglés.
 - `/en/simulations/projectile-2d`: Proyectil 2D en inglés.
@@ -216,7 +218,7 @@ en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ### Avisos
 
-Los avisos se almacenan en `src/data/notices.json` con esquema `3.0.0`, locale explícito y un ámbito obligatorio: `{ "type": "global" }` o `{ "type": "course", "courseId": "fisica-basica-1" }`. Los avisos actuales son exclusivamente españoles y no se publican bajo rutas inglesas.
+Los avisos se almacenan en `src/data/notices.json` con esquema `3.0.0`, locale explícito y un ámbito obligatorio: `{ "type": "global" }` o `{ "type": "course", "courseId": "fisica-basica-1" }`. Los avisos actuales tienen registros editoriales explícitos en ambos locales; nunca existe fallback o traducción en runtime entre ellos.
 
 `src/data/notices.js` expone consultas separadas para todos los publicados, los generales, los de un curso y la selección de portada. `/avisos` muestra solo avisos generales; `/fisica-basica-1/avisos` muestra solo los del curso; la portada combina ambos ámbitos para los cursos activos, prioriza destacados y limita la salida a tres registros sin duplicados.
 
@@ -233,7 +235,7 @@ npm run stats:loc -- --ref HEAD
 
 ### Videos
 
-Los videos se registran en `src/data/videos.js` únicamente cuando exista una publicación real y aprobada. No deben añadirse títulos, fechas, miniaturas o direcciones web provisionales.
+Los videos se registran en `src/data/videos.js` únicamente cuando exista una publicación real y aprobada. Cada registro declara su idioma; no deben añadirse títulos, fechas, miniaturas o direcciones web provisionales.
 
 ### Recursos y bibliografía
 

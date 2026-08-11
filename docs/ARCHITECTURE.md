@@ -22,6 +22,8 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 
 La internacionalización añade una capa pura entre rutas/datos y presentación. `src/i18n/config.js` registra locales, `ui/` conserva diccionarios con paridad, `routes.js` relaciona IDs estables con slugs humanos y `metadata.js` deriva canonical y alternates. Español permanece en la raíz e inglés usa `/en/`; no hay detección automática ni persistencia del idioma. La cobertura completa y el procedimiento editorial viven en [I18N.md](./I18N.md).
 
+La superficie pública sigue el contrato `invariant data + localized presentation`: IDs, fechas, porcentajes, scoring, parámetros, reglas y claves de esquema se comparten; `course-localize.js`, los localizadores de Unidad 1/ejercicios/Participa y los diccionarios proyectan únicamente texto visible. La cobertura pública ES/EN es completa. Las herramientas de autoría docente son la excepción deliberada y su paridad inglesa queda para el Bloque 6B.
+
 ## Capas del proyecto
 
 ### Datos

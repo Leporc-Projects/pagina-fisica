@@ -69,6 +69,8 @@ La cobertura y el flujo están definidos en [I18N.md](./I18N.md). No se crea una
 
 Los textos comunes de interfaz usan claves en los diccionarios `src/i18n/ui/`. Las magnitudes, parámetros, unidades, ecuaciones y límites físicos permanecen compartidos. Las experiencias de simulación añaden texto por locale dentro de su contrato y conservan una única configuración numérica.
 
+Toda nueva feature pública core se desarrolla en ES y EN desde el inicio y no se integra con traducción core faltante. El contenido editorial que sea realmente específico de un idioma declara `locale` explícitamente y no usa fallback silencioso. La cobertura pública estudiantil actual es completa en ambos idiomas; solo las herramientas de autoría docente esperan paridad inglesa en el Bloque 6B.
+
 ## Registrar un video mediante enlace
 
 Los videos se registran en `src/data/videos.js` cuando exista una publicación real y aprobada. El repositorio almacena metadatos y enlaces; no debe almacenar archivos de video pesados.
@@ -84,12 +86,15 @@ Contrato de un registro:
   duration: "Duración verificada",
   date: "AAAA-MM-DD",
   url: "Enlace público aprobado",
+  language: "es",
   thumbnail: "Ruta o enlace opcional aprobado",
   status: "disponible",
 }
 ```
 
 No se deben añadir títulos, fechas, miniaturas o URL provisionales para completar visualmente la página. Mientras no existan registros reales, `VIDEOS` permanece vacío y la página muestra su estado editorial.
+
+`language` es obligatorio. La interfaz puede indicar, por ejemplo, “Language: Spanish” sin afirmar que el audio o el título oficial existe en otro idioma. La URL, el título oficial y la atribución no se traducen arbitrariamente.
 
 Antes de publicar un enlace externo, comprobar que:
 
