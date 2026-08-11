@@ -9,11 +9,11 @@ Aula Física es un sitio estático construido con Astro. No tiene backend, base 
 El flujo principal es:
 
 ```text
-src/data (contenido + contrato de tema)
+src/data (contenido + catálogos + contrato de tema)
    ↓
 componentes y páginas + withBase(import.meta.env.BASE_URL)
    ↓
-BaseLayout + ThemeSelector + visualizaciones SVG + global.css
+BaseLayout + ThemeSelector + visualizaciones/simulaciones SVG + estilos
    ↓
 astro build → dist → GitHub Pages
 ```
@@ -28,7 +28,9 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 
 - `courses.js`: registro mínimo de identidades estables, rutas y estado activo de los cursos reales.
 - `course.js`: contrato académico de Física Básica I; deriva su identidad de `courses.js` y añade navegación interna, siete unidades, evaluación, bibliografía y cronograma.
-- `site.js`: identidad editorial, navegación global, accesos de portada y categorías generales de simulaciones.
+- `site.js`: identidad editorial, navegación global y accesos de portada.
+- `simulations.js`: catálogo canónico de simulaciones, taxonomía, estados,
+  controles, presets y contextos declarativos por curso, unidad y tema.
 - `notices.json`: almacenamiento editorial actual de avisos; puede contener los cuatro estados.
 - `notices.js`: adaptador de consultas publicadas por ámbito; separa el archivo general, cada curso y la selección combinada de portada.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
@@ -78,6 +80,10 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `visualization/CartesianChart.astro`: traduce dominios, series y geometría física a un SVG cartesiano accesible y responsive.
 - `visualization/AcademicDiagram.astro`: compone diagramas vectoriales y geométricos con escala física isotrópica y etiquetas posicionables.
 - `visualization/AcademicVisualization.astro`: resuelve una entrada del registro central como gráfica o diagrama para que temas y ejercicios no dupliquen SVG.
+- `simulations/KinematicsSimulation.astro`: compone controles, lecturas,
+  reproducción, eje físico y tres gráficas de la simulación 1D.
+- `simulations/KinematicsMotion.astro` y `KinematicsChart.astro`: renderizan el
+  estado estático inicial en SVG y exponen hooks pequeños para la mejora cliente.
 - `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
 - `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
 - `academic/RichText.astro` e `InlineMath.astro`: convierten el contrato mixto texto/MathML en HTML estático; nunca interpretan entrada del navegador.
@@ -94,6 +100,14 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `results/`: importación del listado, configuración de fuentes, resumen, incidencias, consolidado y exportaciones del Organizador de resultados. Cada componente representa una etapa visible; el estado y los cálculos permanecen fuera de Astro y del DOM.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
+- `src/utils/kinematics-1d.js`: modelo puro de aceleración constante; valida
+  parámetros y tiempo, calcula estado, retorno, distancia por tramos, muestras,
+  extremos y dominios físicos finitos.
+- `src/utils/kinematics-svg.js`: frontera datos físicos → transformación →
+  geometría SVG para el eje de movimiento y las tres gráficas sincronizadas.
+- `src/scripts/kinematics-1d.js`: adaptación vanilla de controles y reproducción.
+  Mantiene estado efímero en memoria, usa `requestAnimationFrame` y no reconstruye
+  curvas durante cada frame.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
 - `src/utils/exercise-families.js`: valida familias, genera parámetros con aleatoriedad criptográfica, evita combinaciones recientes en memoria y materializa una instancia determinista.
 - `src/utils/bonus-audit.js`: audita candidatos por slot y simula diversidad de tandas sin modificar blueprints.
@@ -135,6 +149,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/avisos.astro` | `/avisos` |
 | `src/pages/recursos.astro` | `/recursos` (redirección compatible) |
 | `src/pages/simulaciones.astro` | `/simulaciones` |
+| `src/pages/simulaciones/cinematica-1d.astro` | `/simulaciones/cinematica-1d` |
 | `src/pages/herramientas.astro` | `/herramientas` |
 | `src/pages/actividades.astro` | `/actividades` |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
@@ -646,6 +661,7 @@ Los imports CSS y los recursos generados por Astro reciben `base` durante el bui
 - estructura interna del curso;
 - cronograma y unidades;
 - visualizaciones SVG académicas y sus variantes responsive e imprimibles;
+- simulación 1D en `kinematics-simulation.css`, separada de las figuras académicas estáticas;
 - breakpoints responsive y reducción de movimiento.
 
 La navegación global es sticky. `CourseNav` conserva acceso rápido con menor
@@ -775,6 +791,41 @@ responder a teclado. Esta interacción no debe guardar respuestas o datos en
 `localStorage`; la única persistencia vigente sigue siendo la preferencia de
 tema.
 
+### Simulación de cinemática 1D
+
+La primera simulación concreta conserva la misma frontera de visualizaciones y
+añade un bucle cliente pequeño:
+
+```text
+simulations.js (catálogo + controles + presets + contextos)
+   ↓
+kinematics-1d.js (x, v, a, Δx, distancia, retorno, muestras, dominios)
+   ↓
+kinematics-svg.js + chart.js (transformaciones y paths SVG finitos)
+   ↓
+componentes simulations/* (HTML y SVG inicial durante el build)
+   ↓ mejora progresiva
+scripts/kinematics-1d.js (estado efímero + requestAnimationFrame + DOM)
+```
+
+`x₀`, `v₀`, `a` y `T` se validan antes de modificar el estado. Una entrada
+inválida pausa la reproducción, marca el campo y conserva la última geometría
+válida; no puede enviar `NaN` o `Infinity` al SVG. El cambio de un parámetro
+reconstruye muestras, dominios, ticks y curvas una sola vez. Un frame de
+reproducción actualiza únicamente lecturas, cursor temporal, puntos y marcador
+de posición.
+
+La reproducción nunca empieza automáticamente. Al terminar el intervalo,
+cambiar parámetros, mover manualmente el tiempo o perder visibilidad se cancela
+el frame pendiente. `pagehide` también limpia el bucle. No se utiliza red,
+`localStorage`, `sessionStorage`, Canvas ni HTML dinámico; los nodos SVG que
+cambian se crean con `createElementNS` y el texto con `textContent`.
+
+El catálogo declara la simulación como recurso global publicado y relaciona sus
+contextos con `movimiento-1d` y `ecuaciones-movimiento`. `UnitTopicPage` consulta
+esa metadata y muestra el CTA solo donde corresponde; no contiene la ruta de la
+simulación ni una lista paralela de temas.
+
 Para añadir una gráfica estática:
 
 1. importar `CartesianChart.astro` en la página académica aprobada;
@@ -833,6 +884,8 @@ Los contratos más importantes son:
 - uso de `localStorage` limitado al arranque y al selector de tema.
 - contrato SVG: transformación, recorte, hooks, tema, ausencia de Canvas y demo fuera de navegación;
 - ocho pruebas unitarias con `node:test` para dominios, escalas, ticks, inversión de y, discontinuidades, recorte y paths finitos.
+- catálogo de simulaciones, ruta publicada, contextos académicos reales y
+  núcleo cinemático con casos límite, retorno, distancia por tramos y geometría finita;
 - contrato académico: siete temas ordenados, capas de profundidad admitidas, referencias existentes entre contenido, fórmulas, figuras y errores;
 - fórmulas MathML con significado, variables, condiciones, interpretación dimensional y errores asociados;
 - registro de MathML inline sin notación de teclado pendiente en el contenido visible;

@@ -34,8 +34,8 @@ pagina-fisica/
 │   ├── data/               Datos del curso, avisos y catálogos
 │   ├── layouts/            Estructura común de las páginas
 │   ├── pages/              Rutas generadas por Astro
-│   ├── styles/             Sistema visual global
-│   └── utils/              Resolución compartida de rutas públicas
+│   ├── styles/             Sistema visual global y estilos de experiencias
+│   └── utils/              Rutas, modelos físicos y geometría SVG pura
 ├── astro.config.mjs
 ├── package.json
 └── README.md
@@ -63,7 +63,8 @@ Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raí
 - `/fisica-basica-1/herramientas/avisos`: editor local de avisos.
 - `/avisos`: archivo público de avisos.
 - `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
-- `/simulaciones`: catálogo futuro de simulaciones.
+- `/simulaciones`: catálogo canónico de simulaciones publicadas y categorías futuras.
+- `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
 - `/herramientas`: acceso de compatibilidad al hub docente del curso.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
 
@@ -136,7 +137,10 @@ para conservar rutas lógicas portables sin escribir el dominio en cada página.
 
 ## Validación
 
-La validación interna comprueba la evaluación, el cronograma, los identificadores, las rutas, los enlaces internos principales y que las plantillas no introduzcan `href` o `src` literales incompatibles con `base`:
+La validación interna comprueba la evaluación, el cronograma, los identificadores,
+las rutas, los enlaces internos principales, el catálogo y los contextos de las
+simulaciones, la infraestructura SVG y que las plantillas no introduzcan `href`
+o `src` literales incompatibles con `base`:
 
 ```sh
 npm run validate
@@ -155,6 +159,20 @@ npm audit
 git diff --check
 git status
 ```
+
+## Simulación de cinemática 1D
+
+La primera experiencia interactiva usa únicamente Astro, JavaScript vanilla y
+SVG. El modelo puro vive en `src/utils/kinematics-1d.js`; el catálogo y los
+casos de estudio viven en `src/data/simulations.js`; la proyección reutiliza las
+transformaciones de `src/utils/chart.js`; y el script cliente solo adapta esos
+resultados al DOM.
+
+Los tres casos publicados son movimiento uniforme (`x₀=-6`, `v₀=2,5`, `a=0`,
+`T=6`), parte del reposo (`x₀=-4`, `v₀=0`, `a=1,5`, `T=6`) y frena y regresa
+(`x₀=-4`, `v₀=6`, `a=-2`, `T=6`). La experiencia no reproduce automáticamente,
+no persiste parámetros o progreso, no usa red y conserva contenido y gráficas
+iniciales útiles cuando JavaScript está desactivado.
 
 ## Incorporación de contenidos
 

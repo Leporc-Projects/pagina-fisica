@@ -21,6 +21,20 @@ import {
 } from "../src/data/courses.js";
 import { HOME_LINKS, NAV, SITE } from "../src/data/site.js";
 import {
+  KINEMATICS_1D_CONTROLS,
+  KINEMATICS_1D_PRESETS,
+  SIMULATIONS,
+  SIMULATION_CATEGORIES,
+  SIMULATION_STATUSES,
+  getPublishedSimulations,
+  getSimulationsForCourseTopic,
+} from "../src/data/simulations.js";
+import {
+  getKinematicsState,
+  getTurningPoint,
+} from "../src/utils/kinematics-1d.js";
+import { createKinematicsChartGeometry } from "../src/utils/kinematics-svg.js";
+import {
   NOTICES,
   getCourseNotices,
   getGlobalNotices,
@@ -430,6 +444,80 @@ check(
   "La portada destaca solo el curso y Simulaciones."
 );
 
+const simulationIds = SIMULATIONS.map((simulation) => simulation.id);
+const simulationRoutes = SIMULATIONS.map((simulation) => simulation.route);
+const unit1TopicSet = new Set(UNIT_1.topics.map((topic) => topic.slug));
+
+check(
+  duplicates(simulationIds).length === 0 &&
+    duplicates(simulationRoutes).length === 0 &&
+    SIMULATIONS.every((simulation) =>
+      /^[a-z][a-z0-9-]*$/.test(simulation.id) &&
+      SIMULATION_CATEGORIES.includes(simulation.category) &&
+      SIMULATION_STATUSES.includes(simulation.status) &&
+      routes.has(normalizeRoute(simulation.route))
+    ),
+  "El catálogo de simulaciones conserva IDs, taxonomías y rutas válidas."
+);
+
+check(
+  getPublishedSimulations().length === 1 &&
+    getPublishedSimulations()[0]?.id === "kinematics-1d" &&
+    getSimulationsForCourseTopic(
+      COURSE.id,
+      UNIT_1.number,
+      "movimiento-1d"
+    )[0]?.id === "kinematics-1d" &&
+    getSimulationsForCourseTopic(
+      COURSE.id,
+      UNIT_1.number,
+      "ecuaciones-movimiento"
+    )[0]?.id === "kinematics-1d" &&
+    SIMULATIONS.every((simulation) =>
+      simulation.contexts.every((context) =>
+        getCourseById(context.courseId) &&
+        context.unit === UNIT_1.number &&
+        context.topics.every((topic) => unit1TopicSet.has(topic))
+      )
+    ),
+  "La simulación 1D es el único recurso publicado y sus contextos académicos existen."
+);
+
+const returnPreset = KINEMATICS_1D_PRESETS.find(
+  (preset) => preset.id === "return"
+);
+const returnState = returnPreset
+  ? getKinematicsState(returnPreset.parameters, returnPreset.parameters.T)
+  : null;
+const returnPoint = returnPreset
+  ? getTurningPoint(returnPreset.parameters)
+  : null;
+
+check(
+  KINEMATICS_1D_CONTROLS.map((control) =>
+    `${control.key}:${control.minimum}:${control.maximum}`
+  ).join("|") === "x0:-50:50|v0:-20:20|a:-10:10|T:1:20" &&
+    KINEMATICS_1D_PRESETS.map((preset) => preset.id).join(",") ===
+      "uniform,rest,return" &&
+    returnPoint?.time === 3 &&
+    returnPoint?.position === 5 &&
+    returnState?.position === -4 &&
+    returnState?.displacement === 0 &&
+    returnState?.distance === 18,
+  "Controles, presets y caso académico de retorno conservan sus valores aprobados."
+);
+
+check(
+  ["position", "velocity", "acceleration"].every((quantity) => {
+    const path = createKinematicsChartGeometry(
+      returnPreset.parameters,
+      quantity
+    ).linePath;
+    return path.startsWith("M ") && !/NaN|Infinity|undefined/.test(path);
+  }),
+  "Las tres curvas cinemáticas producen paths SVG completos y finitos."
+);
+
 const missingCourseRoutes = COURSE_NAV
   .map((item) => normalizeRoute(item.href))
   .filter((route) => !routes.has(route));
@@ -576,6 +664,7 @@ const dataInternalLinks = [
     unit.practiceRoute,
     ...unit.topics.map((topic) => topic.route),
   ]),
+  ...SIMULATIONS.map((simulation) => simulation.route),
 ];
 
 const internalLinks = [
@@ -1512,6 +1601,51 @@ const chartLibraries = ["chart.js", "plotly.js", "d3", "echarts", "highcharts"];
 check(
   chartLibraries.every((library) => !packageNames.includes(library)),
   "La infraestructura de gráficas no incorpora dependencias de visualización."
+);
+
+const kinematicsComponentSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/simulations/KinematicsSimulation.astro"),
+  "utf8"
+);
+const kinematicsScriptSource = fs.readFileSync(
+  path.join(projectRoot, "src/scripts/kinematics-1d.js"),
+  "utf8"
+);
+const kinematicsStyleSource = fs.readFileSync(
+  path.join(projectRoot, "src/styles/kinematics-simulation.css"),
+  "utf8"
+);
+
+check(
+  kinematicsComponentSource.includes("data-kinematics-simulation") &&
+    kinematicsComponentSource.includes("<noscript>") &&
+    kinematicsComponentSource.includes('aria-live="polite"') &&
+    kinematicsComponentSource.includes('data-time-scrubber') &&
+    kinematicsComponentSource.includes('data-reading="direction"'),
+  "La simulación ofrece raíz estable, controles, estado textual y alternativa sin JavaScript."
+);
+
+check(
+  kinematicsScriptSource.includes("requestAnimationFrame") &&
+    kinematicsScriptSource.includes("cancelAnimationFrame") &&
+    kinematicsScriptSource.includes('visibilitychange') &&
+    kinematicsScriptSource.includes('pagehide') &&
+    kinematicsScriptSource.includes("createElementNS") &&
+    kinematicsScriptSource.includes("replaceChildren") &&
+    kinematicsScriptSource.includes("textContent") &&
+    !/(?:innerHTML|outerHTML\s*=|fetch\(|localStorage|sessionStorage|indexedDB|eval\(|Function\()/.test(
+      kinematicsScriptSource
+    ),
+  "El cliente anima y limpia frames sin red, persistencia ni inyección dinámica."
+);
+
+check(
+  kinematicsStyleSource.includes("@media (max-width: 920px)") &&
+    kinematicsStyleSource.includes("@media (max-width: 720px)") &&
+    kinematicsStyleSource.includes("@media (max-width: 480px)") &&
+    kinematicsStyleSource.includes("prefers-reduced-motion") &&
+    !/(?:#[0-9a-f]{3,8}\b|\brgba?\s*\()/i.test(kinematicsStyleSource),
+  "Los estilos de simulación son responsive, reducen movimiento y consumen tokens."
 );
 
 const reviewUtilitySource = fs.readFileSync(

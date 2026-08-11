@@ -554,6 +554,31 @@ vanilla. El control conserva valores físicos y reutiliza las utilidades de
 transformación; no debe almacenar respuestas, diagnósticos ni progreso. Si dos
 gráficas se sincronizan, comparten el valor físico y no una posición SVG.
 
+### Añadir o relacionar una simulación
+
+Una simulación pública debe registrarse primero en `src/data/simulations.js` con
+ID estable, título, ruta lógica, categoría admitida, estado, descripción y
+contextos reales. No se añaden tarjetas o categorías con recursos ficticios.
+`published` es el único estado que puede aparecer como disponible.
+
+Los contextos relacionan un recurso global con `courseId`, número de unidad y
+slugs de temas existentes. No son un ámbito de contenido ni una copia de la
+navegación. Las páginas temáticas deben resolver la relación mediante
+`getSimulationsForCourseTopic()`; no deben escribir la ruta de una simulación ni
+repetir una condición por slug dentro de la plantilla.
+
+Antes de publicar una experiencia interactiva:
+
+- separar modelo físico, datos muestreados, transformación y actualización DOM;
+- probar valores negativos, cero, límites, instantes extremos y dominios constantes;
+- renderizar contenido explicativo y un estado inicial útil durante el build;
+- usar controles nativos etiquetados, foco visible y mensajes de error asociados;
+- evitar anuncios `aria-live` en cada frame; reservarlos para acciones y errores;
+- no iniciar animación automáticamente y respetar `prefers-reduced-motion`;
+- cancelar bucles al pausar, terminar, ocultar o abandonar la página;
+- comprobar claro y oscuro a 1440, 1024, 768, 390 y 320 px;
+- no usar red, persistencia, HTML dinámico, evaluación de código ni datos estudiantiles.
+
 No se aceptan capturas raster de gráficas que puedan generarse con esta
 infraestructura. SVG preserva texto, nitidez y posibilidad de impresión. Canvas
 solo se evaluará para simulaciones densas o animadas cuya carga de elementos y
