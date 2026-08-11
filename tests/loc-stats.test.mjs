@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { categorizePath, collectLocStats, countPhysicalLines } from "../scripts/loc-stats.mjs";
+import { categorizePath, collectLocStats, countPhysicalLines, readWorktreeBytes } from "../scripts/loc-stats.mjs";
 
 test("LOC cuenta líneas físicas con y sin salto final", () => {
   assert.equal(countPhysicalLines(""), 0);
@@ -18,6 +21,19 @@ test("LOC separa código, datos editoriales y documentación", () => {
   assert.equal(categorizePath("src/data/notices.json"), "editorialData");
   assert.equal(categorizePath("docs/I18N.md"), "documentation");
   assert.equal(categorizePath("package-lock.json"), null);
+});
+
+test("LOC cuenta el texto de un symlink como lo almacena Git", () => {
+  const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "aula-fisica-loc-"));
+  const target = path.join(tempDirectory, "target.md");
+  const link = path.join(tempDirectory, "link.md");
+  try {
+    fs.writeFileSync(target, "uno\ndos\n", "utf8");
+    fs.symlinkSync("target.md", link);
+    assert.equal(readWorktreeBytes(link).toString("utf8"), "target.md");
+  } finally {
+    fs.rmSync(tempDirectory, { recursive: true, force: true });
+  }
 });
 
 test("LOC mide el worktree y un ref sin cambiar de checkout", () => {

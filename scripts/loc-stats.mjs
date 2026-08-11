@@ -14,6 +14,12 @@ export const countPhysicalLines = (source) => {
   return lineBreaks + (source.endsWith("\n") ? 0 : 1);
 };
 
+// Git almacena un symlink como el texto de su destino. Replicar esa lectura en
+// el worktree evita que el mismo ref cambie de LOC según el modo de medición.
+export const readWorktreeBytes = (filePath) => fs.lstatSync(filePath).isSymbolicLink()
+  ? Buffer.from(fs.readlinkSync(filePath))
+  : fs.readFileSync(filePath);
+
 export const categorizePath = (relativePath) => {
   const normalized = relativePath.replaceAll("\\", "/");
   const segments = normalized.split("/");
@@ -57,7 +63,7 @@ export const collectLocStats = ({ ref } = {}) => {
     if (!category) continue;
     const bytes = ref
       ? readAtRef(resolvedRef, relativePath)
-      : fs.readFileSync(path.join(projectRoot, relativePath));
+      : readWorktreeBytes(path.join(projectRoot, relativePath));
     if (bytes.includes(0)) continue;
     totals[category] += countPhysicalLines(bytes.toString("utf8"));
   }
