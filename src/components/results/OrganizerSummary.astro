@@ -1,13 +1,17 @@
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
 <section class="results-step results-summary" aria-labelledby="results-summary-title">
   <header class="results-step__heading">
     <div>
       <span class="results-step__number" aria-hidden="true">3</span>
       <div>
-        <p class="academic-label">Panorama</p>
-        <h2 id="results-summary-title">Resumen descriptivo</h2>
+        <p class="academic-label">{t(locale, "teacher.results.summary.label")}</p>
+        <h2 id="results-summary-title">{t(locale, "teacher.results.summary.title")}</h2>
       </div>
     </div>
-    <p>Las estadísticas utilizan porcentajes únicamente cuando la escala es conocida.</p>
+    <p>{t(locale, "teacher.results.summary.help")}</p>
   </header>
   <dl class="results-metrics" data-results-metrics></dl>
   <div class="results-table-wrap" data-source-summary></div>

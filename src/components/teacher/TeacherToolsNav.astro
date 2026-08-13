@@ -1,33 +1,35 @@
 ---
+import { t } from "../../i18n/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
-const { current = "hub" } = Astro.props;
+const { current = "hub", locale = "es" } = Astro.props;
 const tools = [
-  { id: "hub", label: "Herramientas", href: "/fisica-basica-1/herramientas" },
-  { id: "banco", label: "Editor de banco", href: "/fisica-basica-1/herramientas/banco" },
-  { id: "avisos", label: "Editor de avisos", href: "/fisica-basica-1/herramientas/avisos" },
-  { id: "simulaciones", label: "Laboratorio de simulaciones", href: "/fisica-basica-1/herramientas/simulaciones" },
-  { id: "revision", label: "Centro de revisión", href: "/fisica-basica-1/herramientas/revision" },
-  { id: "notas", label: "Organizador de resultados", href: "/fisica-basica-1/herramientas/notas" },
+  { id: "hub", labelKey: "teacher.nav.hub", routeId: ROUTE_IDS.COURSE_TOOLS },
+  { id: "banco", labelKey: "teacher.nav.bank", routeId: ROUTE_IDS.COURSE_TOOL_QUESTION_BANK },
+  { id: "avisos", labelKey: "teacher.nav.notices", routeId: ROUTE_IDS.COURSE_TOOL_NOTICES },
+  { id: "simulaciones", labelKey: "teacher.nav.simulations", routeId: ROUTE_IDS.COURSE_TOOL_SIMULATION_LAB },
+  { id: "revision", labelKey: "teacher.nav.review", routeId: ROUTE_IDS.COURSE_TOOL_REVIEW },
+  { id: "notas", labelKey: "teacher.nav.results", routeId: ROUTE_IDS.COURSE_TOOL_RESULTS },
 ];
 ---
 
-<nav class="teacher-tools-nav" aria-label="Herramientas docentes">
+<nav class="teacher-tools-nav" aria-label={t(locale, "teacher.nav.label")}>
   <ul>
     {
       tools.map((tool) => (
         <li>
           <a
-            href={withBase(tool.href)}
+            href={withBase(getLocalizedPath(tool.routeId, locale))}
             aria-current={tool.id === current ? "page" : undefined}
           >
-            {tool.label}
+            {t(locale, tool.labelKey)}
           </a>
         </li>
       ))
     }
   </ul>
-  <a class="teacher-tools-nav__course" href={withBase("/fisica-basica-1")}>
-    Volver a Física Básica I
+  <a class="teacher-tools-nav__course" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE, locale))}>
+    {t(locale, "teacher.nav.back")}
   </a>
 </nav>

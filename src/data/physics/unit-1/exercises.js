@@ -2,6 +2,7 @@
 // una parte de estos metadatos; tutorías y Bonos consumen el contrato.
 import { UNIT_1_ADDITIONAL_EXERCISE_DEFINITIONS } from "./additional-exercises.js";
 import teacherQuestions from "./teacher-questions.json" with { type: "json" };
+import { teacherQuestionToExercise } from "./teacher-question-adapter.js";
 import { t } from "../../../i18n/index.js";
 export {
   EXERCISE_COGNITIVE_LEVELS,
@@ -1059,7 +1060,7 @@ export const UNIT_1_EXERCISES = [
     ...exercise,
     bonusEligible: true,
   })),
-  ...teacherQuestions.map(createExercise),
+  ...teacherQuestions.map((question) => createExercise(teacherQuestionToExercise(question, "es"))),
 ];
 
 export const getUnit1ExercisesByTopic = (topic) =>

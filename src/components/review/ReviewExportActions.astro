@@ -1,31 +1,31 @@
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
 <section class="review-exports" aria-labelledby="review-exports-title">
   <header class="review-section-heading">
     <div>
-      <p class="academic-label">Salida local</p>
-      <h2 id="review-exports-title">Exportar la sesión</h2>
+      <p class="academic-label">{t(locale, "teacher.review.export.label")}</p>
+      <h2 id="review-exports-title">{t(locale, "teacher.review.export.title")}</h2>
     </div>
-    <p>Los archivos son editables; no están firmados ni autentican su contenido.</p>
+    <p>{t(locale, "teacher.review.export.help")}</p>
   </header>
 
   <label class="review-print-option">
     <input type="checkbox" data-review-print-open />
-    Incluir respuestas abiertas en la impresión
+    {t(locale, "teacher.review.export.includeOpen")}
   </label>
 
   <div class="review-export-actions">
-    <button type="button" data-review-export="txt">Resumen TXT</button>
-    <button type="button" data-review-export="csv">Datos CSV</button>
-    <button type="button" data-review-export="json">JSON de sesión y revisión</button>
-    <button type="button" data-review-export="print">Imprimir / PDF</button>
+    <button type="button" data-review-export="txt">{t(locale, "teacher.review.export.txt")}</button>
+    <button type="button" data-review-export="csv">{t(locale, "teacher.review.export.csv")}</button>
+    <button type="button" data-review-export="json">{t(locale, "teacher.review.export.json")}</button>
+    <button type="button" data-review-export="print">{t(locale, "teacher.review.export.print")}</button>
   </div>
-  <p>
-    CSV incluye una fila por respuesta de Participa. JSON conserva también los
-    intentos de Bonos y las incidencias de importación.
-  </p>
+  <p>{t(locale, "teacher.review.export.detail")}</p>
 </section>
 
 <section class="review-print-open" data-review-print-responses aria-labelledby="review-print-responses-title">
-  <h2 id="review-print-responses-title">Respuestas abiertas incluidas</h2>
+  <h2 id="review-print-responses-title">{t(locale, "teacher.review.export.openTitle")}</h2>
   <div data-review-print-response-list></div>
 </section>
-

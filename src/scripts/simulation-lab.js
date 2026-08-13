@@ -1,4 +1,6 @@
-import { getSimulationModelById } from "../data/simulation-models.js";
+import { localizeSimulationExperience } from "../data/simulation-experiences.js";
+import { getSimulationModelById, localizeSimulationModel } from "../data/simulation-models.js";
+import { t } from "../i18n/index.js";
 import {
   SIMULATION_EXPERIENCE_LIMITS,
   createSimulationExperienceDraft,
@@ -33,6 +35,7 @@ const readInitialExperience = (root) => {
 export const initializeSimulationLab = async () => {
   const root = document.querySelector("[data-simulation-lab]");
   if (!(root instanceof HTMLElement) || root.dataset.initialized === "true") return;
+  const uiLocale = root.dataset.locale === "en" ? "en" : "es";
   const form = root.querySelector("[data-simulation-lab-form]");
   const modelSelect = form?.elements.namedItem("model");
   const errorPanel = root.querySelector("[data-simulation-lab-errors]");
@@ -52,6 +55,7 @@ export const initializeSimulationLab = async () => {
       !initialExperience) return;
 
   let model = getSimulationModelById(initialExperience.modelId);
+  let previewLocale = uiLocale;
   let parameterKeys = Object.keys(model.parameters);
   let presets = structuredClone(initialExperience.presets);
   let observations = [...initialExperience.observations];
@@ -189,10 +193,10 @@ export const initializeSimulationLab = async () => {
       errorPanel.hidden = true;
       return;
     }
-    errorPanel.append(create("strong", "Revisa la configuración:"));
+    errorPanel.append(create("strong", t(uiLocale, "teacher.sim.reviewConfig")));
     const list = create("ul");
     issues.forEach((entry) => {
-      list.append(create("li", entry.message));
+      list.append(create("li", t(uiLocale, "teacher.sim.issue", { path: entry.path || "experience" })));
       controlsForIssue(entry).forEach((control) => {
         control.setAttribute("aria-invalid", "true");
         const base = control.dataset.baseDescribedBy ?? "";
@@ -211,7 +215,7 @@ export const initializeSimulationLab = async () => {
       exportButton.disabled = !validation.valid;
       return { ...validation, experience };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No fue posible preparar la experiencia.";
+      const message = error instanceof Error ? error.message : t(uiLocale, "teacher.sim.creationError");
       const issues = [{ path: "experience", code: "creation-error", message }];
       if (showErrors) renderErrors(issues);
       exportButton.disabled = true;
@@ -223,7 +227,7 @@ export const initializeSimulationLab = async () => {
     const container = root.querySelector("[data-lab-parameters]");
     if (!(container instanceof HTMLElement)) return;
     container.replaceChildren(...parameterKeys.map((key) => {
-      const definition = model.parameters[key];
+      const definition = localizeSimulationModel(model, uiLocale).parameters[key];
       const config = experience.parameters[key];
       const fieldset = create("fieldset", undefined, "simulation-lab__parameter");
       fieldset.dataset.labParameter = key;
@@ -231,7 +235,7 @@ export const initializeSimulationLab = async () => {
       legend.append(create("span", definition.symbol));
       fieldset.append(legend);
       const grid = create("div", undefined, "simulation-lab__parameter-grid");
-      for (const [property, label] of [["default", "Valor inicial"], ["minimum", "Mínimo"], ["maximum", "Máximo"], ["step", "Paso"]]) {
+      for (const [property, label] of [["default", t(uiLocale, "teacher.sim.initial")], ["minimum", t(uiLocale, "teacher.sim.minimum")], ["maximum", t(uiLocale, "teacher.sim.maximum")], ["step", t(uiLocale, "teacher.sim.step")]]) {
         const wrapper = create("label");
         wrapper.append(create("span", label));
         const input = create("input");
@@ -254,10 +258,10 @@ export const initializeSimulationLab = async () => {
       editable.type = "checkbox";
       editable.checked = config.editable;
       editable.dataset.parameterEditable = "";
-      check.append(editable, create("span", `El estudiante puede modificar ${definition.symbol}`));
+      check.append(editable, create("span", t(uiLocale, "teacher.sim.editable", { symbol: definition.symbol })));
       fieldset.append(check, create(
         "small",
-        `Límite del modelo: ${definition.hardMinimum} a ${definition.hardMaximum} ${definition.unit}.`
+        t(uiLocale, "teacher.sim.modelLimit", { minimum: definition.hardMinimum, maximum: definition.hardMaximum, unit: definition.unit })
       ));
       return fieldset;
     }));
@@ -267,13 +271,13 @@ export const initializeSimulationLab = async () => {
   const renderViews = (experience) => {
     const container = root.querySelector("[data-lab-view-options]");
     if (!(container instanceof HTMLElement)) return;
-    container.replaceChildren(...Object.entries(model.views).map(([key, definition]) => {
+    container.replaceChildren(...Object.entries(localizeSimulationModel(model, uiLocale).views).map(([key, definition]) => {
       const label = create("label", undefined, "simulation-lab__check");
       const input = create("input");
       input.type = "checkbox";
       input.checked = experience.views[key] === true;
       input.dataset.labView = key;
-      label.append(input, create("span", `${definition.label}${definition.visual ? " · visual principal" : ""}`));
+      label.append(input, create("span", `${definition.label}${definition.visual ? ` · ${t(uiLocale, "teacher.sim.mainVisual")}` : ""}`));
       return label;
     }));
     registerDescribedBy(container);
@@ -287,13 +291,13 @@ export const initializeSimulationLab = async () => {
       const fieldset = create("fieldset", undefined, "simulation-lab__collection-item");
       fieldset.dataset.labPreset = "";
       fieldset.dataset.presetId = preset.id;
-      fieldset.append(create("legend", `Caso ${index + 1}`));
-      const remove = create("button", "Eliminar caso", "simulation-lab__remove");
+      fieldset.append(create("legend", t(uiLocale, "teacher.sim.case", { number: index + 1 })));
+      const remove = create("button", t(uiLocale, "teacher.sim.removeCase"), "simulation-lab__remove");
       remove.type = "button";
       remove.dataset.removeLabPreset = String(index);
       fieldset.append(remove);
       const label = create("label");
-      label.append(create("span", "Nombre"));
+      label.append(create("span", t(uiLocale, "teacher.sim.name")));
       const labelInput = create("input");
       labelInput.type = "text";
       labelInput.required = true;
@@ -303,7 +307,7 @@ export const initializeSimulationLab = async () => {
       label.append(labelInput);
       fieldset.append(label);
       const englishLabel = create("label");
-      englishLabel.append(create("span", "Name in English"));
+      englishLabel.append(create("span", t(uiLocale, "teacher.sim.nameEnglish")));
       const englishLabelInput = create("input");
       englishLabelInput.type = "text";
       englishLabelInput.required = true;
@@ -315,7 +319,7 @@ export const initializeSimulationLab = async () => {
       const grid = create("div", undefined, "simulation-lab__preset-grid");
       const parameters = parameterConfigFromForm();
       parameterKeys.forEach((key) => {
-        const definition = model.parameters[key];
+        const definition = localizeSimulationModel(model, uiLocale).parameters[key];
         const inputLabel = create("label");
         inputLabel.append(create("span", `${definition.symbol} (${definition.unit})`));
         const input = create("input");
@@ -348,7 +352,7 @@ export const initializeSimulationLab = async () => {
       const entry = create("div", undefined, "simulation-lab__observation");
       entry.dataset.labObservation = "";
       const label = create("label");
-      label.append(create("span", `Observación ${index + 1}`));
+      label.append(create("span", t(uiLocale, "teacher.sim.observation", { number: index + 1 })));
       const textarea = create("textarea");
       textarea.rows = 3;
       textarea.required = true;
@@ -357,7 +361,7 @@ export const initializeSimulationLab = async () => {
       textarea.dataset.observationEs = "";
       label.append(textarea);
       const englishLabel = create("label");
-      englishLabel.append(create("span", `Observation ${index + 1} in English`));
+      englishLabel.append(create("span", t(uiLocale, "teacher.sim.observationEnglish", { number: index + 1 })));
       const englishTextarea = create("textarea");
       englishTextarea.rows = 3;
       englishTextarea.required = true;
@@ -365,7 +369,7 @@ export const initializeSimulationLab = async () => {
       englishTextarea.value = translations.en.observations[index] ?? "";
       englishTextarea.dataset.observationEn = "";
       englishLabel.append(englishTextarea);
-      const remove = create("button", "Eliminar observación", "simulation-lab__remove");
+      const remove = create("button", t(uiLocale, "teacher.sim.removeObservation"), "simulation-lab__remove");
       remove.type = "button";
       remove.dataset.removeLabObservation = String(index);
       entry.append(label, englishLabel, remove);
@@ -396,13 +400,15 @@ export const initializeSimulationLab = async () => {
   };
 
   const renderPreview = async (experience) => {
+    root.querySelectorAll("[data-kinematics-simulation], [data-projectile-simulation]").forEach((entry) => { entry.dataset.locale = previewLocale; });
     await mountSimulationExperienceRenderer(rendererRoot, experience);
-    if (previewHeading) previewHeading.textContent = experience.title;
-    if (previewSummary) previewSummary.textContent = experience.summary;
+    const localized = localizeSimulationExperience(experience, previewLocale);
+    if (previewHeading) previewHeading.textContent = localized.title;
+    if (previewSummary) previewSummary.textContent = localized.summary;
     if (previewObservations) {
-      previewObservations.replaceChildren(...experience.observations.map((observation) => create("li", observation)));
+      previewObservations.replaceChildren(...localized.observations.map((observation) => create("li", observation)));
     }
-    if (previewGuide instanceof HTMLElement) previewGuide.hidden = experience.observations.length === 0;
+    if (previewGuide instanceof HTMLElement) previewGuide.hidden = localized.observations.length === 0;
   };
 
   const switchModel = async (modelId) => {
@@ -410,7 +416,8 @@ export const initializeSimulationLab = async () => {
     const source = createSimulationLabBaseConfiguration(modelId);
     if (!nextModel || !source) return;
     modelSelect.disabled = true;
-    if (status) status.textContent = `Cargando ${nextModel.name}…`;
+    const localizedModel = localizeSimulationModel(nextModel, uiLocale);
+    if (status) status.textContent = t(uiLocale, "teacher.sim.loading", { model: localizedModel.name });
     model = nextModel;
     parameterKeys = Object.keys(model.parameters);
     presets = structuredClone(source.presets);
@@ -430,9 +437,9 @@ export const initializeSimulationLab = async () => {
     const result = evaluate({ showErrors: true });
     try {
       if (result.valid) await renderPreview(result.experience);
-      if (status) status.textContent = `${nextModel.name} está listo para editar y previsualizar.`;
+      if (status) status.textContent = t(uiLocale, "teacher.sim.ready", { model: localizedModel.name });
     } catch {
-      if (status) status.textContent = "El renderer no pudo cargarse; revisa el mensaje localizado en la previsualización.";
+      if (status) status.textContent = t(uiLocale, "teacher.sim.rendererError");
     } finally {
       modelSelect.disabled = false;
     }
@@ -453,7 +460,7 @@ export const initializeSimulationLab = async () => {
     nextPresetNumber += 1;
     renderPresets();
     evaluate({ showErrors: !errorPanel.hidden });
-    if (status) status.textContent = "Caso de estudio añadido a la sesión local.";
+    if (status) status.textContent = t(uiLocale, "teacher.sim.presetAdded");
   });
   root.querySelector("[data-lab-presets]")?.addEventListener("click", (event) => {
     const button = event.target instanceof Element
@@ -477,6 +484,7 @@ export const initializeSimulationLab = async () => {
     renderObservations();
     evaluate({ showErrors: !errorPanel.hidden });
     root.querySelector("[data-lab-observation]:last-child textarea")?.focus();
+    if (status) status.textContent = t(uiLocale, "teacher.sim.observationAdded");
   });
   root.querySelector("[data-lab-observations]")?.addEventListener("click", (event) => {
     const button = event.target instanceof Element
@@ -490,6 +498,14 @@ export const initializeSimulationLab = async () => {
     evaluate({ showErrors: !errorPanel.hidden });
   });
   modelSelect.addEventListener("change", () => { switchModel(modelSelect.value); });
+  root.querySelectorAll('[name="simulationPreviewLocale"]').forEach((control) => control.addEventListener("change", async () => {
+    previewLocale = control.value === "en" ? "en" : "es";
+    const result = evaluate({ showErrors: false });
+    if (result.valid) {
+      await renderPreview(result.experience);
+      if (status) status.textContent = t(uiLocale, "teacher.sim.previewReady", { locale: previewLocale.toUpperCase() });
+    }
+  }));
   form.addEventListener("input", (event) => {
     if (!(event.target instanceof Element) || event.target === modelSelect) return;
     const editable = event.target.closest("[data-parameter-editable]");
@@ -500,15 +516,15 @@ export const initializeSimulationLab = async () => {
     const result = evaluate({ showErrors: true });
     if (!result.valid) {
       errorPanel.focus();
-      if (status) status.textContent = "La configuración necesita ajustes antes de previsualizarse.";
+      if (status) status.textContent = t(uiLocale, "teacher.sim.needsAdjustments");
       return;
     }
     try {
       await renderPreview(result.experience);
       previewHeading?.focus({ preventScroll: true });
-      if (status) status.textContent = "Previsualización actualizada con la configuración válida.";
+      if (status) status.textContent = t(uiLocale, "teacher.sim.previewUpdated");
     } catch {
-      if (status) status.textContent = "No fue posible actualizar el renderer seleccionado.";
+      if (status) status.textContent = t(uiLocale, "teacher.sim.previewUpdateError");
     }
   });
   exportButton.addEventListener("click", () => {
@@ -529,7 +545,7 @@ export const initializeSimulationLab = async () => {
       mimeType: "application/json;charset=utf-8",
       filename: simulationExperiencePackFilename(pack),
     });
-    if (status) status.textContent = "Paquete descargado como borrador. No se publicó ni se envió.";
+    if (status) status.textContent = t(uiLocale, "teacher.sim.exported");
   });
 
   registerDescribedBy();

@@ -1,7 +1,9 @@
 import publicEn from "./public-en.js";
+import teacherEn from "./teacher-en.js";
 
 export default Object.freeze({
   ...publicEn,
+  ...teacherEn,
   "brand.home": "Aula Física home page",
   "shell.skip": "Skip to content",
   "shell.menu": "Menu",

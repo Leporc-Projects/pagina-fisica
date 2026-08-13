@@ -1,37 +1,41 @@
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
 <section class="review-bonuses" aria-labelledby="review-bonuses-title">
   <header class="review-section-heading">
     <div>
-      <p class="academic-label">Consulta</p>
-      <h2 id="review-bonuses-title">Intentos de Bonos reconocidos</h2>
+      <p class="academic-label">{t(locale, "teacher.review.bonuses.label")}</p>
+      <h2 id="review-bonuses-title">{t(locale, "teacher.review.bonuses.title")}</h2>
     </div>
-    <p>El ID identifica el intento; una copia preparada para entrega puede incluir correo.</p>
+    <p>{t(locale, "teacher.review.bonuses.help")}</p>
   </header>
   <form class="review-filters review-bonus-filters" data-review-bonus-filters>
     <label>
-      Identidad
+      {t(locale, "teacher.review.identity")}
       <select name="identityMode">
-        <option value="">Todos los intentos</option>
-        <option value="anonymous">Anónimos</option>
-        <option value="institutionalEmail">Identificados</option>
+        <option value="">{t(locale, "teacher.review.allAttempts")}</option>
+        <option value="anonymous">{t(locale, "teacher.review.anonymous")}</option>
+        <option value="institutionalEmail">{t(locale, "teacher.review.identified")}</option>
       </select>
     </label>
     <label>
-      Buscar correo
+      {t(locale, "teacher.review.searchEmail")}
       <input type="search" name="email" autocomplete="off" />
     </label>
-    <button type="button" class="review-button review-button--quiet" data-review-bonus-reset>Restablecer filtros</button>
+    <button type="button" class="review-button review-button--quiet" data-review-bonus-reset>{t(locale, "teacher.review.resetFilters")}</button>
   </form>
   <p class="review-list-summary" data-review-bonus-summary></p>
   <div class="review-table-wrap">
     <table>
       <thead>
         <tr>
-          <th scope="col">Archivo</th>
-          <th scope="col">Bono</th>
-          <th scope="col">Identidad</th>
-          <th scope="col">Correo institucional</th>
-          <th scope="col">Resultado</th>
-          <th scope="col">Fecha</th>
+          <th scope="col">{t(locale, "teacher.review.file")}</th>
+          <th scope="col">{t(locale, "teacher.review.bonus")}</th>
+          <th scope="col">{t(locale, "teacher.review.identity")}</th>
+          <th scope="col">{t(locale, "teacher.review.institutionalEmail")}</th>
+          <th scope="col">{t(locale, "teacher.review.result")}</th>
+          <th scope="col">{t(locale, "teacher.review.date")}</th>
         </tr>
       </thead>
       <tbody data-review-bonus-records></tbody>
@@ -42,26 +46,26 @@
 <section class="review-incidents" aria-labelledby="review-incidents-title">
   <header class="review-section-heading">
     <div>
-      <p class="academic-label">Validación</p>
-      <h2 id="review-incidents-title">Archivos e incidencias</h2>
+      <p class="academic-label">{t(locale, "teacher.review.incidents.label")}</p>
+      <h2 id="review-incidents-title">{t(locale, "teacher.review.incidents.title")}</h2>
     </div>
-    <p>Un archivo inválido no interrumpe la importación de los demás.</p>
+    <p>{t(locale, "teacher.review.incidents.help")}</p>
   </header>
   <div class="review-table-wrap">
     <table>
       <thead>
         <tr>
-          <th scope="col">Archivo</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Motivo</th>
+          <th scope="col">{t(locale, "teacher.review.file")}</th>
+          <th scope="col">{t(locale, "teacher.review.status")}</th>
+          <th scope="col">{t(locale, "teacher.review.reason")}</th>
         </tr>
       </thead>
       <tbody data-review-incidents></tbody>
     </table>
   </div>
-  <nav class="review-pagination" aria-label="Páginas de incidencias">
-    <button type="button" data-review-incident-previous>Anterior</button>
+  <nav class="review-pagination" aria-label={t(locale, "teacher.review.incidents.pages")}>
+    <button type="button" data-review-incident-previous>{t(locale, "teacher.review.previous")}</button>
     <span data-review-incident-page></span>
-    <button type="button" data-review-incident-next>Siguiente</button>
+    <button type="button" data-review-incident-next>{t(locale, "teacher.review.next")}</button>
   </nav>
 </section>

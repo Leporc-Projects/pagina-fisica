@@ -3,6 +3,10 @@ import { t } from "../../../i18n/index.js";
 import { UNIT_1_EXERCISES } from "./exercises.js";
 import exercisesEn from "./i18n/exercises.en.js";
 import { getLocalizedUnit1ExerciseFamilies } from "./family-localize.js";
+import teacherQuestions from "./teacher-questions.json" with { type: "json" };
+import { teacherQuestionToExercise } from "./teacher-question-adapter.js";
+
+const teacherQuestionsById = new Map(teacherQuestions.map((question) => [question.id, question]));
 
 const requireTranslation = (value, context) => {
   if (value === undefined || value === null || value === "") {
@@ -61,6 +65,11 @@ const localizeInteraction = (interaction, translation, exerciseId) => {
 export const localizeUnit1Exercise = (exercise, locale) => {
   assertSupportedLocale(locale);
   if (!exercise || locale === "es") return exercise;
+  if (exercise.authorSource === "teacher") {
+    const source = teacherQuestionsById.get(exercise.id);
+    if (!source) throw new RangeError(`Missing Teacher Question 2.0 source: ${exercise.id}`);
+    return teacherQuestionToExercise(source, locale);
+  }
   const translation = requireTranslation(exercisesEn[exercise.id], exercise?.id);
   const objectives = requireParallelArray(exercise.objectives, translation.objectives, `${exercise.id}.objectives`);
   const prerequisites = requireParallelArray(exercise.prerequisites, translation.prerequisites ?? [], `${exercise.id}.prerequisites`);

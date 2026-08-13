@@ -1,13 +1,6 @@
-import {
-  ACTIVITY_OPTIONS,
-  HELPFULNESS_OPTIONS,
-  IMPROVEMENT_AREAS,
-  PARTICIPATION_TOPICS,
-  PROPOSAL_TYPES,
-  STUDENT_DIFFICULTY_ESTIMATES,
-  SUPPORT_OPTIONS,
-} from "../data/participation.js";
-import { REVIEW_STATUSES } from "../data/review.js";
+import { localizeReviewData } from "../data/review-localize.js";
+import { LOCALES } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
 import { attemptIdentity } from "../utils/bonus.js";
 import { downloadLocalFile } from "./local-export.js";
 import {
@@ -19,9 +12,7 @@ import {
   getProposalRecords,
   participationMainText,
   proposalReviewFor,
-  REVIEW_LABELS,
   reviewFilename,
-  reviewTopicTitle,
   toReviewCSV,
   toReviewJSON,
   toReviewText,
@@ -46,14 +37,10 @@ const appendCell = (row, text, { status } = {}) => {
   return cell;
 };
 
-const formatDate = (iso) => new Intl.DateTimeFormat("es-CO", {
+const formatDate = (iso, locale) => new Intl.DateTimeFormat(LOCALES[locale].intlLocale, {
   dateStyle: "medium",
   timeStyle: "short",
 }).format(new Date(iso));
-
-const optionLabels = (options) => Object.fromEntries(options);
-const proposalTypeLabels = optionLabels(PROPOSAL_TYPES);
-const studentDifficultyLabels = optionLabels(STUDENT_DIFFICULTY_ESTIMATES);
 
 const truncateText = (value, maximum) => {
   const text = String(value ?? "");
@@ -64,6 +51,9 @@ export const initializeReviewCenter = () => {
   const center = document.querySelector("[data-review-center]");
   if (!(center instanceof HTMLElement) || center.dataset.initialized === "true") return;
   center.dataset.initialized = "true";
+  const locale = center.dataset.locale ?? "es";
+  const localized = localizeReviewData(locale);
+  const labels = localized.labels;
 
   const fileInput = center.querySelector("[data-review-files]");
   const dropzone = center.querySelector("[data-review-dropzone]");
@@ -91,7 +81,7 @@ export const initializeReviewCenter = () => {
     const rows = entries
       .map(([key, count]) => [labels[key] ?? key, count])
       .filter(([, count]) => count > 0)
-      .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0], "es"));
+      .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0], locale));
     if (rows.length === 0) {
       const row = createElement("tr");
       const cell = createElement("td", emptyMessage);
@@ -121,7 +111,7 @@ export const initializeReviewCenter = () => {
       const text = document.createElementNS(SVG_NS, "text");
       text.setAttribute("x", "8");
       text.setAttribute("y", "36");
-      text.textContent = "Sin respuestas de dificultad conceptual.";
+      text.textContent = t(locale, "teacher.review.chartEmpty");
       svg.append(text);
       return;
     }
@@ -132,7 +122,7 @@ export const initializeReviewCenter = () => {
       label.setAttribute("x", "0");
       label.setAttribute("y", String(y + 20));
       label.setAttribute("class", "review-bar-chart__label");
-      label.textContent = truncateText(reviewTopicTitle(topic), 31);
+      label.textContent = truncateText(labels.topic[topic] ?? topic, 31);
       const bar = document.createElementNS(SVG_NS, "rect");
       bar.setAttribute("x", "270");
       bar.setAttribute("y", String(y));
@@ -155,16 +145,16 @@ export const initializeReviewCenter = () => {
     if (counts) {
       counts.replaceChildren();
       [
-        ["Archivos", summary.files],
-        ["Válidos", summary.incidents.valid],
-        ["Advertencias", summary.incidents.warning],
-        ["Inválidos", summary.incidents.invalid],
-        ["Duplicados", summary.duplicates],
-        ["Registros únicos", summary.uniqueRecords],
-        ["Respuestas de Participa", summary.participation],
-        ["Intentos de Bonos", summary.bonuses],
-        ["Bonos anónimos", summary.bonusIdentity.anonymous],
-        ["Bonos identificados", summary.bonusIdentity.institutionalEmail],
+        [t(locale, "teacher.review.metric.files"), summary.files],
+        [t(locale, "teacher.review.metric.valid"), summary.incidents.valid],
+        [t(locale, "teacher.review.metric.warning"), summary.incidents.warning],
+        [t(locale, "teacher.review.metric.invalid"), summary.incidents.invalid],
+        [t(locale, "teacher.review.metric.duplicates"), summary.duplicates],
+        [t(locale, "teacher.review.metric.unique"), summary.uniqueRecords],
+        [t(locale, "teacher.review.metric.participation"), summary.participation],
+        [t(locale, "teacher.review.metric.bonuses"), summary.bonuses],
+        [t(locale, "teacher.review.metric.anonymous"), summary.bonusIdentity.anonymous],
+        [t(locale, "teacher.review.metric.identified"), summary.bonusIdentity.institutionalEmail],
       ].forEach(([label, value]) => {
         const group = createElement("div");
         group.append(createElement("dt", label), createElement("dd", String(value)));
@@ -173,34 +163,33 @@ export const initializeReviewCenter = () => {
     }
     replaceTableRows(
       center.querySelector("[data-review-activity-counts]"),
-      ACTIVITY_OPTIONS.map((option) => [option.value, summary.activity[option.value] ?? 0]),
-      REVIEW_LABELS.activity,
-      "Sin respuestas de Participa."
+      localized.activityOptions.map((option) => [option.value, summary.activity[option.value] ?? 0]),
+      labels.activity,
+      t(locale, "teacher.review.none.participation")
     );
-    const topicLabels = Object.fromEntries(PARTICIPATION_TOPICS.map((topic) => [topic.slug, topic.title]));
     replaceTableRows(
       center.querySelector("[data-review-topic-counts]"),
-      PARTICIPATION_TOPICS.map((topic) => [topic.slug, summary.difficultyTopics[topic.slug] ?? 0]),
-      topicLabels,
-      "Sin dificultades declaradas."
+      localized.topics.map((topic) => [topic.slug, summary.difficultyTopics[topic.slug] ?? 0]),
+      labels.topic,
+      t(locale, "teacher.review.none.difficulties")
     );
     replaceTableRows(
       center.querySelector("[data-review-support-counts]"),
-      SUPPORT_OPTIONS.map(([value]) => [value, summary.requestedSupport[value] ?? 0]),
-      REVIEW_LABELS.support,
-      "Sin tipo de ayuda declarado."
+      localized.supportOptions.map(([value]) => [value, summary.requestedSupport[value] ?? 0]),
+      labels.support,
+      t(locale, "teacher.review.none.support")
     );
     replaceTableRows(
       center.querySelector("[data-review-improvement-counts]"),
-      IMPROVEMENT_AREAS.map(([value]) => [value, summary.improvementAreas[value] ?? 0]),
-      REVIEW_LABELS.improvementArea,
-      "Sin mejoras de página."
+      localized.improvementAreas.map(([value]) => [value, summary.improvementAreas[value] ?? 0]),
+      labels.improvementArea,
+      t(locale, "teacher.review.none.improvements")
     );
     replaceTableRows(
       center.querySelector("[data-review-helpfulness-counts]"),
-      HELPFULNESS_OPTIONS.map(([value]) => [value, summary.helpfulness[value] ?? 0]),
-      REVIEW_LABELS.helpfulness,
-      "Sin valoración opcional."
+      localized.helpfulnessOptions.map(([value]) => [value, summary.helpfulness[value] ?? 0]),
+      labels.helpfulness,
+      t(locale, "teacher.review.none.rating")
     );
     renderTopicChart(summary.difficultyTopics);
   };
@@ -208,17 +197,17 @@ export const initializeReviewCenter = () => {
   const responseDetails = (response) => {
     if (response.activityType === "concept-difficulty") {
       return response.payload.helpfulSupport
-        ? [["Podría ayudar", REVIEW_LABELS.support[response.payload.helpfulSupport]]]
+        ? [[t(locale, "teacher.review.detail.support"), labels.support[response.payload.helpfulSupport]]]
         : [];
     }
     if (response.activityType === "student-question-proposal") {
-      return [["Tipo", proposalTypeLabels[response.payload.proposal.kind]]];
+      return [[t(locale, "teacher.review.detail.type"), labels.proposalType[response.payload.proposal.kind]]];
     }
     return [
-      ["Categoría", REVIEW_LABELS.improvementArea[response.payload.area]],
+      [t(locale, "teacher.review.detail.category"), labels.improvementArea[response.payload.area]],
       response.payload.helpfulness && [
-        "Valoración opcional",
-        REVIEW_LABELS.helpfulness[response.payload.helpfulness],
+        t(locale, "teacher.review.detail.rating"),
+        labels.helpfulness[response.payload.helpfulness],
       ],
     ].filter(Boolean);
   };
@@ -237,23 +226,23 @@ export const initializeReviewCenter = () => {
     const summary = center.querySelector("[data-review-response-summary]");
     if (summary) {
       summary.textContent = result.total === 1
-        ? "1 respuesta encontrada."
-        : `${result.total} respuestas encontradas.`;
+        ? t(locale, "teacher.review.response.one")
+        : t(locale, "teacher.review.response.many", { count: result.total });
     }
     const list = center.querySelector("[data-review-response-list]");
     if (list) {
       list.replaceChildren();
       if (result.records.length === 0) {
-        list.append(createElement("p", "No hay respuestas que coincidan con los filtros.", "review-inline-empty"));
+        list.append(createElement("p", t(locale, "teacher.review.response.none"), "review-inline-empty"));
       }
       result.records.forEach((record) => {
         const response = record.original;
         const article = createElement("article", undefined, "review-response");
         const header = createElement("header");
-        const title = createElement("h3", REVIEW_LABELS.activity[response.activityType]);
+        const title = createElement("h3", labels.activity[response.activityType]);
         const meta = createElement(
           "p",
-          `${response.topic.title} · ${formatDate(response.createdAt)}`,
+          `${response.topic.title} · ${formatDate(response.createdAt, locale)}`,
           "review-response__meta"
         );
         header.append(title, meta);
@@ -263,13 +252,13 @@ export const initializeReviewCenter = () => {
           "review-response__excerpt"
         );
         const details = createElement("details");
-        const detailsSummary = createElement("summary", "Ver datos completos");
+        const detailsSummary = createElement("summary", t(locale, "teacher.review.details"));
         const fullText = createElement("p", participationMainText(response));
         const facts = createElement("dl", undefined, "review-response__facts");
         [
-          ["ID de respuesta", response.responseId],
+          [t(locale, "teacher.review.detail.id"), response.responseId],
           ...responseDetails(response),
-          ["Archivo", record.sourceFiles.join(", ")],
+          [t(locale, "teacher.review.detail.file"), record.sourceFiles.join(", ")],
         ].forEach(([label, value]) => {
           const group = createElement("div");
           group.append(createElement("dt", label), createElement("dd", value));
@@ -281,7 +270,7 @@ export const initializeReviewCenter = () => {
       });
     }
     const page = center.querySelector("[data-review-response-page]");
-    if (page) page.textContent = `Página ${result.page} de ${result.pageCount}`;
+    if (page) page.textContent = t(locale, "teacher.review.page", { page: result.page, pages: result.pageCount });
     const previous = center.querySelector("[data-review-response-previous]");
     const next = center.querySelector("[data-review-response-next]");
     if (previous instanceof HTMLButtonElement) previous.disabled = result.page <= 1;
@@ -303,7 +292,7 @@ export const initializeReviewCenter = () => {
       status: select.value,
       note: note.value,
     });
-    announce("Revisión local actualizada. El archivo original no fue modificado.");
+    announce(t(locale, "teacher.review.reviewSaved"));
   };
 
   const renderProposals = () => {
@@ -315,12 +304,14 @@ export const initializeReviewCenter = () => {
       proposalPage * PROPOSALS_PER_PAGE
     );
     const summary = center.querySelector("[data-review-proposal-summary]");
-    if (summary) summary.textContent = `${proposals.length} ${proposals.length === 1 ? "propuesta anónima" : "propuestas anónimas"}.`;
+    if (summary) summary.textContent = proposals.length === 1
+      ? t(locale, "teacher.review.proposal.one")
+      : t(locale, "teacher.review.proposal.many", { count: proposals.length });
     const list = center.querySelector("[data-review-proposal-list]");
     if (list) {
       list.replaceChildren();
       if (visible.length === 0) {
-        list.append(createElement("p", "No se importaron propuestas estudiantiles.", "review-inline-empty"));
+        list.append(createElement("p", t(locale, "teacher.review.proposal.none"), "review-inline-empty"));
       }
       visible.forEach((record) => {
         const response = record.original;
@@ -329,31 +320,31 @@ export const initializeReviewCenter = () => {
         const article = createElement("article", undefined, "review-proposal");
         const header = createElement("header");
         header.append(
-          createElement("p", "Propuesta anónima", "academic-label"),
+          createElement("p", t(locale, "teacher.review.proposal.anonymous"), "academic-label"),
           createElement("h3", proposal.statement),
-          createElement("p", `${response.topic.title} · ${formatDate(response.createdAt)}`, "review-response__meta")
+          createElement("p", `${response.topic.title} · ${formatDate(response.createdAt, locale)}`, "review-response__meta")
         );
         const facts = createElement("dl", undefined, "review-proposal__facts");
-        addProposalFact(facts, "Tipo", proposalTypeLabels[proposal.kind]);
-        addProposalFact(facts, "Concepto que pretende evaluar", proposal.intendedConcept);
-        addProposalFact(facts, "Respuesta esperada", proposal.expectedAnswer);
-        addProposalFact(facts, "Explicación", proposal.answerExplanation);
+        addProposalFact(facts, t(locale, "teacher.review.detail.type"), labels.proposalType[proposal.kind]);
+        addProposalFact(facts, t(locale, "teacher.review.proposal.concept"), proposal.intendedConcept);
+        addProposalFact(facts, t(locale, "teacher.review.proposal.expected"), proposal.expectedAnswer);
+        addProposalFact(facts, t(locale, "teacher.review.proposal.explanation"), proposal.answerExplanation);
         addProposalFact(
           facts,
-          "Dificultad estimada por quien propone",
-          studentDifficultyLabels[proposal.studentDifficultyEstimate?.value]
+          t(locale, "teacher.review.proposal.difficulty"),
+          labels.studentDifficulty[proposal.studentDifficultyEstimate?.value]
         );
         const controls = createElement("div", undefined, "review-proposal__controls");
-        const selectLabel = createElement("label", "Estado de revisión local");
+        const selectLabel = createElement("label", t(locale, "teacher.review.proposal.status"));
         const select = createElement("select");
-        REVIEW_STATUSES.forEach(([value, label]) => {
+        localized.reviewStatuses.forEach(([value, label]) => {
           const option = createElement("option", label);
           option.value = value;
           option.selected = review.status === value;
           select.append(option);
         });
         selectLabel.append(select);
-        const noteLabel = createElement("label", "Nota docente opcional");
+        const noteLabel = createElement("label", t(locale, "teacher.review.proposal.note"));
         const note = createElement("textarea");
         note.rows = 3;
         note.value = review.note ?? "";
@@ -366,7 +357,7 @@ export const initializeReviewCenter = () => {
       });
     }
     const page = center.querySelector("[data-review-proposal-page]");
-    if (page) page.textContent = `Página ${proposalPage} de ${pageCount}`;
+    if (page) page.textContent = t(locale, "teacher.review.page", { page: proposalPage, pages: pageCount });
     const previous = center.querySelector("[data-review-proposal-previous]");
     const next = center.querySelector("[data-review-proposal-next]");
     if (previous instanceof HTMLButtonElement) previous.disabled = proposalPage <= 1;
@@ -394,13 +385,13 @@ export const initializeReviewCenter = () => {
     });
     const summary = center.querySelector("[data-review-bonus-summary]");
     if (summary) {
-      summary.textContent = `${records.length} ${records.length === 1
-        ? "intento encontrado"
-        : "intentos encontrados"}.`;
+      summary.textContent = records.length === 1
+        ? t(locale, "teacher.review.attempt.one")
+        : t(locale, "teacher.review.attempt.many", { count: records.length });
     }
     if (records.length === 0) {
       const row = createElement("tr");
-      const cell = createElement("td", "No se importaron intentos de Bonos.");
+      const cell = createElement("td", t(locale, "teacher.review.attempt.none"));
       cell.colSpan = 6;
       row.append(cell);
       target.append(row);
@@ -412,13 +403,15 @@ export const initializeReviewCenter = () => {
       const row = createElement("tr");
       appendCell(row, record.sourceFiles.join(", "));
       appendCell(row, attempt.bonusTitle);
-      appendCell(row, identity.mode === "institutionalEmail" ? "Identificado" : "Anónimo");
+      appendCell(row, identity.mode === "institutionalEmail"
+        ? t(locale, "teacher.review.identified")
+        : t(locale, "teacher.review.anonymous"));
       appendCell(row, identity.mode === "institutionalEmail" ? identity.email : "—");
       appendCell(
         row,
-        `${attempt.summary.pointsEarned} / ${attempt.summary.pointsPossible} (${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(attempt.summary.percentage)} %)`
+        `${attempt.summary.pointsEarned} / ${attempt.summary.pointsPossible} (${new Intl.NumberFormat(LOCALES[locale].intlLocale, { maximumFractionDigits: 1 }).format(attempt.summary.percentage)} %)`
       );
-      appendCell(row, formatDate(attempt.completedAt));
+      appendCell(row, formatDate(attempt.completedAt, locale));
       target.append(row);
     });
   };
@@ -436,17 +429,13 @@ export const initializeReviewCenter = () => {
       visible.forEach((incident) => {
         const row = createElement("tr");
         appendCell(row, incident.file);
-        appendCell(row, {
-          valid: "Válido",
-          warning: "Advertencia",
-          invalid: "Inválido",
-        }[incident.status], { status: incident.status });
-        const reason = appendCell(row, incident.reason);
+        appendCell(row, t(locale, `teacher.review.incident.${incident.status}`), { status: incident.status });
+        const reason = appendCell(row, t(locale, `teacher.review.reason.${incident.reasonCode}`));
         if (incident.status === "warning" && incident.key) {
           const record = session.records.find((item) => item.key === incident.key);
           if (record) {
             const details = createElement("details");
-            details.append(createElement("summary", "Ver archivos con el mismo ID"));
+            details.append(createElement("summary", t(locale, "teacher.review.sameId")));
             const list = createElement("ul");
             record.sourceFiles.forEach((file) => list.append(createElement("li", file)));
             details.append(list);
@@ -457,7 +446,7 @@ export const initializeReviewCenter = () => {
       });
     }
     const page = center.querySelector("[data-review-incident-page]");
-    if (page) page.textContent = `Página ${incidentPage} de ${pageCount}`;
+    if (page) page.textContent = t(locale, "teacher.review.page", { page: incidentPage, pages: pageCount });
     const previous = center.querySelector("[data-review-incident-previous]");
     const next = center.querySelector("[data-review-incident-next]");
     if (previous instanceof HTMLButtonElement) previous.disabled = incidentPage <= 1;
@@ -470,7 +459,9 @@ export const initializeReviewCenter = () => {
     if (workspace instanceof HTMLElement) workspace.hidden = !hasFiles;
     if (clearArea instanceof HTMLElement) clearArea.hidden = !hasFiles;
     const label = center.querySelector("[data-review-file-label]");
-    if (label) label.textContent = hasFiles ? "Añadir archivos" : "Seleccionar archivos";
+    if (label) label.textContent = hasFiles
+      ? t(locale, "teacher.review.addFiles")
+      : t(locale, "teacher.review.selectFiles");
     if (!hasFiles) return;
     renderSummary();
     renderResponses();
@@ -483,7 +474,9 @@ export const initializeReviewCenter = () => {
     if (readingFiles || files.length === 0) return;
     readingFiles = true;
     if (fileInput instanceof HTMLInputElement) fileInput.disabled = true;
-    announce(`Leyendo ${files.length} ${files.length === 1 ? "archivo" : "archivos"} en este navegador…`);
+    announce(files.length === 1
+      ? t(locale, "teacher.review.reading.one")
+      : t(locale, "teacher.review.reading.many", { count: files.length }));
     const entries = await Promise.all(files.map(async (file) => {
       try {
         return { name: file.name, size: file.size, text: await file.text() };
@@ -502,7 +495,9 @@ export const initializeReviewCenter = () => {
       fileInput.value = "";
     }
     const latest = entries.length;
-    announce(`${latest} ${latest === 1 ? "archivo procesado" : "archivos procesados"}. Nada se envió.`);
+    announce(latest === 1
+      ? t(locale, "teacher.review.processed.one")
+      : t(locale, "teacher.review.processed.many", { count: latest }));
   };
 
   fileInput?.addEventListener("change", () => {
@@ -581,7 +576,7 @@ export const initializeReviewCenter = () => {
     if (filterForm instanceof HTMLFormElement) filterForm.reset();
     if (clearConfirmation instanceof HTMLElement) clearConfirmation.hidden = true;
     render();
-    announce("Sesión limpiada. Los archivos y notas desaparecieron de esta pestaña.");
+    announce(t(locale, "teacher.review.cleared"));
   });
 
   const renderPrintResponses = () => {
@@ -594,7 +589,7 @@ export const initializeReviewCenter = () => {
         const response = record.original;
         const article = createElement("article");
         article.append(
-          createElement("h3", `${index + 1}. ${REVIEW_LABELS.activity[response.activityType]}`),
+          createElement("h3", `${index + 1}. ${labels.activity[response.activityType]}`),
           createElement("p", `${response.topic.title} · ${response.responseId}`),
           createElement("p", participationMainText(response))
         );
@@ -614,12 +609,12 @@ export const initializeReviewCenter = () => {
             includeOpen instanceof HTMLInputElement && includeOpen.checked
           );
           if (center.dataset.printOpen === "true") renderPrintResponses();
-          announce("Se abrirá el diálogo para imprimir o guardar como PDF.");
+          announce(t(locale, "teacher.review.printing"));
           window.print();
           return;
         }
         const exporters = {
-          txt: [toReviewText, "text/plain;charset=utf-8"],
+          txt: [(value) => toReviewText(value, locale), "text/plain;charset=utf-8"],
           csv: [toReviewCSV, "text/csv;charset=utf-8"],
           json: [toReviewJSON, "application/json;charset=utf-8"],
         };
@@ -630,9 +625,9 @@ export const initializeReviewCenter = () => {
           mimeType: exporter[1],
           filename: reviewFilename(exported, action),
         });
-        announce(`Archivo ${action.toUpperCase()} preparado localmente.`);
+        announce(t(locale, "teacher.review.exported", { format: action.toUpperCase() }));
       } catch {
-        announce("No fue posible preparar el archivo. La sesión sigue disponible en esta pestaña.");
+        announce(t(locale, "teacher.review.exportError"));
       }
     });
   });

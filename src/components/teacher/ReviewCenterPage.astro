@@ -1,0 +1,10 @@
+---
+import ReviewCenter from "../review/ReviewCenter.astro";
+import { ROUTE_IDS } from "../../i18n/routes.js";
+import TeacherToolShell from "./TeacherToolShell.astro";
+import "../../styles/review-center.css";
+const { locale = "es" } = Astro.props;
+---
+<TeacherToolShell locale={locale} current="revision" routeId={ROUTE_IDS.COURSE_TOOL_REVIEW} pageKey="review" articleClass="review-page" heroClass="review-page__hero" headingClass="review-page__heading" policyClass="review-page__policy" policyParagraphs={["One", "Two"]} printKey="teacher.print.review">
+  <ReviewCenter locale={locale} />
+</TeacherToolShell>

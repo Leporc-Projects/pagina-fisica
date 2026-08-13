@@ -1,113 +1,43 @@
 ---
-import {
-  NOTICE_CATEGORIES,
-  NOTICE_PACK_SCHEMA_VERSION,
-} from "../../utils/notices.js";
+import { NOTICE_CATEGORIES, NOTICE_PACK_SCHEMA_VERSION } from "../../utils/notices.js";
 import { COURSES } from "../../data/courses.js";
+import { localizeCourseData } from "../../data/course-localize.js";
+import { noticeCategoryLabel } from "../../data/notice-localize.js";
+import { t } from "../../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
+const courseName = localizeCourseData(locale).COURSE.name;
 ---
 
-<section class="notice-editor" data-notice-editor aria-labelledby="notice-editor-title">
+<section class="notice-editor" data-notice-editor data-locale={locale} aria-labelledby="notice-editor-title">
   <header class="notice-editor__intro">
-    <div>
-      <p class="academic-label">Borrador local</p>
-      <h2 id="notice-editor-title">Preparar un aviso</h2>
-      <p>Completa el contenido, comprueba su presentación y añádelo al paquete editorial.</p>
-    </div>
-    <p class="notice-editor__local">Nada se publica ni se envía desde esta página.</p>
+    <div><p class="academic-label">{t(locale, "teacher.notices.localDraft")}</p><h2 id="notice-editor-title">{t(locale, "teacher.notices.prepare")}</h2><p>{t(locale, "teacher.notices.prepareHelp")}</p></div>
+    <p class="notice-editor__local">{t(locale, "teacher.notices.notPublished")}</p>
   </header>
-
   <form data-notice-form novalidate>
     <fieldset>
-      <legend>Contenido del aviso</legend>
-      <label>
-        <span>Título</span>
-        <input name="title" maxlength="120" required autocomplete="off" />
-      </label>
-      <label>
-        <span>Resumen</span>
-        <textarea name="summary" rows="3" maxlength="280" required></textarea>
-      </label>
-      <label>
-        <span>Contenido</span>
-        <textarea name="content" rows="6" maxlength="3000" required></textarea>
-        <small>Texto sin HTML. Los saltos de línea se conservan en la presentación.</small>
-      </label>
+      <legend>{t(locale, "teacher.notices.content")}</legend>
+      <label><span>{t(locale, "teacher.notices.language")}</span><select name="locale" required><option value="es" selected={locale === "es"}>Español</option><option value="en" selected={locale === "en"}>English</option></select><small>{t(locale, "teacher.notices.languageHelp")}</small></label>
+      <label><span>{t(locale, "teacher.notices.title")}</span><input name="title" maxlength="120" required autocomplete="off" /></label>
+      <label><span>{t(locale, "teacher.notices.summary")}</span><textarea name="summary" rows="3" maxlength="280" required></textarea></label>
+      <label><span>{t(locale, "teacher.notices.body")}</span><textarea name="content" rows="6" maxlength="3000" required></textarea><small>{t(locale, "teacher.notices.plainText")}</small></label>
     </fieldset>
-
     <fieldset>
-      <legend>Publicación editorial</legend>
+      <legend>{t(locale, "teacher.notices.editorial")}</legend>
       <div class="notice-editor__grid">
-        <label>
-          <span>Publicar en</span>
-          <select name="scope" required>
-            {COURSES.map((course) => (
-              <option value={course.id}>{course.name}</option>
-            ))}
-            <option value="global">Aula Física · avisos generales</option>
-          </select>
-          <small>El ámbito decide en qué archivo público aparecerá.</small>
-        </label>
-        <label>
-          <span>Categoría</span>
-          <select name="category" required>
-            {NOTICE_CATEGORIES.map((category) => <option value={category}>{category}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>Fecha</span>
-          <input name="publishedAt" type="date" required />
-          <small>Metadato editorial; no programa una publicación.</small>
-        </label>
+        <label><span>{t(locale, "teacher.notices.scope")}</span><select name="scope" required>{COURSES.map((course) => <option value={course.id}>{course.id === "fisica-basica-1" ? courseName : course.name}</option>)}<option value="global">{t(locale, "teacher.notices.global")}</option></select><small>{t(locale, "teacher.notices.scopeHelp")}</small></label>
+        <label><span>{t(locale, "teacher.notices.category")}</span><select name="category" required>{NOTICE_CATEGORIES.map((category) => <option value={category}>{noticeCategoryLabel(category, locale)}</option>)}</select></label>
+        <label><span>{t(locale, "teacher.notices.date")}</span><input name="publishedAt" type="date" required /><small>{t(locale, "teacher.notices.dateHelp")}</small></label>
       </div>
-      <label>
-        <span>Enlace opcional</span>
-        <input
-          name="href"
-          type="text"
-          inputmode="url"
-          placeholder="/fisica-basica-1 o https://…"
-          autocomplete="off"
-        />
-        <small>Admite rutas internas desde / y direcciones externas HTTPS.</small>
-      </label>
-      <label class="notice-editor__check">
-        <input name="featured" type="checkbox" />
-        <span>Destacar este aviso en la portada</span>
-      </label>
-      <div class="notice-editor__generated" aria-label="Metadatos automáticos">
-        <span>Estado inicial: <strong>draft</strong></span>
-        <span>Esquema: <strong>{NOTICE_PACK_SCHEMA_VERSION}</strong></span>
-        <span>ID y versiones: <strong>automáticos</strong></span>
-      </div>
+      <label><span>{t(locale, "teacher.notices.link")}</span><input name="href" type="text" inputmode="url" placeholder="/fisica-basica-1 or https://…" autocomplete="off" /><small>{t(locale, "teacher.notices.linkHelp")}</small></label>
+      <label class="notice-editor__check"><input name="featured" type="checkbox" /><span>{t(locale, "teacher.notices.featured")}</span></label>
+      <div class="notice-editor__generated" aria-label={t(locale, "teacher.notices.generated")}><span>{t(locale, "teacher.notices.initialStatus")}: <strong>draft</strong></span><span>{t(locale, "teacher.notices.schema")}: <strong>{NOTICE_PACK_SCHEMA_VERSION}</strong></span><span>{t(locale, "teacher.notices.ids")}: <strong>{t(locale, "teacher.notices.automatic")}</strong></span></div>
     </fieldset>
-
-    <div class="notice-editor__actions">
-      <button type="button" data-preview-notice>Comprobar y previsualizar</button>
-      <button type="button" class="review-button" data-add-notice>Añadir al paquete</button>
-    </div>
+    <div class="notice-editor__actions"><button type="button" data-preview-notice>{t(locale, "teacher.notices.previewAction")}</button><button type="button" class="review-button" data-add-notice>{t(locale, "teacher.notices.add")}</button></div>
     <div class="notice-editor__errors" data-notice-errors aria-live="polite"></div>
   </form>
-
-  <section class="notice-preview" data-notice-preview hidden aria-labelledby="notice-preview-title">
-    <header>
-      <p class="academic-label">Previsualización</p>
-      <h2 id="notice-preview-title" tabindex="-1">Así se verá el aviso</h2>
-    </header>
-    <article class="notice-entry" data-notice-preview-card></article>
-  </section>
-
-  <section class="notice-pack" aria-labelledby="notice-pack-title">
-    <header>
-      <div>
-        <p class="academic-label">Paquete docente</p>
-        <h2 id="notice-pack-title">Avisos preparados</h2>
-      </div>
-      <button type="button" data-export-notice-pack disabled>Exportar paquete JSON</button>
-    </header>
-    <p data-notice-pack-empty>No hay avisos en el paquete.</p>
-    <ol data-notice-pack-list></ol>
-    <p class="notice-editor__status" data-notice-status aria-live="polite"></p>
-  </section>
+  <section class="notice-preview" data-notice-preview hidden aria-labelledby="notice-preview-title"><header><p class="academic-label">{t(locale, "teacher.notices.previewLabel")}</p><h2 id="notice-preview-title" tabindex="-1">{t(locale, "teacher.notices.previewTitle")}</h2></header><article class="notice-entry" data-notice-preview-card></article></section>
+  <section class="notice-pack" aria-labelledby="notice-pack-title"><header><div><p class="academic-label">{t(locale, "teacher.notices.packLabel")}</p><h2 id="notice-pack-title">{t(locale, "teacher.notices.packTitle")}</h2></div><button type="button" data-export-notice-pack disabled>{t(locale, "teacher.notices.export")}</button></header><p data-notice-pack-empty>{t(locale, "teacher.notices.empty")}</p><ol data-notice-pack-list></ol><p class="notice-editor__status" data-notice-status aria-live="polite"></p></section>
 </section>
 
 <script>

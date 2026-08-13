@@ -1,0 +1,43 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../course/CoursePageHeader.astro";
+import { t } from "../../i18n/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
+import { withBase } from "../../utils/paths.js";
+import TeacherToolsNav from "./TeacherToolsNav.astro";
+
+const { locale = "es" } = Astro.props;
+const tools = [
+  ["bank", ROUTE_IDS.COURSE_TOOL_QUESTION_BANK],
+  ["notices", ROUTE_IDS.COURSE_TOOL_NOTICES],
+  ["simulations", ROUTE_IDS.COURSE_TOOL_SIMULATION_LAB],
+  ["review", ROUTE_IDS.COURSE_TOOL_REVIEW],
+  ["results", ROUTE_IDS.COURSE_TOOL_RESULTS],
+];
+---
+
+<BaseLayout title={`${t(locale, "teacher.hub.title")} · ${t(locale, "teacher.courseName")}`} description={t(locale, "teacher.hub.metaDescription")} locale={locale} routeId={ROUTE_IDS.COURSE_TOOLS}>
+  <article class="course-subpage teacher-tools-hub">
+    <CoursePageHeader title={t(locale, "teacher.hub.title")} description={t(locale, "teacher.hub.description")} locale={locale} />
+    <TeacherToolsNav current="hub" locale={locale} />
+    <section class="course-section" aria-labelledby="teacher-tools-title">
+      <header class="course-section__header">
+        <div><p class="course-section__index">{t(locale, "teacher.hub.workLocal")}</p><h2 id="teacher-tools-title">{t(locale, "teacher.hub.available")}</h2></div>
+        <p>{t(locale, "teacher.hub.intro")}</p>
+      </header>
+      <div class="teacher-tools-grid">
+        {tools.map(([key, routeId]) => (
+          <article class="teacher-tool-card">
+            <h3>{t(locale, `teacher.nav.${key}`)}</h3>
+            <p>{t(locale, `teacher.hub.${key}Description`)}</p>
+            <a class="text-link" href={withBase(getLocalizedPath(routeId, locale))}>{t(locale, "teacher.hub.open")}</a>
+          </article>
+        ))}
+      </div>
+    </section>
+    <section class="course-section course-section--split" aria-labelledby="teacher-tools-scope-title">
+      <div><p class="course-section__index">{t(locale, "teacher.hub.scope")}</p><h2 id="teacher-tools-scope-title">{t(locale, "teacher.hub.noAuth")}</h2></div>
+      <div class="course-section__body"><p class="course-lead">{t(locale, "teacher.hub.noPrivate")}</p><p>{t(locale, "teacher.hub.filesLocal")}</p></div>
+    </section>
+  </article>
+</BaseLayout>

@@ -1,0 +1,10 @@
+---
+import NoticeEditor from "../notices/NoticeEditor.astro";
+import { ROUTE_IDS } from "../../i18n/routes.js";
+import TeacherToolShell from "./TeacherToolShell.astro";
+import "../../styles/notice-editor.css";
+const { locale = "es" } = Astro.props;
+---
+<TeacherToolShell locale={locale} current="avisos" routeId={ROUTE_IDS.COURSE_TOOL_NOTICES} pageKey="notices" articleClass="notice-editor-page" heroClass="notice-editor-page__hero">
+  <NoticeEditor locale={locale} />
+</TeacherToolShell>

@@ -1,19 +1,23 @@
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
 <section class="results-step" aria-labelledby="results-incidents-title">
   <header class="results-step__heading">
     <div>
       <span class="results-step__number" aria-hidden="true">4</span>
       <div>
-        <p class="academic-label">Revisión</p>
-        <h2 id="results-incidents-title">Incidencias</h2>
+        <p class="academic-label">{t(locale, "teacher.results.incidents.label")}</p>
+        <h2 id="results-incidents-title">{t(locale, "teacher.results.incidents.title")}</h2>
       </div>
     </div>
-    <p>Los datos dudosos se conservan y se explican; nunca se corrigen o descartan en silencio.</p>
+    <p>{t(locale, "teacher.results.incidents.help")}</p>
   </header>
 
-  <div class="results-incident-key" aria-label="Severidades">
-    <span><i data-severity="error"></i>Error: impide usar un valor</span>
-    <span><i data-severity="warning"></i>Atención: requiere una decisión</span>
-    <span><i data-severity="info"></i>Información: describe un estado</span>
+  <div class="results-incident-key" aria-label={t(locale, "teacher.results.severities")}>
+    <span><i data-severity="error"></i>{t(locale, "teacher.results.severity.errorHelp")}</span>
+    <span><i data-severity="warning"></i>{t(locale, "teacher.results.severity.warningHelp")}</span>
+    <span><i data-severity="info"></i>{t(locale, "teacher.results.severity.infoHelp")}</span>
   </div>
   <div class="results-table-wrap" data-incidents-table></div>
 </section>

@@ -1,0 +1,10 @@
+---
+import ResultsOrganizer from "../results/ResultsOrganizer.astro";
+import { ROUTE_IDS } from "../../i18n/routes.js";
+import TeacherToolShell from "./TeacherToolShell.astro";
+import "../../styles/results-organizer.css";
+const { locale = "es" } = Astro.props;
+---
+<TeacherToolShell locale={locale} current="notas" routeId={ROUTE_IDS.COURSE_TOOL_RESULTS} pageKey="results" articleClass="results-page" heroClass="results-page__hero" headingClass="results-page__heading" policyClass="results-page__policy" policyParagraphs={["One", "Two"]} printKey="teacher.print.results">
+  <ResultsOrganizer locale={locale} />
+</TeacherToolShell>

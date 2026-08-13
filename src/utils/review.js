@@ -28,6 +28,7 @@ import {
   PARTICIPATION_SCHEMA_VERSION,
   validateParticipationResponse,
 } from "./participation.js";
+import { localizeParticipationData } from "../data/participation-localize.js";
 
 const labelMap = (options) => Object.fromEntries(options);
 
@@ -68,22 +69,23 @@ export const createReviewSession = () => ({
   incidents: [],
 });
 
-const invalidResult = (reason) => ({ status: "invalid", reason });
+const invalidResult = (reasonCode, reason) => ({ status: "invalid", reasonCode, reason });
 
 export const validateImportedDocument = (document) => {
   if (!document || typeof document !== "object" || Array.isArray(document)) {
-    return invalidResult("El JSON no contiene un objeto de respuesta reconocido.");
+    return invalidResult("invalid-object", "El JSON no contiene un objeto de respuesta reconocido.");
   }
 
   if ("responseId" in document || "activityType" in document) {
     if (document.schemaVersion !== PARTICIPATION_SCHEMA_VERSION) {
-      return invalidResult("La versión del esquema de Participa no está soportada.");
+      return invalidResult("unsupported-participation-schema", "La versión del esquema de Participa no está soportada.");
     }
     const validation = validateParticipationResponse(document);
-    if (!validation.valid) return invalidResult(validation.errors.join(" "));
+    if (!validation.valid) return invalidResult("invalid-participation", validation.errors.join(" "));
     return {
       status: "valid",
       reason: "Respuesta de Participa válida.",
+      reasonCode: "valid-participation",
       kind: "participation",
       id: document.responseId,
       original: deepFreeze(document),
@@ -93,26 +95,27 @@ export const validateImportedDocument = (document) => {
   if ("attemptId" in document || "bonusId" in document) {
     if (![BONUS_ATTEMPT_SCHEMA_VERSION, LEGACY_BONUS_ATTEMPT_SCHEMA_VERSION]
       .includes(document.schemaVersion)) {
-      return invalidResult("La versión del esquema de Bono no está soportada.");
+      return invalidResult("unsupported-bonus-schema", "La versión del esquema de Bono no está soportada.");
     }
     const validation = validateCompletedBonusAttempt(document);
-    if (!validation.valid) return invalidResult(validation.errors.join(" "));
-    if (!isAttemptId(document.attemptId)) return invalidResult("attemptId inválido.");
+    if (!validation.valid) return invalidResult("invalid-bonus", validation.errors.join(" "));
+    if (!isAttemptId(document.attemptId)) return invalidResult("invalid-attempt-id", "attemptId inválido.");
     const bonus = bonusMap.get(document.bonusId);
-    if (!bonus) return invalidResult("El Bono indicado no pertenece al registro conocido.");
+    if (!bonus) return invalidResult("unknown-bonus", "El Bono indicado no pertenece al registro conocido.");
     if (bonus.version !== document.bonusVersion) {
-      return invalidResult("La versión del Bono no coincide con el registro conocido.");
+      return invalidResult("bonus-version-mismatch", "La versión del Bono no coincide con el registro conocido.");
     }
     return {
       status: "valid",
       reason: "Intento de Bono válido; disponible solo para consulta.",
+      reasonCode: "valid-bonus",
       kind: "bonus",
       id: document.attemptId,
       original: deepFreeze(document),
     };
   }
 
-  return invalidResult("El tipo de archivo JSON no pertenece a un contrato reconocido.");
+  return invalidResult("unknown-contract", "El tipo de archivo JSON no pertenece a un contrato reconocido.");
 };
 
 export const parseReviewImportEntry = (entry) => {
@@ -122,25 +125,26 @@ export const parseReviewImportEntry = (entry) => {
   const size = Number.isFinite(entry?.size) ? entry.size : 0;
 
   if (!name.toLocaleLowerCase("es").endsWith(".json")) {
-    return { file: name, status: "invalid", reason: "El formato de importación debe ser JSON." };
+    return { file: name, status: "invalid", reasonCode: "json-only", reason: "El formato de importación debe ser JSON." };
   }
 
   if (size > REVIEW_FILE_MAX_BYTES) {
     return {
       file: name,
       status: "invalid",
+      reasonCode: "file-too-large",
       reason: `El archivo supera el límite de ${REVIEW_FILE_MAX_BYTES / 1024 / 1024} MB.`,
     };
   }
   if (typeof entry?.text !== "string") {
-    return { file: name, status: "invalid", reason: "No fue posible leer el archivo." };
+    return { file: name, status: "invalid", reasonCode: "unreadable-file", reason: "No fue posible leer el archivo." };
   }
 
   let document;
   try {
     document = JSON.parse(entry.text);
   } catch {
-    return { file: name, status: "invalid", reason: "JSON inválido." };
+    return { file: name, status: "invalid", reasonCode: "invalid-json", reason: "JSON inválido." };
   }
 
   return { file: name, ...validateImportedDocument(document) };
@@ -154,7 +158,7 @@ export const addReviewImportEntries = (session, entries) => {
   entries.forEach((entry) => {
     const result = parseReviewImportEntry(entry);
     if (result.status === "invalid") {
-      incidents.push({ file: result.file, status: "invalid", reason: result.reason });
+      incidents.push({ file: result.file, status: "invalid", reasonCode: result.reasonCode, reason: result.reason });
       return;
     }
 
@@ -166,6 +170,7 @@ export const addReviewImportEntries = (session, entries) => {
         file: result.file,
         status: "warning",
         reason: "Duplicado detectado; los agregados conservan la primera instancia.",
+        reasonCode: "duplicate-record",
         key,
       });
       return;
@@ -184,6 +189,7 @@ export const addReviewImportEntries = (session, entries) => {
       file: result.file,
       status: "valid",
       reason: result.reason,
+      reasonCode: result.reasonCode,
       key,
     });
   });
@@ -439,36 +445,77 @@ const countLines = (record, labels) => Object.entries(record)
   .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0]))
   .map(([key, count]) => `- ${labels[key] ?? key}: ${count}`);
 
-export const toReviewText = (reviewExport) => {
+export const toReviewText = (reviewExport, locale = "es") => {
+  const participation = localizeParticipationData(locale);
+  const localizedLabels = {
+    activity: Object.fromEntries(participation.activityOptions.map((option) => [option.value, option.label])),
+    improvementArea: Object.fromEntries(participation.improvementAreas),
+    topic: Object.fromEntries(participation.topics.map((topic) => [topic.slug, topic.title])),
+  };
   const summary = reviewExport.summary;
+  const copy = locale === "es" ? {
+    course: "Aula Física · Física Básica I",
+    title: "Centro de revisión",
+    date: "Fecha",
+    files: "Archivos procesados",
+    valid: "Válidos",
+    warnings: "Advertencias",
+    invalid: "Inválidos",
+    duplicates: "Duplicados",
+    unique: "Registros únicos",
+    activity: "Participación por actividad",
+    topics: "Dificultades mencionadas por tema",
+    improvements: "Áreas de mejora",
+    bonuses: "Intentos de Bono reconocidos",
+    anonymous: "Anónimos",
+    identified: "Identificados",
+    caveat: "Los conteos describen los archivos importados; no estiman dominio ni causalidad.",
+    local: "Los archivos se procesaron localmente y no fueron enviados automáticamente.",
+  } : {
+    course: "Aula Física · Basic Physics I",
+    title: "Review center",
+    date: "Date",
+    files: "Files processed",
+    valid: "Valid",
+    warnings: "Warnings",
+    invalid: "Invalid",
+    duplicates: "Duplicates",
+    unique: "Unique records",
+    activity: "Participation by activity",
+    topics: "Reported difficulties by topic",
+    improvements: "Improvement areas",
+    bonuses: "Recognized Bonus attempts",
+    anonymous: "Anonymous",
+    identified: "Identified",
+    caveat: "Counts describe the imported files; they do not estimate mastery or causality.",
+    local: "Files were processed locally and were not sent automatically.",
+  };
   return [
-    "Aula Física · Física Básica I",
-    "Centro de revisión",
-    `Fecha: ${reviewExport.generatedAt}`,
+    copy.course,
+    copy.title,
+    `${copy.date}: ${reviewExport.generatedAt}`,
     "",
-    `Archivos procesados: ${summary.files}`,
-    `Válidos: ${summary.incidents.valid}`,
-    `Advertencias: ${summary.incidents.warning}`,
-    `Inválidos: ${summary.incidents.invalid}`,
-    `Duplicados: ${summary.duplicates}`,
-    `Registros únicos: ${summary.uniqueRecords}`,
+    `${copy.files}: ${summary.files}`,
+    `${copy.valid}: ${summary.incidents.valid}`,
+    `${copy.warnings}: ${summary.incidents.warning}`,
+    `${copy.invalid}: ${summary.incidents.invalid}`,
+    `${copy.duplicates}: ${summary.duplicates}`,
+    `${copy.unique}: ${summary.uniqueRecords}`,
     "",
-    "Participación por actividad",
-    ...countLines(summary.activity, REVIEW_LABELS.activity),
+    copy.activity,
+    ...countLines(summary.activity, localizedLabels.activity),
     "",
-    "Dificultades mencionadas por tema",
-    ...countLines(summary.difficultyTopics, Object.fromEntries(
-      PARTICIPATION_TOPICS.map((topic) => [topic.slug, topic.title])
-    )),
+    copy.topics,
+    ...countLines(summary.difficultyTopics, localizedLabels.topic),
     "",
-    "Áreas de mejora",
-    ...countLines(summary.improvementAreas, REVIEW_LABELS.improvementArea),
+    copy.improvements,
+    ...countLines(summary.improvementAreas, localizedLabels.improvementArea),
     "",
-    `Intentos de Bono reconocidos: ${summary.bonuses}`,
-    `- Anónimos: ${summary.bonusIdentity.anonymous}`,
-    `- Identificados: ${summary.bonusIdentity.institutionalEmail}`,
-    "Los conteos describen los archivos importados; no estiman dominio ni causalidad.",
-    "Los archivos se procesaron localmente y no fueron enviados automáticamente.",
+    `${copy.bonuses}: ${summary.bonuses}`,
+    `- ${copy.anonymous}: ${summary.bonusIdentity.anonymous}`,
+    `- ${copy.identified}: ${summary.bonusIdentity.institutionalEmail}`,
+    copy.caveat,
+    copy.local,
   ].join("\n") + "\n";
 };
 

@@ -4,35 +4,38 @@ import OrganizerExports from "./OrganizerExports.astro";
 import OrganizerImportPanel from "./OrganizerImportPanel.astro";
 import OrganizerReview from "./OrganizerReview.astro";
 import OrganizerSummary from "./OrganizerSummary.astro";
+import { t } from "../../i18n/index.js";
+
+const { locale = "es" } = Astro.props;
 ---
 
-<div class="results-organizer" data-results-organizer>
-  <nav class="results-section-nav" aria-label="Flujo del organizador">
-    <a href="#results-students-title">Estudiantes</a>
-    <a href="#results-sources-title">Resultados</a>
-    <a href="#results-summary-title">Resumen</a>
-    <a href="#results-incidents-title">Incidencias</a>
-    <a href="#results-consolidated-title">Consolidado</a>
-    <a href="#results-exports-title">Exportar</a>
+<div class="results-organizer" data-results-organizer data-locale={locale}>
+  <nav class="results-section-nav" aria-label={t(locale, "teacher.results.navLabel")}>
+    <a href="#results-students-title">{t(locale, "teacher.results.nav.students")}</a>
+    <a href="#results-sources-title">{t(locale, "teacher.results.nav.results")}</a>
+    <a href="#results-summary-title">{t(locale, "teacher.results.nav.summary")}</a>
+    <a href="#results-incidents-title">{t(locale, "teacher.results.nav.incidents")}</a>
+    <a href="#results-consolidated-title">{t(locale, "teacher.results.nav.consolidated")}</a>
+    <a href="#results-exports-title">{t(locale, "teacher.results.nav.export")}</a>
   </nav>
 
-  <OrganizerImportPanel />
+  <OrganizerImportPanel {locale} />
 
   <div class="results-workspace" data-results-workspace hidden>
-    <OrganizerSummary />
-    <OrganizerReview />
-    <OrganizerConsolidated />
-    <OrganizerExports />
+    <OrganizerSummary {locale} />
+    <OrganizerReview {locale} />
+    <OrganizerConsolidated {locale} />
+    <OrganizerExports {locale} />
   </div>
 
   <section class="results-clear" data-clear-area hidden aria-labelledby="results-clear-title">
-    <h2 id="results-clear-title">Sesión local</h2>
-    <p>El listado, las fuentes y las decisiones viven únicamente en la memoria de esta pestaña.</p>
-    <button type="button" class="results-button--quiet" data-clear-session>Limpiar sesión</button>
+    <h2 id="results-clear-title">{t(locale, "teacher.results.clear.title")}</h2>
+    <p>{t(locale, "teacher.results.clear.help")}</p>
+    <button type="button" class="results-button--quiet" data-clear-session>{t(locale, "teacher.results.clear.action")}</button>
     <div class="results-clear__confirm" data-clear-confirmation hidden>
-      <p>Se retirarán de memoria el listado, las fuentes, las incidencias y el consolidado.</p>
-      <button type="button" data-clear-cancel>Cancelar</button>
-      <button type="button" class="results-button--danger" data-clear-confirm>Confirmar limpieza</button>
+      <p>{t(locale, "teacher.results.clear.confirmHelp")}</p>
+      <button type="button" data-clear-cancel>{t(locale, "teacher.results.cancel")}</button>
+      <button type="button" class="results-button--danger" data-clear-confirm>{t(locale, "teacher.results.clear.confirm")}</button>
     </div>
   </section>
 

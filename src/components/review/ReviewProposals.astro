@@ -1,21 +1,21 @@
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
 <section class="review-proposals" aria-labelledby="review-proposals-title">
   <header class="review-section-heading">
     <div>
-      <p class="academic-label">Revisión docente local</p>
-      <h2 id="review-proposals-title">Propuestas estudiantiles</h2>
+      <p class="academic-label">{t(locale, "teacher.review.proposals.label")}</p>
+      <h2 id="review-proposals-title">{t(locale, "teacher.review.proposals.title")}</h2>
     </div>
-    <p>
-      El estado y la nota se superponen al original. “Candidata al banco” no
-      publica ni crea un ejercicio académico.
-    </p>
+    <p>{t(locale, "teacher.review.proposals.help")}</p>
   </header>
 
   <p class="review-list-summary" data-review-proposal-summary></p>
   <div class="review-proposal-list" data-review-proposal-list></div>
-  <nav class="review-pagination" aria-label="Páginas de propuestas">
-    <button type="button" data-review-proposal-previous>Anterior</button>
+  <nav class="review-pagination" aria-label={t(locale, "teacher.review.proposals.pages")}>
+    <button type="button" data-review-proposal-previous>{t(locale, "teacher.review.previous")}</button>
     <span data-review-proposal-page></span>
-    <button type="button" data-review-proposal-next>Siguiente</button>
+    <button type="button" data-review-proposal-next>{t(locale, "teacher.review.next")}</button>
   </nav>
 </section>
-

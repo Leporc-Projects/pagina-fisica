@@ -1,29 +1,33 @@
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
 <section class="review-summary" aria-labelledby="review-summary-title">
   <header class="review-section-heading">
     <div>
-      <p class="academic-label">Resumen descriptivo</p>
-      <h2 id="review-summary-title">Qué contienen los archivos</h2>
+      <p class="academic-label">{t(locale, "teacher.review.summary.label")}</p>
+      <h2 id="review-summary-title">{t(locale, "teacher.review.summary.title")}</h2>
     </div>
-    <p>Estos conteos describen la sesión importada; no estiman dominio ni causalidad.</p>
+    <p>{t(locale, "teacher.review.summary.help")}</p>
   </header>
 
   <dl class="review-counts" data-review-counts></dl>
 
   <div class="review-summary__grid">
     <section aria-labelledby="review-activity-title">
-      <h3 id="review-activity-title">Participación por actividad</h3>
+      <h3 id="review-activity-title">{t(locale, "teacher.review.summary.activity")}</h3>
       <div class="review-table-wrap">
         <table>
-          <thead><tr><th scope="col">Actividad</th><th scope="col">Respuestas</th></tr></thead>
+          <thead><tr><th scope="col">{t(locale, "teacher.review.activity")}</th><th scope="col">{t(locale, "teacher.review.responsesColumn")}</th></tr></thead>
           <tbody data-review-activity-counts></tbody>
         </table>
       </div>
     </section>
 
     <section aria-labelledby="review-topic-chart-title">
-      <h3 id="review-topic-chart-title">Dificultades mencionadas por tema</h3>
+      <h3 id="review-topic-chart-title">{t(locale, "teacher.review.summary.topics")}</h3>
       <p id="review-topic-chart-description">
-        Número de respuestas de dificultad conceptual agrupadas por tema declarado.
+        {t(locale, "teacher.review.summary.topicsHelp")}
       </p>
       <svg
         class="review-bar-chart"
@@ -33,38 +37,37 @@
       ></svg>
       <div class="review-table-wrap">
         <table>
-          <thead><tr><th scope="col">Tema</th><th scope="col">Menciones</th></tr></thead>
+          <thead><tr><th scope="col">{t(locale, "teacher.review.topic")}</th><th scope="col">{t(locale, "teacher.review.mentions")}</th></tr></thead>
           <tbody data-review-topic-counts></tbody>
         </table>
       </div>
     </section>
 
     <section aria-labelledby="review-support-title">
-      <h3 id="review-support-title">Ayuda solicitada</h3>
+      <h3 id="review-support-title">{t(locale, "teacher.review.summary.support")}</h3>
       <div class="review-table-wrap">
         <table>
-          <thead><tr><th scope="col">Tipo de ayuda</th><th scope="col">Menciones</th></tr></thead>
+          <thead><tr><th scope="col">{t(locale, "teacher.review.supportType")}</th><th scope="col">{t(locale, "teacher.review.mentions")}</th></tr></thead>
           <tbody data-review-support-counts></tbody>
         </table>
       </div>
     </section>
 
     <section aria-labelledby="review-improvement-title">
-      <h3 id="review-improvement-title">Mejoras de la página</h3>
+      <h3 id="review-improvement-title">{t(locale, "teacher.review.summary.improvements")}</h3>
       <div class="review-table-wrap">
         <table>
-          <thead><tr><th scope="col">Categoría</th><th scope="col">Respuestas</th></tr></thead>
+          <thead><tr><th scope="col">{t(locale, "teacher.review.category")}</th><th scope="col">{t(locale, "teacher.review.responsesColumn")}</th></tr></thead>
           <tbody data-review-improvement-counts></tbody>
         </table>
       </div>
-      <h4>Valoración opcional</h4>
+      <h4>{t(locale, "teacher.review.optionalRating")}</h4>
       <div class="review-table-wrap">
         <table>
-          <thead><tr><th scope="col">Valoración</th><th scope="col">Respuestas</th></tr></thead>
+          <thead><tr><th scope="col">{t(locale, "teacher.review.rating")}</th><th scope="col">{t(locale, "teacher.review.responsesColumn")}</th></tr></thead>
           <tbody data-review-helpfulness-counts></tbody>
         </table>
       </div>
     </section>
   </div>
 </section>
-

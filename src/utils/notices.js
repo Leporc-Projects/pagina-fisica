@@ -97,29 +97,33 @@ export const normalizeNotice = (notice, { status = notice?.status ?? "draft" } =
 
 export const validateNotice = (notice, { existingIds = [] } = {}) => {
   const errors = [];
-  const require = (condition, message) => { if (!condition) errors.push(message); };
-  require(notice?.schemaVersion === NOTICE_SCHEMA_VERSION, "schemaVersion de aviso inválida.");
-  require(/^notice-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$/.test(notice?.id ?? ""), "ID de aviso inválido.");
-  require(!new Set(existingIds).has(notice?.id), "El ID del aviso ya existe.");
-  require(Number.isInteger(notice?.version) && notice.version >= 1, "La versión debe ser un entero positivo.");
-  require(isSupportedLocale(notice?.locale), "El locale del aviso no está soportado.");
+  const issues = [];
+  const require = (condition, code, message, path = code) => {
+    if (!condition) { issues.push({ code, path, params: {} }); errors.push(message); }
+  };
+  require(notice?.schemaVersion === NOTICE_SCHEMA_VERSION, "invalid-schema", "schemaVersion de aviso inválida.", "schemaVersion");
+  require(/^notice-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$/.test(notice?.id ?? ""), "invalid-id", "ID de aviso inválido.", "id");
+  require(!new Set(existingIds).has(notice?.id), "duplicate-id", "El ID del aviso ya existe.", "id");
+  require(Number.isInteger(notice?.version) && notice.version >= 1, "invalid-version", "La versión debe ser un entero positivo.", "version");
+  require(isSupportedLocale(notice?.locale), "invalid-locale", "El locale del aviso no está soportado.", "locale");
   const scopeValidation = validateContentScope(notice?.scope);
   scopeValidation.errors.forEach((error) => errors.push(`Ámbito: ${error}`));
-  require(validText(notice?.title), "Falta el título.");
-  require(validText(notice?.summary), "Falta el resumen.");
-  require(validText(notice?.content), "Falta el contenido.");
-  require(NOTICE_CATEGORIES.includes(notice?.category), "La categoría no está permitida.");
-  require(isIsoDate(notice?.publishedAt), "publishedAt debe ser una fecha ISO válida (AAAA-MM-DD).");
-  require(typeof notice?.featured === "boolean", "featured debe ser booleano.");
-  require(NOTICE_STATUSES.includes(notice?.status), "El estado editorial no está permitido.");
+  if (!scopeValidation.valid) issues.push({ code: "invalid-scope", path: "scope", params: {} });
+  require(validText(notice?.title), "missing-title", "Falta el título.", "title");
+  require(validText(notice?.summary), "missing-summary", "Falta el resumen.", "summary");
+  require(validText(notice?.content), "missing-content", "Falta el contenido.", "content");
+  require(NOTICE_CATEGORIES.includes(notice?.category), "invalid-category", "La categoría no está permitida.", "category");
+  require(isIsoDate(notice?.publishedAt), "invalid-date", "publishedAt debe ser una fecha ISO válida (AAAA-MM-DD).", "publishedAt");
+  require(typeof notice?.featured === "boolean", "invalid-featured", "featured debe ser booleano.", "featured");
+  require(NOTICE_STATUSES.includes(notice?.status), "invalid-status", "El estado editorial no está permitido.", "status");
   ["title", "summary", "content"].forEach((field) => {
     const entry = notice?.[field];
-    require(typeof entry !== "string" || !hasControlCharacters(entry), `${field} contiene caracteres de control.`);
-    require(typeof entry !== "string" || !hasHtmlMarkup(entry), `${field} no admite HTML.`);
+    require(typeof entry !== "string" || !hasControlCharacters(entry), "control-characters", `${field} contiene caracteres de control.`, field);
+    require(typeof entry !== "string" || !hasHtmlMarkup(entry), "html-not-allowed", `${field} no admite HTML.`, field);
   });
   const hrefValidation = validateNoticeHref(notice?.href);
-  require(hrefValidation.valid, hrefValidation.error ?? "El enlace no es válido.");
-  return { valid: errors.length === 0, errors };
+  require(hrefValidation.valid, "invalid-href", hrefValidation.error ?? "El enlace no es válido.", "href");
+  return { valid: errors.length === 0, errors, issues };
 };
 
 export const sortNoticesByDate = (notices) => [...notices].sort((first, second) =>
@@ -156,30 +160,34 @@ export const createNoticePack = (
 
 export const validateNoticePack = (pack, { existingIds = [] } = {}) => {
   const errors = [];
-  const require = (condition, message) => { if (!condition) errors.push(message); };
+  const issues = [];
+  const require = (condition, code, message, path = code) => { if (!condition) { issues.push({ code, path, params: {} }); errors.push(message); } };
   const isLegacyPack = typeof pack?.schemaVersion === "string" && /^[12](?:\.|$)/.test(pack.schemaVersion);
   require(
     pack?.schemaVersion === NOTICE_PACK_SCHEMA_VERSION,
+    isLegacyPack ? "legacy-pack-schema" : "invalid-pack-schema",
     isLegacyPack
       ? "Los paquetes anteriores a 3.x no son compatibles: deben regenerarse con ámbito y locale explícitos."
-      : "schemaVersion de paquete inválida."
+      : "schemaVersion de paquete inválida.",
+    "schemaVersion"
   );
-  require(/^notice-pack-[0-9a-f]{16}$/.test(pack?.packageId ?? ""), "packageId inválido.");
+  require(/^notice-pack-[0-9a-f]{16}$/.test(pack?.packageId ?? ""), "invalid-package-id", "packageId inválido.", "packageId");
   const createdDate = new Date(pack?.createdAt);
   require(validText(pack?.createdAt) && !Number.isNaN(createdDate.valueOf()) &&
-    createdDate.toISOString() === pack.createdAt, "createdAt debe usar ISO 8601.");
-  require(pack?.source === "teacher", "La fuente del paquete debe ser teacher.");
-  require(Array.isArray(pack?.notices) && pack.notices.length > 0, "El paquete no contiene avisos.");
+    createdDate.toISOString() === pack.createdAt, "invalid-created-at", "createdAt debe usar ISO 8601.", "createdAt");
+  require(pack?.source === "teacher", "invalid-source", "La fuente del paquete debe ser teacher.", "source");
+  require(Array.isArray(pack?.notices) && pack.notices.length > 0, "empty-pack", "El paquete no contiene avisos.", "notices");
   const ids = Array.isArray(pack?.notices)
     ? pack.notices.map((notice) => notice.id)
     : [];
-  require(new Set(ids).size === ids.length, "El paquete contiene IDs duplicados.");
+  require(new Set(ids).size === ids.length, "duplicate-pack-ids", "El paquete contiene IDs duplicados.", "notices");
   if (Array.isArray(pack?.notices)) pack.notices.forEach((notice, index) => {
     const validation = validateNotice(notice, { existingIds });
     validation.errors.forEach((error) => errors.push(`Aviso ${index + 1}: ${error}`));
-    require(notice?.status === "draft", `Aviso ${index + 1}: el paquete solo admite estado draft.`);
+    validation.issues.forEach((entry) => issues.push({ ...entry, path: `notices.${index}.${entry.path}` }));
+    require(notice?.status === "draft", "invalid-pack-status", `Aviso ${index + 1}: el paquete solo admite estado draft.`, `notices.${index}.status`);
   });
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, issues };
 };
 
 export const mergeNoticePack = (pack, currentNotices) => {

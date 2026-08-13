@@ -1,0 +1,10 @@
+---
+import SimulationLab from "../simulations/SimulationLab.astro";
+import { ROUTE_IDS } from "../../i18n/routes.js";
+import TeacherToolShell from "./TeacherToolShell.astro";
+import "../../styles/simulation-lab.css";
+const { locale = "es" } = Astro.props;
+---
+<TeacherToolShell locale={locale} current="simulaciones" routeId={ROUTE_IDS.COURSE_TOOL_SIMULATION_LAB} pageKey="simulations" articleClass="simulation-lab-page" heroClass="simulation-lab-page__hero">
+  <SimulationLab locale={locale} />
+</TeacherToolShell>

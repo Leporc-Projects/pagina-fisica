@@ -1,0 +1,60 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { t } from "../../i18n/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
+import { withBase } from "../../utils/paths.js";
+import TeacherToolsNav from "./TeacherToolsNav.astro";
+
+const {
+  locale = "es",
+  current,
+  routeId,
+  pageKey,
+  articleClass,
+  heroClass,
+  headingClass,
+  policyClass,
+  policyParagraphs = [""],
+  printKey,
+} = Astro.props;
+const title = t(locale, `teacher.page.${pageKey}Title`);
+---
+
+<BaseLayout
+  title={`${title} · ${t(locale, "teacher.courseName")}`}
+  description={t(locale, `teacher.page.${pageKey}Meta`)}
+  locale={locale}
+  routeId={routeId}
+>
+  <article class={articleClass}>
+    <header class={heroClass}>
+      <nav class="academic-breadcrumb" aria-label={t(locale, "teacher.breadcrumb")}>
+        <a href={withBase(getLocalizedPath(ROUTE_IDS.COURSE, locale))}>{t(locale, "teacher.courseName")}</a>
+        <span aria-hidden="true">/</span>
+        <a href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_TOOLS, locale))}>{t(locale, "teacher.hub.title")}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{title}</span>
+      </nav>
+      <div class={headingClass}>
+        <p class="eyebrow eyebrow--dark">{t(locale, "teacher.localTool")}</p>
+        <h1>{title}</h1>
+        <p>{t(locale, `teacher.page.${pageKey}Description`)}</p>
+      </div>
+      <aside class={policyClass}>
+        <strong>{t(locale, `teacher.page.${pageKey}PolicyTitle`)}</strong>
+        {policyParagraphs.map((suffix) => <p>{t(locale, `teacher.page.${pageKey}Policy${suffix}`)}</p>)}
+      </aside>
+    </header>
+
+    <TeacherToolsNav current={current} locale={locale} />
+
+    {printKey && (
+      <div class={`${current === "notas" ? "results" : "review"}-print-brand`} aria-hidden="true">
+        <strong>Aula Física</strong>
+        <span>{t(locale, printKey)}</span>
+      </div>
+    )}
+
+    <slot />
+  </article>
+</BaseLayout>

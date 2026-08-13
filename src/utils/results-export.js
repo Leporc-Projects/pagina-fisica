@@ -1,4 +1,6 @@
 import { neutralizeSpreadsheetFormula, recordsToCsv, sanitizeFilePart } from "./local-export.js";
+import { assertSupportedLocale } from "../i18n/config.js";
+import { localizeResultsOrganizerData } from "../data/results-organizer-localize.js";
 
 const text = (value) => neutralizeSpreadsheetFormula(value ?? "");
 const rounded = (value, digits = 2) => Number.isFinite(value)
@@ -149,34 +151,61 @@ export const createResultsCsvExports = (model, generatedAt = new Date().toISOStr
   "Resumen.csv": csvFor(buildSummaryRecords(model, generatedAt)),
 });
 
-export const createResultsText = (model, generatedAt = new Date().toISOString()) => {
+const RESULTS_TEXT = Object.freeze({
+  es: Object.freeze({
+    course: "Aula Física · Física Básica I", title: "Resumen de resultados", generated: "Generado",
+    students: "Estudiantes en lista", sources: "Fuentes", valid: "Resultados válidos", missing: "Faltantes",
+    missingNote: "faltante no equivale a cero", unknown: "Desconocidos", duplicates: "Duplicados",
+    invalid: "Inválidos", policy: "Política de faltantes", participants: "participantes",
+    participation: "participación", mean: "media", scale: "escala",
+    caveat: "Este resumen es descriptivo y no constituye una nota oficial del curso.",
+    local: "Los archivos se procesaron localmente en el navegador.",
+  }),
+  en: Object.freeze({
+    course: "Aula Física · Basic Physics I", title: "Results summary", generated: "Generated",
+    students: "Students in roster", sources: "Sources", valid: "Valid results", missing: "Missing",
+    missingNote: "missing does not equal zero", unknown: "Unknown", duplicates: "Duplicates",
+    invalid: "Invalid", policy: "Missing-results policy", participants: "participants",
+    participation: "participation", mean: "mean", scale: "scale",
+    caveat: "This summary is descriptive and does not constitute an official course grade.",
+    local: "Files were processed locally in the browser.",
+  }),
+});
+
+export const createResultsText = (model, generatedAt = new Date().toISOString(), locale = "es") => {
+  const copy = RESULTS_TEXT[assertSupportedLocale(locale)];
+  const policies = localizeResultsOrganizerData(locale);
+  const missingPolicy = policies.missingPolicies.find(([value]) => value === model.missingPolicy)?.[1]
+    ?? model.missingPolicy;
   const lines = [
-    "Aula Física · Física Básica I",
-    "Resumen de resultados",
-    `Generado: ${generatedAt}`,
+    copy.course,
+    copy.title,
+    `${copy.generated}: ${generatedAt}`,
     "",
-    `Estudiantes en lista: ${model.summary.students}`,
-    `Fuentes: ${model.summary.sources}`,
-    `Resultados válidos: ${model.summary.validResults}`,
-    `Faltantes: ${model.summary.missing} (faltante no equivale a cero)`,
-    `Desconocidos: ${model.summary.unknown}`,
-    `Duplicados: ${model.summary.duplicates}`,
-    `Inválidos: ${model.summary.invalid}`,
-    `Política de faltantes: ${model.missingPolicy}`,
+    `${copy.students}: ${model.summary.students}`,
+    `${copy.sources}: ${model.summary.sources}`,
+    `${copy.valid}: ${model.summary.validResults}`,
+    `${copy.missing}: ${model.summary.missing} (${copy.missingNote})`,
+    `${copy.unknown}: ${model.summary.unknown}`,
+    `${copy.duplicates}: ${model.summary.duplicates}`,
+    `${copy.invalid}: ${model.summary.invalid}`,
+    `${copy.policy}: ${missingPolicy}`,
     "",
-    "Fuentes",
+    copy.sources,
   ];
   model.summary.sourceSummaries.forEach((source) => {
+    const duplicatePolicy = policies.duplicatePolicies.find(([value]) => value === source.duplicatePolicy)?.[1]
+      ?? source.duplicatePolicy;
     lines.push(
-      `${source.label}: ${source.participants} participantes; ${source.missing} faltantes; ` +
-      `participación ${rounded(source.participation)} %; media ${rounded(source.stats.mean)} % (n=${source.stats.n}); ` +
-      `duplicados: ${source.duplicatePolicy}; escala: ${source.scale}.`
+      `${source.label}: ${source.participants} ${copy.participants}; ${source.missing} ${copy.missing.toLocaleLowerCase(locale)}; ` +
+      `${copy.participation} ${rounded(source.participation)} %; ${copy.mean} ${rounded(source.stats.mean)} % (n=${source.stats.n}); ` +
+      `${copy.duplicates.toLocaleLowerCase(locale)}: ${duplicatePolicy}; ${copy.scale}: ${source.scale}.`
     );
   });
   lines.push(
     "",
-    "Este resumen es descriptivo y no constituye una nota oficial del curso.",
-    "Los archivos se procesaron localmente en el navegador."
+    copy.caveat,
+    copy.local
   );
   return `${lines.join("\n")}\n`;
 };

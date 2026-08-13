@@ -1,44 +1,48 @@
+---
+import { localizeResultsOrganizerData } from "../../data/results-organizer-localize.js";
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+const { missingPolicies } = localizeResultsOrganizerData(locale);
+---
 <section class="results-step" aria-labelledby="results-consolidated-title">
   <header class="results-step__heading">
     <div>
       <span class="results-step__number" aria-hidden="true">5</span>
       <div>
-        <p class="academic-label">Consolidado</p>
-        <h2 id="results-consolidated-title">Una fila por estudiante</h2>
+        <p class="academic-label">{t(locale, "teacher.results.consolidated.label")}</p>
+        <h2 id="results-consolidated-title">{t(locale, "teacher.results.consolidated.title")}</h2>
       </div>
     </div>
-    <p>Los resultados son descriptivos. Esta herramienta no calcula ni modifica la nota oficial.</p>
+    <p>{t(locale, "teacher.results.consolidated.help")}</p>
   </header>
 
   <div class="results-controls">
     <label>
-      <span>Buscar estudiante o correo</span>
+      <span>{t(locale, "teacher.results.search")}</span>
       <input type="search" data-results-search />
     </label>
     <label>
-      <span>Grupo</span>
-      <select data-results-group><option value="">Todos</option></select>
+      <span>{t(locale, "teacher.results.group")}</span>
+      <select data-results-group><option value="">{t(locale, "teacher.results.all")}</option></select>
     </label>
     <label>
-      <span>Estado</span>
+      <span>{t(locale, "teacher.results.status")}</span>
       <select data-results-status>
-        <option value="">Todos</option>
-        <option value="complete">Completos</option>
-        <option value="missing">Con faltantes</option>
-        <option value="incidents">Con incidencias</option>
+        <option value="">{t(locale, "teacher.results.all")}</option>
+        <option value="complete">{t(locale, "teacher.results.complete")}</option>
+        <option value="missing">{t(locale, "teacher.results.withMissing")}</option>
+        <option value="incidents">{t(locale, "teacher.results.withIncidents")}</option>
       </select>
     </label>
     <label>
-      <span>Faltantes en el promedio</span>
+      <span>{t(locale, "teacher.results.missingInAverage")}</span>
       <select data-missing-policy>
-        <option value="unresolved">No calcular hasta resolver</option>
-        <option value="exclude">Excluir faltantes</option>
-        <option value="zero">Tratar faltantes como cero</option>
+        {missingPolicies.map(([value, label]) => <option {value}>{label}</option>)}
       </select>
     </label>
   </div>
   <p class="results-policy-note" data-missing-policy-note>
-    Faltante es un estado, no una puntuación. El promedio permanece pendiente hasta resolverlo.
+    {t(locale, "teacher.results.missing.unresolved")}
   </p>
   <div class="results-table-wrap results-table-wrap--wide" data-consolidated-table></div>
 </section>

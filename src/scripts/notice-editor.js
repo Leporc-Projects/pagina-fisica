@@ -1,3 +1,8 @@
+import { noticeCategoryLabel } from "../data/notice-localize.js";
+import { LOCALES } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
+import { contentScopeLabel } from "../utils/content-scope.js";
+import { formatNoticeIssues } from "../utils/notice-issues.js";
 import {
   createNoticeDraft,
   createNoticePack,
@@ -7,8 +12,6 @@ import {
   validateNotice,
   validateNoticePack,
 } from "../utils/notices.js";
-import { contentScopeLabel } from "../utils/content-scope.js";
-import { LOCALES } from "../i18n/config.js";
 import { withBase } from "../utils/paths.js";
 import { downloadLocalFile } from "./local-export.js";
 
@@ -20,10 +23,11 @@ const create = (tag, text, className) => {
   return element;
 };
 
+// UI locale comes from the route, while authored locale is an explicit field
+// in the notice contract and may deliberately differ from the surrounding UI.
 const readDraft = (form, id) => createNoticeDraft({
-  scope: fieldValue(form, "scope") === "global"
-    ? { type: "global" }
-    : { type: "course", courseId: fieldValue(form, "scope") },
+  locale: fieldValue(form, "locale"),
+  scope: fieldValue(form, "scope") === "global" ? { type: "global" } : { type: "course", courseId: fieldValue(form, "scope") },
   title: fieldValue(form, "title"),
   summary: fieldValue(form, "summary"),
   content: fieldValue(form, "content"),
@@ -33,47 +37,37 @@ const readDraft = (form, id) => createNoticeDraft({
   href: fieldValue(form, "href"),
 }, { id });
 
-const renderErrors = (target, errors) => {
+const renderErrors = (target, issues, locale) => {
   target.replaceChildren();
-  if (errors.length === 0) return;
-  target.append(create("strong", "Revisa estos campos:"));
+  if (issues.length === 0) return;
+  target.append(create("strong", t(locale, "teacher.notices.reviewFields")));
   const list = create("ul");
-  errors.forEach((error) => list.append(create("li", error)));
+  formatNoticeIssues(issues, locale).forEach((error) => list.append(create("li", error)));
   target.append(list);
 };
 
 const renderPreview = (panel, notice) => {
   const card = panel.querySelector("[data-notice-preview-card]");
   if (!(card instanceof HTMLElement)) return;
+  const authoredLocale = notice.locale;
   card.replaceChildren();
-
   const meta = create("div", undefined, "notice-meta");
-  meta.append(create("span", `${notice.category} · ${contentScopeLabel(notice.scope)}`));
-  const time = create("time", new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateString(LOCALES.es.intlLocale, {
-    day: "2-digit", month: "long", year: "numeric",
-  }));
+  meta.append(create("span", `${noticeCategoryLabel(notice.category, authoredLocale)} · ${contentScopeLabel(notice.scope, authoredLocale)}`));
+  const time = create("time", new Date(`${notice.publishedAt}T00:00:00`).toLocaleDateString(LOCALES[authoredLocale].intlLocale, { day: "2-digit", month: "long", year: "numeric" }));
   time.dateTime = notice.publishedAt;
   meta.append(time);
-
   const heading = create("div", undefined, "notice-entry__heading");
   const title = create("h3", notice.title);
   title.id = "notice-editor-preview-card-title";
   heading.append(title);
-  if (notice.featured) heading.append(create("span", "Destacado", "status-label status-label--featured"));
-
+  if (notice.featured) heading.append(create("span", t(authoredLocale, "teacher.notices.featuredLabel"), "status-label status-label--featured"));
   card.setAttribute("aria-labelledby", title.id);
-  card.append(meta, heading, create("p", notice.summary));
-  const content = create("p", notice.content, "notice-entry__content");
-  card.append(content);
-
+  card.append(meta, heading, create("p", notice.summary), create("p", notice.content, "notice-entry__content"));
   const href = noticeHrefForRender(notice.href, withBase);
   if (href) {
-    const link = create("a", "Consultar información →", "text-link");
+    const link = create("a", t(authoredLocale, "teacher.notices.linkLabel"), "text-link");
     link.href = href;
-    if (href.startsWith("https://")) {
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-    }
+    if (href.startsWith("https://")) { link.target = "_blank"; link.rel = "noopener noreferrer"; }
     card.append(link);
   }
   panel.hidden = false;
@@ -84,6 +78,7 @@ export const initializeNoticeEditor = () => {
   const root = document.querySelector("[data-notice-editor]");
   if (!(root instanceof HTMLElement) || root.dataset.initialized === "true") return;
   root.dataset.initialized = "true";
+  const uiLocale = root.dataset.locale === "en" ? "en" : "es";
   const form = root.querySelector("[data-notice-form]");
   const errors = root.querySelector("[data-notice-errors]");
   const preview = root.querySelector("[data-notice-preview]");
@@ -91,62 +86,45 @@ export const initializeNoticeEditor = () => {
   const empty = root.querySelector("[data-notice-pack-empty]");
   const exportButton = root.querySelector("[data-export-notice-pack]");
   const status = root.querySelector("[data-notice-status]");
-  if (!(form instanceof HTMLFormElement) || !(errors instanceof HTMLElement) ||
-      !(preview instanceof HTMLElement) || !(list instanceof HTMLElement)) return;
+  if (!(form instanceof HTMLFormElement) || !(errors instanceof HTMLElement) || !(preview instanceof HTMLElement) || !(list instanceof HTMLElement)) return;
 
   let notices = [];
   let currentId;
   let idDate;
-
   const currentDraft = () => {
     const date = fieldValue(form, "publishedAt");
-    if (!currentId || idDate !== date) {
-      currentId = undefined;
-      idDate = date;
-    }
+    if (!currentId || idDate !== date) { currentId = undefined; idDate = date; }
     const draft = readDraft(form, currentId);
     currentId = draft.id;
     return draft;
   };
-
   const validateCurrent = () => {
     try {
       const notice = currentDraft();
       const validation = validateNotice(notice, { existingIds: notices.map((entry) => entry.id) });
-      renderErrors(errors, validation.errors);
+      renderErrors(errors, validation.issues, uiLocale);
       return { ...validation, notice };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No fue posible preparar el aviso.";
-      renderErrors(errors, [message]);
+    } catch {
+      const issues = [{ code: "invalid-date", path: "publishedAt", params: {} }];
+      renderErrors(errors, issues, uiLocale);
       return { valid: false, notice: null };
     }
   };
-
   const renderPack = () => {
     list.replaceChildren();
     notices.forEach((notice, index) => {
       const item = create("li");
-      item.append(create(
-        "span",
-        `${notice.title} · ${notice.category} · ${contentScopeLabel(notice.scope)}`
-      ));
-      const remove = create("button", "Quitar");
+      item.append(create("span", `[${notice.locale.toUpperCase()}] ${notice.title} · ${noticeCategoryLabel(notice.category, notice.locale)} · ${contentScopeLabel(notice.scope, notice.locale)}`));
+      const remove = create("button", t(uiLocale, "teacher.notices.remove"));
       remove.type = "button";
-      remove.addEventListener("click", () => {
-        notices = notices.filter((_, noticeIndex) => noticeIndex !== index);
-        renderPack();
-      });
+      remove.addEventListener("click", () => { notices = notices.filter((_, noticeIndex) => noticeIndex !== index); renderPack(); });
       item.append(remove);
       list.append(item);
     });
     if (empty instanceof HTMLElement) empty.hidden = notices.length > 0;
     if (exportButton instanceof HTMLButtonElement) exportButton.disabled = notices.length === 0;
   };
-
-  root.querySelector("[data-preview-notice]")?.addEventListener("click", () => {
-    const result = validateCurrent();
-    if (result.valid) renderPreview(preview, result.notice);
-  });
+  root.querySelector("[data-preview-notice]")?.addEventListener("click", () => { const result = validateCurrent(); if (result.valid) renderPreview(preview, result.notice); });
   root.querySelector("[data-add-notice]")?.addEventListener("click", () => {
     const result = validateCurrent();
     if (!result.valid) return;
@@ -154,21 +132,14 @@ export const initializeNoticeEditor = () => {
     notices = [...notices, result.notice];
     renderPack();
     currentId = undefined;
-    if (status) status.textContent = "Aviso añadido como borrador al paquete local.";
+    if (status) status.textContent = t(uiLocale, "teacher.notices.added");
   });
   exportButton?.addEventListener("click", () => {
     const pack = createNoticePack(notices);
     const validation = validateNoticePack(pack);
-    if (!validation.valid) {
-      renderErrors(errors, validation.errors);
-      return;
-    }
-    downloadLocalFile({
-      contents: toNoticePackJSON(pack),
-      mimeType: "application/json;charset=utf-8",
-      filename: noticePackFilename(pack),
-    });
-    if (status) status.textContent = "Paquete preparado para descargar. No se publicó ni se envió.";
+    if (!validation.valid) return renderErrors(errors, validation.issues, uiLocale);
+    downloadLocalFile({ contents: toNoticePackJSON(pack), mimeType: "application/json;charset=utf-8", filename: noticePackFilename(pack) });
+    if (status) status.textContent = t(uiLocale, "teacher.notices.exported");
   });
   renderPack();
 };

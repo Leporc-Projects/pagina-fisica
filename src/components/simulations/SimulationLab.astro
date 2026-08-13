@@ -7,14 +7,20 @@ import {
 import {
   SIMULATION_MODELS,
   getSimulationModelById,
+  localizeSimulationModel,
 } from "../../data/simulation-models.js";
-import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { localizeSimulationExperience } from "../../data/simulation-experiences.js";
+import { localizeUnit1 } from "../../data/physics/unit-1/localize.js";
+import { t } from "../../i18n/index.js";
 import {
   SIMULATION_EXPERIENCE_LIMITS,
 } from "../../utils/simulation-experience.js";
 
+const { locale = "es" } = Astro.props;
 const experience = getSimulationExperienceById("kinematics-1d");
-const model = getSimulationModelById(experience.modelId);
+const previewExperience = localizeSimulationExperience(experience, locale);
+const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
+const UNIT_1 = localizeUnit1(locale);
 const parameters = Object.entries(model.parameters).map(([key, definition]) => ({
   key,
   ...definition,
@@ -30,6 +36,7 @@ const viewOptions = Object.entries(model.views);
 <section
   class="simulation-lab"
   data-simulation-lab
+  data-locale={locale}
   data-initial-experience={serializedExperience}
   data-models={serializedModels}
   data-experiences={serializedExperiences}
@@ -37,13 +44,13 @@ const viewOptions = Object.entries(model.views);
 >
   <header class="simulation-lab__intro">
     <div>
-      <p class="academic-label">Constructor visual seguro</p>
-      <h2 id="simulation-lab-title">Diseña una experiencia</h2>
-      <p>Selecciona un modelo, comprueba su renderer real y prepara un borrador para revisión.</p>
+      <p class="academic-label">{t(locale, "teacher.sim.builder")}</p>
+      <h2 id="simulation-lab-title">{t(locale, "teacher.sim.design")}</h2>
+      <p>{t(locale, "teacher.sim.designHelp")}</p>
     </div>
     <div class="simulation-lab__local" role="note">
-      <strong>Sesión local y efímera</strong>
-      <p>No se guarda ni se envía nada. Si recargas la página, los cambios se pierden; el archivo JSON es la copia durable.</p>
+      <strong>{t(locale, "teacher.sim.localTitle")}</strong>
+      <p>{t(locale, "teacher.sim.localText")}</p>
     </div>
   </header>
 
@@ -51,18 +58,18 @@ const viewOptions = Object.entries(model.views);
     <div class="simulation-lab__editor">
       <form data-simulation-lab-form novalidate>
         <fieldset>
-          <legend>Modelo y textos en español</legend>
+          <legend>{t(locale, "teacher.sim.spanishContent")}</legend>
           <label>
-            <span>Modelo</span>
+            <span>{t(locale, "teacher.sim.model")}</span>
             <select name="model" aria-describedby="simulation-lab-model-help">
               {SIMULATION_MODELS.map((option) => (
-                <option value={option.id} selected={option.id === model.id}>{option.name}</option>
+                <option value={option.id} selected={option.id === model.id}>{localizeSimulationModel(option, locale).name}</option>
               ))}
             </select>
-            <small id="simulation-lab-model-help">Cada modelo usa únicamente su renderer registrado y sus límites físicos.</small>
+            <small id="simulation-lab-model-help">{t(locale, "teacher.sim.modelHelp")}</small>
           </label>
           <label>
-            <span>Título</span>
+            <span>{t(locale, "teacher.sim.title")}</span>
             <input
               name="title"
               value={experience.title}
@@ -72,22 +79,22 @@ const viewOptions = Object.entries(model.views);
             />
           </label>
           <label>
-            <span>Resumen</span>
+            <span>{t(locale, "teacher.sim.summary")}</span>
             <textarea
               name="summary"
               rows="4"
               maxlength={SIMULATION_EXPERIENCE_LIMITS.maximumSummaryLength}
               required
             >{experience.summary}</textarea>
-            <small>Texto plano; explica qué podrá explorar el estudiante.</small>
+            <small>{t(locale, "teacher.sim.summaryHelp")}</small>
           </label>
         </fieldset>
 
         <fieldset>
-          <legend>English text</legend>
-          <p class="simulation-lab__fieldset-help">Completa la versión inglesa junto con la española; los parámetros y las vistas siguen siendo compartidos.</p>
+          <legend>{t(locale, "teacher.sim.englishContent")}</legend>
+          <p class="simulation-lab__fieldset-help">{t(locale, "teacher.sim.bilingualHelp")}</p>
           <label>
-            <span>Title</span>
+            <span>{t(locale, "teacher.sim.title")}</span>
             <input
               name="title-en"
               value={experience.translations.en.title}
@@ -97,7 +104,7 @@ const viewOptions = Object.entries(model.views);
             />
           </label>
           <label>
-            <span>Summary</span>
+            <span>{t(locale, "teacher.sim.summary")}</span>
             <textarea
               name="summary-en"
               rows="4"
@@ -108,15 +115,15 @@ const viewOptions = Object.entries(model.views);
         </fieldset>
 
         <fieldset>
-          <legend>Parámetros</legend>
-          <p class="simulation-lab__fieldset-help">Los límites de la experiencia pueden ser más estrechos, nunca superar los límites del modelo.</p>
+          <legend>{t(locale, "teacher.sim.parameters")}</legend>
+          <p class="simulation-lab__fieldset-help">{t(locale, "teacher.sim.parametersHelp")}</p>
           <div class="simulation-lab__parameters" data-lab-parameters>
             {parameters.map((parameter) => (
               <fieldset class="simulation-lab__parameter" data-lab-parameter={parameter.key}>
                 <legend>{parameter.label} <span>{parameter.symbol}</span></legend>
                 <div class="simulation-lab__parameter-grid">
                   <label>
-                    <span>Valor inicial</span>
+                    <span>{t(locale, "teacher.sim.initial")}</span>
                     <input
                       type="number"
                       inputmode="decimal"
@@ -129,7 +136,7 @@ const viewOptions = Object.entries(model.views);
                     />
                   </label>
                   <label>
-                    <span>Mínimo</span>
+                    <span>{t(locale, "teacher.sim.minimum")}</span>
                     <input
                       type="number"
                       inputmode="decimal"
@@ -142,7 +149,7 @@ const viewOptions = Object.entries(model.views);
                     />
                   </label>
                   <label>
-                    <span>Máximo</span>
+                    <span>{t(locale, "teacher.sim.maximum")}</span>
                     <input
                       type="number"
                       inputmode="decimal"
@@ -155,7 +162,7 @@ const viewOptions = Object.entries(model.views);
                     />
                   </label>
                   <label>
-                    <span>Paso</span>
+                    <span>{t(locale, "teacher.sim.step")}</span>
                     <input
                       type="number"
                       inputmode="decimal"
@@ -174,10 +181,10 @@ const viewOptions = Object.entries(model.views);
                     data-parameter-editable
                     checked={parameter.editable}
                   />
-                  <span>El estudiante puede modificar {parameter.symbol}</span>
+                  <span>{t(locale, "teacher.sim.editable", { symbol: parameter.symbol })}</span>
                 </label>
                 <small>
-                  Límite del modelo: {parameter.hardMinimum} a {parameter.hardMaximum} {parameter.unit}.
+                  {t(locale, "teacher.sim.modelLimit", { minimum: parameter.hardMinimum, maximum: parameter.hardMaximum, unit: parameter.unit })}
                 </small>
               </fieldset>
             ))}
@@ -185,39 +192,39 @@ const viewOptions = Object.entries(model.views);
         </fieldset>
 
         <fieldset data-lab-views>
-          <legend>Qué mostrar</legend>
-          <p class="simulation-lab__fieldset-help">Activa al menos una representación visual principal del modelo.</p>
+          <legend>{t(locale, "teacher.sim.views")}</legend>
+          <p class="simulation-lab__fieldset-help">{t(locale, "teacher.sim.viewsHelp")}</p>
           <div class="simulation-lab__checks" data-lab-view-options>
             {viewOptions.map(([key, definition]) => (
               <label class="simulation-lab__check">
                 <input type="checkbox" data-lab-view={key} checked={experience.views[key]} />
-                <span>{definition.label}{definition.visual ? " · visual principal" : ""}</span>
+                <span>{definition.label}{definition.visual ? ` · ${t(locale, "teacher.sim.mainVisual")}` : ""}</span>
               </label>
             ))}
           </div>
         </fieldset>
 
         <fieldset data-lab-presets-fieldset>
-          <legend>Casos de estudio</legend>
+          <legend>{t(locale, "teacher.sim.presets")}</legend>
           <div class="simulation-lab__collection-heading">
-            <p>Prepara hasta {SIMULATION_EXPERIENCE_LIMITS.maximumPresets} combinaciones completas.</p>
-            <button type="button" class="review-button" data-add-lab-preset>Añadir caso de estudio</button>
+            <p>{t(locale, "teacher.sim.presetsHelp", { count: SIMULATION_EXPERIENCE_LIMITS.maximumPresets })}</p>
+            <button type="button" class="review-button" data-add-lab-preset>{t(locale, "teacher.sim.addPreset")}</button>
           </div>
           <div data-lab-presets></div>
         </fieldset>
 
         <fieldset data-lab-observations-fieldset>
-          <legend>Guía de exploración</legend>
+          <legend>{t(locale, "teacher.sim.observations")}</legend>
           <div class="simulation-lab__collection-heading">
-            <p>Añade preguntas o focos de observación en texto plano.</p>
-            <button type="button" class="review-button" data-add-lab-observation>Añadir observación</button>
+            <p>{t(locale, "teacher.sim.observationsHelp")}</p>
+            <button type="button" class="review-button" data-add-lab-observation>{t(locale, "teacher.sim.addObservation")}</button>
           </div>
           <div data-lab-observations></div>
         </fieldset>
 
         <fieldset>
-          <legend>Contexto académico</legend>
-          <p class="simulation-lab__fieldset-help">La asociación es opcional. Las opciones proceden de los temas reales de la Unidad 1.</p>
+          <legend>{t(locale, "teacher.sim.context")}</legend>
+          <p class="simulation-lab__fieldset-help">{t(locale, "teacher.sim.contextHelp")}</p>
           <div class="simulation-lab__checks" data-lab-context-topics>
             {UNIT_1.topics.map((topic) => (
               <label class="simulation-lab__check">
@@ -237,8 +244,8 @@ const viewOptions = Object.entries(model.views);
         ></div>
 
         <div class="simulation-lab__actions">
-          <button type="button" data-preview-simulation>Previsualizar experiencia</button>
-          <button type="button" class="review-button" data-export-simulation disabled>Exportar paquete JSON</button>
+          <button type="button" data-preview-simulation>{t(locale, "teacher.sim.previewAction")}</button>
+          <button type="button" class="review-button" data-export-simulation disabled>{t(locale, "teacher.sim.export")}</button>
         </div>
         <output class="simulation-lab__status" data-simulation-lab-status aria-live="polite"></output>
       </form>
@@ -246,15 +253,16 @@ const viewOptions = Object.entries(model.views);
 
     <aside class="simulation-lab__preview" aria-labelledby="simulation-lab-preview-title">
       <header>
-        <p class="academic-label">Previsualización real</p>
-        <h2 id="simulation-lab-preview-title" tabindex="-1" data-preview-title>{experience.title}</h2>
-        <p data-preview-summary>{experience.summary}</p>
+        <p class="academic-label">{t(locale, "teacher.sim.previewReal")}</p>
+        <fieldset class="simulation-lab__preview-locale"><legend>{t(locale, "teacher.sim.previewLanguage")}</legend><label><input type="radio" name="simulationPreviewLocale" value="es" checked={locale === "es"} /> ES</label><label><input type="radio" name="simulationPreviewLocale" value="en" checked={locale === "en"} /> EN</label></fieldset>
+        <h2 id="simulation-lab-preview-title" tabindex="-1" data-preview-title>{previewExperience.title}</h2>
+        <p data-preview-summary>{previewExperience.summary}</p>
       </header>
-      <SimulationExperienceRenderer experience={experience} preview includeAllRenderers />
+      <SimulationExperienceRenderer experience={experience} preview includeAllRenderers locale={locale} />
       <section class="simulation-lab__preview-guide" data-preview-guide aria-labelledby="simulation-lab-preview-guide-title">
-        <h3 id="simulation-lab-preview-guide-title">Qué observar</h3>
+        <h3 id="simulation-lab-preview-guide-title">{t(locale, "teacher.sim.observe")}</h3>
         <ol data-preview-observations>
-          {experience.observations.map((observation) => <li>{observation}</li>)}
+          {previewExperience.observations.map((observation) => <li>{observation}</li>)}
         </ol>
       </section>
     </aside>
@@ -263,8 +271,11 @@ const viewOptions = Object.entries(model.views);
 
 <script>
   import { initializeSimulationLab } from "../../scripts/simulation-lab.js";
+  import { t } from "../../i18n/index.js";
   initializeSimulationLab().catch(() => {
     const status = document.querySelector("[data-simulation-lab-status]");
-    if (status) status.textContent = "No fue posible iniciar el Laboratorio de simulaciones.";
+    const root = document.querySelector("[data-simulation-lab]");
+    const locale = root?.dataset.locale === "en" ? "en" : "es";
+    if (status) status.textContent = t(locale, "teacher.sim.initError");
   });
 </script>

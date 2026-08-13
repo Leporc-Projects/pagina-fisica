@@ -1,8 +1,7 @@
-import {
-  DUPLICATE_POLICIES,
-  RESULTS_LIMITS,
-  SCORE_MAXIMUM_MODES,
-} from "../data/results-organizer.js";
+import { RESULTS_LIMITS } from "../data/results-organizer.js";
+import { localizeResultsOrganizerData } from "../data/results-organizer-localize.js";
+import { LOCALES } from "../i18n/config.js";
+import { t } from "../i18n/index.js";
 import {
   createResultsCsvExports,
   createResultsText,
@@ -20,6 +19,10 @@ import {
   suggestColumns,
   tableHeaders,
 } from "../utils/results-organizer.js";
+
+let uiLocale = "es";
+let localizedData = localizeResultsOrganizerData(uiLocale);
+const tr = (key, params) => t(uiLocale, key, params);
 
 const createElement = (tag, options = {}) => {
   const element = document.createElement(tag);
@@ -45,7 +48,7 @@ const id = () => {
 const extension = (name) => name.toLocaleLowerCase("en").split(".").at(-1) ?? "";
 const baseLabel = (name) => name.replace(/\.[^.]+$/, "").replaceAll(/[_-]+/g, " ").trim();
 const formatNumber = (value, digits = 1) => Number.isFinite(value)
-  ? new Intl.NumberFormat("es-CO", { maximumFractionDigits: digits }).format(value)
+  ? new Intl.NumberFormat(LOCALES[uiLocale].intlLocale, { maximumFractionDigits: digits }).format(value)
   : "—";
 
 const download = (content, fileName, type) => {
@@ -74,14 +77,14 @@ const selectControl = (options, value, attrs = {}) => {
 };
 
 const columnOptions = (headers, optional = false) => [
-  ...(optional ? [["", "No usar"]] : [["", "Selecciona una columna"]]),
-  ...headers.map((header, index) => [String(index), `${header} · col. ${index + 1}`]),
+  ...(optional ? [["", tr("teacher.results.noUse")]] : [["", tr("teacher.results.selectColumn")]]),
+  ...headers.map((header, index) => [String(index), `${header} · ${tr("teacher.results.columnAbbrev")} ${index + 1}`]),
 ];
 
 const previewTable = (data, headerRow) => {
   const container = createElement("div", { className: "results-preview" });
   const table = createElement("table");
-  const caption = createElement("caption", { text: `Vista previa · encabezado en fila ${headerRow}` });
+  const caption = createElement("caption", { text: tr("teacher.results.preview", { row: headerRow }) });
   const tbody = createElement("tbody");
   const start = Math.max(0, headerRow - 1);
   data.slice(start, start + RESULTS_LIMITS.previewRows).forEach((row, rowIndex) => {
@@ -109,7 +112,7 @@ const fileIncident = ({ type, fileName, message, severity = "error" }) => ({
   severity,
   type,
   sourceId: null,
-  source: "Importación",
+  source: tr("teacher.results.importSource"),
   fileName,
   row: null,
   email: "",
@@ -207,14 +210,14 @@ const renderRosterConfiguration = (root, state) => {
 
   append(
     controls,
-    labelWrap("Hoja", sheetSelect),
-    labelWrap("Fila del encabezado", headerInput)
+    labelWrap(tr("teacher.results.sheet"), sheetSelect),
+    labelWrap(tr("teacher.results.headerRow"), headerInput)
   );
   [
-    ["email", "Correo institucional", false],
-    ["name", "Nombre", true],
-    ["id", "Identificación", true],
-    ["group", "Grupo", true],
+    ["email", tr("teacher.results.email"), false],
+    ["name", tr("teacher.results.name"), true],
+    ["id", tr("teacher.results.identification"), true],
+    ["group", tr("teacher.results.group"), true],
   ].forEach(([field, label, optional]) => {
     const select = selectControl(columnOptions(headers, optional), state.rosterImport.mapping[field] ?? "");
     select.addEventListener("change", () => {
@@ -222,7 +225,7 @@ const renderRosterConfiguration = (root, state) => {
     });
     controls.append(labelWrap(label, select));
   });
-  const confirm = createElement("button", { text: "Usar este listado", attrs: { type: "button" } });
+  const confirm = createElement("button", { text: tr("teacher.results.useRoster"), attrs: { type: "button" } });
   confirm.addEventListener("click", () => {
     try {
       state.roster = normalizeRoster({
@@ -231,17 +234,17 @@ const renderRosterConfiguration = (root, state) => {
         mapping: state.rosterImport.mapping,
         fileName: state.rosterImport.fileName,
       });
-      setLive(root, `Listado preparado: ${state.roster.students.length} filas.`);
+      setLive(root, tr("teacher.results.rosterPrepared", { count: state.roster.students.length }));
       recompute(root, state);
       renderRosterConfiguration(root, state);
     } catch (error) {
-      setLive(root, error.message);
+      setLive(root, tr("teacher.results.configurationError"));
     }
   });
   append(
     container,
     createElement("h3", { text: state.rosterImport.fileName }),
-    createElement("p", { text: "Las sugerencias son visibles y editables. Comprueba el encabezado y cada columna." }),
+    createElement("p", { text: tr("teacher.results.rosterHelp") }),
     controls,
     previewTable(currentSheet.data, state.rosterImport.headerRow),
     confirm
@@ -249,7 +252,7 @@ const renderRosterConfiguration = (root, state) => {
   if (state.roster) {
     container.append(createElement("p", {
       className: "results-config__success",
-      text: `${state.roster.students.length} filas del listado están activas en esta sesión.`,
+      text: tr("teacher.results.rosterActive", { count: state.roster.students.length }),
     }));
   }
 };
@@ -273,34 +276,34 @@ const renderSourceCard = (root, state, source) => {
   const card = createElement("article", { className: "results-source-card" });
   const header = createElement("header");
   const titleGroup = createElement("div");
-  const labelInput = createElement("input", { attrs: { type: "text", value: source.label, "aria-label": "Nombre de la fuente" } });
+  const labelInput = createElement("input", { attrs: { type: "text", value: source.label, "aria-label": tr("teacher.results.sourceName") } });
   labelInput.addEventListener("change", () => {
     source.label = labelInput.value.trim() || baseLabel(source.fileName);
     updateSourceConfiguration(root, state, source);
     renderSources(root, state);
   });
   append(titleGroup, labelInput, createElement("small", { text: `${source.fileName} · ${source.format.toUpperCase()}` }));
-  const remove = createElement("button", { text: "Eliminar fuente", attrs: { type: "button" }, className: "results-button--quiet" });
+  const remove = createElement("button", { text: tr("teacher.results.removeSource"), attrs: { type: "button" }, className: "results-button--quiet" });
   remove.addEventListener("click", () => {
     state.sources = state.sources.filter((item) => item.id !== source.id);
     renderSources(root, state);
     recompute(root, state);
-    setLive(root, "Fuente retirada de la sesión.");
+    setLive(root, tr("teacher.results.sourceRemoved"));
   });
   append(header, titleGroup, remove);
   card.append(header);
 
   if (source.kind === "bonus") {
     const fields = createElement("div", { className: "results-config__grid" });
-    const policy = selectControl(DUPLICATE_POLICIES, source.config.duplicatePolicy);
+    const policy = selectControl(localizedData.duplicatePolicies, source.config.duplicatePolicy);
     policy.addEventListener("change", () => {
       source.config.duplicatePolicy = policy.value;
       updateSourceConfiguration(root, state, source);
     });
     append(
       fields,
-      labelWrap("Política de duplicados", policy),
-      createElement("p", { text: `${source.documents.length} intento(s) de Bono reconocidos. La puntuación proviene del summary validado.` })
+      labelWrap(tr("teacher.results.duplicatePolicy"), policy),
+      createElement("p", { text: tr("teacher.results.bonusAttempts", { count: source.documents.length }) })
     );
     card.append(fields);
   } else {
@@ -322,12 +325,12 @@ const renderSourceCard = (root, state, source) => {
       updateSourceConfiguration(root, state, source);
       renderSources(root, state);
     });
-    append(fields, labelWrap("Hoja", sheet), labelWrap("Fila del encabezado", headerRow));
+    append(fields, labelWrap(tr("teacher.results.sheet"), sheet), labelWrap(tr("teacher.results.headerRow"), headerRow));
     [
-      ["email", "Correo", false],
-      ["score", "Puntuación", false],
-      ["possible", "Máximo (si está en columna)", true],
-      ["timestamp", "Fecha / hora", true],
+      ["email", tr("teacher.results.email"), false],
+      ["score", tr("teacher.results.score"), false],
+      ["possible", tr("teacher.results.maximumColumn"), true],
+      ["timestamp", tr("teacher.results.timestamp"), true],
     ].forEach(([field, label, optional]) => {
       const control = selectControl(columnOptions(headers, optional), source.config.mapping[field] ?? "");
       control.addEventListener("change", () => {
@@ -336,7 +339,7 @@ const renderSourceCard = (root, state, source) => {
       });
       fields.append(labelWrap(label, control));
     });
-    const maximumMode = selectControl(SCORE_MAXIMUM_MODES, source.config.scoreConfiguration.maximumMode);
+    const maximumMode = selectControl(localizedData.scoreMaximumModes, source.config.scoreConfiguration.maximumMode);
     maximumMode.addEventListener("change", () => {
       source.config.scoreConfiguration.maximumMode = maximumMode.value;
       updateSourceConfiguration(root, state, source);
@@ -350,26 +353,26 @@ const renderSourceCard = (root, state, source) => {
       source.config.scoreConfiguration.fixedMaximum = maximum.value;
       updateSourceConfiguration(root, state, source);
     });
-    const policy = selectControl(DUPLICATE_POLICIES, source.config.duplicatePolicy);
+    const policy = selectControl(localizedData.duplicatePolicies, source.config.duplicatePolicy);
     policy.addEventListener("change", () => {
       source.config.duplicatePolicy = policy.value;
       updateSourceConfiguration(root, state, source);
     });
     append(
       fields,
-      labelWrap("Cómo conocer el máximo", maximumMode),
-      labelWrap("Máximo fijo", maximum),
-      labelWrap("Política de duplicados", policy)
+      labelWrap(tr("teacher.results.maximumMode"), maximumMode),
+      labelWrap(tr("teacher.results.fixedMaximum"), maximum),
+      labelWrap(tr("teacher.results.duplicatePolicy"), policy)
     );
     card.append(fields, previewTable(source.data, source.config.headerRow));
   }
   const status = createElement("p", {
     className: source.configurationError ? "results-source-card__error" : "results-source-card__status",
     text: source.configurationError
-      ? source.configurationError
+      ? tr("teacher.results.configurationError")
       : source.normalized
-        ? `${source.normalized.submissions.length} filas preparadas; revisa las incidencias antes de exportar.`
-        : "Completa la configuración.",
+        ? tr("teacher.results.preparedRows", { count: source.normalized.submissions.length })
+        : tr("teacher.results.completeConfiguration"),
   });
   card.append(status);
   return card;
@@ -380,7 +383,7 @@ function renderSources(root, state) {
   if (!(list instanceof HTMLElement)) return;
   list.replaceChildren();
   if (state.sources.length === 0) {
-    list.append(createElement("p", { className: "results-empty", text: "Todavía no hay fuentes cargadas." }));
+    list.append(createElement("p", { className: "results-empty", text: tr("teacher.results.sources.empty") }));
     return;
   }
   state.sources.forEach((source) => list.append(renderSourceCard(root, state, source)));
@@ -419,25 +422,25 @@ const renderSummary = (root, model) => {
   const metrics = root.querySelector("[data-results-metrics]");
   if (metrics) {
     metrics.replaceChildren(
-      metric("Estudiantes", model.summary.students),
-      metric("Fuentes", model.summary.sources),
-      metric("Resultados válidos", model.summary.validResults),
-      metric("Faltantes", model.summary.missing),
-      metric("Desconocidos", model.summary.unknown),
-      metric("Duplicados", model.summary.duplicates),
-      metric("Inválidos", model.summary.invalid),
+      metric(tr("teacher.results.metric.students"), model.summary.students),
+      metric(tr("teacher.results.metric.sources"), model.summary.sources),
+      metric(tr("teacher.results.metric.valid"), model.summary.validResults),
+      metric(tr("teacher.results.metric.missing"), model.summary.missing),
+      metric(tr("teacher.results.metric.unknown"), model.summary.unknown),
+      metric(tr("teacher.results.metric.duplicates"), model.summary.duplicates),
+      metric(tr("teacher.results.metric.invalid"), model.summary.invalid),
     );
   }
   const sourceSummary = root.querySelector("[data-source-summary]");
   if (sourceSummary) {
-    sourceSummary.replaceChildren(buildTable("Resumen por fuente", [
-      { key: "label", label: "Fuente" },
-      { key: "participants", label: "Participantes" },
-      { key: "missing", label: "Faltantes" },
-      { label: "Participación", render: (source) => `${formatNumber(source.participation)} %` },
-      { label: "Media", render: (source) => source.stats.n ? `${formatNumber(source.stats.mean)} % (n=${source.stats.n})` : "Sin escala" },
-      { label: "Mediana", render: (source) => source.stats.n ? `${formatNumber(source.stats.median)} %` : "—" },
-      { label: "Mín.–máx.", render: (source) => source.stats.n ? `${formatNumber(source.stats.min)}–${formatNumber(source.stats.max)} %` : "—" },
+    sourceSummary.replaceChildren(buildTable(tr("teacher.results.sourceSummary"), [
+      { key: "label", label: tr("teacher.results.source") },
+      { key: "participants", label: tr("teacher.results.participants") },
+      { key: "missing", label: tr("teacher.results.metric.missing") },
+      { label: tr("teacher.results.participation"), render: (source) => `${formatNumber(source.participation)} %` },
+      { label: tr("teacher.results.mean"), render: (source) => source.stats.n ? `${formatNumber(source.stats.mean)} % (n=${source.stats.n})` : tr("teacher.results.noScale") },
+      { label: tr("teacher.results.median"), render: (source) => source.stats.n ? `${formatNumber(source.stats.median)} %` : "—" },
+      { label: tr("teacher.results.range"), render: (source) => source.stats.n ? `${formatNumber(source.stats.min)}–${formatNumber(source.stats.max)} %` : "—" },
     ], model.summary.sourceSummaries));
   }
 };
@@ -446,26 +449,26 @@ const renderIncidents = (root, model) => {
   const container = root.querySelector("[data-incidents-table]");
   if (!container) return;
   if (model.incidents.length === 0) {
-    container.replaceChildren(createElement("p", { className: "results-empty", text: "No hay incidencias abiertas con la configuración actual." }));
+    container.replaceChildren(createElement("p", { className: "results-empty", text: tr("teacher.results.noIncidents") }));
     return;
   }
-  container.replaceChildren(buildTable(`Incidencias · ${model.incidents.length}`, [
-    { label: "Severidad", render: (item) => {
-      const value = createElement("span", { className: "results-severity", text: item.severity });
+  container.replaceChildren(buildTable(tr("teacher.results.incidentCount", { count: model.incidents.length }), [
+    { label: tr("teacher.results.severity"), render: (item) => {
+      const value = createElement("span", { className: "results-severity", text: tr(`teacher.results.severity.${item.severity}`) });
       value.dataset.severity = item.severity;
       return value;
     } },
-    { key: "type", label: "Tipo" },
-    { key: "source", label: "Fuente" },
-    { label: "Referencia", render: (item) => item.row ? `${item.fileName} · fila ${item.row}` : item.fileName },
-    { label: "Correo / valor", render: (item) => item.email || item.value },
-    { key: "message", label: "Detalle" },
+    { label: tr("teacher.results.type"), render: (item) => tr(`teacher.results.incident.${item.type}`) },
+    { key: "source", label: tr("teacher.results.source") },
+    { label: tr("teacher.results.reference"), render: (item) => item.row ? `${item.fileName} · ${tr("teacher.results.row")} ${item.row}` : item.fileName },
+    { label: tr("teacher.results.emailValue"), render: (item) => item.email || item.value },
+    { label: tr("teacher.results.detail"), render: (item) => tr(`teacher.results.incident.${item.type}`) },
   ], model.incidents.slice(0, 500)));
 };
 
 const resultDetail = (entry) => {
-  if (!entry || entry.status === "missing") return createElement("span", { text: "Faltante", className: "results-cell-state" });
-  if (entry.status !== "resolved") return createElement("span", { text: "Requiere revisión", className: "results-cell-state results-cell-state--attention" });
+  if (!entry || entry.status === "missing") return createElement("span", { text: tr("teacher.results.missing"), className: "results-cell-state" });
+  if (entry.status !== "resolved") return createElement("span", { text: tr("teacher.results.requiresReview"), className: "results-cell-state results-cell-state--attention" });
   const scoreText = entry.score.possiblePoints === null
     ? entry.score.rawScore
     : `${formatNumber(entry.score.earnedPoints, 3)} / ${formatNumber(entry.score.possiblePoints, 3)}`;
@@ -474,12 +477,12 @@ const resultDetail = (entry) => {
   const list = createElement("dl");
   const selected = entry.selectedSubmission ?? entry.submissions[0];
   [
-    ["Archivo", selected?.fileName],
-    ["Fila", selected?.row],
-    ["Valor original", selected?.score.rawScore],
-    ["Política", entry.policy],
-    ["Fecha", selected?.timestamp],
-    ["Intentos conservados", entry.submissions.length],
+    [tr("teacher.results.file"), selected?.fileName],
+    [tr("teacher.results.row"), selected?.row],
+    [tr("teacher.results.originalValue"), selected?.score.rawScore],
+    [tr("teacher.results.policy"), localizedData.duplicatePolicies.find(([value]) => value === entry.policy)?.[1] ?? entry.policy],
+    [tr("teacher.results.date"), selected?.timestamp],
+    [tr("teacher.results.retainedAttempts"), entry.submissions.length],
   ].forEach(([term, value]) => {
     if (value === null || value === undefined || value === "") return;
     append(list, createElement("dt", { text: term }), createElement("dd", { text: value }));
@@ -508,14 +511,14 @@ const renderConsolidated = (root, state) => {
     return true;
   });
   const columns = [
-    { label: "Estudiante", render: (row) => row.student.name || "Sin nombre" },
-    { label: "Correo", render: (row) => row.student.normalizedEmail || row.student.rawEmail },
+    { label: tr("teacher.results.student"), render: (row) => row.student.name || tr("teacher.results.unnamed") },
+    { label: tr("teacher.results.email"), render: (row) => row.student.normalizedEmail || row.student.rawEmail },
     ...(model.rows.some((row) => row.student.studentId) ? [{ label: "ID", render: (row) => row.student.studentId }] : []),
-    ...(model.rows.some((row) => row.student.group) ? [{ label: "Grupo", render: (row) => row.student.group }] : []),
+    ...(model.rows.some((row) => row.student.group) ? [{ label: tr("teacher.results.group"), render: (row) => row.student.group }] : []),
     ...model.sources.map((source) => ({ label: source.label, render: (row) => resultDetail(row.results[source.id]) })),
-    { label: "Promedio de resultados", render: (row) => row.mean.value === null ? "Pendiente" : `${formatNumber(row.mean.value)} %` },
+    { label: tr("teacher.results.average"), render: (row) => row.mean.value === null ? tr("teacher.results.pending") : `${formatNumber(row.mean.value)} %` },
   ];
-  container.replaceChildren(buildTable(`Consolidado · ${filtered.length} de ${model.rows.length} estudiantes`, columns, filtered));
+  container.replaceChildren(buildTable(tr("teacher.results.consolidatedCount", { visible: filtered.length, total: model.rows.length }), columns, filtered));
 };
 
 const renderFilters = (root, state) => {
@@ -523,7 +526,7 @@ const renderFilters = (root, state) => {
   const groupSelect = root.querySelector("[data-results-group]");
   if (groupSelect instanceof HTMLSelectElement) {
     const current = state.filters.group;
-    groupSelect.replaceChildren(createElement("option", { text: "Todos", attrs: { value: "" } }));
+    groupSelect.replaceChildren(createElement("option", { text: tr("teacher.results.all"), attrs: { value: "" } }));
     groups.forEach((group) => groupSelect.append(createElement("option", { text: group, attrs: { value: group } })));
     groupSelect.value = current;
   }
@@ -548,7 +551,10 @@ const renderWorkspace = (root, state) => {
   const rosterStatus = root.querySelector("[data-roster-status]");
   if (rosterStatus) {
     rosterStatus.hidden = false;
-    rosterStatus.textContent = `${state.model.summary.students} estudiantes en el listado · ${state.model.summary.sources} fuentes configuradas.`;
+    rosterStatus.textContent = tr("teacher.results.rosterStatus", {
+      students: state.model.summary.students,
+      sources: state.model.summary.sources,
+    });
   }
 };
 
@@ -567,7 +573,7 @@ function recompute(root, state) {
 
 const importRoster = async (root, state, file) => {
   try {
-    setLive(root, `Leyendo ${file.name}…`);
+    setLive(root, `${tr("teacher.results.readingPrefix")} ${file.name}…`);
     const workbook = await loadTableWorkbook(file);
     validateWorkbookLimits(workbook);
     const headers = tableHeaders(workbook.sheets[0].data, 1);
@@ -581,21 +587,21 @@ const importRoster = async (root, state, file) => {
     state.roster = null;
     renderRosterConfiguration(root, state);
     recompute(root, state);
-    setLive(root, "Listado leído. Confirma hoja, encabezado y columnas.");
+    setLive(root, tr("teacher.results.rosterRead"));
   } catch (error) {
     state.importIncidents.push(fileIncident({
       type: extension(file.name) === "xls" ? "unsupported_format" : "invalid_file",
       fileName: file.name,
       message: error.message,
     }));
-    setLive(root, error.message);
+    setLive(root, tr("teacher.results.importError"));
   }
 };
 
 const importSourceFile = async (root, state, file) => {
   const format = extension(file.name);
   try {
-    setLive(root, `Leyendo ${file.name}…`);
+    setLive(root, `${tr("teacher.results.readingPrefix")} ${file.name}…`);
     if (file.size > RESULTS_LIMITS.maxFileBytes) throw new RangeError("El archivo supera el límite de 15 MB.");
     if (format === "json") {
       let document;
@@ -646,7 +652,7 @@ const importSourceFile = async (root, state, file) => {
       fileName: file.name,
       message: error.message,
     }));
-    setLive(root, error.message);
+    setLive(root, tr("teacher.results.importError"));
   }
 };
 
@@ -663,7 +669,7 @@ const wireActions = (root, state) => {
     sourceFiles.value = "";
     renderSources(root, state);
     recompute(root, state);
-    setLive(root, `${state.sources.length} fuente(s) en la sesión.`);
+    setLive(root, tr("teacher.results.sourcesInSession", { count: state.sources.length }));
   });
 
   root.querySelector("[data-results-search]")?.addEventListener("input", (event) => {
@@ -681,11 +687,7 @@ const wireActions = (root, state) => {
   root.querySelector("[data-missing-policy]")?.addEventListener("change", (event) => {
     state.missingPolicy = event.currentTarget.value;
     const note = root.querySelector("[data-missing-policy-note]");
-    if (note) note.textContent = state.missingPolicy === "zero"
-      ? "Decisión activa: cada faltante cuenta como 0 % únicamente en el promedio descriptivo."
-      : state.missingPolicy === "exclude"
-        ? "Decisión activa: los faltantes se excluyen del promedio descriptivo."
-        : "Faltante es un estado, no una puntuación. El promedio permanece pendiente hasta resolverlo.";
+    if (note) note.textContent = tr(`teacher.results.missing.${state.missingPolicy}`);
     recompute(root, state);
   });
 
@@ -693,13 +695,13 @@ const wireActions = (root, state) => {
     if (!state.model) return;
     const button = root.querySelector("[data-export-xlsx]");
     button.disabled = true;
-    setLive(root, "Preparando XLSX…");
+    setLive(root, tr("teacher.results.preparingXlsx"));
     try {
       const { writeResultsWorkbook } = await import("../utils/results-xlsx-browser.js");
       await writeResultsWorkbook(createResultsWorkbook(state.model), `${resultsExportBaseName()}.xlsx`);
-      setLive(root, "XLSX preparado con las hojas Consolidado, Incidencias y Resumen.");
+      setLive(root, tr("teacher.results.xlsxReady"));
     } catch (error) {
-      setLive(root, `No fue posible preparar el XLSX: ${error.message}`);
+      setLive(root, tr("teacher.results.xlsxError"));
     } finally {
       button.disabled = false;
     }
@@ -710,13 +712,13 @@ const wireActions = (root, state) => {
       const fileName = button.dataset.exportCsv;
       const files = createResultsCsvExports(state.model);
       download(files[fileName], fileName, "text/csv;charset=utf-8");
-      setLive(root, `${fileName} preparado.`);
+      setLive(root, `${fileName} · ${tr("teacher.results.fileReady", { file: "CSV" })}`);
     });
   });
   root.querySelector("[data-export-txt]")?.addEventListener("click", () => {
     if (!state.model) return;
-    download(createResultsText(state.model), "aula-fisica-resumen-resultados.txt", "text/plain;charset=utf-8");
-    setLive(root, "Resumen TXT preparado.");
+    download(createResultsText(state.model, new Date().toISOString(), uiLocale), "aula-fisica-resumen-resultados.txt", "text/plain;charset=utf-8");
+    setLive(root, tr("teacher.results.txtReady"));
   });
   root.querySelector("[data-export-print]")?.addEventListener("click", () => window.print());
 
@@ -743,7 +745,7 @@ const wireActions = (root, state) => {
     if (clearArea) clearArea.hidden = true;
     if (rosterStatus) rosterStatus.hidden = true;
     if (clearConfirmation) clearConfirmation.hidden = true;
-    setLive(root, "Sesión limpiada. Los archivos dejaron de estar en memoria.");
+    setLive(root, tr("teacher.results.sessionCleared"));
   });
 };
 
@@ -751,6 +753,8 @@ export const initializeResultsOrganizer = () => {
   const root = document.querySelector("[data-results-organizer]");
   if (!(root instanceof HTMLElement) || root.dataset.initialized === "true") return;
   root.dataset.initialized = "true";
+  uiLocale = root.dataset.locale ?? "es";
+  localizedData = localizeResultsOrganizerData(uiLocale);
   const state = {
     rosterImport: null,
     roster: null,

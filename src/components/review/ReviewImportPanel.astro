@@ -1,20 +1,21 @@
+---
+import { t } from "../../i18n/index.js";
+const { locale = "es" } = Astro.props;
+---
 <section class="review-import" aria-labelledby="review-import-title">
   <header>
-    <p class="academic-label">Importación local</p>
-    <h2 id="review-import-title">Archivos para revisar</h2>
-    <p>
-      Selecciona archivos JSON exportados desde Participa. Los intentos JSON de
-      Bonos también se reconocen, pero en esta herramienta son solo de consulta.
-    </p>
+    <p class="academic-label">{t(locale, "teacher.review.import.label")}</p>
+    <h2 id="review-import-title">{t(locale, "teacher.review.import.title")}</h2>
+    <p>{t(locale, "teacher.review.import.help")}</p>
   </header>
 
   <div class="review-dropzone" data-review-dropzone>
     <div>
-      <strong>Arrastra archivos JSON hasta aquí</strong>
-      <span>o selecciónalos desde tu equipo</span>
+      <strong>{t(locale, "teacher.review.import.drop")}</strong>
+      <span>{t(locale, "teacher.review.import.orSelect")}</span>
     </div>
     <label class="review-file-button">
-      <span data-review-file-label>Seleccionar archivos</span>
+      <span data-review-file-label>{t(locale, "teacher.review.selectFiles")}</span>
       <input
         type="file"
         accept=".json,application/json"
@@ -25,23 +26,22 @@
   </div>
 
   <p class="review-import__limits">
-    Máximo 5 MB por archivo. Cada archivo se valida por separado.
+    {t(locale, "teacher.review.import.limit")}
   </p>
   <p class="review-live" data-review-live aria-live="polite"></p>
 
   <div class="review-clear" data-review-clear-area hidden>
     <button type="button" class="review-button review-button--quiet" data-review-clear>
-      Limpiar sesión
+      {t(locale, "teacher.review.clear")}
     </button>
     <div class="review-clear__confirmation" data-review-clear-confirmation hidden>
-      <p>Se eliminarán de esta pestaña los archivos y notas de revisión cargados.</p>
+      <p>{t(locale, "teacher.review.clearHelp")}</p>
       <div>
-        <button type="button" data-review-clear-cancel>Cancelar</button>
+        <button type="button" data-review-clear-cancel>{t(locale, "teacher.review.cancel")}</button>
         <button type="button" class="review-button review-button--danger" data-review-clear-confirm>
-          Confirmar limpieza
+          {t(locale, "teacher.review.confirmClear")}
         </button>
       </div>
     </div>
   </div>
 </section>
-
