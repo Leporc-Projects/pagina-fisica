@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import {
   SIMULATION_EXPERIENCES,
   getSimulationExperienceByModelId,
+  localizeSimulationExperience,
 } from "../src/data/simulation-experiences.js";
 import {
   SIMULATION_MODELS,
@@ -115,6 +116,22 @@ test("el Laboratorio construye configuraciones base independientes", () => {
   kinematics.parameters.v0.default = -20;
   assert.equal(projectile.parameters.v0.default, 20);
   assert.throws(() => createSimulationLabBaseConfiguration("future-model"), RangeError);
+});
+
+test("el preview ES/EN cambia presentación sin duplicar configuración física", () => {
+  const canonical = getSimulationExperienceByModelId("projectile-2d");
+  const es = localizeSimulationExperience(canonical, "es");
+  const en = localizeSimulationExperience(canonical, "en");
+  assert.notEqual(es.title, en.title);
+  assert.deepEqual(es.parameters, en.parameters);
+  assert.deepEqual(es.views, en.views);
+  assert.equal(es.modelId, en.modelId);
+
+  const component = fs.readFileSync(new URL("../src/components/simulations/SimulationLab.astro", import.meta.url), "utf8");
+  const runtime = fs.readFileSync(new URL("../src/scripts/simulation-lab.js", import.meta.url), "utf8");
+  assert.match(component, /name="simulationPreviewLocale"/);
+  assert.match(runtime, /previewLocale/);
+  assert.match(runtime, /localizeSimulationExperience/);
 });
 
 test("un pack de proyectil es válido y la importación fuerza review", () => {

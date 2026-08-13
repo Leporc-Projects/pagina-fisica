@@ -78,6 +78,22 @@ test("genera ID y metadatos sin pedirlos al editor", () => {
   assert.equal(validateNotice(draft).valid, true);
 });
 
+test("el locale del aviso es explícito e independiente del locale de la interfaz", () => {
+  const spanishFromEnglishUi = notice({ locale: "es", title: "Aviso escrito en español" });
+  assert.equal(spanishFromEnglishUi.locale, "es");
+  assert.equal(spanishFromEnglishUi.title, "Aviso escrito en español");
+  const pack = createNoticePack([spanishFromEnglishUi], { cryptoApi: deterministicCrypto(31) });
+  assert.equal(pack.notices[0].locale, "es");
+  assert.equal(validateNoticePack(pack).valid, true);
+
+  const component = fs.readFileSync(new URL("../src/components/notices/NoticeEditor.astro", import.meta.url), "utf8");
+  const client = fs.readFileSync(new URL("../src/scripts/notice-editor.js", import.meta.url), "utf8");
+  assert.match(component, /name="locale"[^>]*required/);
+  assert.match(component, /selected=\{locale === "en"\}/);
+  assert.match(client, /locale: fieldValue\(form, "locale"\)/);
+  assert.match(client, /const authoredLocale = notice\.locale/);
+});
+
 test("valida fechas reales, IDs únicos, estado y campos obligatorios", () => {
   const valid = notice();
   assert.equal(validateNotice(valid, { existingIds: [valid.id] }).valid, false);

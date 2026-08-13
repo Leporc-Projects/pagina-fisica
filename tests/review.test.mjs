@@ -250,6 +250,10 @@ test("TXT resume conteos sin inferir dominio", () => {
   const text = toReviewText(createReviewExport(session, {}, reviewedAt));
   assert.match(text, /Centro de revisión/);
   assert.match(text, /no estiman dominio ni causalidad/);
+  const english = toReviewText(createReviewExport(session, {}, reviewedAt), "en");
+  assert.match(english, /Review center/);
+  assert.match(english, /do not estimate mastery or causality/);
+  assert.equal(session.records[0].original.payload.unclearPoint, difficulty.payload.unclearPoint);
 });
 
 test("maneja 300 archivos pequeños de forma determinista", () => {
@@ -265,4 +269,3 @@ test("maneja 300 archivos pequeños de forma determinista", () => {
   assert.equal(aggregateReviewSession(session).difficultyTopics.vectores, 300);
   assert.equal(filterParticipationRecords(session, { page: 15 }).records.length, 20);
 });
-

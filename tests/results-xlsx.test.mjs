@@ -71,6 +71,14 @@ test("CSV usa BOM, CRLF y neutraliza fórmula; TXT es resumen humano", () => {
   const text = createResultsText(model, "2026-08-08T12:00:00.000Z");
   assert.match(text, /Faltante no equivale a cero/i);
   assert.match(text, /no constituye una nota oficial/i);
+  const englishText = createResultsText(model, "2026-08-08T12:00:00.000Z", "en");
+  assert.match(englishText, /missing does not equal zero/i);
+  assert.match(englishText, /does not constitute an official course grade/i);
+  assert.deepEqual(
+    createResultsCsvExports(model, "2026-08-08T12:00:00.000Z"),
+    csv,
+    "UI locale cannot rename machine-readable CSV keys or values"
+  );
 });
 
 test("genera y vuelve a leer un XLSX sintético Microsoft-like con varias hojas", async () => {

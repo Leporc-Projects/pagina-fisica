@@ -22,6 +22,8 @@ import {
   simulateBonusDiversity,
 } from "../src/utils/bonus-audit.js";
 import {
+  QUESTION_PACK_SCHEMA_VERSION,
+  TEACHER_QUESTION_SCHEMA_VERSION,
   createQuestionPack,
   createTeacherQuestionId,
   mergeQuestionPack,
@@ -29,6 +31,7 @@ import {
   validateQuestionPack,
   validateTeacherQuestion,
 } from "../src/utils/question-pack.js";
+import { teacherQuestionToExercise } from "../src/data/physics/unit-1/teacher-question-adapter.js";
 import { validateImportedDocument } from "../src/utils/review.js";
 
 const deterministicCrypto = (seed = 1) => ({
@@ -46,21 +49,36 @@ const baseTeacherQuestion = (overrides = {}) => normalizeTeacherQuestion({
   id: createTeacherQuestionId("vectores", deterministicCrypto(12), 1786200000000),
   topic: "vectores",
   subtopic: "componentes-y-base",
-  title: "Componentes con Unicode Δ",
-  prompt: "Determina Aₓ. <img src=x onerror=alert(1)>",
   type: "numerical",
   representation: "vectorial",
   cognitiveLevel: "apply",
   difficulty: 2,
   modalities: ["practice", "selfAssessment", "bonus"],
-  objectives: ["Descomponer un vector."],
-  hints: ["Revisa el signo."],
-  solution: [{ title: "Componentes", text: "Aₓ = A cos θ." }],
   commonErrors: ["vector-sine-cosine"],
-  interaction: { kind: "number", field: { id: "value", label: "Aₓ", unit: "m" } },
-  answer: { kind: "number", value: -3.5, display: "−3,5 m" },
+  interaction: { kind: "number", field: { id: "value", unit: "m" } },
+  answer: { kind: "number", value: -3.5 },
   tolerance: 0.01,
   expectedUnit: "m",
+  presentations: {
+    es: {
+      title: "Componentes con Unicode Δ",
+      prompt: "Determina Aₓ. <img src=x onerror=alert(1)>",
+      objectives: ["Descomponer un vector."],
+      hints: ["Revisa el signo."],
+      solution: [{ title: "Componentes", text: "Aₓ = A cos θ." }],
+      fields: [{ id: "value", label: "Aₓ" }],
+      answerDisplay: "−3,5 m",
+    },
+    en: {
+      title: "Components with Unicode Δ",
+      prompt: "Determine Aₓ. <img src=x onerror=alert(1)>",
+      objectives: ["Resolve a vector into components."],
+      hints: ["Check the sign."],
+      solution: [{ title: "Components", text: "Aₓ = A cos θ." }],
+      fields: [{ id: "value", label: "Aₓ" }],
+      answerDisplay: "−3.5 m",
+    },
+  },
   ...overrides,
 });
 
@@ -103,16 +121,18 @@ test("el snapshot de Bono conserva la instancia parametrizada exacta", () => {
 
 test("valida y conserva un paquete docente como borrador", () => {
   const question = baseTeacherQuestion();
+  assert.equal(question.schemaVersion, TEACHER_QUESTION_SCHEMA_VERSION);
   assert.equal(validateTeacherQuestion(question).valid, true);
   const pack = createQuestionPack([question], {
     cryptoApi: deterministicCrypto(4),
     createdAt: "2026-08-08T11:00:00.000Z",
   });
   assert.equal(validateQuestionPack(pack).valid, true);
+  assert.equal(pack.schemaVersion, QUESTION_PACK_SCHEMA_VERSION);
   assert.equal(pack.questions[0].authorSource, "teacher");
   assert.equal(pack.questions[0].status, "draft");
   assert.match(JSON.stringify(pack), /Unicode Δ/);
-  assert.match(pack.questions[0].prompt, /<img/);
+  assert.match(pack.questions[0].presentations.es.prompt, /<img/);
   const imported = mergeQuestionPack(pack, [], {
     repositoryIds: UNIT_1_EXERCISES.map((item) => item.id),
   });
@@ -125,26 +145,34 @@ test("rechaza IDs duplicados, topics inexistentes e interacciones mal formadas",
   assert.equal(validateTeacherQuestion(question, { existingIds: [question.id] }).valid, false);
   assert.equal(validateTeacherQuestion(baseTeacherQuestion({ topic: "tema-inexistente" })).valid, false);
   const brokenChoice = baseTeacherQuestion({
-    interaction: { kind: "singleChoice", options: [{ id: "a", content: "Una" }], correctOptionId: "b" },
-    answer: { kind: "text", value: "Dos" },
+    interaction: { kind: "singleChoice", options: [{ id: "a" }], correctOptionId: "b" },
+    answer: { kind: "choice", optionId: "b" },
+    presentations: {
+      es: { ...baseTeacherQuestion().presentations.es, fields: [], options: [{ id: "a", content: "Una" }] },
+      en: { ...baseTeacherQuestion().presentations.en, fields: [], options: [{ id: "a", content: "One" }] },
+    },
   });
   assert.equal(validateTeacherQuestion(brokenChoice).valid, false);
   const mismatchedAnswer = baseTeacherQuestion({
     interaction: {
       kind: "singleChoice",
-      options: [{ id: "a", content: "Una" }, { id: "b", content: "Dos" }],
+      options: [{ id: "a" }, { id: "b" }],
       correctOptionId: "b",
     },
-    answer: { kind: "text", value: "Una" },
+    answer: { kind: "choice", optionId: "a" },
+    presentations: {
+      es: { ...baseTeacherQuestion().presentations.es, fields: [], options: [{ id: "a", content: "Una" }, { id: "b", content: "Dos" }] },
+      en: { ...baseTeacherQuestion().presentations.en, fields: [], options: [{ id: "a", content: "One" }, { id: "b", content: "Two" }] },
+    },
   });
   assert.equal(validateTeacherQuestion(mismatchedAnswer).valid, false);
   const duplicateFields = baseTeacherQuestion({
     interaction: { kind: "multiNumber", fields: [
-      { id: "x", label: "x", unit: "m" }, { id: "x", label: "y", unit: "m" },
+      { id: "x", unit: "m" }, { id: "x", unit: "m" },
     ] },
     answer: { kind: "values", values: [
-      { symbol: "x", value: 1, unit: "m", tolerance: 0 },
-      { symbol: "y", value: 2, unit: "m", tolerance: 0 },
+      { fieldId: "x", value: 1, tolerance: 0 },
+      { fieldId: "y", value: 2, tolerance: 0 },
     ] },
   });
   assert.equal(validateTeacherQuestion(duplicateFields).valid, false);
@@ -157,18 +185,44 @@ test("acepta number y multiNumber; la matemática pendiente desactiva Bono", () 
   const multi = baseTeacherQuestion({
     id: createTeacherQuestionId("vectores", deterministicCrypto(15), 1786200000001),
     interaction: { kind: "multiNumber", fields: [
-      { id: "x", label: "x", unit: "m" }, { id: "y", label: "y", unit: "m" },
+      { id: "x", unit: "m" }, { id: "y", unit: "m" },
     ] },
     answer: { kind: "values", values: [
-      { symbol: "x", value: 2, unit: "m", tolerance: 0.01 },
-      { symbol: "y", value: -1, unit: "m", tolerance: 0.01 },
+      { fieldId: "x", value: 2, tolerance: 0.01 },
+      { fieldId: "y", value: -1, tolerance: 0.01 },
     ] },
+    presentations: {
+      es: { ...baseTeacherQuestion().presentations.es, fields: [{ id: "x", label: "x" }, { id: "y", label: "y" }] },
+      en: { ...baseTeacherQuestion().presentations.en, fields: [{ id: "x", label: "x" }, { id: "y", label: "y" }] },
+    },
   });
   assert.equal(validateTeacherQuestion(multi).valid, true);
   const editorial = baseTeacherQuestion({ requiresEditorialMath: true });
   assert.equal(editorial.status, "draft");
   assert.equal(editorial.bonusEligible, false);
   assert.equal(validateTeacherQuestion(editorial).valid, true);
+});
+
+test("Question 2.0 conserva identidad y calificación al proyectar ES y EN", () => {
+  const question = baseTeacherQuestion();
+  const es = teacherQuestionToExercise(question, "es");
+  const en = teacherQuestionToExercise(question, "en");
+  assert.equal(es.id, en.id);
+  assert.equal(es.answer.value, en.answer.value);
+  assert.equal(es.interaction.kind, en.interaction.kind);
+  assert.equal(es.interaction.field.id, en.interaction.field.id);
+  assert.equal(es.interaction.field.unit, en.interaction.field.unit);
+  assert.equal(es.prompt.includes("Determina"), true);
+  assert.equal(en.prompt.includes("Determine"), true);
+  assert.notEqual(es.title, en.title);
+});
+
+test("Question 2.0 rechaza preguntas y paquetes 1.x con códigos estables", () => {
+  const question = { ...baseTeacherQuestion(), schemaVersion: "1.0.0" };
+  assert.equal(validateTeacherQuestion(question).issues.some((issue) => issue.code === "legacy-question-schema"), true);
+  const pack = createQuestionPack([baseTeacherQuestion()], { cryptoApi: deterministicCrypto(99) });
+  pack.schemaVersion = "1.0.0";
+  assert.equal(validateQuestionPack(pack).issues.some((issue) => issue.code === "legacy-pack-schema"), true);
 });
 
 test("el importador está limitado a JSON y mantiene el archivo docente separado", () => {
