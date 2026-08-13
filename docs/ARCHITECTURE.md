@@ -241,13 +241,20 @@ objeto único de respuesta en memoria
    └─ CSS @media print + window.print() → impresión / Guardar como PDF
 ```
 
-El contrato público `1.0.0` contiene `schemaVersion`, `responseId`,
+El generador público emite el contrato `1.1.0`, que contiene `schemaVersion`, `responseId`,
 `activityType`, contexto de curso/unidad/tema, `createdAt`, `purpose`,
 `collection`, `privacy`, `submissionTarget` y `payload`. `createdAt` se conserva
 en ISO 8601 y solo se presenta con el locale del navegador; no se registra la
 zona horaria como campo. `responseId` representa 128 bits generados con
 `crypto.getRandomValues()` y solo identifica el archivo, sin IP, user-agent ni
 datos del dispositivo.
+
+El cambio `1.1.0` añade `helpfulSupportOther`: solo existe y es obligatorio
+cuando `helpfulSupport` vale `other`. La normalización lo elimina al elegir otra
+opción. Los lectores y el Centro de revisión aceptan tanto respuestas válidas
+`1.0.0` como `1.1.0`; no migran archivos del disco. Preview, TXT, JSON y CSV
+parten del mismo objeto validado, y el CSV reserva la columna estable
+`helpful_support_other`.
 
 Los propósitos de participación son `learning`, `feedback` y `contribution`.
 No incluyen `research` ni `measurement`. `collection` es únicamente `local`,

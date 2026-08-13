@@ -35,6 +35,14 @@ Consult these guides before working on related tasks:
 - Deliberately locale-specific editorial content must declare its locale explicitly; never infer it or fall back silently.
 - Public/student-facing and teacher-tool coverage is complete in ES and EN.
 
+## Academic clarity
+
+- Conceptual difficulty must come from physics and reasoning, never from ambiguous wording.
+- Every core academic section develops one concept through four required layers: Essential explains its physical meaning accessibly, Understand develops relations and application, Deepen formalizes it, and Explore generalizes or connects it.
+- Keep only Essential visible initially; use native disclosures for Understand, Deepen, and Explore, with all content readable in print.
+- Keep semantic MathML typographically integrated with surrounding text through the shared inline-math contract; do not add per-formula alignment hacks.
+- A public simulations catalog represents published resources, not a roadmap. Derive visible categories from published simulations and do not add promotional availability or novelty badges to finished features.
+
 ## Code comments
 
 - Comments explain contracts, constraints, safety, or non-obvious reasoning. Do not narrate syntax or retain obsolete implementation history.

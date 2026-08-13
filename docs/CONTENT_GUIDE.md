@@ -150,22 +150,34 @@ menor prioridad expositiva dentro del sitio.
 
 ## Profundidad progresiva del contenido
 
-Cada sección académica puede usar cuatro capas. No es obligatorio llenar las
-cuatro si la explicación no lo necesita:
+Cada sección académica core desarrolla un solo concepto mediante cuatro capas
+obligatorias:
 
-- `essential`: definiciones, convenciones y relaciones indispensables;
-- `understand`: interpretación física y conexiones entre representaciones;
-- `deepen`: condiciones del modelo, matices y desarrollo formal;
-- `explore`: ampliaciones opcionales claramente diferenciadas.
+- `essential`: qué significa físicamente, con lenguaje accesible y sin exigir
+  formalismo previo;
+- `understand`: cómo funciona, cómo reconocerlo y cómo aplicarlo en casos
+  básicos;
+- `deepen`: formulación matemática, condiciones, deducciones y análisis
+  dimensional cuando aporten al concepto;
+- `explore`: generalizaciones, límites del modelo, conexiones o situaciones no
+  ideales que amplían ese mismo concepto.
 
-Los bloques deben avanzar en comprensión, no repetir el mismo párrafo con más
-palabras. Las comprobaciones conceptuales se añaden en `checks` cuando ayudan a
-detectar una confusión concreta; no se usan para simular calificaciones.
+Las cuatro capas no son cuatro temas distintos. Deben responder a una misma
+pregunta conceptual con profundidad creciente. Esencial usa frases directas,
+define términos antes de emplearlos y ofrece primero una imagen física; no
+infantiliza ni sacrifica precisión. La dificultad conceptual no debe provenir
+de redacción ambigua. Las comprobaciones conceptuales se añaden en `checks`
+cuando ayudan a detectar una confusión concreta; no simulan calificaciones.
 
-`Esencial` y `Comprende` deben poder leerse sin abrir controles. `Profundiza` y
-`Explora` admiten disclosure nativo cuando son capas genuinamente opcionales.
-No se debe mover una definición, condición indispensable o instrucción
-necesaria a un bloque cerrado solo para acortar visualmente la página.
+`Esencial` permanece visible. `Comprende`, `Profundiza` y `Explora` usan
+disclosure nativo cerrado inicialmente para que cada estudiante decida la
+profundidad. En impresión, todo el contenido debe quedar disponible. Una
+definición o condición indispensable permanece en Esencial; no se oculta solo
+para acortar visualmente la página.
+
+Las matemáticas inline conservan MathML semántico y deben alinearse con el
+baseline del texto sin hacks por fórmula. Las expresiones display mantienen su
+propio bloque y scroll local cuando lo necesitan.
 
 ## Añadir materiales propios
 
@@ -294,6 +306,11 @@ Reglas editoriales:
 - conservar los campos opcionales como opcionales también en el contrato;
 - alimentar toda representación desde el mismo objeto validado.
 
+Las respuestas nuevas usan el esquema `1.1.0`. Si `helpfulSupport` es `other`,
+`helpfulSupportOther` contiene obligatoriamente la explicación libre; para
+cualquier otra opción ese campo se omite. El Centro de revisión conserva
+compatibilidad de lectura con respuestas válidas `1.0.0`.
+
 Una propuesta estudiantil no es un ejercicio. Su flujo editorial futuro es:
 
 ```text
@@ -384,6 +401,14 @@ La corrección se realiza sobre el archivo o el mapping. No se añade una tabla
 editable que permita reemplazar notas sin trazabilidad. Si en otro bloque se
 introducen ponderaciones, escala 0–5 o correcciones manuales, deben ser
 decisiones explícitas, auditables y seguir separadas de la nota oficial.
+
+## Catálogo público de simulaciones
+
+El catálogo presenta únicamente simulaciones `published`. Sus categorías se
+derivan de esos recursos: una categoría vacía no se muestra como promesa de
+trabajo futuro. Las simulaciones terminadas tampoco llevan badges
+`Disponible`, `Available`, `Nuevo` o `New`; existen, se describen y se abren.
+Los estados editoriales internos permanecen intactos.
 
 ## Añadir una fórmula
 

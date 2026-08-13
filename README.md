@@ -71,7 +71,7 @@ La cobertura actual está completa en español e inglés, tanto para el recorrid
 - `/fisica-basica-1/herramientas/notas`: Organizador local de resultados.
 - `/avisos`: archivo público de avisos.
 - `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
-- `/simulaciones`: catálogo canónico de simulaciones publicadas y categorías futuras.
+- `/simulaciones`: catálogo canónico cuyas categorías se derivan de las simulaciones publicadas.
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
 - `/simulaciones/proyectil-2d`: simulación propia de movimiento parabólico en Canvas 2D.
 - `/en/`: portada y recorrido público completo en inglés.
