@@ -1,17 +1,22 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { COURSES } from "../src/data/courses.js";
 import {
   SIMULATIONS,
   SIMULATION_CATEGORIES,
   SIMULATION_STATUSES,
+  getPublishedSimulationCategories,
   getPublishedSimulations,
   getSimulationById,
   getSimulationsByCategory,
   getSimulationsForCourseTopic,
 } from "../src/data/simulations.js";
 import { UNIT_1 } from "../src/data/physics/unit-1/unit.js";
+
+const root = fileURLToPath(new URL("../", import.meta.url));
 
 test("el catálogo contiene solo IDs y rutas únicas", () => {
   assert.equal(new Set(SIMULATIONS.map((item) => item.id)).size, SIMULATIONS.length);
@@ -42,6 +47,21 @@ test("la consulta por categoría encuentra Cinemática y no inventa recursos", (
     "projectile-2d",
   ]);
   assert.deepEqual(getSimulationsByCategory("Dinámica"), []);
+});
+
+test("las categorías públicas se derivan de recursos publicados", () => {
+  const categories = getPublishedSimulationCategories();
+  assert.deepEqual(categories, ["Cinemática"]);
+  assert.ok(categories.every((category) => getSimulationsByCategory(category).length > 0));
+});
+
+test("el catálogo no muestra categorías vacías ni badges promocionales", () => {
+  const page = fs.readFileSync(
+    `${root}/src/components/pages/SimulationsCatalogPage.astro`,
+    "utf8"
+  );
+  assert.match(page, /getPublishedSimulationCategories/);
+  assert.doesNotMatch(page, /status-label--available|simulations\.available|simulations\.preparing/);
 });
 
 test("los contextos apuntan a cursos, unidades y temas reales", () => {

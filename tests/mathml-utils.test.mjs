@@ -51,9 +51,12 @@ test("los contenedores MathML conservan el contenido completo", () => {
   const formulaResources = block(".academic-section__resources");
 
   assert.match(inlineMath, /inline-size:\s*max-content/);
-  assert.match(inlineMath, /max-width:\s*calc\(100%/);
-  assert.match(inlineMath, /overflow-x:\s*auto/);
-  assert.match(inlineMath, /padding-block:\s*(?!0(?:[;\s]|$))/);
+  assert.match(inlineMath, /max-inline-size:\s*100%/);
+  assert.match(inlineMath, /vertical-align:\s*baseline/);
+  assert.match(inlineMath, /line-height:\s*1/);
+  assert.doesNotMatch(inlineMath, /vertical-align:\s*-/);
+  assert.doesNotMatch(inlineMath, /padding-block/);
+  assert.doesNotMatch(inlineMath, /overflow-x:\s*auto/);
   assert.doesNotMatch(inlineMath, /overflow(?:-y)?:\s*(?:hidden|clip)/);
   assert.doesNotMatch(formulaBlock, /overflow:\s*(?:hidden|clip)/);
   assert.match(solutionSteps, /grid-template-columns:\s*minmax\(0,\s*1fr\)/);

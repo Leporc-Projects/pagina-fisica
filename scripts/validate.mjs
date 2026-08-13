@@ -27,6 +27,7 @@ import {
   SIMULATIONS,
   SIMULATION_CATEGORIES,
   SIMULATION_STATUSES,
+  getPublishedSimulationCategories,
   getPublishedSimulations,
   getSimulationsForCourseTopic,
 } from "../src/data/simulations.js";
@@ -121,6 +122,8 @@ import {
 } from "../src/utils/bonus.js";
 import {
   PARTICIPATION_PURPOSES,
+  PARTICIPATION_SCHEMA_VERSION,
+  SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS,
   createParticipationResponse,
   validateParticipationResponse,
 } from "../src/utils/participation.js";
@@ -360,6 +363,9 @@ const validationParticipationResponse = createParticipationResponse({
 
 check(
   validateParticipationResponse(validationParticipationResponse).valid &&
+    PARTICIPATION_SCHEMA_VERSION === "1.1.0" &&
+    SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS.join(",") === "1.0.0,1.1.0" &&
+    validationParticipationResponse.schemaVersion === "1.1.0" &&
     validationParticipationResponse.collection === "local" &&
     validationParticipationResponse.privacy === "anonymous" &&
     validationParticipationResponse.submissionTarget === null,
@@ -540,6 +546,14 @@ check(
       simulation.contexts === simulation.experience.contexts
     ),
   "El catálogo de simulaciones conserva IDs, taxonomías y rutas válidas."
+);
+
+check(
+  getPublishedSimulationCategories().join(",") === "Cinemática" &&
+    getPublishedSimulationCategories().every((category) =>
+      getPublishedSimulations().some((simulation) => simulation.category === category)
+    ),
+  "Las categorías públicas se derivan de simulaciones publicadas y omiten categorías vacías."
 );
 
 check(
@@ -1121,10 +1135,11 @@ check(
     topic.sections.every((section) =>
       section.essential?.length > 0 &&
       section.understand?.length > 0 &&
-      section.deepen?.length > 0
+      section.deepen?.length > 0 &&
+      section.explore?.length > 0
     )
   ),
-  "Cada sección contiene Esencial, Comprende y Profundiza."
+  "Cada sección contiene Esencial, Comprende, Profundiza y Explora."
 );
 
 check(
@@ -1631,10 +1646,11 @@ const academicSectionSource = fs.readFileSync(
 );
 
 check(
-  topicPageSource.includes("present={presentUnit1RichText}") &&
+    topicPageSource.includes("present={presentUnit1RichText}") &&
     academicSectionSource.includes("academic-layer--essential") &&
-    academicSectionSource.includes("academic-layer--understand") &&
-    academicSectionSource.includes("<details") &&
+    academicSectionSource.includes("academic-details--understand") &&
+    academicSectionSource.includes("academic-details--deepen") &&
+    academicSectionSource.includes("academic-details--explore") &&
     globalCss.includes("details:not([open])>*:not(summary)") &&
     globalCss.includes("@media (prefers-reduced-motion: reduce)"),
   "La lectura mantiene lo esencial visible y revela disclosures al imprimir."

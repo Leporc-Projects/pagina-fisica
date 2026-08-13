@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
 import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
 import { UNIT_1_FORMULAS } from "../src/data/physics/unit-1/formulas.js";
@@ -12,6 +14,7 @@ import {
 } from "../src/data/physics/unit-1/localize.js";
 
 const withoutMathAriaLabel = (mathml) => mathml.replace(/ aria-label="[^"]*"/, "");
+const root = fileURLToPath(new URL("../", import.meta.url));
 const replaceStrings = (value) => {
   if (typeof value === "string") return "<text>";
   if (Array.isArray(value)) return value.map(replaceStrings);
@@ -34,8 +37,44 @@ test("Unit 1 content localizes every topic without changing academic references"
       source.sections.map(({ id, formulas, visualizations }) => ({ id, formulas, visualizations })),
       slug,
     );
-    assert.ok(localized.sections.every((section) => section.title && section.essential.every(Boolean)));
+    assert.ok(localized.sections.every((section) =>
+      section.title &&
+      ["essential", "understand", "deepen", "explore"].every((layer) =>
+        Array.isArray(section[layer]) && section[layer].length > 0 && section[layer].every(Boolean)
+      )
+    ));
+    assert.deepEqual(
+      localized.sections.map((section) =>
+        ["essential", "understand", "deepen", "explore"].map((layer) => section[layer].length)
+      ),
+      source.sections.map((section) =>
+        ["essential", "understand", "deepen", "explore"].map((layer) => section[layer].length)
+      ),
+      slug
+    );
   }
+});
+
+test("las 24 secciones desarrollan un concepto en cuatro capas completas", () => {
+  const sections = Object.values(UNIT_1_CONTENT).flatMap((topic) => topic.sections);
+  assert.equal(sections.length, 24);
+  assert.ok(sections.every((section) =>
+    ["essential", "understand", "deepen", "explore"].every((layer) =>
+      Array.isArray(section[layer]) && section[layer].length > 0
+    )
+  ));
+});
+
+test("solo Esencial permanece visible inicialmente y las demás capas usan details", () => {
+  const component = fs.readFileSync(
+    `${root}/src/components/academic/AcademicSection.astro`,
+    "utf8"
+  );
+  assert.match(component, /academic-layer--essential/);
+  assert.match(component, /<details class="academic-details academic-details--understand">/);
+  assert.match(component, /<details class="academic-details academic-details--deepen">/);
+  assert.match(component, /<details class="academic-details academic-details--explore">/);
+  assert.doesNotMatch(component, /<details[^>]*\sopen/);
 });
 
 test("Unit 1 formulas share IDs, symbols, equations, units, and relations", () => {

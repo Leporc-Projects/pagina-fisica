@@ -43,6 +43,16 @@ const difficulty = createParticipationResponse({
   },
 }, { responseId: ids.difficulty, createdAt: at });
 
+const difficultyOther = createParticipationResponse({
+  activityType: "concept-difficulty",
+  topicSlug: "vectores",
+  payload: {
+    unclearPoint: "No identifico la dirección de la proyección.",
+    helpfulSupport: "other",
+    helpfulSupportOther: "Una construcción geométrica paso a paso.",
+  },
+}, { responseId: "resp_00000000000000000000000000000004", createdAt: at });
+
 const proposal = createParticipationResponse({
   activityType: "student-question-proposal",
   topicSlug: "movimiento-1d",
@@ -94,6 +104,16 @@ test("acepta una respuesta JSON canónica de Participa", () => {
   assert.equal(result.kind, "participation");
   assert.equal(result.id, ids.difficulty);
   assert.equal(Object.isFrozen(result.original), true);
+});
+
+test("acepta archivos históricos válidos de Participa 1.0.0", () => {
+  const legacy = structuredClone(difficulty);
+  legacy.schemaVersion = "1.0.0";
+
+  const result = validateImportedDocument(legacy);
+  assert.equal(result.status, "valid");
+  assert.equal(result.kind, "participation");
+  assert.equal(result.original.schemaVersion, "1.0.0");
 });
 
 test("rechaza JSON inválido sin lanzar stack al flujo de importación", () => {
@@ -241,6 +261,18 @@ test("CSV crea una fila por respuesta y neutraliza fórmulas", () => {
   assert.equal(lines[0].split(",").length, REVIEW_CSV_COLUMNS.length);
   assert.match(csv, /"'=HYPERLINK\(""https:\/\/example\.test""\)"/);
   assert.match(csv, /proyección/);
+});
+
+test("el Centro de revisión conserva el detalle de otra ayuda", () => {
+  const session = addReviewImportEntries(createReviewSession(), [
+    entry("otra-ayuda.json", difficultyOther),
+  ]);
+  const exported = createReviewExport(session, {}, reviewedAt);
+  const csv = toReviewCSV(exported, { includeBom: false });
+
+  assert.match(csv, /Una construcción geométrica paso a paso\./);
+  assert.equal(exported.items[0].original.payload.helpfulSupportOther,
+    "Una construcción geométrica paso a paso.");
 });
 
 test("TXT resume conteos sin inferir dominio", () => {

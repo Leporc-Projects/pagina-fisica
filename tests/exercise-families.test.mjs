@@ -109,6 +109,15 @@ test("las ecuaciones independientes reproducen las respuestas numéricas", () =>
   close(item.answer.value, item.parameters.relative + item.parameters.frame, 1e-9);
 });
 
+test("la solución de suma vectorial agrupa componentes negativos antes de elevar", () => {
+  const family = UNIT_1_EXERCISE_FAMILIES.find((item) => item.id === "family-u1-vector-sum");
+  const instance = generateFamilyInstance(family, { random: () => 0.42 });
+  const magnitudeStep = instance.solution.at(-1).text;
+
+  assert.equal(family.version, 2);
+  assert.match(magnitudeStep, /√\[\([−-]?\d+\)² \+ \([−-]?\d+\)²\]/);
+});
+
 test("evita repetir una combinación reciente cuando la familia ofrece otra", () => {
   const family = UNIT_1_EXERCISE_FAMILIES.find((item) => item.id === "family-u1-vector-magnitude-components");
   const first = generateFamilyInstance(family, { random: seededRandom(2) });

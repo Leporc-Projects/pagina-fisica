@@ -4,6 +4,8 @@ import test from "node:test";
 import {
   PARTICIPATION_CSV_COLUMNS,
   PARTICIPATION_COLLECTIONS,
+  LEGACY_PARTICIPATION_SCHEMA_VERSION,
+  PARTICIPATION_SCHEMA_VERSION,
   PARTICIPATION_PRIVACY_LEVELS,
   PARTICIPATION_PURPOSES,
   createParticipationResponse,
@@ -80,7 +82,8 @@ test("crea una reflexión local, anónima y de aprendizaje", () => {
   const response = conceptResponse({ helpfulSupport: "graph" });
 
   assert.equal(validateParticipationResponse(response).valid, true);
-  assert.equal(response.schemaVersion, "1.0.0");
+  assert.equal(response.schemaVersion, "1.1.0");
+  assert.equal(response.schemaVersion, PARTICIPATION_SCHEMA_VERSION);
   assert.equal(response.purpose, "learning");
   assert.equal(response.collection, "local");
   assert.equal(response.privacy, "anonymous");
@@ -150,6 +153,42 @@ test("omite campos opcionales vacíos", () => {
   assert.equal("studentDifficultyEstimate" in proposal.payload.proposal, false);
 });
 
+test("otra ayuda exige y conserva una explicación libre", () => {
+  const response = conceptResponse({
+    helpfulSupport: "other",
+    helpfulSupportOther: "Una comparación paso a paso con un caso real.",
+  });
+
+  assert.equal(validateParticipationResponse(response).valid, true);
+  assert.equal(
+    response.payload.helpfulSupportOther,
+    "Una comparación paso a paso con un caso real."
+  );
+  assert.throws(
+    () => conceptResponse({ helpfulSupport: "other", helpfulSupportOther: "  " }),
+    /obligatorio/
+  );
+});
+
+test("normaliza fuera el detalle cuando la ayuda seleccionada no es other", () => {
+  const response = conceptResponse({
+    helpfulSupport: "graph",
+    helpfulSupportOther: "Texto que ya no corresponde",
+  });
+
+  assert.equal("helpfulSupportOther" in response.payload, false);
+  const invalid = structuredClone(response);
+  invalid.payload.helpfulSupportOther = "Texto inesperado";
+  assert.equal(validateParticipationResponse(invalid).valid, false);
+});
+
+test("acepta respuestas históricas válidas del esquema 1.0.0", () => {
+  const legacy = structuredClone(conceptResponse({ helpfulSupport: "example" }));
+  legacy.schemaVersion = LEGACY_PARTICIPATION_SCHEMA_VERSION;
+
+  assert.equal(validateParticipationResponse(legacy).valid, true);
+});
+
 test("rechaza campos requeridos y enums fuera del contrato", () => {
   assert.throws(
     () => conceptResponse({ unclearPoint: "   " }),
@@ -202,6 +241,24 @@ test("JSON conserva el contrato completo, Unicode y saltos de línea", () => {
   assert.match(parsed.payload.unclearPoint, /\n/);
   assert.match(json, /"submissionTarget": null/);
   assert.equal(/name|email|document|userAgent|timezone|ipAddress/.test(json), false);
+});
+
+test("JSON, TXT y CSV conservan el detalle de otra ayuda", () => {
+  const detail = "Una animación que compare Δx con distancia.";
+  const response = conceptResponse({
+    helpfulSupport: "other",
+    helpfulSupportOther: detail,
+  });
+  const json = JSON.parse(toParticipationJSON(response));
+  const text = toParticipationText(response);
+  const rows = parseCsv(toParticipationCSV(response));
+
+  assert.equal(json.payload.helpfulSupportOther, detail);
+  assert.match(text, /Una animación que compare Δx con distancia\./);
+  assert.equal(
+    rows[1][PARTICIPATION_CSV_COLUMNS.indexOf("helpful_support_other")],
+    detail
+  );
 });
 
 test("TXT produce una representación legible de la misma respuesta", () => {
