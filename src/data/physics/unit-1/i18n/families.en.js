@@ -46,7 +46,7 @@ export const FAMILY_PRESENTERS_EN = Object.freeze({
     return presentation(
       "Sum of two vectors", `Let A = (${signed(ax)}, ${signed(ay)}) and B = (${signed(bx)}, ${signed(by)}). Determine R = A + B and its magnitude.`,
       ["Add corresponding components first."],
-      [`R = (${number(ax)} + ${number(bx)}, ${number(ay)} + ${number(by)}) = (${rx}, ${ry}).`, `|R| = √(${rx}² + ${ry}²) = ${magnitude} units.`],
+      [`R = (${number(ax)} + ${number(bx)}, ${number(ay)} + ${number(by)}) = (${rx}, ${ry}).`, `|R| = √[(${rx})² + (${ry})²] = ${magnitude} units.`],
       { fields: ["Rₓ", "Rᵧ", "|R|"], answerDisplay: null },
     );
   },

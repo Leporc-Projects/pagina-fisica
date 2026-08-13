@@ -1,5 +1,6 @@
 ---
-// Organiza una idea por profundidad sin ocultar la explicación esencial.
+// Cada disclosure profundiza el mismo concepto; solo la explicación esencial
+// permanece visible para ofrecer una entrada accesible sin eliminar contenido.
 import RichText from "./RichText.astro";
 import { t } from "../../i18n/index.js";
 
@@ -11,7 +12,7 @@ interface SectionContent {
   essential: string[];
   understand: string[];
   deepen: string[];
-  explore?: string[];
+  explore: string[];
 }
 
 interface Props {
@@ -41,10 +42,15 @@ const { section, index, present = (value) => value, locale = "es" } = Astro.prop
     {section.essential.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
   </div>
 
-  <div class="academic-layer academic-layer--understand">
-    <h3><span>{t(locale, "academic.understand")}</span> {t(locale, "academic.understandDescription")}</h3>
-    {section.understand.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
-  </div>
+  <details class="academic-details academic-details--understand">
+    <summary>
+      <span>{t(locale, "academic.understand")}</span>
+      <strong>{t(locale, "academic.understandDescription")}</strong>
+    </summary>
+    <div class="academic-details__body">
+      {section.understand.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
+    </div>
+  </details>
 
   <details class="academic-details academic-details--deepen">
     <summary>
@@ -56,17 +62,15 @@ const { section, index, present = (value) => value, locale = "es" } = Astro.prop
     </div>
   </details>
 
-  {section.explore && (
-    <details class="academic-details academic-details--explore">
-      <summary>
-        <span>{t(locale, "academic.explore")}</span>
-        <strong>{t(locale, "academic.exploreDescription")}</strong>
-      </summary>
-      <div class="academic-details__body">
-        {section.explore.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
-      </div>
-    </details>
-  )}
+  <details class="academic-details academic-details--explore">
+    <summary>
+      <span>{t(locale, "academic.explore")}</span>
+      <strong>{t(locale, "academic.exploreDescription")}</strong>
+    </summary>
+    <div class="academic-details__body">
+      {section.explore.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
+    </div>
+  </details>
 
   <div class="academic-section__resources">
     <slot />

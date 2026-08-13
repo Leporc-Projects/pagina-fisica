@@ -2,14 +2,14 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../PageHeader.astro";
 import SectionHeading from "../SectionHeading.astro";
-import { SIMULATION_CATEGORIES, SIMULATION_CATEGORY_KEYS, getSimulationsByCategory, getPublishedSimulations } from "../../data/simulations.js";
+import { SIMULATION_CATEGORY_KEYS, getPublishedSimulationCategories, getSimulationsByCategory, getPublishedSimulations } from "../../data/simulations.js";
 import { t } from "../../i18n/index.js";
 import { ROUTE_IDS, getLocalizedPath } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
 const publishedSimulations = getPublishedSimulations(locale);
-const categories = SIMULATION_CATEGORIES.map((category) => ({
+const categories = getPublishedSimulationCategories().map((category) => ({
   id: category,
   label: t(locale, SIMULATION_CATEGORY_KEYS[category]),
 }));
@@ -19,13 +19,13 @@ const categories = SIMULATION_CATEGORIES.map((category) => ({
   <PageHeader eyebrow={t(locale, "simulations.eyebrow")} title={t(locale, "simulations.title")} description={t(locale, "simulations.intro")} />
   <div class="policy-panel page-section" role="note"><h2>{t(locale, "simulations.policyTitle")}</h2><p>{t(locale, "simulations.policy")}</p></div>
   <section class="page-section" aria-labelledby="published-simulations-title">
-    <SectionHeading id="published-simulations-title" title={t(locale, "simulations.available")} desc={t(locale, "simulations.availableDescription")} />
+    <SectionHeading id="published-simulations-title" title={t(locale, "simulations.publishedTitle")} desc={t(locale, "simulations.publishedDescription")} />
     <ul class="publication-list" role="list">
       {publishedSimulations.map((simulation, index) => (
         <li class="publication-row">
           <span class="publication-row__number">{String(index + 1).padStart(2, "0")}</span>
           <div><h3><a href={withBase(simulation.route)}>{simulation.title}</a></h3><p class="publication-row__meta">{simulation.category}</p><p>{simulation.description}</p></div>
-          <div class="publication-row__action"><span class="status-label status-label--available">{t(locale, "simulations.available")}</span><a class="text-link" href={withBase(simulation.route)}>{t(locale, "simulations.open")}</a></div>
+          <div class="publication-row__action"><a class="text-link" href={withBase(simulation.route)}>{t(locale, "simulations.open")}</a></div>
         </li>
       ))}
     </ul>
@@ -35,8 +35,7 @@ const categories = SIMULATION_CATEGORIES.map((category) => ({
     <ul class="publication-list" role="list">
       {categories.map((category, index) => {
         const simulations = getSimulationsByCategory(category.id, locale);
-        const available = simulations.length > 0;
-        return <li class="publication-row"><span class="publication-row__number">{String(index + 1).padStart(2, "0")}</span><div><h3>{category.label}</h3>{available && <p class="publication-row__meta">{t(locale, simulations.length === 1 ? "simulations.resourceCount" : "simulations.resourcesCount", { count: simulations.length })}</p>}</div><span class:list={{"status-label":true,"status-label--available":available,"status-label--preparing":!available}}>{available ? t(locale, "simulations.available") : t(locale, "simulations.preparing")}</span></li>;
+        return <li class="publication-row"><span class="publication-row__number">{String(index + 1).padStart(2, "0")}</span><div><h3>{category.label}</h3><p class="publication-row__meta">{t(locale, simulations.length === 1 ? "simulations.resourceCount" : "simulations.resourcesCount", { count: simulations.length })}</p></div></li>;
       })}
     </ul>
   </section>

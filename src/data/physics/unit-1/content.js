@@ -11,7 +11,7 @@ export const UNIT_1_CONTENT = {
         id: "magnitudes-y-si",
         title: "Magnitudes, unidades y Sistema Internacional",
         essential: [
-          "Una magnitud física es una propiedad que puede compararse cuantitativamente con un patrón. Un valor físico necesita un número y una unidad: 4,2 no comunica lo mismo que 4,2 s.",
+          "Una magnitud física es una propiedad que puede medirse, como el tiempo, la longitud o la masa. Para comunicar una medida hacen falta un número y una unidad: 4,2 no significa lo mismo que 4,2 s.",
           "El Sistema Internacional usa siete unidades base. En esta unidad aparecen sobre todo metro (m), kilogramo (kg) y segundo (s); otras unidades se construyen combinándolas.",
         ],
         understand: [
@@ -21,6 +21,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "Las magnitudes derivadas se definen a partir de magnitudes base. Por ejemplo, la velocidad tiene dimensión longitud dividida por tiempo y se expresa en m/s en el SI.",
           "Una igualdad física exige dimensiones iguales a ambos lados, aunque la igualdad dimensional por sí sola no demuestra que el modelo sea correcto.",
+        ],
+        explore: [
+          "En una medición real, la unidad permite comparar resultados obtenidos con instrumentos distintos. La trazabilidad conecta cada resultado con patrones y procedimientos que otras personas pueden reproducir.",
         ],
       },
       {
@@ -37,6 +40,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "El redondeo se realiza al final para evitar acumular error. Durante el desarrollo pueden conservarse cifras de guarda y después reportar el resultado con precisión coherente.",
           "Los números exactos, como una definición de unidad o un conteo, no limitan las cifras significativas.",
+        ],
+        explore: [
+          "En ciencia e ingeniería se convierten unidades también para comparar escalas y fuentes de datos. Una conversión correcta conserva la incertidumbre relativa de la medición; no crea información más precisa.",
         ],
         checks: [
           {
@@ -92,6 +98,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "Un vector geométrico puede representarse en distintas bases. Las componentes cambian al cambiar de base, mientras que magnitudes y relaciones geométricas permanecen invariantes.",
         ],
+        explore: [
+          "Esta independencia de la base permite describir un mismo desplazamiento desde ejes diferentes. Elegir una base conveniente simplifica el cálculo, pero no cambia el vector físico.",
+        ],
         checks: [
           {
             question: "¿Cuál describe completamente una velocidad?",
@@ -109,15 +118,18 @@ export const UNIT_1_CONTENT = {
         id: "componentes-y-base",
         title: "Componentes cartesianas, unitarios y bases",
         essential: [
-          "Las componentes cartesianas indican cuánto del vector corresponde a cada eje. En una base ortonormal tridimensional se escribe A = Aₓ i + Aᵧ j + A_z k.",
-          "Si el ángulo θ se mide desde +x en el plano, Aₓ = A cos θ y Aᵧ = A sin θ. Antes de elegir seno o coseno debe analizarse la geometría y el cuadrante.",
+          "Las componentes cartesianas indican cuánto del vector apunta a lo largo de cada eje. Sus signos dependen de los sentidos positivos elegidos.",
+          "Los vectores unitarios i, j y k sirven como direcciones de referencia para los ejes x, y y z.",
         ],
         understand: [
-          "Los vectores unitarios i, j y k tienen magnitud uno y señalan los sentidos positivos de los ejes. La terna forma una base para expresar cualquier vector cartesiano.",
+          "En una base cartesiana tridimensional se escribe A = Aₓ i + Aᵧ j + A_z k. Si θ se mide desde +x en el plano, Aₓ = A cos θ y Aᵧ = A sin θ; la geometría y el cuadrante determinan los signos.",
           "La función atan2(Aᵧ,Aₓ) conserva la información del cuadrante; usar solamente arctan(Aᵧ/Aₓ) puede producir una dirección incorrecta.",
         ],
         deepen: [
           "La magnitud se obtiene mediante el teorema de Pitágoras extendido. Recuperar la dirección exige combinar las componentes con sus signos.",
+        ],
+        explore: [
+          "Las componentes son proyecciones sobre una base. En una base no ortogonal la reconstrucción sigue siendo posible, pero ya no basta aplicar directamente el teorema de Pitágoras a las componentes.",
         ],
         formulas: ["vector-magnitude", "vector-components"],
         visualizations: ["vector-components"],
@@ -136,6 +148,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "El método por componentes funciona en cualquier dimensión y evita depender de la escala del dibujo. El diagrama sigue siendo útil para anticipar signos y dirección aproximada.",
         ],
+        explore: [
+          "La suma de muchos vectores puede representarse con un polígono punta-cola. Si el polígono cierra, la resultante es cero, una idea que después será útil para estudiar equilibrio.",
+        ],
         visualizations: ["vector-sum"],
       },
       {
@@ -151,6 +166,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "El producto escalar es conmutativo. El producto vectorial no: B×A = −(A×B). Si los vectores son paralelos, su producto vectorial es cero.",
+        ],
+        explore: [
+          "Estos productos conectan la geometría con otras magnitudes físicas: el producto escalar aparece al calcular trabajo y el vectorial al describir torque y momento angular.",
         ],
         formulas: ["dot-product", "cross-product"],
         visualizations: ["dot-projection"],
@@ -177,6 +195,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "El sistema de referencia incluye origen, orientación, escala espacial y reloj. Las afirmaciones sobre movimiento deben entenderse respecto a ese sistema.",
         ],
+        explore: [
+          "Dos observadores pueden asignar posiciones diferentes al mismo objeto si eligen orígenes distintos. Comparar sus descripciones exige transformar coordenadas y declarar qué eventos están comparando.",
+        ],
         checks: [
           {
             question: "Un móvil está en x = −20 m. ¿Qué puede concluirse necesariamente?",
@@ -199,6 +220,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "La derivada dx/dt surge como el límite de Δx/Δt cuando el intervalo temporal tiende a cero. Requiere que la función de posición sea diferenciable en el instante considerado.",
         ],
+        explore: [
+          "Si x(t) tiene una esquina, la velocidad instantánea puede no existir justo allí aunque sí existan velocidades medias a ambos lados. El modelo debe decidir si ese cambio brusco es físicamente razonable.",
+        ],
         formulas: ["average-velocity", "instantaneous-velocity"],
       },
       {
@@ -214,6 +238,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "La aceleración instantánea es dv/dt y también la segunda derivada de la posición cuando x(t) es dos veces diferenciable.",
+        ],
+        explore: [
+          "En más de una dimensión, una aceleración puede cambiar la dirección de la velocidad sin cambiar su magnitud. Por eso la regla de signos de una dimensión debe reemplazarse por una comparación vectorial.",
         ],
         formulas: ["average-acceleration", "instantaneous-acceleration"],
         checks: [
@@ -237,6 +264,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "Las áreas son integrales definidas. Su interpretación física incluye signo y unidad: (m/s)·s produce m, mientras (m/s²)·s produce m/s.",
+        ],
+        explore: [
+          "Las gráficas experimentales contienen ruido y no siempre permiten leer pendientes o áreas exactas. En esos casos se estiman tendencias y se comunica la incertidumbre del resultado.",
         ],
         visualizations: ["position-time", "velocity-time", "acceleration-time"],
       },
@@ -262,6 +292,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "Integrar a constante produce v = v₀+at. Integrar esa velocidad desde la condición inicial produce x = x₀+v₀t+½at². Las otras relaciones se obtienen eliminando t o usando el promedio lineal de velocidades.",
         ],
+        explore: [
+          "Un movimiento real puede aproximarse por tramos de aceleración casi constante. La utilidad de la aproximación depende de que cada intervalo sea suficientemente corto para el propósito del análisis.",
+        ],
         formulas: [
           "constant-velocity",
           "constant-position",
@@ -283,6 +316,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "Para calcular distancia desde v(t), deben localizarse sus ceros y sumar el valor absoluto del desplazamiento en cada intervalo. Integrar |v(t)| produce distancia recorrida.",
         ],
+        explore: [
+          "La distancia recorrida es la variación total de la posición a lo largo del intervalo. Esta idea se generaliza a trayectorias curvas sumando longitudes cada vez más pequeñas.",
+        ],
       },
       {
         id: "caida-libre",
@@ -297,6 +333,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "El cuerpo puede tratarse como partícula cuando su tamaño y rotación no son relevantes para la pregunta. Si la resistencia del aire importa, la aceleración ya no es constante ni necesariamente igual para ascenso y descenso.",
+        ],
+        explore: [
+          "Con resistencia del aire, objetos de igual forma pueden caer de manera distinta según su masa, área y rapidez. El valor constante −g deja de ser la aceleración total, aunque la gravedad siga actuando.",
         ],
         checks: [
           {
@@ -319,6 +358,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "Si la aceleración depende de posición o velocidad, puede ser necesario cambiar variables o resolver una ecuación diferencial. En esta unidad se establece la relación conceptual sin construir todavía un método general de solución.",
+        ],
+        explore: [
+          "Cuando los datos se conocen solo en instantes discretos, la acumulación puede aproximarse numéricamente mediante áreas de rectángulos o trapecios. El tamaño del paso controla parte del error.",
         ],
         formulas: ["integrated-velocity", "integrated-position"],
       },
@@ -344,6 +386,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "La derivación componente a componente supone que los vectores unitarios cartesianos son constantes. En bases móviles, como la polar, también hay que derivar los vectores unitarios.",
         ],
+        explore: [
+          "La curvatura de la trayectoria depende de cómo cambia la dirección de la velocidad. Dos movimientos pueden recorrer la misma curva con ritmos distintos y, por tanto, con aceleraciones diferentes.",
+        ],
         formulas: ["position-vector", "velocity-vector", "acceleration-vector"],
       },
       {
@@ -359,6 +404,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "Para rapidez no nula, la aceleración tangencial tiene magnitud dv/dt y la normal tiene magnitud v²/ρ, donde ρ es el radio local de curvatura.",
         ],
+        explore: [
+          "La misma descomposición tangencial-normal se usa en cualquier trayectoria suave. El radio local de curvatura reemplaza al radio fijo de una circunferencia.",
+        ],
       },
       {
         id: "proyectiles",
@@ -373,6 +421,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "Las fórmulas de alcance o tiempo de vuelo que suponen alturas inicial y final iguales no deben aplicarse a lanzamientos entre alturas diferentes.",
+        ],
+        explore: [
+          "La resistencia del aire acopla los movimientos horizontal y vertical porque depende del vector velocidad. La trayectoria deja de ser exactamente parabólica y el alcance debe obtenerse con un modelo más completo.",
         ],
         formulas: ["projectile-acceleration", "projectile-position"],
         visualizations: ["projectile-motion"],
@@ -406,6 +457,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "La aceleración radial vectorial puede escribirse a_r = −(v²/R) r̂. El signo negativo indica que apunta en sentido opuesto al unitario radial saliente.",
         ],
+        explore: [
+          "En una trayectoria curva que no sea circular, la dirección normal sigue apuntando hacia el centro local de curvatura. El radio de curvatura puede cambiar de un punto a otro.",
+        ],
         formulas: ["circular-speed", "centripetal-acceleration"],
         visualizations: ["circular-motion"],
         checks: [
@@ -429,6 +483,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "En una circunferencia de radio fijo, a_t = dv/dt y a_r = v²/R. La magnitud total es la raíz de la suma de sus cuadrados.",
         ],
+        explore: [
+          "Si cambian simultáneamente la rapidez y el radio, ambas componentes pueden variar con el tiempo. Separarlas permite reconocer qué parte curva la trayectoria y cuál cambia el ritmo del movimiento.",
+        ],
       },
       {
         id: "velocidad-relativa",
@@ -443,6 +500,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "La relación de composición es válida para marcos clásicos. A velocidades comparables con la luz se requiere otra transformación, fuera del alcance de esta unidad.",
+        ],
+        explore: [
+          "La composición vectorial también describe embarcaciones con corriente y aeronaves con viento. En dos dimensiones, elegir la dirección propia puede compensar una velocidad del medio.",
         ],
         formulas: ["relative-velocity"],
         visualizations: ["relative-velocity"],
@@ -468,6 +528,9 @@ export const UNIT_1_CONTENT = {
         deepen: [
           "Las relaciones dr̂/dt = θ̇ θ̂ y dθ̂/dt = −θ̇ r̂ explican los términos adicionales que aparecen al derivar posición y velocidad.",
         ],
+        explore: [
+          "Las coordenadas polares resultan naturales cuando existe un centro distinguido. En problemas sin simetría radial, una base cartesiana puede producir una descripción más sencilla.",
+        ],
         visualizations: ["polar-basis"],
       },
       {
@@ -481,6 +544,9 @@ export const UNIT_1_CONTENT = {
         ],
         deepen: [
           "La expresión se obtiene derivando r = r r̂ y usando que r̂ cambia con θ. Por eso no basta con derivar únicamente la coordenada r.",
+        ],
+        explore: [
+          "Una trayectoria espiral combina cambio radial y giro. Según sus signos, el objeto puede acercarse al origen mientras avanza en el sentido de aumento de θ.",
         ],
         formulas: ["polar-velocity"],
       },

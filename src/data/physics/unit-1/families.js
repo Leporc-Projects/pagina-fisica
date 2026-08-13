@@ -122,6 +122,7 @@ export const UNIT_1_EXERCISE_FAMILIES = [
   }),
   family({
     id: "family-u1-vector-sum",
+    version: 2,
     topic: "vectores",
     subtopic: "suma-y-resta",
     type: "numerical",
@@ -152,7 +153,7 @@ export const UNIT_1_EXERCISE_FAMILIES = [
         expectedUnit: "unidades",
         interaction: valuesInteraction([["rx", "Rₓ", "unidades"], ["ry", "Rᵧ", "unidades"], ["r", "|R|", "unidades"]]),
         hints: ["Suma primero las componentes homólogas."],
-        solution: solution(`R = (${ax} + ${bx}, ${ay} + ${by}) = (${rx}, ${ry}).`, `|R| = √(${rx}² + ${ry}²) = ${magnitude} unidades.`),
+        solution: solution(`R = (${ax} + ${bx}, ${ay} + ${by}) = (${rx}, ${ry}).`, `|R| = √[(${rx})² + (${ry})²] = ${magnitude} unidades.`),
         commonErrors: ["vector-magnitude-component"],
       };
     },

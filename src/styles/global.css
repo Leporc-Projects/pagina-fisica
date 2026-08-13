@@ -3436,7 +3436,7 @@ main {
 
 .academic-layer {
   max-width: 52rem;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   padding: 0 clamp(0rem, 2vw, 1rem);
 }
 
@@ -3473,27 +3473,19 @@ main {
   color: var(--status-info-text);
 }
 
-.academic-layer--understand {
-  margin-top: 2rem;
-  border-top: 1px solid var(--border);
-  padding-top: 1.5rem;
-}
-
 .academic-details {
   max-width: 52rem;
-  margin-top: 1.2rem;
+  margin-top: 0;
   border: 0;
-  border-block: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
   background: transparent;
 }
 
 .academic-details summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem 0.8rem;
-  align-items: baseline;
+  display: list-item;
   cursor: pointer;
-  padding: 1rem 0.25rem;
+  padding: 1rem clamp(1rem, 3vw, 1.5rem);
 }
 
 .academic-details summary::marker {
@@ -3506,6 +3498,14 @@ main {
   font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.academic-details summary strong {
+  margin-inline-start: 0.8rem;
+}
+
+.academic-details--understand summary span {
+  color: var(--accent-secondary);
 }
 
 .academic-details--explore {
@@ -3522,7 +3522,7 @@ main {
   display: grid;
   gap: 1rem;
   border-top: 1px solid var(--border);
-  padding: 1.2rem 0.25rem;
+  padding: 1.2rem clamp(1rem, 3vw, 1.5rem);
 }
 
 .academic-details__body p,
@@ -3546,26 +3546,27 @@ main {
   background: var(--formula-bg);
 }
 
-/* El ancho intrínseco evita que una fórmula corta se comprima hasta el espacio
-   restante de la línea. Las expresiones que exceden el párrafo conservan un
-   scroll local y el padding vertical protege flechas, fracciones y exponentes. */
+/* MathML participa de la línea mediante su baseline nativo. Evitar overflow
+   aquí es importante: un inline-block scrollable alinea por el borde inferior
+   y obliga a compensaciones que hunden símbolos, subíndices y fracciones. */
 .inline-math {
   display: inline-block;
   inline-size: max-content;
-  max-width: calc(100% - 0.16em);
-  overflow-x: auto;
-  padding-block: 0.24em;
-  margin-inline: 0.08em;
+  max-inline-size: 100%;
+  overflow: visible;
+  padding: 0 0.04em;
+  margin-inline: 0.04em;
   color: currentColor;
-  line-height: normal;
-  vertical-align: -0.32em;
+  line-height: 1;
+  vertical-align: baseline;
   white-space: nowrap;
-  scrollbar-width: thin;
 }
 
 .inline-math math {
+  display: inline;
   color: currentColor;
   font-size: 1em;
+  vertical-align: baseline;
 }
 
 .formula-block__header,

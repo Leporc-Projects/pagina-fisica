@@ -6,7 +6,7 @@ export default Object.freeze({
       "magnitudes-y-si": {
         title: "Physical quantities, units, and the International System",
         essential: [
-          "A physical quantity is a property that can be compared quantitatively with a standard. A physical value needs a number and a unit: 4.2 does not convey the same information as 4.2 s.",
+          "A physical quantity is a property that can be measured, such as time, length, or mass. Communicating a measurement requires a number and a unit: 4.2 does not mean the same thing as 4.2 s.",
           "The International System uses seven base units. This unit mainly uses the metre (m), kilogram (kg), and second (s); other units are built by combining them.",
         ],
         understand: [
@@ -17,6 +17,7 @@ export default Object.freeze({
           "Derived quantities are defined from base quantities. For example, velocity has the dimension of length divided by time and is expressed in m/s in the SI.",
           "A physical equality requires equal dimensions on both sides, although dimensional equality alone does not prove that a model is correct.",
         ],
+        explore: ["In a real measurement, the unit makes results from different instruments comparable. Traceability connects each result to standards and procedures that other people can reproduce."],
       },
       "conversion-y-cifras": {
         title: "Unit conversion and significant figures",
@@ -32,6 +33,7 @@ export default Object.freeze({
           "Round at the end to avoid accumulating error. Guard digits may be kept during the work before reporting the result with consistent precision.",
           "Exact numbers, such as a unit definition or a count, do not limit significant figures.",
         ],
+        explore: ["Science and engineering also convert units to compare scales and data sources. A correct conversion preserves the measurement's relative uncertainty; it does not create more precise information."],
         checks: [{
           question: "What must remain unchanged during a correct unit conversion?",
           options: ["The written number", "The represented physical quantity", "The unit symbol"],
@@ -67,6 +69,7 @@ export default Object.freeze({
           "A vector's magnitude is never negative. A component may be negative because it compares the vector with the positive sense of an axis.",
         ],
         deepen: ["A geometric vector can be represented in different bases. Components change with the basis, while magnitudes and geometric relations remain invariant."],
+        explore: ["This independence from the basis allows the same displacement to be described with different axes. Choosing a convenient basis simplifies the calculation but does not change the physical vector."],
         checks: [{
           question: "Which option completely describes a velocity?",
           options: ["25 m/s", "25 m north", "25 m/s north", "25 s/m"],
@@ -76,14 +79,15 @@ export default Object.freeze({
       "componentes-y-base": {
         title: "Cartesian components, unit vectors, and bases",
         essential: [
-          "Cartesian components indicate how much of a vector lies along each axis. In a three-dimensional orthonormal basis, A = Aₓ i + Aᵧ j + A_z k.",
-          "If angle θ is measured from +x in the plane, Aₓ = A cos θ and Aᵧ = A sin θ. Analyse the geometry and quadrant before choosing sine or cosine.",
+          "Cartesian components indicate how much of a vector points along each axis. Their signs depend on the chosen positive directions.",
+          "The unit vectors i, j, and k provide reference directions for the x, y, and z axes.",
         ],
         understand: [
-          "The unit vectors i, j, and k have magnitude one and point in the positive axis directions. Together they form a basis for expressing any Cartesian vector.",
+          "In a three-dimensional Cartesian basis, A = Aₓ i + Aᵧ j + A_z k. If θ is measured from +x in the plane, Aₓ = A cos θ and Aᵧ = A sin θ; geometry and quadrant determine the signs.",
           "The function atan2(Aᵧ,Aₓ) preserves quadrant information; using only arctan(Aᵧ/Aₓ) can produce an incorrect direction.",
         ],
         deepen: ["Magnitude follows from the extended Pythagorean theorem. Recovering direction requires combining the components with their signs."],
+        explore: ["Components are projections onto a basis. Reconstruction is still possible in a nonorthogonal basis, but the Pythagorean theorem can no longer be applied directly to the components."],
       },
       "suma-y-resta": {
         title: "Vector addition and subtraction",
@@ -96,6 +100,7 @@ export default Object.freeze({
           "A small resultant does not mean the vectors are small: they may have large magnitudes and nearly opposite senses.",
         ],
         deepen: ["The component method works in any dimension and does not depend on drawing scale. A diagram remains useful for anticipating signs and approximate direction."],
+        explore: ["Adding many vectors can be represented by a head-to-tail polygon. If the polygon closes, the resultant is zero—an idea that will later be useful when studying equilibrium."],
       },
       "producto-escalar-y-vectorial": {
         title: "Dot product and cross product",
@@ -108,6 +113,7 @@ export default Object.freeze({
           "The magnitude AB sin θ of the cross product equals the area of the parallelogram formed by the vectors.",
         ],
         deepen: ["The dot product is commutative. The cross product is not: B×A = −(A×B). Parallel vectors have zero cross product."],
+        explore: ["These products connect geometry with other physical quantities: the dot product appears in work, while the cross product appears in torque and angular momentum."],
       },
     },
   },
@@ -125,6 +131,7 @@ export default Object.freeze({
           "Changing the origin changes position coordinates but not displacement between two events if axis orientation and scale remain fixed.",
         ],
         deepen: ["A reference frame includes origin, orientation, spatial scale, and clock. Statements about motion must be understood relative to that frame."],
+        explore: ["Two observers may assign different positions to the same object when they choose different origins. Comparing their descriptions requires transforming coordinates and stating which events are being compared."],
         checks: [{ question: "An object is at x = −20 m. What can necessarily be concluded?", answer: "It is 20 m on the negative side of the origin. The direction of its velocity or acceleration cannot be inferred." }],
       },
       "velocidad-y-rapidez": {
@@ -138,6 +145,7 @@ export default Object.freeze({
           "For an out-and-back trip, distance may be large while displacement—and therefore average velocity—is zero.",
         ],
         deepen: ["The derivative dx/dt arises as the limit of Δx/Δt as the time interval approaches zero. The position function must be differentiable at the instant considered."],
+        explore: ["If x(t) has a corner, instantaneous velocity may not exist at that exact point even though average velocities exist on both sides. The model must decide whether such an abrupt change is physically reasonable."],
       },
       "aceleracion-y-signos": {
         title: "Average and instantaneous acceleration; signs",
@@ -150,6 +158,7 @@ export default Object.freeze({
           "On a v(t) graph, slope is acceleration. On an a(t) graph, the function value is acceleration, not its slope.",
         ],
         deepen: ["Instantaneous acceleration is dv/dt and is also the second derivative of position when x(t) is twice differentiable."],
+        explore: ["In more than one dimension, acceleration can change the direction of velocity without changing its magnitude. The one-dimensional sign rule must then be replaced by a vector comparison."],
         checks: [{ question: "If v < 0 and a < 0, what happens to speed?", answer: "It increases because velocity and acceleration point in the same direction." }],
       },
       "graficas-relacionadas": {
@@ -163,6 +172,7 @@ export default Object.freeze({
           "A horizontal line on x(t) indicates rest; a horizontal line on v(t) indicates constant velocity, which need not be zero.",
         ],
         deepen: ["The areas are definite integrals. Their physical interpretation includes sign and unit: (m/s)·s gives m, while (m/s²)·s gives m/s."],
+        explore: ["Experimental graphs contain noise and do not always provide exact slopes or areas. In those cases, trends are estimated and the result's uncertainty is communicated."],
       },
     },
   },
@@ -180,6 +190,7 @@ export default Object.freeze({
           "The average velocity (v₀+v)/2 may be used in this form only when acceleration is constant.",
         ],
         deepen: ["Integrating constant a gives v = v₀+at. Integrating that velocity from the initial condition gives x = x₀+v₀t+½at². The other relations follow by eliminating t or using the linear average of velocities."],
+        explore: ["A real motion may be approximated by intervals of nearly constant acceleration. The approximation is useful only when each interval is short enough for the purpose of the analysis."],
       },
       "cambio-de-sentido": {
         title: "Change of direction and interval-by-interval analysis",
@@ -189,6 +200,7 @@ export default Object.freeze({
         ],
         understand: ["Acceleration opposite to velocity reduces speed to instantaneous rest. If acceleration continues, speed then increases in the opposite direction."],
         deepen: ["To calculate distance from v(t), locate its zeros and add the absolute value of displacement over each interval. Integrating |v(t)| gives distance travelled."],
+        explore: ["Distance travelled is the total variation of position over the interval. The idea generalizes to curved paths by adding increasingly small path lengths."],
       },
       "caida-libre": {
         title: "Free fall as a model",
@@ -201,6 +213,7 @@ export default Object.freeze({
           "Time or speed symmetries apply only between points at the same height under the same model conditions.",
         ],
         deepen: ["The body may be treated as a particle when its size and rotation are irrelevant to the question. If air resistance matters, acceleration is no longer constant or necessarily equal during ascent and descent."],
+        explore: ["With air resistance, objects of the same shape may fall differently depending on mass, area, and speed. The constant value −g is no longer the total acceleration, although gravity still acts."],
         checks: [{ question: "At the highest point of an ideal vertical launch, what are vᵧ and aᵧ if +y points upward?", answer: "vᵧ = 0 and aᵧ = −g." }],
       },
       integracion: {
@@ -214,6 +227,7 @@ export default Object.freeze({
           "Similarly, the integral of v(t) is displacement and is added to the initial position to obtain x(t).",
         ],
         deepen: ["If acceleration depends on position or velocity, changing variables or solving a differential equation may be necessary. This unit establishes the conceptual relation without yet constructing a general solution method."],
+        explore: ["When data are known only at discrete instants, accumulation can be approximated numerically with rectangle or trapezoid areas. Step size controls part of the error."],
       },
     },
   },
@@ -231,6 +245,7 @@ export default Object.freeze({
           "The x, y, and z components do not represent motions with different times: they describe the same event and share t.",
         ],
         deepen: ["Componentwise differentiation assumes that Cartesian unit vectors are constant. In moving bases such as polar coordinates, the unit vectors must also be differentiated."],
+        explore: ["Trajectory curvature depends on how the direction of velocity changes. Two motions may follow the same curve at different rates and therefore have different accelerations."],
       },
       "componentes-de-trayectoria": {
         title: "Parallel and perpendicular components",
@@ -240,6 +255,7 @@ export default Object.freeze({
         ],
         understand: ["This decomposition follows the trajectory and need not coincide with the x and y axes. It is especially useful in circular motion."],
         deepen: ["For nonzero speed, tangential acceleration has magnitude dv/dt and normal acceleration has magnitude v²/ρ, where ρ is the local radius of curvature."],
+        explore: ["The same tangential-normal decomposition applies to any smooth trajectory. The local radius of curvature replaces the fixed radius of a circle."],
       },
       proyectiles: {
         title: "Projectile motion",
@@ -252,6 +268,7 @@ export default Object.freeze({
           "The parabolic shape results from combining x linear in t with y quadratic in t under these conditions.",
         ],
         deepen: ["Range or flight-time formulas that assume equal initial and final heights must not be applied to launches between different heights."],
+        explore: ["Air resistance couples horizontal and vertical motion because it depends on the velocity vector. The trajectory is no longer exactly parabolic, and range requires a more complete model."],
         checks: [{ question: "At the highest point of an ideal projectile, is the total velocity necessarily zero?", answer: "No. The vertical component is zero, but the horizontal component remains constant in the ideal model." }],
       },
     },
@@ -270,6 +287,7 @@ export default Object.freeze({
           "The greater the speed or the smaller the radius, the greater the acceleration required to change direction.",
         ],
         deepen: ["The radial acceleration vector can be written a_r = −(v²/R) r̂. The negative sign indicates that it points opposite to the outward radial unit vector."],
+        explore: ["On a curved path that is not circular, the normal direction still points toward the local centre of curvature. The radius of curvature may change from point to point."],
         checks: [{ question: "A particle moves around a circle at constant speed. Does it have acceleration?", answer: "Yes. Its velocity direction changes continuously, so there is acceleration toward the centre." }],
       },
       "rapidez-variable": {
@@ -277,6 +295,7 @@ export default Object.freeze({
         essential: ["If speed changes, acceleration has a tangential component in addition to the radial component.", "The tangential component changes speed; the radial component changes direction."],
         understand: ["Total acceleration is the vector sum of two perpendicular components. Neither replaces the other."],
         deepen: ["For a circle of fixed radius, a_t = dv/dt and a_r = v²/R. Total magnitude is the square root of the sum of their squares."],
+        explore: ["If speed and radius change simultaneously, both components may vary with time. Separating them reveals which part bends the path and which part changes the pace of motion."],
       },
       "velocidad-relativa": {
         title: "Relative velocity and reference frames",
@@ -289,6 +308,7 @@ export default Object.freeze({
           "In this unit's classical approximation, time is common to the frames and velocities add vectorially.",
         ],
         deepen: ["The composition relation is valid for classical frames. At speeds comparable with light, another transformation is required, beyond this unit's scope."],
+        explore: ["Vector composition also describes boats in currents and aircraft in wind. In two dimensions, choosing one's own direction can compensate for a medium's velocity."],
       },
     },
   },
@@ -300,12 +320,14 @@ export default Object.freeze({
         essential: ["A planar position can be described by radial distance r and angle θ measured from a reference axis.", "r̂ points radially outward and θ̂ is perpendicular to r̂ in the direction of increasing θ."],
         understand: ["Unlike i and j, polar unit vectors change direction when θ changes. Although their magnitudes remain one, their derivatives are not zero."],
         deepen: ["The relations dr̂/dt = θ̇ θ̂ and dθ̂/dt = −θ̇ r̂ explain the additional terms that appear when differentiating position and velocity."],
+        explore: ["Polar coordinates are natural when a distinguished centre exists. In problems without radial symmetry, a Cartesian basis may give a simpler description."],
       },
       "velocidad-polar": {
         title: "Velocity in polar coordinates",
         essential: ["Velocity combines radial and angular change: one part follows r̂ and another follows θ̂."],
         understand: ["ṙ measures how quickly distance from the origin changes. rθ̇ is the transverse speed caused by rotation."],
         deepen: ["The expression follows by differentiating r = r r̂ and using the fact that r̂ changes with θ. Differentiating only coordinate r is therefore insufficient."],
+        explore: ["A spiral trajectory combines radial change and rotation. Depending on their signs, the object may approach the origin while moving in the direction of increasing θ."],
       },
       "aceleracion-polar": {
         title: "Polar acceleration and its relation to circular motion",

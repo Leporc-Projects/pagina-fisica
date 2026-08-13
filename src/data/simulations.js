@@ -112,6 +112,16 @@ export const getPublishedSimulationsForLocale = (locale = "es") =>
     };
   }).filter((simulation) => simulation.status === "published");
 
+export const getPublishedSimulationCategories = () => {
+  const publishedIds = new Set(getPublishedSimulationsForLocale("es").map(({ id }) => id));
+  return SIMULATION_CATEGORIES.filter((category) =>
+    SIMULATION_CATALOG.some(
+      ({ experienceId, category: entryCategory }) =>
+        entryCategory === category && publishedIds.has(experienceId)
+    )
+  );
+};
+
 export const getSimulationsByCategory = (category, locale = "es") =>
   getPublishedSimulationsForLocale(locale).filter(
     (simulation) => SIMULATION_CATALOG.some(

@@ -104,10 +104,10 @@ export const localizeUnit1Content = (locale) => {
         essential: requireParallelArray(section.essential, localized.essential, `${slug}.${section.id}.essential`),
         understand: requireParallelArray(section.understand, localized.understand, `${slug}.${section.id}.understand`),
         deepen: requireParallelArray(section.deepen, localized.deepen, `${slug}.${section.id}.deepen`),
+        explore: requireParallelArray(section.explore, localized.explore, `${slug}.${section.id}.explore`),
         formulas: section.formulas,
         visualizations: section.visualizations,
       };
-      if (section.explore) result.explore = requireParallelArray(section.explore, localized.explore, `${slug}.${section.id}.explore`);
       if (section.checks) result.checks = requireParallelArray(section.checks, localized.checks, `${slug}.${section.id}.checks`);
       return result;
     });
