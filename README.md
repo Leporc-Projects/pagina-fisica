@@ -52,7 +52,7 @@ pagina-fisica/
 
 Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raíz de `https://aulafisica.com`.
 
-La cobertura pública y estudiantil actual está completa en español e inglés. Las rutas inglesas equivalentes viven bajo `/en/`; esto incluye curso, avisos, cronograma, Unidad 1, práctica, Bonos, videos, evaluación, recursos y Participa. Las herramientas de autoría docente continúan en español y su paridad inglesa queda pendiente para el Bloque 6B.
+La cobertura actual está completa en español e inglés, tanto para el recorrido estudiantil como para las herramientas docentes. Las rutas inglesas equivalentes viven bajo `/en/`; las seis rutas docentes comparten implementación y conservan datos, IDs y claves de máquina entre idiomas.
 
 - `/`: portada y avisos recientes.
 - `/fisica-basica-1`: información general del curso.
@@ -64,8 +64,11 @@ La cobertura pública y estudiantil actual está completa en español e inglés.
 - `/fisica-basica-1/evaluacion`: evaluación oficial y política de privacidad.
 - `/fisica-basica-1/recursos`: guías, bibliografía y recursos externos del curso.
 - `/fisica-basica-1/herramientas`: hub de herramientas docentes locales.
+- `/fisica-basica-1/herramientas/banco`: editor bilingüe de preguntas fijas Question 2.0.
 - `/fisica-basica-1/herramientas/avisos`: editor local de avisos.
 - `/fisica-basica-1/herramientas/simulaciones`: Laboratorio local para configurar, previsualizar y exportar experiencias declarativas.
+- `/fisica-basica-1/herramientas/revision`: Centro local de revisión.
+- `/fisica-basica-1/herramientas/notas`: Organizador local de resultados.
 - `/avisos`: archivo público de avisos.
 - `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
 - `/simulaciones`: catálogo canónico de simulaciones publicadas y categorías futuras.
@@ -75,6 +78,7 @@ La cobertura pública y estudiantil actual está completa en español e inglés.
 - `/en/simulations`: catálogo completo de simulaciones en inglés.
 - `/en/simulations/kinematics-1d`: Cinemática 1D en inglés.
 - `/en/simulations/projectile-2d`: Proyectil 2D en inglés.
+- `/en/basic-physics-1/tools`: hub docente y contrapartes inglesas completas de las cinco herramientas.
 - `/herramientas`: acceso de compatibilidad al hub docente del curso.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
 

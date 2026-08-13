@@ -69,7 +69,7 @@ La cobertura y el flujo están definidos en [I18N.md](./I18N.md). No se crea una
 
 Los textos comunes de interfaz usan claves en los diccionarios `src/i18n/ui/`. Las magnitudes, parámetros, unidades, ecuaciones y límites físicos permanecen compartidos. Las experiencias de simulación añaden texto por locale dentro de su contrato y conservan una única configuración numérica.
 
-Toda nueva feature pública core se desarrolla en ES y EN desde el inicio y no se integra con traducción core faltante. El contenido editorial que sea realmente específico de un idioma declara `locale` explícitamente y no usa fallback silencioso. La cobertura pública estudiantil actual es completa en ambos idiomas; solo las herramientas de autoría docente esperan paridad inglesa en el Bloque 6B.
+Toda nueva feature core se desarrolla en ES y EN desde el inicio y no se integra con traducción faltante. El contenido editorial que sea realmente específico de un idioma declara `locale` explícitamente y no usa fallback silencioso. La cobertura estudiantil y docente actual es completa en ambos idiomas.
 
 ## Registrar un video mediante enlace
 
@@ -244,8 +244,8 @@ historial ni filtros.
 ### Autoría docente mediante paquetes
 
 El Editor de banco crea solo preguntas fijas `singleChoice`, `number` o
-`multiNumber`. Genera el ID provisional, muestra una previsualización y exporta
-un paquete JSON versionado. No debe simular autenticación, modificar el sitio ni
+`multiNumber` con Question `2.0.0`. Genera el ID provisional, exige presentaciones completas ES/EN, muestra una previsualización seleccionable y exporta
+un Question Pack `2.0.0`. La identidad, los IDs de opción o campo, las unidades, las tolerancias y la respuesta se escriben una sola vez; el texto vive en `presentations.es` y `presentations.en`. No debe simular autenticación, modificar el sitio ni
 presentar un borrador como publicado. La dificultad introducida aquí sí es
 editorial porque procede de autoría/revisión docente; nunca se toma de
 `studentDifficultyEstimate`.
@@ -258,7 +258,7 @@ se compongan y revisen MathML o figuras. Para incorporarlo se ejecuta:
 npm run import:questions -- ruta/al/paquete.json
 ```
 
-El importador solo lee JSON, rechaza IDs repetidos, temas o respuestas inválidas
+El importador solo lee JSON, rechaza IDs repetidos, temas, paridad o respuestas inválidas y rechaza paquetes/preguntas `1.x`
 y escribe en el archivo docente separado. Después se revisan contenido,
 notación, dificultad, errores frecuentes y estado mediante un cambio normal del
 repositorio. Nunca se ejecuta JS suministrado ni se publica automáticamente.

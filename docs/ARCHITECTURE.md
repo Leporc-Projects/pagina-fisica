@@ -22,7 +22,7 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 
 La internacionalización añade una capa pura entre rutas/datos y presentación. `src/i18n/config.js` registra locales, `ui/` conserva diccionarios con paridad, `routes.js` relaciona IDs estables con slugs humanos y `metadata.js` deriva canonical y alternates. Español permanece en la raíz e inglés usa `/en/`; no hay detección automática ni persistencia del idioma. La cobertura completa y el procedimiento editorial viven en [I18N.md](./I18N.md).
 
-La superficie pública sigue el contrato `invariant data + localized presentation`: IDs, fechas, porcentajes, scoring, parámetros, reglas y claves de esquema se comparten; `course-localize.js`, los localizadores de Unidad 1/ejercicios/Participa y los diccionarios proyectan únicamente texto visible. La cobertura pública ES/EN es completa. Las herramientas de autoría docente son la excepción deliberada y su paridad inglesa queda para el Bloque 6B.
+El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fechas, porcentajes, scoring, parámetros, reglas y claves de esquema se comparten; los localizadores y diccionarios proyectan únicamente texto visible. La cobertura ES/EN es completa para la superficie pública y para las herramientas docentes.
 
 ## Capas del proyecto
 
@@ -465,15 +465,15 @@ entrar en una tanda. En Bono se materializa antes de crear el intento, y el
 snapshot conserva enunciado, respuesta, parámetros, versión e ID de instancia;
 la corrección y las exportaciones nunca regeneran la pregunta.
 
-`/fisica-basica-1/herramientas/banco` no es administración ni tiene
-autenticación ficticia. Previsualiza `singleChoice`, `number` y `multiNumber`,
-mantiene borradores en memoria y exporta `aula-fisica-question-pack-*.json` con
-esquema versionado, `authorSource: "teacher"` y `status: "draft"`. Contenido
+`/fisica-basica-1/herramientas/banco` y su contraparte inglesa no son administración ni tienen
+autenticación ficticia. Previsualizan `singleChoice`, `number` y `multiNumber`,
+mantienen borradores en memoria y exportan `aula-fisica-question-pack-*.json` con
+Question Pack `2.0.0`, `authorSource: "teacher"` y `status: "draft"`. Cada Question 2.0 conserva una sola identidad, interacción y calificación, junto a `presentations.es` y `presentations.en`; la proyección pública deriva texto localizado sin cambiar IDs, unidades, tolerancias ni respuestas. Contenido
 con `requiresEditorialMath: true` queda fuera de Bonos hasta composición y
 revisión editorial.
 
 El comando `npm run import:questions -- ruta/paquete.json` acepta solo JSON,
-valida IDs, temas, respuestas y duplicados, y combina los borradores en
+valida IDs, paridad ES/EN, respuestas basadas en IDs y duplicados, rechaza esquemas `1.x` con un error explícito y combina los borradores en
 `teacher-questions.json`. No ejecuta el archivo, no publica y no cambia el
 estado a `review` o `published`. El flujo sigue siendo:
 
@@ -485,7 +485,7 @@ editor local → paquete docente JSON → importador del repositorio
 ### Avisos y flujo editorial
 
 `notices.json` conserva los datos y `notices.js` oculta su representación física.
-El esquema vigente `2.0.0` exige un `scope` validado por el contrato compartido:
+El esquema vigente `3.0.0` exige `locale` explícito y un `scope` validado por el contrato compartido:
 
 ```json
 { "type": "global" }

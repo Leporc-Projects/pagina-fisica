@@ -181,12 +181,14 @@ autentique al estudiante podrá desactivar el correo incrustado.
 
 ## Paquetes de autoría docente
 
-El Editor de banco conserva en memoria enunciados, respuestas y metadatos
+El Editor de banco conserva en memoria presentaciones ES/EN, una respuesta invariante y metadatos
 académicos escritos por el docente. El paquete exportado no pide ni incluye
 nombre o correo del autor; registra solo `authorSource: teacher`, ID del paquete,
 fecha y preguntas en borrador. El importador del repositorio procesa JSON como
 datos, no código. Esta autoría académica es distinta de datos estudiantiles y no
 convierte el editor en un servicio remoto.
+
+El locale de la interfaz no modifica contenido importado. El Centro de revisión y el Organizador traducen etiquetas derivadas de enums y mensajes de validación, pero conservan literalmente respuestas, nombres, correos, archivos y valores originales. Los cambios de locale tampoco cambian claves, IDs, políticas o exports de máquina.
 
 El Editor de avisos tampoco recopila datos de estudiantes ni identidad del
 autor. Conserva en memoria título, resumen, contenido, categoría, fecha,
