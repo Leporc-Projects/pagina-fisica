@@ -14,7 +14,12 @@ import { recordsToCsv } from "./local-export.js";
 
 export { escapeCsvField } from "./local-export.js";
 
-export const PARTICIPATION_SCHEMA_VERSION = "1.0.0";
+export const PARTICIPATION_SCHEMA_VERSION = "1.1.0";
+export const LEGACY_PARTICIPATION_SCHEMA_VERSION = "1.0.0";
+export const SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS = Object.freeze([
+  LEGACY_PARTICIPATION_SCHEMA_VERSION,
+  PARTICIPATION_SCHEMA_VERSION,
+]);
 export const STUDENT_PROPOSAL_SCHEMA_VERSION = "1.0.0";
 export const PARTICIPATION_PURPOSES = ["feedback", "learning", "contribution"];
 export const PARTICIPATION_COLLECTIONS = ["local"];
@@ -104,6 +109,13 @@ const normalizePayload = (activityType, payload = {}, locale = "es") => {
         t(locale, "participation.field.support"),
         locale
       );
+      if (normalized.helpfulSupport === "other") {
+        normalized.helpfulSupportOther = cleanRequiredText(
+          payload.helpfulSupportOther,
+          t(locale, "participation.supportOther"),
+          locale
+        );
+      }
     }
 
     return normalized;
@@ -243,7 +255,10 @@ export const validateParticipationResponse = (response) => {
     if (!condition) errors.push(message);
   };
 
-  require(response?.schemaVersion === PARTICIPATION_SCHEMA_VERSION, "schemaVersion inválida.");
+  require(
+    SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS.includes(response?.schemaVersion),
+    "schemaVersion inválida."
+  );
   require(isResponseId(response?.responseId), "responseId inválido.");
   require(ACTIVITY_TYPES.includes(response?.activityType), "activityType inválido.");
   require(
@@ -282,6 +297,23 @@ export const validateParticipationResponse = (response) => {
         SUPPORT_VALUES.includes(response.payload.helpfulSupport),
       "La ayuda sugerida es inválida."
     );
+    if (response?.schemaVersion === PARTICIPATION_SCHEMA_VERSION) {
+      require(
+        response?.payload?.helpfulSupport !== "other" ||
+          hasText(response?.payload?.helpfulSupportOther),
+        "Falta el detalle de la otra ayuda sugerida."
+      );
+      require(
+        response?.payload?.helpfulSupport === "other" ||
+          response?.payload?.helpfulSupportOther === undefined,
+        "El detalle de otra ayuda solo corresponde a helpfulSupport other."
+      );
+    } else {
+      require(
+        response?.payload?.helpfulSupportOther === undefined,
+        "El esquema 1.0.0 no admite el detalle de otra ayuda."
+      );
+    }
   }
 
   if (response?.activityType === "student-question-proposal") {
@@ -338,7 +370,13 @@ export const participationSummary = (response, locale = "es") => {
       ...common,
       response: response.payload.unclearPoint,
       optional: response.payload.helpfulSupport
-        ? [[t(locale, "participation.couldHelp"), labels.support[response.payload.helpfulSupport]]]
+        ? [
+          [t(locale, "participation.couldHelp"), labels.support[response.payload.helpfulSupport]],
+          response.payload.helpfulSupportOther && [
+            t(locale, "participation.supportOtherDetail"),
+            response.payload.helpfulSupportOther,
+          ],
+        ].filter(Boolean)
         : [],
     };
   }
@@ -427,6 +465,7 @@ export const PARTICIPATION_CSV_COLUMNS = [
   "submission_target",
   "unclear_point",
   "helpful_support",
+  "helpful_support_other",
   "proposal_schema_version",
   "proposal_type",
   "proposal_statement",
@@ -463,6 +502,7 @@ const participationCsvRecord = (response) => {
     submission_target: response.submissionTarget,
     unclear_point: response.payload.unclearPoint,
     helpful_support: response.payload.helpfulSupport,
+    helpful_support_other: response.payload.helpfulSupportOther,
     proposal_schema_version: proposal?.schemaVersion,
     proposal_type: proposal?.kind,
     proposal_statement: proposal?.statement,

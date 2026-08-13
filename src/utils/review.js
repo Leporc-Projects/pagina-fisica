@@ -25,7 +25,7 @@ import {
 import { recordsToCsv, sanitizeFilePart } from "./local-export.js";
 import {
   isResponseId,
-  PARTICIPATION_SCHEMA_VERSION,
+  SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS,
   validateParticipationResponse,
 } from "./participation.js";
 import { localizeParticipationData } from "../data/participation-localize.js";
@@ -77,7 +77,7 @@ export const validateImportedDocument = (document) => {
   }
 
   if ("responseId" in document || "activityType" in document) {
-    if (document.schemaVersion !== PARTICIPATION_SCHEMA_VERSION) {
+    if (!SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS.includes(document.schemaVersion)) {
       return invalidResult("unsupported-participation-schema", "La versión del esquema de Participa no está soportada.");
     }
     const validation = validateParticipationResponse(document);
@@ -280,6 +280,7 @@ const searchableParticipationText = (response) => {
     proposal?.intendedConcept,
     proposal?.expectedAnswer,
     proposal?.answerExplanation,
+    response.payload.helpfulSupportOther,
   ].filter(Boolean).join(" ");
 };
 
@@ -393,6 +394,7 @@ const participationCsvRow = (item) => {
   let optionalText = "";
   if (response.activityType === "concept-difficulty") {
     category = response.payload.helpfulSupport ?? "";
+    optionalText = response.payload.helpfulSupportOther ?? "";
   } else if (response.activityType === "student-question-proposal") {
     category = proposal.kind;
     optionalText = [

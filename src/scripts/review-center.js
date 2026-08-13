@@ -196,9 +196,16 @@ export const initializeReviewCenter = () => {
 
   const responseDetails = (response) => {
     if (response.activityType === "concept-difficulty") {
-      return response.payload.helpfulSupport
-        ? [[t(locale, "teacher.review.detail.support"), labels.support[response.payload.helpfulSupport]]]
-        : [];
+      return [
+        response.payload.helpfulSupport && [
+          t(locale, "teacher.review.detail.support"),
+          labels.support[response.payload.helpfulSupport],
+        ],
+        response.payload.helpfulSupportOther && [
+          t(locale, "teacher.review.detail.supportOther"),
+          response.payload.helpfulSupportOther,
+        ],
+      ].filter(Boolean);
     }
     if (response.activityType === "student-question-proposal") {
       return [[t(locale, "teacher.review.detail.type"), labels.proposalType[response.payload.proposal.kind]]];

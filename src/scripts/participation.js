@@ -39,6 +39,18 @@ if (app instanceof HTMLElement) {
     });
   };
 
+  const syncHelpfulSupportOther = (form) => {
+    const field = form.querySelector("[data-helpful-support-other]");
+    const input = form.elements.namedItem("helpfulSupportOther");
+    const selected = form.querySelector('input[name="helpfulSupport"]:checked');
+    const active = selected instanceof HTMLInputElement && selected.value === "other";
+    if (field instanceof HTMLElement) field.hidden = !active;
+    if (input instanceof HTMLTextAreaElement) {
+      input.required = active;
+      if (!active) input.value = "";
+    }
+  };
+
   const clearPreviewEntries = (target) => {
     if (!target) return;
     while (target.firstChild) target.firstChild.remove();
@@ -122,6 +134,7 @@ if (app instanceof HTMLElement) {
         payload: {
           unclearPoint: stringValue(formData, "unclearPoint"),
           helpfulSupport: stringValue(formData, "helpfulSupport"),
+          helpfulSupportOther: stringValue(formData, "helpfulSupportOther"),
         },
       };
     }
@@ -162,6 +175,13 @@ if (app instanceof HTMLElement) {
   });
 
   app.querySelectorAll("[data-activity-form]").forEach((form) => {
+    if (form instanceof HTMLFormElement && form.dataset.activityForm === "concept-difficulty") {
+      form.querySelectorAll('input[name="helpfulSupport"]').forEach((option) => {
+        option.addEventListener("change", () => syncHelpfulSupportOther(form));
+      });
+      syncHelpfulSupportOther(form);
+    }
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (!(form instanceof HTMLFormElement)) return;

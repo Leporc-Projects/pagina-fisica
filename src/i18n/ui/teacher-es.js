@@ -430,6 +430,7 @@ export default Object.freeze({
   "teacher.review.metric.anonymous": "Bonos anónimos",
   "teacher.review.metric.identified": "Bonos identificados",
   "teacher.review.detail.support": "Podría ayudar",
+  "teacher.review.detail.supportOther": "Detalle de otra ayuda",
   "teacher.review.detail.type": "Tipo",
   "teacher.review.detail.category": "Categoría",
   "teacher.review.detail.rating": "Valoración opcional",

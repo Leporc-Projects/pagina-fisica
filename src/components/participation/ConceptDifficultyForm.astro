@@ -42,6 +42,16 @@ const { supportOptions } = localizeParticipationData(locale);
       </div>
     </fieldset>
 
+    <div class="participation-field" data-helpful-support-other hidden>
+      <label for="helpful-support-other">{t(locale, "participation.supportOther")}</label>
+      <textarea
+        id="helpful-support-other"
+        name="helpfulSupportOther"
+        rows="3"
+        placeholder={t(locale, "participation.supportOtherPlaceholder")}
+      ></textarea>
+    </div>
+
     <button class="participation-primary" type="submit">{t(locale, "participation.prepare")}</button>
   </form>
 </section>
