@@ -56,6 +56,7 @@ export const initializeSimulationLab = async () => {
 
   let model = getSimulationModelById(initialExperience.modelId);
   let previewLocale = uiLocale;
+  let mountedPreviewLocale = uiLocale;
   let parameterKeys = Object.keys(model.parameters);
   let presets = structuredClone(initialExperience.presets);
   let observations = [...initialExperience.observations];
@@ -400,8 +401,16 @@ export const initializeSimulationLab = async () => {
   };
 
   const renderPreview = async (experience) => {
+    if (mountedPreviewLocale !== previewLocale) {
+      await destroySimulationExperienceRenderer(rendererRoot);
+    }
     root.querySelectorAll("[data-kinematics-simulation], [data-projectile-simulation], [data-forces-friction-simulation], [data-circular-radial-simulation]").forEach((entry) => { entry.dataset.locale = previewLocale; });
     await mountSimulationExperienceRenderer(rendererRoot, experience);
+    mountedPreviewLocale = previewLocale;
+    rendererRoot.querySelectorAll("[data-preview-i18n]").forEach((node) => {
+      const key = node.dataset.previewI18n;
+      if (key) node.textContent = t(previewLocale, key);
+    });
     const localized = localizeSimulationExperience(experience, previewLocale);
     if (previewHeading) previewHeading.textContent = localized.title;
     if (previewSummary) previewSummary.textContent = localized.summary;

@@ -1,0 +1,55 @@
+---
+import { formatNumber, t } from "../../i18n/index.js";
+import SimulationLinkedChart from "./SimulationLinkedChart.astro";
+
+interface Props {
+  locale?: "es" | "en";
+  readings: Record<string, number | string | object>;
+  views: Record<string, boolean>;
+}
+
+const { locale = "es", readings, views } = Astro.props;
+const display = (value) => formatNumber(locale, Number(value), { maximumFractionDigits: 2 });
+---
+
+<div class="dynamics-analysis-grid">
+  {views.freeBodyDiagram && <section class="dynamics-analysis-card dynamics-external-fbd" aria-labelledby="circular-fbd-title">
+    <div><p class="academic-label" data-preview-i18n="circularDynamics.analysis">{t(locale, "circularDynamics.analysis")}</p><h2 id="circular-fbd-title" data-preview-i18n="circularDynamics.fbdTitle">{t(locale, "circularDynamics.fbdTitle")}</h2></div>
+    <svg viewBox="0 0 360 230" role="img" aria-describedby="circular-fbd-description" data-circular-fbd>
+      <desc id="circular-fbd-description">{t(locale, "circularDynamics.fbdDescription")}</desc>
+      <defs><marker id="circular-fbd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" /></marker></defs>
+      <circle class="dynamics-fbd__pivot" cx="82" cy="116" r="10" />
+      <line class="dynamics-fbd__string" data-circular-fbd-string x1="92" y1="116" x2="254" y2="116" />
+      <circle class="dynamics-fbd__body" cx="270" cy="116" r="20" />
+      <g class="dynamics-fbd__arrow dynamics-fbd__arrow--tension" data-circular-fbd-tension><line x1="250" y1="116" x2="118" y2="116" marker-end="url(#circular-fbd-arrow)"/><text x="174" y="101">T</text></g>
+      <text class="dynamics-fbd__zero" data-circular-fbd-zero x="180" y="176" text-anchor="middle" hidden>{t(locale, "circularDynamics.zeroHorizontalForce")}</text>
+    </svg>
+    <p data-circular-fbd-note data-preview-i18n="circularDynamics.verticalBalance">{t(locale, "circularDynamics.verticalBalance")}</p>
+  </section>}
+
+  <section class="dynamics-analysis-card dynamics-live-equations" aria-labelledby="circular-equations-title">
+    <div><p class="academic-label" data-preview-i18n="circularDynamics.liveModel">{t(locale, "circularDynamics.liveModel")}</p><h2 id="circular-equations-title" data-preview-i18n="circularDynamics.liveEquations">{t(locale, "circularDynamics.liveEquations")}</h2></div>
+    <div class="dynamics-equation-list" data-circular-connected-equations>
+      <math display="block"><mrow><mi>ω</mi><mo>=</mo><mfrac><mi>v</mi><mi>R</mi></mfrac><mo>=</mo><mn data-equation="omega">{display(readings.omega)}</mn><mtext> rad/s</mtext></mrow></math>
+      <math display="block"><mrow><msub><mi>a</mi><mi>r</mi></msub><mo>=</mo><mfrac><msup><mi>v</mi><mn>2</mn></msup><mi>R</mi></mfrac><mo>=</mo><mn data-equation="radial-acceleration">{display(readings.radialAcceleration)}</mn><mtext> m/s²</mtext></mrow></math>
+      <math display="block"><mrow><msub><mi>T</mi><mtext>req</mtext></msub><mo>=</mo><mfrac><mrow><mi>m</mi><msup><mi>v</mi><mn>2</mn></msup></mrow><mi>R</mi></mfrac><mo>=</mo><mn data-equation="required-tension">{display(readings.requiredTension)}</mn><mtext> N</mtext></mrow></math>
+      <math display="block"><mrow><msub><mi>T</mi><mtext>actual</mtext></msub><mo>=</mo><msub><mi>T</mi><mtext>req</mtext></msub><mo>=</mo><mn data-equation="actual-tension">{display(readings.tension)}</mn><mtext> N</mtext></mrow></math>
+      <p><span data-equation="tension-ratio">{display(Number(readings.requiredTension) / Number(readings.maximumTension) * 100)}</span> % {t(locale, "circularDynamics.ofStringLimit")}</p>
+    </div>
+    <div class="dynamics-equation-list" data-circular-free-equations hidden>
+      <math display="block"><mrow><msub><mi>T</mi><mtext>actual</mtext></msub><mo>=</mo><mn>0</mn><mtext> N</mtext><mo>·</mo><mi>a</mi><mo>=</mo><mn>0</mn></mrow></math>
+      <math display="block"><mrow><mover><mi>r</mi><mo>→</mo></mover><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mover><mi>r</mi><mo>→</mo></mover><mtext>break</mtext></msub><mo>+</mo><msub><mover><mi>v</mi><mo>→</mo></mover><mtext>break</mtext></msub><mo>(</mo><mi>t</mi><mo>−</mo><msub><mi>t</mi><mtext>break</mtext></msub><mo>)</mo></mrow></math>
+      <p data-preview-i18n="circularDynamics.hypotheticalRequired">{t(locale, "circularDynamics.hypotheticalRequired")}</p>
+      <math display="block"><mrow><msub><mi>T</mi><mtext>req</mtext></msub><mo>=</mo><mn data-equation="required-tension-free">{display(readings.requiredTension)}</mn><mtext> N</mtext></mrow></math>
+    </div>
+  </section>
+</div>
+
+{views.relationshipGraphs && <section class="dynamics-analysis-card dynamics-relationship" aria-labelledby="circular-relationships-title">
+  <div><p class="academic-label" data-preview-i18n="circularDynamics.relationships">{t(locale, "circularDynamics.relationships")}</p><h2 id="circular-relationships-title" data-preview-i18n="circularDynamics.relationshipsTitle">{t(locale, "circularDynamics.relationshipsTitle")}</h2></div>
+  <div class="dynamics-chart-grid">
+    <SimulationLinkedChart id="circular-tension-speed" chartKey="circular-tension-speed" title="T_req(v)" description={t(locale, "circularDynamics.speedGraphDescription")} descriptionKey="circularDynamics.speedGraphDescription" xLabel="v [m/s]" yLabel="T_req [N]" seriesLabels={["T_req(v)"]} referenceLabel="T_max" message={t(locale, "circularDynamics.speedQuadratic")} messageKey="circularDynamics.speedQuadratic" locale={locale} />
+    <SimulationLinkedChart id="circular-tension-radius" chartKey="circular-tension-radius" title="T_req(R)" description={t(locale, "circularDynamics.radiusGraphDescription")} descriptionKey="circularDynamics.radiusGraphDescription" xLabel="R [m]" yLabel="T_req [N]" seriesLabels={["T_req(R)"]} referenceLabel="T_max" message={t(locale, "circularDynamics.radiusInverse")} messageKey="circularDynamics.radiusInverse" locale={locale} />
+  </div>
+  <p data-circular-relationship-note data-preview-i18n="circularDynamics.relationshipHypothetical" hidden>{t(locale, "circularDynamics.relationshipHypothetical")}</p>
+</section>}

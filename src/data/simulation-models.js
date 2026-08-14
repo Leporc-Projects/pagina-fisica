@@ -164,12 +164,13 @@ export const SIMULATION_MODELS = Object.freeze([
       freeBodyDiagram: view("Diagrama de cuerpo libre", true),
       frictionMeter: view("Medidor del umbral de fricción", true),
       historyGraph: view("Historia de velocidad y fuerza neta", true),
+      frictionRelationGraph: view("Relación entre fricción, umbral y fuerza aplicada", true),
     }),
     translations: translations(
       "Forces, friction, and motion",
       "Dynamics",
       { F: "Applied force", beta: "Surface angle", muS: "Static-friction coefficient", muK: "Kinetic-friction coefficient", m: "Mass", alpha: "Force angle relative to the surface", g: "Gravity", v0: "Initial velocity along the surface" },
-      { scene: "Scene along the surface", readings: "Live readings", vectors: "Physical vectors", freeBodyDiagram: "Free-body diagram", frictionMeter: "Friction-threshold meter", historyGraph: "Velocity and net-force history" }
+      { scene: "Scene along the surface", readings: "Live readings", vectors: "Physical vectors", freeBodyDiagram: "Free-body diagram", frictionMeter: "Friction-threshold meter", historyGraph: "Velocity and net-force history", frictionRelationGraph: "Friction, threshold, and applied-force relationship" }
     ),
   }),
   Object.freeze({
@@ -190,12 +191,13 @@ export const SIMULATION_MODELS = Object.freeze([
       freeBodyDiagram: view("Diagrama de cuerpo libre", true),
       tensionMeter: view("Medidor del límite de tensión", true),
       trail: view("Rastro y círculo de referencia", true),
+      relationshipGraphs: view("Relaciones de tensión con rapidez y radio", true),
     }),
     translations: translations(
       "Circular motion and radial force",
       "Dynamics",
       { v: "Speed", R: "Radius", Tmax: "Maximum string tension", m: "Mass" },
-      { scene: "Circular scene", readings: "Live readings", vectors: "Physical vectors", freeBodyDiagram: "Free-body diagram", tensionMeter: "Tension-limit meter", trail: "Trail and reference circle" }
+      { scene: "Circular scene", readings: "Live readings", vectors: "Physical vectors", freeBodyDiagram: "Free-body diagram", tensionMeter: "Tension-limit meter", trail: "Trail and reference circle", relationshipGraphs: "Tension relationships with speed and radius" }
     ),
   }),
 ]);

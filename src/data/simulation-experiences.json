@@ -256,10 +256,10 @@
           "angled-pull": "Pulling reduces the normal force"
         },
         "observations": [
-          "Use “Static friction adjusts” and increase F slowly. Notice that f_s matches the required force before reaching its maximum.",
+          "Use the “Friction and threshold” graph while increasing F. Notice that f_s matches the required force before reaching its maximum.",
           "Cross the static threshold and compare μ_sN with the kinetic friction that follows.",
           "Compare the inclined-plane presets: the weight component may be smaller or larger than the maximum static friction.",
-          "In “Pulling reduces the normal force”, change alpha and observe how an applied-force component changes N and therefore the available friction.",
+          "In “Pulling reduces the normal force”, change alpha and observe how N changes and shifts both the static-maximum and kinetic curves.",
           "Give the block a positive initial velocity and configure a negative net force: velocity and acceleration can point in opposite directions while the block slows down."
         ]
       }
@@ -274,7 +274,7 @@
       "g": { "default": 9.8, "minimum": 1, "maximum": 15, "step": 0.1, "editable": true },
       "v0": { "default": 0, "minimum": -6, "maximum": 6, "step": 0.5, "editable": true }
     },
-    "views": { "scene": true, "readings": true, "vectors": true, "freeBodyDiagram": true, "frictionMeter": true, "historyGraph": true },
+    "views": { "scene": true, "readings": true, "vectors": true, "freeBodyDiagram": true, "frictionMeter": true, "historyGraph": true, "frictionRelationGraph": true },
     "presets": [
       { "id": "static-below-limit", "label": "Fricción estática se ajusta", "parameters": { "F": 20, "beta": 0, "muS": 0.5, "muK": 0.3, "m": 10, "alpha": 0, "g": 9.8, "v0": 0 } },
       { "id": "static-breaks", "label": "Supera el umbral", "parameters": { "F": 55, "beta": 0, "muS": 0.5, "muK": 0.3, "m": 10, "alpha": 0, "g": 9.8, "v0": 0 } },
@@ -283,10 +283,10 @@
       { "id": "angled-pull", "label": "Tirar reduce la normal", "parameters": { "F": 50, "beta": 0, "muS": 0.5, "muK": 0.25, "m": 10, "alpha": 30, "g": 9.8, "v0": 0 } }
     ],
     "observations": [
-      "Usa “Fricción estática se ajusta” y aumenta F lentamente. Observa que f_s iguala la fuerza necesaria antes de llegar a su máximo.",
+      "Usa la gráfica “Fricción y umbral” mientras aumentas F. Observa que f_s iguala la fuerza necesaria antes de llegar a su máximo.",
       "Cruza el umbral estático y compara μ_sN con la fricción cinética posterior.",
       "Compara los presets de plano inclinado: la componente del peso puede ser menor o mayor que la fricción estática máxima.",
-      "En “Tirar reduce la normal”, cambia alpha y observa cómo una componente de la fuerza aplicada modifica N y, con ello, la fricción disponible.",
+      "En “Tirar reduce la normal”, cambia alpha y observa cómo N desplaza las curvas de máximo estático y fricción cinética.",
       "Da una velocidad inicial positiva y configura una fuerza neta negativa: velocidad y aceleración pueden apuntar en sentidos opuestos mientras el bloque se frena."
     ],
     "contexts": [
@@ -314,9 +314,9 @@
           "wide-radius": "Larger radius"
         },
         "observations": [
-          "Double v while keeping m and R fixed: compare T_required before and after. It should increase by a factor of four.",
-          "Double R with m and v fixed: radial acceleration and required tension are halved.",
-          "Change only m: radial acceleration does not change, but required tension is proportional to m.",
+          "Use the T(v) graph to verify that doubling v quadruples T_req.",
+          "Use T(R) to verify the inverse dependence on radius.",
+          "Change m: a_r does not depend on mass, but the T(v) curve scales with it.",
           "Press “Cut string” at different positions and observe that the free trajectory begins tangent to the circle.",
           "Use “Speed breaks the string”: exceeding T_max does not create an orbit with a different radius; it removes the constraint that sustained circular motion."
         ]
@@ -328,7 +328,7 @@
       "Tmax": { "default": 20, "minimum": 1, "maximum": 100, "step": 1, "editable": true },
       "m": { "default": 1.5, "minimum": 0.5, "maximum": 5, "step": 0.1, "editable": true }
     },
-    "views": { "scene": true, "readings": true, "vectors": true, "freeBodyDiagram": true, "tensionMeter": true, "trail": true },
+    "views": { "scene": true, "readings": true, "vectors": true, "freeBodyDiagram": true, "tensionMeter": true, "trail": true, "relationshipGraphs": true },
     "presets": [
       { "id": "gentle-orbit", "label": "Órbita estable", "parameters": { "v": 2.5, "R": 2, "Tmax": 20, "m": 1 } },
       { "id": "near-limit", "label": "Cerca del límite", "parameters": { "v": 4.8, "R": 2, "Tmax": 24, "m": 2 } },
@@ -337,9 +337,9 @@
       { "id": "wide-radius", "label": "Radio mayor", "parameters": { "v": 5, "R": 4, "Tmax": 20, "m": 2 } }
     ],
     "observations": [
-      "Duplica v manteniendo m y R: compara T_required antes y después. Debe crecer por un factor de cuatro.",
-      "Duplica R con m y v fijos: la aceleración radial y la tensión requerida se reducen a la mitad.",
-      "Cambia solo m: la aceleración radial no cambia, pero la tensión requerida sí es proporcional a m.",
+      "Usa la gráfica T(v) para comprobar que duplicar v cuadruplica T_req.",
+      "Usa T(R) para comprobar la dependencia inversa con el radio.",
+      "Cambia m: a_r no depende de la masa, pero la curva T(v) escala con ella.",
       "Pulsa “Cortar cuerda” en distintas posiciones y observa que la trayectoria libre comienza tangente al círculo.",
       "Usa “La rapidez rompe la cuerda”: superar T_max no crea una órbita de radio distinto; desaparece la restricción que mantenía el movimiento circular."
     ],

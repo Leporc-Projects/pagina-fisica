@@ -27,12 +27,12 @@ export const createCircularRadialP5Renderer = ({ container, getFrame, locale }) 
     };
     p.setup = () => {
       const width = Math.max(320, container.clientWidth);
-      p.createCanvas(width, Math.max(390, Math.min(610, width * 0.66))).parent(container);
+      p.createCanvas(width, Math.max(360, Math.min(560, width * 0.6))).parent(container);
       p.pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
       p.noLoop();
       resizeObserver = new ResizeObserver(() => {
         const width = Math.max(320, container.clientWidth);
-        p.resizeCanvas(width, Math.max(390, Math.min(610, width * 0.66)));
+        p.resizeCanvas(width, Math.max(360, Math.min(560, width * 0.6)));
         p.redraw();
       });
       resizeObserver.observe(container);
@@ -41,7 +41,6 @@ export const createCircularRadialP5Renderer = ({ container, getFrame, locale }) 
       const frame = getFrame();
       const colors = {
         bg: cssColor(container, "--content-canvas", "#f4f7fb"),
-        panel: cssColor(container, "--surface", "#fff"),
         text: cssColor(container, "--text", "#172033"),
         muted: cssColor(container, "--text-muted", "#64748b"),
         grid: cssColor(container, "--border", "#d7deea"),
@@ -54,8 +53,8 @@ export const createCircularRadialP5Renderer = ({ container, getFrame, locale }) 
       };
       p.background(colors.bg);
       const compact = p.width < 620;
-      const center = { x: compact ? p.width / 2 : p.width * 0.42, y: p.height * 0.5 };
-      const available = compact ? Math.min(p.width * 0.31, p.height * 0.29) : Math.min(p.width * 0.3, p.height * 0.37);
+      const center = { x: compact ? p.width * 0.46 : p.width * 0.44, y: p.height * 0.5 };
+      const available = compact ? Math.min(p.width * 0.33, p.height * 0.36) : Math.min(p.width * 0.35, p.height * 0.42);
       const scale = available / frame.parameters.R;
       const toScreen = (point) => ({ x: center.x + point.x * scale, y: center.y - point.y * scale });
       p.noFill(); p.stroke(colors.grid); p.strokeWeight(2);
@@ -93,17 +92,6 @@ export const createCircularRadialP5Renderer = ({ container, getFrame, locale }) 
         const inward = { x: -frame.state.position.x * frame.readings.tension / frame.parameters.R, y: -frame.state.position.y * frame.readings.tension / frame.parameters.R };
         normalizedArrow(puck, inward, colors.tension, "T");
       }
-      if (frame.experience.views.freeBodyDiagram) {
-        const size = compact ? 112 : 152;
-        const x = p.width - size - 20, y = 18;
-        p.noStroke(); p.fill(colors.panel); p.rect(x, y, size, 104, 12);
-        p.fill(colors.text); p.textSize(11); p.textStyle(p.BOLD); p.text(t(locale, "circularDynamics.fbdShort"), x + 11, y + 19);
-        p.fill(colors.accent); p.circle(x + size * 0.7, y + 58, 20);
-        if (frame.state.status === "connected") arrow(x + size * 0.7, y + 58, -58, 0, colors.tension, "T");
-        else { p.fill(colors.muted); p.textStyle(p.NORMAL); p.text(t(locale, "circularDynamics.noHorizontalForce"), x + 11, y + 84); }
-      }
-      p.noStroke(); p.fill(colors.muted); p.textSize(10); p.textStyle(p.NORMAL);
-      p.text(t(locale, "circularDynamics.vectorScaleNote"), 12, p.height - 14);
     };
   };
   instance = new p5(sketch);

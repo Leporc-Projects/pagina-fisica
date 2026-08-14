@@ -1,0 +1,68 @@
+---
+import { formatNumber, t } from "../../i18n/index.js";
+import SimulationLinkedChart from "./SimulationLinkedChart.astro";
+
+interface Props {
+  locale?: "es" | "en";
+  readings: Record<string, number | string>;
+  parameters: Record<string, number>;
+  views: Record<string, boolean>;
+}
+
+const { locale = "es", readings, parameters, views } = Astro.props;
+const display = (value) => formatNumber(locale, Number(value), { maximumFractionDigits: 2 });
+const normalRaw = parameters.m * parameters.g * Math.cos(parameters.beta * Math.PI / 180) - parameters.F * Math.sin(parameters.alpha * Math.PI / 180);
+---
+
+<div class="dynamics-analysis-grid">
+  {views.freeBodyDiagram && <section class="dynamics-analysis-card dynamics-external-fbd" aria-labelledby="forces-fbd-title">
+    <div><p class="academic-label" data-preview-i18n="forcesFriction.analysis">{t(locale, "forcesFriction.analysis")}</p><h2 id="forces-fbd-title" data-preview-i18n="forcesFriction.fbdTitle">{t(locale, "forcesFriction.fbdTitle")}</h2></div>
+    <svg viewBox="0 0 360 250" role="img" aria-describedby="forces-fbd-description" data-forces-fbd>
+      <desc id="forces-fbd-description">{t(locale, "forcesFriction.fbdDescription")}</desc>
+      <defs><marker id="forces-fbd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" /></marker></defs>
+      <line class="dynamics-fbd__orientation" data-fbd-orientation x1="55" y1="188" x2="305" y2="188" />
+      <rect class="dynamics-fbd__body" data-fbd-body x="158" y="105" width="44" height="44" rx="5" />
+      {[["weight", "W"], ["normal", "N"], ["applied", "F"], ["friction", "f"]].map(([key, label]) => <g class={`dynamics-fbd__arrow dynamics-fbd__arrow--${key}`} data-fbd-arrow={key}><line marker-end="url(#forces-fbd-arrow)"/><text>{label}</text></g>)}
+      <g data-fbd-weight-components hidden>
+        <g class="dynamics-fbd__arrow dynamics-fbd__arrow--weight-component" data-fbd-arrow="weightParallel"><line marker-end="url(#forces-fbd-arrow)"/><text>W∥</text></g>
+        <g class="dynamics-fbd__arrow dynamics-fbd__arrow--weight-component" data-fbd-arrow="weightPerpendicular"><line marker-end="url(#forces-fbd-arrow)"/><text>W⊥</text></g>
+      </g>
+    </svg>
+    <label class="dynamics-analysis-toggle"><input type="checkbox" data-resolve-weight /> <span data-preview-i18n="forcesFriction.resolveWeight">{t(locale, "forcesFriction.resolveWeight")}</span></label>
+    <p data-preview-i18n="forcesFriction.componentsNotForces">{t(locale, "forcesFriction.componentsNotForces")}</p>
+  </section>}
+
+  <section class="dynamics-analysis-card dynamics-live-equations" aria-labelledby="forces-equations-title">
+    <div><p class="academic-label" data-preview-i18n="forcesFriction.liveModel">{t(locale, "forcesFriction.liveModel")}</p><h2 id="forces-equations-title" data-preview-i18n="forcesFriction.liveEquations">{t(locale, "forcesFriction.liveEquations")}</h2></div>
+    <div class="dynamics-equation-list">
+      <math display="block"><mrow><mi>N</mi><mo>=</mo><mi>m</mi><mi>g</mi><mi>cos</mi><mi>β</mi><mo>−</mo><mi>F</mi><mi>sin</mi><mi>α</mi><mo>=</mo><mn data-equation="normal">{display(readings.normal)}</mn><mtext> N</mtext></mrow></math>
+      <math display="block"><mrow><msub><mi>F</mi><mtext>drive</mtext></msub><mo>=</mo><mi>F</mi><mi>cos</mi><mi>α</mi><mo>−</mo><mi>m</mi><mi>g</mi><mi>sin</mi><mi>β</mi><mo>=</mo><mn data-equation="drive">{display(-Number(readings.requiredStatic))}</mn><mtext> N</mtext></mrow></math>
+      <div data-equation-regime="static">
+        <math display="block"><mrow><msub><mi>f</mi><mi>s</mi></msub><mo>=</mo><mo>−</mo><msub><mi>F</mi><mtext>drive</mtext></msub><mo>=</mo><mn data-equation="friction">{display(readings.friction)}</mn><mtext> N</mtext></mrow></math>
+        <math display="block"><mrow><mo>|</mo><msub><mi>f</mi><mi>s</mi></msub><mo>|</mo><mo>≤</mo><msub><mi>μ</mi><mi>s</mi></msub><mi>N</mi><mo>·</mo><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub><mo>=</mo><mn>0</mn><mo>·</mo><mi>a</mi><mo>=</mo><mn>0</mn></mrow></math>
+      </div>
+      <div data-equation-regime="kinetic" hidden>
+        <math display="block"><mrow><mo>|</mo><msub><mi>f</mi><mi>k</mi></msub><mo>|</mo><mo>=</mo><msub><mi>μ</mi><mi>k</mi></msub><mi>N</mi><mo>=</mo><mn data-equation="friction-absolute">{display(Math.abs(Number(readings.friction)))}</mn><mtext> N</mtext></mrow></math>
+        <math display="block"><mrow><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub><mo>=</mo><mn data-equation="net">{display(readings.netParallel)}</mn><mtext> N</mtext><mo>·</mo><mi>a</mi><mo>=</mo><mfrac><mrow><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub></mrow><mi>m</mi></mfrac><mo>=</mo><mn data-equation="acceleration">{display(readings.a)}</mn><mtext> m/s²</mtext></mrow></math>
+      </div>
+      <div data-equation-regime="contact-invalid" hidden>
+        <math display="block"><mrow><msub><mi>N</mi><mtext>raw</mtext></msub><mo>=</mo><mn data-equation="normal-raw">{display(normalRaw)}</mn><mtext> N</mtext><mo>≤</mo><mn>0</mn></mrow></math>
+        <p data-preview-i18n="forcesFriction.constraintStops">{t(locale, "forcesFriction.constraintStops")}</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+{views.historyGraph && <section class="dynamics-analysis-card dynamics-history" aria-labelledby="forces-history-title">
+  <div><p class="academic-label" data-preview-i18n="forcesFriction.evolution">{t(locale, "forcesFriction.evolution")}</p><h2 id="forces-history-title" data-preview-i18n="forcesFriction.historyTitle">{t(locale, "forcesFriction.historyTitle")}</h2></div>
+  <div class="dynamics-chart-grid">
+    <SimulationLinkedChart id="forces-velocity-history" chartKey="forces-velocity-history" title="v(t)" description={t(locale, "forcesFriction.velocityHistoryDescription")} descriptionKey="forcesFriction.velocityHistoryDescription" xLabel="t [s]" yLabel="v [m/s]" seriesLabels={["v(t)"]} locale={locale} />
+    <SimulationLinkedChart id="forces-net-history" chartKey="forces-net-history" title="ΣF∥(t)" description={t(locale, "forcesFriction.netHistoryDescription")} descriptionKey="forcesFriction.netHistoryDescription" xLabel="t [s]" yLabel="ΣF∥ [N]" seriesLabels={["ΣF∥(t)"]} locale={locale} />
+  </div>
+</section>}
+
+{views.frictionRelationGraph && <section class="dynamics-analysis-card dynamics-relationship" aria-labelledby="friction-relation-title">
+  <div><p class="academic-label" data-preview-i18n="forcesFriction.relationship">{t(locale, "forcesFriction.relationship")}</p><h2 id="friction-relation-title" data-preview-i18n="forcesFriction.relationshipTitle">{t(locale, "forcesFriction.relationshipTitle")}</h2></div>
+  <SimulationLinkedChart id="forces-friction-relation" chartKey="forces-friction-relation" title={t(locale, "forcesFriction.relationshipChartTitle")} titleKey="forcesFriction.relationshipChartTitle" description={t(locale, "forcesFriction.relationshipDescription")} descriptionKey="forcesFriction.relationshipDescription" xLabel="F [N]" yLabel="|f| [N]" seriesLabels={[t(locale, "forcesFriction.seriesRequired"), t(locale, "forcesFriction.seriesStaticMaximum"), t(locale, "forcesFriction.seriesKinetic")]} seriesLabelKeys={["forcesFriction.seriesRequired", "forcesFriction.seriesStaticMaximum", "forcesFriction.seriesKinetic"]} locale={locale} />
+  <p class="dynamics-relationship__state" data-friction-relation-state data-preview-i18n="forcesFriction.relationStatic">{t(locale, "forcesFriction.relationStatic")}</p>
+</section>}

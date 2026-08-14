@@ -57,7 +57,8 @@
 .dynamics-controls,
 .dynamics-data-grid,
 .dynamics-readings,
-.dynamics-meter {
+.dynamics-meter,
+.dynamics-analysis-card {
   display: grid;
   min-width: 0;
   gap: 1rem;
@@ -98,7 +99,7 @@
 
 .dynamics-canvas__surface {
   width: 100%;
-  min-height: 390px;
+  min-height: 360px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -153,6 +154,160 @@
 .dynamics-view-toggles label { display: inline-flex; align-items: center; gap: .35rem; color: var(--text); font-weight: 700; }
 .dynamics-view-toggles input { accent-color: var(--accent); }
 
+.dynamics-vector-legend {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.dynamics-analysis-grid,
+.dynamics-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  min-width: 0;
+}
+
+.dynamics-analysis-card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  padding: clamp(1rem, 2.5vw, 1.35rem);
+}
+
+.dynamics-analysis-card h2 {
+  margin-top: .3rem;
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  letter-spacing: -.025em;
+}
+
+.dynamics-analysis-card h3 {
+  font-size: 1rem;
+  letter-spacing: -.015em;
+}
+
+.dynamics-analysis-card > p,
+.dynamics-analysis-card figcaption p,
+.dynamics-external-fbd > p {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.dynamics-external-fbd svg {
+  display: block;
+  width: 100%;
+  max-height: 18rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--content-canvas);
+}
+
+.dynamics-external-fbd [hidden] { display: none; }
+
+.dynamics-fbd__orientation {
+  stroke: var(--border-strong);
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+
+.dynamics-fbd__body {
+  fill: var(--accent);
+  stroke: var(--accent-strong);
+  stroke-width: 2;
+}
+
+.dynamics-fbd__pivot { fill: var(--accent); }
+.dynamics-fbd__string { stroke: var(--text-muted); stroke-width: 3; }
+.dynamics-fbd__arrow line { stroke: currentColor; stroke-width: 3; }
+.dynamics-fbd__arrow text { fill: currentColor; font-size: 14px; font-weight: 800; }
+.dynamics-fbd__arrow--applied { color: var(--data-series-1); }
+.dynamics-fbd__arrow--weight,
+.dynamics-fbd__arrow--weight-component { color: var(--data-series-2); }
+.dynamics-fbd__arrow--normal,
+.dynamics-fbd__arrow--tension { color: var(--data-series-3); }
+.dynamics-fbd__arrow--friction { color: var(--data-series-4); }
+.dynamics-fbd__zero { fill: var(--text-muted); font-size: 14px; font-weight: 750; }
+
+.dynamics-analysis-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+.dynamics-analysis-toggle input { accent-color: var(--accent); }
+
+.dynamics-equation-list {
+  display: grid;
+  gap: .65rem;
+}
+
+.dynamics-equation-list math {
+  max-width: 100%;
+  overflow-x: auto;
+  border-left: 3px solid var(--accent);
+  background: var(--formula-bg);
+  color: var(--text);
+  padding: .65rem .75rem;
+  font-size: .98rem;
+}
+
+.dynamics-equation-list > p {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.simulation-linked-chart {
+  display: grid;
+  min-width: 0;
+  gap: .65rem;
+}
+
+.simulation-linked-chart svg {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--content-canvas);
+}
+
+.simulation-linked-chart__plot { fill: var(--surface); }
+.simulation-linked-chart__grid line { stroke: var(--border); stroke-width: 1; }
+.simulation-linked-chart__ticks text { fill: var(--text-muted); font-size: 11px; }
+.simulation-linked-chart__ticks .simulation-linked-chart__axis-label { fill: var(--text); font-size: 12px; font-weight: 750; }
+.simulation-linked-chart__zero { stroke: var(--border-strong); stroke-width: 1.5; }
+.simulation-linked-chart__cursor { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.simulation-linked-chart__reference { stroke: var(--status-warning-text); stroke-width: 2; stroke-dasharray: 9 5; }
+.simulation-linked-chart__series { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.simulation-linked-chart__series--1 { stroke: var(--data-series-1); }
+.simulation-linked-chart__series--2 { stroke: var(--data-series-3); stroke-dasharray: 10 5; }
+.simulation-linked-chart__series--3 { stroke: var(--data-series-4); stroke-dasharray: 3 4; }
+.simulation-linked-chart__current { stroke: var(--surface); stroke-width: 2; }
+.simulation-linked-chart__current--1 { fill: var(--data-series-1); }
+.simulation-linked-chart__current--2 { fill: var(--data-series-3); }
+.simulation-linked-chart__current--3 { fill: var(--data-series-4); }
+.simulation-linked-chart [hidden] { display: none; }
+
+.simulation-linked-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem 1rem;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: .7rem;
+}
+
+.simulation-linked-chart__legend li { display: inline-flex; align-items: center; gap: .4rem; }
+.simulation-linked-chart__swatch { display: inline-block; width: 1.8rem; border-top: 3px solid var(--data-series-1); }
+.simulation-linked-chart__swatch--2 { border-color: var(--data-series-3); border-top-style: dashed; }
+.simulation-linked-chart__swatch--3 { border-color: var(--data-series-4); border-top-style: dotted; }
+.simulation-linked-chart__swatch--reference { border-color: var(--status-warning-text); border-top-style: dashed; }
+.dynamics-relationship__state { font-weight: 750; }
+
 .dynamics-data-grid {
   grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
 }
@@ -187,7 +342,7 @@
 .dynamics-meter dd { margin-top: .2rem; font-family: var(--font-mono); font-size: .95rem; font-weight: 750; }
 .dynamics-readings dd small { color: var(--text-muted); font-size: .7rem; }
 .dynamics-meter progress { width: 100%; height: 1rem; accent-color: var(--accent); }
-.dynamics-meter dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
+.dynamics-meter dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; }
 
 .dynamics-contact-warning {
   border: 1px solid var(--status-warning-border);
@@ -273,13 +428,16 @@
   .forces-friction-page-intro,
   .circular-dynamics-page-intro,
   .dynamics-data-grid,
+  .dynamics-analysis-grid,
+  .dynamics-chart-grid,
   .forces-friction-observe ol,
   .circular-dynamics-observe ol { grid-template-columns: 1fr; }
   .dynamics-canvas figcaption,
   .dynamics-playback { align-items: stretch; flex-direction: column; }
   .dynamics-status { min-width: 0; }
-  .dynamics-canvas__surface { min-height: 390px; }
+  .dynamics-canvas__surface { min-height: 360px; }
   .dynamics-readings dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dynamics-meter dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -290,4 +448,5 @@
   .dynamics-controls,
   .dynamics-playback { break-inside: avoid; }
   .dynamics-controls { position: static; }
+  .simulation-floating-playback { display: none !important; }
 }

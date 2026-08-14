@@ -7,13 +7,15 @@ export const CIRCULAR_RADIAL_LIMITS = Object.freeze({
 
 const vectorMagnitude = ({ x, y }) => Math.hypot(x, y);
 
+export const getRequiredCircularTension = (params) => params.m * params.v ** 2 / params.R;
+
 export const getConnectedCircularState = (params, t, theta0 = 0) => {
   const omega = params.v / params.R;
   const theta = theta0 + omega * t;
   const cosine = Math.cos(theta);
   const sine = Math.sin(theta);
   const radialAcceleration = params.v ** 2 / params.R;
-  const tension = params.m * radialAcceleration;
+  const tension = getRequiredCircularTension(params);
   return Object.freeze({
     t,
     theta,
@@ -60,7 +62,7 @@ export const cutCircularString = (state, params) =>
 export const stepCircularRadial = (state, params, dt) => {
   if (!Number.isFinite(dt) || dt < 0) throw new RangeError("dt debe ser finito y no negativo.");
   if (state.status === "connected") {
-    const requiredTension = params.m * params.v ** 2 / params.R;
+    const requiredTension = getRequiredCircularTension(params);
     if (requiredTension > params.Tmax) {
       return breakCircularString(state, params, "broken-overload");
     }
@@ -91,8 +93,8 @@ export const getCircularRadialReadings = (state, params) => Object.freeze({
   radius: params.R,
   speed: vectorMagnitude(state.velocity),
   radialAcceleration: state.status === "connected" ? params.v ** 2 / params.R : 0,
-  requiredTension: params.m * params.v ** 2 / params.R,
-  tension: state.status === "connected" ? params.m * params.v ** 2 / params.R : 0,
+  requiredTension: getRequiredCircularTension(params),
+  tension: state.status === "connected" ? getRequiredCircularTension(params) : 0,
   maximumTension: params.Tmax,
   status: state.status,
   position: state.position,

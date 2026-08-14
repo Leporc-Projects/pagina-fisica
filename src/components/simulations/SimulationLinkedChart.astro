@@ -1,0 +1,57 @@
+---
+import { DYNAMICS_CHART_VIEW } from "../../utils/dynamics-charts.js";
+import { t } from "../../i18n/index.js";
+
+interface Props {
+  id: string;
+  chartKey: string;
+  title: string;
+  description: string;
+  xLabel: string;
+  yLabel: string;
+  seriesLabels: string[];
+  message?: string;
+  referenceLabel?: string;
+  locale?: "es" | "en";
+  titleKey?: string;
+  descriptionKey?: string;
+  messageKey?: string;
+  seriesLabelKeys?: string[];
+}
+
+const { id, chartKey, title, description, xLabel, yLabel, seriesLabels, message, referenceLabel, locale = "es", titleKey, descriptionKey, messageKey, seriesLabelKeys = [] } = Astro.props;
+const { width, height, plot } = DYNAMICS_CHART_VIEW;
+const clipId = `${id}-clip`;
+const descriptionId = `${id}-description`;
+const indexes = [0, 1, 2, 3, 4];
+---
+
+<figure class="simulation-linked-chart" data-simulation-chart={chartKey}>
+  <figcaption><h3 data-preview-i18n={titleKey}>{title}</h3>{message && <p data-preview-i18n={messageKey}>{message}</p>}</figcaption>
+  <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-describedby={descriptionId}>
+    <desc id={descriptionId} data-preview-i18n={descriptionKey}>{description}</desc>
+    <defs><clipPath id={clipId}><rect x={plot.left} y={plot.top} width={plot.width} height={plot.height} /></clipPath></defs>
+    <rect class="simulation-linked-chart__plot" x={plot.left} y={plot.top} width={plot.width} height={plot.height} />
+    <g class="simulation-linked-chart__grid" aria-hidden="true">
+      {indexes.map((index) => <line data-grid-x={index} />)}
+      {indexes.map((index) => <line data-grid-y={index} />)}
+    </g>
+    <g class="simulation-linked-chart__ticks" aria-hidden="true">
+      {indexes.map((index) => <text data-tick-x={index} y={plot.top + plot.height + 18} text-anchor="middle"></text>)}
+      {indexes.map((index) => <text data-tick-y={index} x={plot.left - 9} text-anchor="end" dominant-baseline="middle"></text>)}
+      <text class="simulation-linked-chart__axis-label" x={plot.left + plot.width / 2} y={height - 6} text-anchor="middle">{xLabel}</text>
+      <text class="simulation-linked-chart__axis-label" x="15" y={plot.top + plot.height / 2} text-anchor="middle" transform={`rotate(-90 15 ${plot.top + plot.height / 2})`}>{yLabel}</text>
+    </g>
+    <g clip-path={`url(#${clipId})`}>
+      <line class="simulation-linked-chart__zero" data-chart-zero />
+      <line class="simulation-linked-chart__reference" data-chart-reference hidden />
+      <line class="simulation-linked-chart__cursor" data-chart-cursor hidden />
+      {seriesLabels.map((_, index) => <path class={`simulation-linked-chart__series simulation-linked-chart__series--${index + 1}`} data-series-path={index} hidden />)}
+      {seriesLabels.map((_, index) => <circle class={`simulation-linked-chart__current simulation-linked-chart__current--${index + 1}`} data-series-current={index} r="5" hidden />)}
+    </g>
+  </svg>
+  {(seriesLabels.length > 1 || referenceLabel) && <ul class="simulation-linked-chart__legend" aria-label={t(locale, "simulation.legend")}>
+    {seriesLabels.map((label, index) => <li><span class={`simulation-linked-chart__swatch simulation-linked-chart__swatch--${index + 1}`} aria-hidden="true"></span><span data-preview-i18n={seriesLabelKeys[index]}>{label}</span></li>)}
+    {referenceLabel && <li><span class="simulation-linked-chart__swatch simulation-linked-chart__swatch--reference" aria-hidden="true"></span>{referenceLabel}</li>}
+  </ul>}
+</figure>
