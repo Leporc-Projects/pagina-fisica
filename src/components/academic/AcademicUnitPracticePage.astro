@@ -1,0 +1,46 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import OpenPractice from "./OpenPractice.astro";
+import AcademicUnitNav from "./AcademicUnitNav.astro";
+import { getAcademicUnitAdapter } from "../../data/physics/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
+import { t } from "../../i18n/index.js";
+import { withBase } from "../../utils/paths.js";
+
+const { unitNumber, locale = "es" } = Astro.props;
+const adapter = getAcademicUnitAdapter(unitNumber);
+if (!adapter) throw new Error(`No existe práctica registrada para la unidad ${unitNumber}.`);
+const unit = adapter.localizeUnit(locale);
+const localizedBankItems = adapter.getBankItems(locale);
+const localizedVisualizations = Object.fromEntries(
+  adapter.visualizationIds.map((id) => [id, adapter.getVisualization(id, locale)])
+);
+const publicLearningExercises = localizedBankItems.filter(
+  (exercise) => exercise.status !== "draft" && exercise.purpose === "learning" && exercise.exposure === "public"
+);
+---
+
+<BaseLayout
+  title={t(locale, "practice.pageTitle", { unit: unit.shortTitle })}
+  description={t(locale, "practice.pageDescription", { unitTitle: unit.title })}
+  locale={locale}
+  routeId={unit.practiceRouteId}
+>
+  <article class="unit-practice-page">
+    <header class="unit-topic-hero">
+      <nav class="academic-breadcrumb" aria-label={t(locale, "unitPage.breadcrumb")}>
+        <a href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_PRACTICE, locale))}>{t(locale, "practice.catalogBreadcrumb")}</a>
+        <span aria-hidden="true">/</span>
+        <a href={withBase(unit.route)}>{unit.shortTitle}</a>
+      </nav>
+      <div class="unit-topic-hero__heading">
+        <p class="eyebrow eyebrow--dark">{t(locale, "practice.eyebrow", { unit: unit.shortTitle })}</p>
+        <h1>{t(locale, "practice.unitTitle", { unitTitle: unit.title })}</h1>
+        <p>{t(locale, "practice.unitDescription")}</p>
+      </div>
+      <aside class="practice-policy"><strong>{t(locale, "practice.policyTitle")}</strong><p>{t(locale, "practice.policyText")}</p></aside>
+    </header>
+    <AcademicUnitNav unit={unit} locale={locale} />
+    <OpenPractice exercises={publicLearningExercises} topics={unit.topics} visualizations={localizedVisualizations} present={adapter.presentRichText} locale={locale} />
+  </article>
+</BaseLayout>

@@ -1,0 +1,42 @@
+---
+// La navegación recibe la unidad ya localizada; no conoce carpetas ni números.
+import { t } from "../../i18n/index.js";
+import { withBase } from "../../utils/paths.js";
+
+interface Props {
+  unit: any;
+  activeSlug?: string | null;
+  locale?: "es" | "en";
+}
+
+const { unit, activeSlug = null, locale = "es" } = Astro.props;
+const activeTopic = unit.topics.find((topic) => topic.slug === activeSlug);
+const currentLabel = activeSlug === "index"
+  ? t(locale, "unitNav.index")
+  : activeTopic?.shortTitle ?? t(locale, "unitNav.explore");
+---
+
+<details class="unit-context-nav">
+  <summary>
+    <span>{unit.shortTitle}</span>
+    <strong>{currentLabel}</strong>
+    <small>{t(locale, "unitNav.open")}</small>
+  </summary>
+
+  <nav class="unit-topic-nav" aria-label={t(locale, "unitNav.label", { unit: unit.shortTitle })}>
+    <a class="unit-topic-nav__link" href={withBase(unit.route)} aria-current={activeSlug === "index" ? "page" : undefined}>
+      <span>00</span>
+      <strong>{t(locale, "unitNav.index")}</strong>
+    </a>
+    {unit.topics.map((topic) => (
+      <a
+        class:list={["unit-topic-nav__link", topic.priority === "extension" && "unit-topic-nav__link--extension"]}
+        href={withBase(topic.route)}
+        aria-current={activeSlug === topic.slug ? "page" : undefined}
+      >
+        <span>{String(topic.order).padStart(2, "0")}</span>
+        <strong>{topic.shortTitle}</strong>
+      </a>
+    ))}
+  </nav>
+</details>

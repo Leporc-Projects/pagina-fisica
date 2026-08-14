@@ -1,53 +1,10 @@
 ---
-// Navegación única de Unidad 1; deriva rutas y estado activo de UNIT_1.
-import { localizeUnit1 } from "../../data/physics/unit-1/localize.js";
-import { t } from "../../i18n/index.js";
-import { withBase } from "../../utils/paths.js";
+// Wrapper de compatibilidad para páginas auxiliares históricas de Unidad 1.
+import AcademicUnitNav from "./AcademicUnitNav.astro";
+import { getLocalizedAcademicUnit } from "../../data/physics/index.js";
 
-interface Props {
-  activeSlug?: string | null;
-  locale?: "es" | "en";
-}
-
-// Las páginas auxiliares, como la práctica, omiten el estado activo porque no
-// representan ninguno de los destinos incluidos en esta navegación.
 const { activeSlug = null, locale = "es" } = Astro.props;
-const unit = localizeUnit1(locale);
-const activeTopic = unit.topics.find((topic) => topic.slug === activeSlug);
-const currentLabel = activeSlug === "index"
-  ? t(locale, "unitNav.index")
-  : activeTopic?.shortTitle ?? t(locale, "unitNav.explore");
+const unit = getLocalizedAcademicUnit(1, locale);
 ---
 
-<details class="unit-context-nav">
-  <summary>
-    <span>{unit.shortTitle}</span>
-    <strong>{currentLabel}</strong>
-    <small>{t(locale, "unitNav.open")}</small>
-  </summary>
-
-  <nav class="unit-topic-nav" aria-label={t(locale, "unitNav.label", { unit: unit.shortTitle })}>
-    <a
-      class="unit-topic-nav__link"
-      href={withBase(unit.route)}
-      aria-current={activeSlug === "index" ? "page" : undefined}
-    >
-      <span>00</span>
-      <strong>{t(locale, "unitNav.index")}</strong>
-    </a>
-
-    {unit.topics.map((topic) => (
-      <a
-        class:list={[
-          "unit-topic-nav__link",
-          topic.priority === "extension" && "unit-topic-nav__link--extension",
-        ]}
-        href={withBase(topic.route)}
-        aria-current={activeSlug === topic.slug ? "page" : undefined}
-      >
-        <span>{String(topic.order).padStart(2, "0")}</span>
-        <strong>{topic.shortTitle}</strong>
-      </a>
-    ))}
-  </nav>
-</details>
+<AcademicUnitNav unit={unit} activeSlug={activeSlug} locale={locale} />

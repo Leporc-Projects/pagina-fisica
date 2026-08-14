@@ -1,6 +1,8 @@
 // Metadatos editoriales de la Unidad 1. Las rutas, el orden y la clasificación
 // de profundidad se consumen en índices, navegación, páginas y validaciones.
 
+import { ROUTE_IDS } from "../../../i18n/routes.js";
+
 const unitRoute = "/fisica-basica-1/unidades/unidad-1";
 
 export const UNIT_1 = {
@@ -10,7 +12,10 @@ export const UNIT_1 = {
   shortTitle: "Unidad 1",
   chapters: "Capítulos 1, 2 y 3",
   status: "review",
+  priority: "core",
+  routeId: ROUTE_IDS.COURSE_UNIT_1,
   route: unitRoute,
+  practiceRouteId: ROUTE_IDS.COURSE_UNIT_1_PRACTICE,
   practiceRoute: "/fisica-basica-1/ejercicios/unidad-1",
   bonusRoute: "/fisica-basica-1/bonos",
   description:

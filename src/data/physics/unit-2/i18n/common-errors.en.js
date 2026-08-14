@@ -1,0 +1,18 @@
+export default Object.freeze({
+  "force-required-for-motion": ["Assuming every moving object needs a forward net force.", "Net force is required to change velocity; constant velocity can persist with zero net force."],
+  "zero-net-force-means-no-forces": ["Reading zero net force as the absence of individual forces.", "Make the complete inventory and add vectors: nonzero forces can balance."],
+  "acceleration-follows-velocity": ["Forcing acceleration to point along velocity.", "Acceleration points with net force; compare it with v only to interpret how motion changes."],
+  "use-one-force-instead-of-net-force": ["Applying ma to one force while ignoring the others.", "Choose the system, add every external force, and apply the second law to the resultant."],
+  "mass-equals-weight": ["Using mass and weight as synonyms.", "Mass measures inertia in kg; weight is a gravitational force in N."],
+  "weight-measured-in-kg": ["Expressing weight in kilograms.", "The kilogram measures mass. Calculate or measure weight and report it in newtons."],
+  "g-always-exactly-9-8": ["Treating g = 9.8 m/s² as an exact universal value.", "Use the stated field for the location and recognize 9.8 m/s² as a local Earth approximation."],
+  "third-law-same-body": ["Drawing both forces of a third-law pair on the same body.", "Name agent and receiver: one force acts on A and the other on B."],
+  "third-law-pair-cancels": ["Cancelling a third-law pair in one body's FBD.", "The pair acts on different bodies; it becomes internal only when the system contains both."],
+  "third-law-equal-acceleration": ["Inferring equal accelerations from equal interaction forces.", "Apply the second law separately: masses and other forces may differ."],
+  "include-velocity-in-fbd": ["Including velocity as a force arrow.", "An FBD contains interactions on the system; show velocity in a separate kinematic diagram."],
+  "include-ma-as-force": ["Adding ma as though it were a force.", "ma is the dynamical result of the sum, not another interaction."],
+  "include-reaction-force-in-same-fbd": ["Adding the force exerted by the system on another body.", "Draw only forces that act on the isolated system."],
+  "components-as-extra-forces": ["Counting a force and its components as simultaneous forces.", "Use the original vector or its components for addition, but not both inventories."],
+  "forget-system-boundary": ["Listing forces before defining the system.", "Draw the boundary first; each interaction crossing it determines an external force."],
+  "non-inertial-frame-used-as-inertial": ["Applying standard Newton form in an accelerating frame without recognizing it.", "Test the frame with the first law or analyze from an inertial frame before introducing apparent forces."],
+});

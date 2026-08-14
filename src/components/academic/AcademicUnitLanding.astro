@@ -1,0 +1,80 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import UnitLearningMap from "./UnitLearningMap.astro";
+import { getAcademicUnitAdapter } from "../../data/physics/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
+import { t } from "../../i18n/index.js";
+import { withBase } from "../../utils/paths.js";
+
+const { unitNumber, locale = "es" } = Astro.props;
+const adapter = getAcademicUnitAdapter(unitNumber);
+if (!adapter) throw new Error(`No existe una unidad académica desarrollada con número ${unitNumber}.`);
+const unit = adapter.localizeUnit(locale);
+const exerciseCount = adapter.getFixedExercises(locale).length;
+---
+
+<BaseLayout title={`${unit.shortTitle} · ${unit.title}`} description={unit.description} locale={locale} routeId={unit.routeId}>
+  <article class="unit-landing">
+    <header class="unit-landing__hero">
+      <nav class="academic-breadcrumb" aria-label={t(locale, "unitPage.breadcrumb")}>
+        <a href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_UNITS, locale))}>{t(locale, "unitPage.units")}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{unit.shortTitle}</span>
+      </nav>
+      <div>
+        <p class="eyebrow eyebrow--dark">{unit.shortTitle} · {unit.chapters}</p>
+        <h1>{unit.title}</h1>
+        <p>{unit.description}</p>
+      </div>
+      <dl class="unit-landing__facts">
+        <div><dt>{t(locale, "unitPage.topics")}</dt><dd>{unit.topics.length}</dd></div>
+        <div><dt>{t(locale, "unitPage.exercises")}</dt><dd>{exerciseCount}</dd></div>
+      </dl>
+    </header>
+
+    <UnitLearningMap unitLabel={unit.shortTitle} unitTitle={unit.title} topics={unit.topics} locale={locale} />
+
+    <section class="unit-study-guide" aria-labelledby="study-guide-title">
+      <div>
+        <p class="academic-label">{t(locale, "unitPage.progressiveDepth")}</p>
+        <h2 id="study-guide-title">{t(locale, "unitPage.readEssential")}</h2>
+        <p>{t(locale, "unitPage.studyGuide")}</p>
+      </div>
+      <ol>
+        <li><strong>{t(locale, "academic.essential")}</strong><span>{t(locale, "unitPage.essentialSummary")}</span></li>
+        <li><strong>{t(locale, "academic.understand")}</strong><span>{t(locale, "unitPage.understandSummary")}</span></li>
+        <li><strong>{t(locale, "academic.deepen")}</strong><span>{t(locale, "unitPage.deepenSummary")}</span></li>
+        <li><strong>{t(locale, "academic.explore")}</strong><span>{t(locale, "unitPage.exploreSummary")}</span></li>
+      </ol>
+    </section>
+
+    <section class="unit-source-note" aria-labelledby="unit-source-title">
+      <div>
+        <p class="academic-label">{t(locale, "unitPage.academicScope")}</p>
+        <h2 id="unit-source-title">{t(locale, "unitPage.sourcesModels")}</h2>
+      </div>
+      <div><p>{t(locale, "unitPage.sourceText")}</p><p>{t(locale, "unitPage.modelText")}</p></div>
+    </section>
+
+    <aside class="unit-practice-cta">
+      <div>
+        <p class="academic-label">{t(locale, "unitPage.exerciseBank")}</p>
+        <h2>{t(locale, "unitPage.practiceTitle", { count: exerciseCount })}</h2>
+        <p>{t(locale, "unitPage.practiceDescription")}</p>
+      </div>
+      <div class="unit-practice-cta__links">
+        <a class="text-link" href={withBase(unit.practiceRoute)}>{t(locale, "unitPage.openPractice", { unit: unit.shortTitle })}</a>
+        {unit.bonusRoute && <a class="text-link" href={withBase(unit.bonusRoute)}>{t(locale, "unitPage.openBonus")}</a>}
+      </div>
+    </aside>
+
+    <aside class="unit-practice-cta unit-feedback-link">
+      <div>
+        <p class="academic-label">{t(locale, "unitPage.participation")}</p>
+        <h2>{t(locale, "unitPage.unclear")}</h2>
+        <p>{t(locale, "unitPage.participationDescription")}</p>
+      </div>
+      <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_PARTICIPATE, locale))}>{t(locale, "unitPage.openParticipation")}</a>
+    </aside>
+  </article>
+</BaseLayout>

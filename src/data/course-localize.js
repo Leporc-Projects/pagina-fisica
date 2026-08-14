@@ -26,13 +26,13 @@ const EN_COURSE = Object.freeze({
 });
 
 const EN_UNITS = Object.freeze([
-  ["Vectors and kinematics", "Chapters 1, 2 and 3", "Foundations of measurement, vector algebra, and descriptions of motion in one, two, and three dimensions."],
-  ["Newton's laws", "Chapter 4", "Study of mechanical interactions and of the laws relating force, mass, and motion."],
-  ["Forces and equations of motion", "Chapter 5", "Application of Newton's laws to particles in equilibrium and motion."],
-  ["Work and energy", "Chapters 6 and 7", "Energy formulation of mechanics and analysis of conservative and non-conservative forces."],
-  ["Linear momentum and systems of particles", "Chapter 8", "Description of systems of particles through linear momentum, impulse, and centre of mass."],
-  ["Rotation and angular momentum", "Chapters 9 and 10", "Kinematics and dynamics of rotating rigid bodies."],
-  ["Gravitation and periodic motion", "Chapters 13 and 14", "Applications of Newtonian mechanics to gravitational and oscillatory systems."],
+  ["Vectors and kinematics", "Chapters 1, 2 and 3", "Foundations of measurement, vector algebra, and descriptions of motion in one, two, and three dimensions.", ["Units, physical quantities, and dimensional analysis", "Significant figures and orders of magnitude", "Vectors, components, and unit vectors", "Rectilinear motion", "Motion with constant acceleration", "Free fall", "Projectile motion", "Circular motion", "Relative velocity"]],
+  ["Newton's laws", "Chapter 4", "Study of mechanical interactions and of the laws relating force, mass, and motion.", ["Forces and interactions", "Newton's first law", "Newton's second law", "Mass and weight", "Newton's third law", "Free-body diagrams", "Inertial reference frames"]],
+  ["Forces and equations of motion", "Chapter 5", "Application of Newton's laws to particles in equilibrium and motion.", ["Particles in equilibrium", "Particle dynamics", "Normal force", "Tension", "Static and kinetic friction", "Fluid resistance", "Dynamics of circular motion", "Fundamental forces of nature"]],
+  ["Work and energy", "Chapters 6 and 7", "Energy formulation of mechanics and analysis of conservative and non-conservative forces.", ["Work", "Kinetic energy", "Work–energy theorem", "Work with a variable force", "Power", "Gravitational potential energy", "Elastic potential energy", "Conservative and non-conservative forces", "Conservation of energy", "Energy diagrams"]],
+  ["Linear momentum and systems of particles", "Chapter 8", "Description of systems of particles through linear momentum, impulse, and centre of mass.", ["Linear momentum", "Impulse", "Conservation of linear momentum", "Elastic and inelastic collisions", "Centre of mass", "Variable-mass systems", "Rocket propulsion"]],
+  ["Rotation and angular momentum", "Chapters 9 and 10", "Kinematics and dynamics of rotating rigid bodies.", ["Angular velocity and acceleration", "Rotation with constant angular acceleration", "Relation between linear and angular motion", "Moment of inertia", "Parallel-axis theorem", "Rotational kinetic energy", "Torque", "Work and power in rotation", "Angular momentum", "Conservation of angular momentum", "Gyroscopes and precession"]],
+  ["Gravitation and periodic motion", "Chapters 13 and 14", "Applications of Newtonian mechanics to gravitational and oscillatory systems.", ["Universal law of gravitation", "Weight and gravitational field", "Gravitational potential energy", "Satellite motion", "Kepler's laws", "Description of oscillations", "Simple harmonic motion", "Oscillator energy", "Simple and physical pendulums", "Damped oscillations", "Forced oscillations and resonance"]],
 ]);
 
 const EN_EVALUATION = Object.freeze([
@@ -70,7 +70,7 @@ export const localizeCourseData = (locale) => {
   if (locale === "es") return { COURSE, UNITS, EVALUATION, BIBLIOGRAPHY, SCHEDULE, SCHEDULE_TYPES };
   return {
     COURSE: { ...COURSE, ...EN_COURSE, href: getLocalizedPath(ROUTE_IDS.COURSE, locale) },
-    UNITS: UNITS.map((unit, index) => ({ ...unit, title: EN_UNITS[index][0], chapters: EN_UNITS[index][1], description: EN_UNITS[index][2] })),
+    UNITS: UNITS.map((unit, index) => ({ ...unit, title: EN_UNITS[index][0], chapters: EN_UNITS[index][1], description: EN_UNITS[index][2], topics: EN_UNITS[index][3] })),
     EVALUATION: EVALUATION.map((item, index) => ({ ...item, name: EN_EVALUATION[index][0], content: EN_EVALUATION[index][1] })),
     BIBLIOGRAPHY: BIBLIOGRAPHY.map((book, index) => ({ ...book, role: EN_BIBLIOGRAPHY_ROLES[index] })),
     SCHEDULE: localizeSchedule(),

@@ -3,7 +3,10 @@
 import { UNIT_1_ADDITIONAL_EXERCISE_DEFINITIONS } from "./additional-exercises.js";
 import teacherQuestions from "./teacher-questions.json" with { type: "json" };
 import { teacherQuestionToExercise } from "./teacher-question-adapter.js";
-import { t } from "../../../i18n/index.js";
+import {
+  createAcademicExercise,
+  singleChoiceInteraction,
+} from "../exercise-builder.js";
 export {
   EXERCISE_COGNITIVE_LEVELS,
   EXERCISE_EXPOSURES,
@@ -13,90 +16,12 @@ export {
   EXERCISE_REPRESENTATIONS,
   EXERCISE_STATUSES,
   EXERCISE_TYPES,
-} from "./exercise-schema.js";
+} from "../exercise-schema.js";
 
-const DEFAULT_FEEDBACK = {
-  correct: t("es", "exercise.feedback.correct"),
-  incorrect: t("es", "exercise.feedback.incorrect"),
-  commonErrors: {},
-};
+const singleChoice = singleChoiceInteraction;
 
-const numericInteraction = (exercise) => {
-  if (exercise.answer?.kind === "number") {
-    return {
-      kind: "number",
-      field: {
-        id: "value",
-        label: t("es", "exercise.answer"),
-        unit: exercise.expectedUnit,
-      },
-    };
-  }
-
-  if (exercise.answer?.kind === "values") {
-    return {
-      kind: "multiNumber",
-      fields: exercise.answer.values.map((value, index) => ({
-        id: `value-${index + 1}`,
-        label: value.symbol,
-        unit: value.unit ?? exercise.expectedUnit,
-      })),
-    };
-  }
-
-  return null;
-};
-
-const singleChoice = (options, correctOptionId) => ({
-  kind: "singleChoice",
-  options,
-  correctOptionId,
-});
-
-export const createExercise = (exercise) => {
-  const automaticallyEligible = ["number", "values"].includes(
-    exercise.answer?.kind
-  );
-  const bonusEligible = exercise.bonusEligible ?? automaticallyEligible;
-  const interaction = exercise.interaction ?? (
-    bonusEligible ? numericInteraction(exercise) : null
-  );
-  const baseModalities = exercise.modalities ?? ["practice", "selfAssessment"];
-  const modalities = bonusEligible
-    ? [...new Set([...baseModalities, "bonus"])]
-    : baseModalities;
-
-  return {
-    itemKind: "fixed",
-    authorSource: "editorial",
-    unit: 1,
-    modalities,
-    prerequisites: [],
-    objectives: [],
-    estimatedMinutes: 5,
-    tolerance: null,
-    expectedUnit: null,
-    hints: [],
-    commonErrors: [],
-    parameterizable: false,
-    purpose: "learning",
-    exposure: "public",
-    status: "review",
-    version: 1,
-    ...exercise,
-    modalities,
-    bonusEligible,
-    interaction,
-    feedback: {
-      ...DEFAULT_FEEDBACK,
-      ...exercise.feedback,
-      commonErrors: {
-        ...DEFAULT_FEEDBACK.commonErrors,
-        ...exercise.feedback?.commonErrors,
-      },
-    },
-  };
-};
+export const createExercise = (exercise) =>
+  createAcademicExercise(exercise, { unit: 1, bonusByDefault: true });
 
 export const UNIT_1_EXERCISES = [
   createExercise({

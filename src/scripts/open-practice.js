@@ -1,11 +1,13 @@
 // Mejora progresiva mínima: selecciona tandas, filtra y navega. El Set de IDs
 // vistos vive solo mientras esta página permanece abierta y nunca se persiste.
 import { selectExerciseBatch } from "../utils/exercise-batches.js";
-import { UNIT_1_EXERCISE_FAMILIES } from "../data/physics/unit-1/families.js";
 import {
   createCryptoRandom,
 } from "../utils/exercise-families.js";
-import { generateLocalizedUnit1FamilyInstance } from "../data/physics/unit-1/family-localize.js";
+import {
+  generateLocalizedAcademicFamilyInstance,
+  getAcademicExerciseFamily,
+} from "../data/physics/family-registry.js";
 import { t } from "../i18n/index.js";
 
 const element = (tag, text, className) => {
@@ -104,7 +106,6 @@ export const initializeOpenPractice = () => {
     }));
     const seenIds = new Set();
     const recentParameterKeys = new Set();
-    const familyMap = new Map(UNIT_1_EXERCISE_FAMILIES.map((family) => [family.id, family]));
     const random = createCryptoRandom();
     let batch = [];
     let activeIndex = 0;
@@ -113,10 +114,10 @@ export const initializeOpenPractice = () => {
     const materialize = (exercise) => {
       if (exercise.itemKind !== "parameterizedFamily") return;
       if (exercise.generatedForRotation === rotation) return;
-      const family = familyMap.get(exercise.id);
+      const family = getAcademicExerciseFamily(exercise.id);
       const target = exercise.slide.querySelector("[data-generated-practice-card]");
       if (!family || !(target instanceof HTMLElement)) return;
-      const instance = generateLocalizedUnit1FamilyInstance(family, locale, { random, recentParameterKeys });
+      const instance = generateLocalizedAcademicFamilyInstance(family.id, locale, { random, recentParameterKeys });
       recentParameterKeys.add(`${family.id}:${instance.parameterKey}`);
       renderGeneratedCard(target, instance, locale);
       exercise.generatedForRotation = rotation;

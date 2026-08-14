@@ -1,60 +1,41 @@
 ---
-// Composición común de las siete páginas: datos → capas → fórmulas/figuras → navegación.
+// Renderer común: toda dependencia específica queda detrás del adapter de unidad.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import AcademicVisualization from "../visualization/AcademicVisualization.astro";
 import AcademicSection from "./AcademicSection.astro";
+import AcademicUnitNav from "./AcademicUnitNav.astro";
 import CommonErrors from "./CommonErrors.astro";
 import ConceptCheck from "./ConceptCheck.astro";
 import FormulaBlock from "./FormulaBlock.astro";
-import UnitOneNav from "./UnitOneNav.astro";
-import { presentUnit1RichText } from "../../data/physics/unit-1/math-content.js";
+import { getAcademicUnitAdapter } from "../../data/physics/index.js";
 import { COURSE } from "../../data/course.js";
 import { getSimulationsForCourseTopic } from "../../data/simulations.js";
-import {
-  getLocalizedUnit1ErrorsByTopics,
-  getLocalizedUnit1Formula,
-  getLocalizedUnit1Topic,
-  getLocalizedUnit1TopicNeighbors,
-  getLocalizedUnit1Visualization,
-  getUnit1TopicRouteId,
-  localizeUnit1,
-  localizeUnit1Content,
-} from "../../data/physics/unit-1/localize.js";
 import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
 import { t } from "../../i18n/index.js";
 import { withBase } from "../../utils/paths.js";
 
 interface Props {
   slug: string;
+  unitNumber?: number;
   locale?: "es" | "en";
 }
 
-const { slug, locale = "es" } = Astro.props;
-const unit = localizeUnit1(locale);
-const topic = getLocalizedUnit1Topic(slug, locale);
-const content = localizeUnit1Content(locale)[slug];
-
-if (!topic || !content) {
-  throw new Error(`No existe contenido registrado para el tema ${slug}.`);
-}
-
-const { previous, next } = getLocalizedUnit1TopicNeighbors(slug, locale);
-const errors = getLocalizedUnit1ErrorsByTopics(content.errorTopics, locale);
-const relatedSimulations = getSimulationsForCourseTopic(
-  COURSE.id,
-  unit.number,
-  slug,
-  locale
-);
+const { slug, unitNumber = 1, locale = "es" } = Astro.props;
+const adapter = getAcademicUnitAdapter(unitNumber);
+if (!adapter) throw new Error(`No existe adapter académico para la unidad ${unitNumber}.`);
+const unit = adapter.localizeUnit(locale);
+const topic = unit.topics.find((candidate) => candidate.slug === slug);
+const content = adapter.getContent(locale)[slug];
+if (!topic || !content) throw new Error(`No existe contenido registrado para unidad ${unitNumber}, tema ${slug}.`);
+const topicIndex = unit.topics.findIndex((candidate) => candidate.slug === slug);
+const previous = unit.topics[topicIndex - 1] ?? null;
+const next = unit.topics[topicIndex + 1] ?? null;
+const errors = adapter.getErrors(content.errorTopics, locale);
+const relatedSimulations = getSimulationsForCourseTopic(COURSE.id, unit.number, slug, locale);
 let checkNumber = 0;
 ---
 
-<BaseLayout
-  title={`${topic.title} · ${unit.shortTitle}`}
-  description={topic.summary}
-  locale={locale}
-  routeId={getUnit1TopicRouteId(slug)}
->
+<BaseLayout title={`${topic.title} · ${unit.shortTitle}`} description={topic.summary} locale={locale} routeId={adapter.getTopicRouteId(slug)}>
   <article class="unit-topic-page">
     <header class="unit-topic-hero">
       <nav class="academic-breadcrumb" aria-label={t(locale, "unitPage.breadcrumb")}>
@@ -62,7 +43,6 @@ let checkNumber = 0;
         <span aria-hidden="true">/</span>
         <a href={withBase(unit.route)}>{unit.shortTitle}</a>
       </nav>
-
       <div class="unit-topic-hero__heading">
         <p class="eyebrow eyebrow--dark">
           {topic.priority === "extension"
@@ -72,128 +52,64 @@ let checkNumber = 0;
         <h1>{topic.title}</h1>
         <p>{content.introduction}</p>
       </div>
-
       {topic.priority === "extension" && (
-        <aside class="extension-notice">
-          <strong>{t(locale, "unitTopic.editorialPriority")}</strong>
-          <p>{t(locale, "unitTopic.extensionNotice")}</p>
-        </aside>
+        <aside class="extension-notice"><strong>{t(locale, "unitTopic.editorialPriority")}</strong><p>{t(locale, "unitTopic.extensionNotice")}</p></aside>
       )}
     </header>
 
-    <UnitOneNav activeSlug={slug} locale={locale} />
+    <AcademicUnitNav unit={unit} activeSlug={slug} locale={locale} />
 
     <div class="unit-reading-layout">
       <aside class="unit-page-toc">
         <p class="academic-label">{t(locale, "unitTopic.onThisPage")}</p>
         <ol>
           {content.sections.map((section, index) => (
-            <li>
-              <a href={`#${section.id}`}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                {section.title}
-              </a>
-            </li>
+            <li><a href={`#${section.id}`}><span>{String(index + 1).padStart(2, "0")}</span>{section.title}</a></li>
           ))}
-          <li>
-            <a href="#common-errors">
-              <span>{String(content.sections.length + 1).padStart(2, "0")}</span>
-              {t(locale, "academic.commonErrors")}
-            </a>
-          </li>
+          <li><a href="#common-errors"><span>{String(content.sections.length + 1).padStart(2, "0")}</span>{t(locale, "academic.commonErrors")}</a></li>
         </ol>
       </aside>
 
       <div class="unit-topic-content">
         {content.sections.map((section, sectionIndex) => (
-          <AcademicSection
-            section={section}
-            index={sectionIndex + 1}
-            present={presentUnit1RichText}
-            locale={locale}
-          >
+          <AcademicSection section={section} index={sectionIndex + 1} present={adapter.presentRichText} locale={locale}>
             {(section.formulas ?? []).map((formulaId) => {
-              const formula = getLocalizedUnit1Formula(formulaId, locale);
-              return formula
-                ? <FormulaBlock formula={formula} present={presentUnit1RichText} locale={locale} />
-                : null;
+              const formula = adapter.getFormula(formulaId, locale);
+              return formula ? <FormulaBlock formula={formula} present={adapter.presentRichText} locale={locale} /> : null;
             })}
-
             {(section.visualizations ?? []).map((visualizationId) => {
-              const visualization = getLocalizedUnit1Visualization(visualizationId, locale);
-              if (!visualization) return null;
-
-              return <AcademicVisualization
-                visualization={visualization}
-                present={presentUnit1RichText}
-                locale={locale}
-              />;
+              const visualization = adapter.getVisualization(visualizationId, locale);
+              return visualization ? <AcademicVisualization visualization={visualization} present={adapter.presentRichText} locale={locale} /> : null;
             })}
-
             {(section.checks ?? []).map((check) => {
               checkNumber += 1;
-              return (
-                <ConceptCheck
-                  check={check}
-                  index={checkNumber}
-                  present={presentUnit1RichText}
-                  locale={locale}
-                />
-              );
+              return <ConceptCheck check={check} index={checkNumber} present={adapter.presentRichText} locale={locale} />;
             })}
           </AcademicSection>
         ))}
-
-        <div id="common-errors">
-          <CommonErrors errors={errors} present={presentUnit1RichText} locale={locale} />
-        </div>
+        <div id="common-errors"><CommonErrors errors={errors} present={adapter.presentRichText} locale={locale} /></div>
       </div>
     </div>
 
     {relatedSimulations.map((simulation) => (
       <aside class="unit-practice-cta unit-simulation-cta">
-        <div>
-          <p class="academic-label">{t(locale, "unitTopic.relatedSimulation")}</p>
-          <h2>{simulation.title}</h2>
-          <p>{simulation.description}</p>
-        </div>
-        <a class="text-link" href={withBase(simulation.route)}>
-          {t(locale, "unitTopic.exploreSimulation")}
-        </a>
+        <div><p class="academic-label">{t(locale, "unitTopic.relatedSimulation")}</p><h2>{simulation.title}</h2><p>{simulation.description}</p></div>
+        <a class="text-link" href={withBase(simulation.route)}>{t(locale, "unitTopic.exploreSimulation")}</a>
       </aside>
     ))}
 
     <nav class="unit-topic-pagination" aria-label={t(locale, "unitTopic.pagination")}>
       {previous
-        ? <a href={withBase(previous.route)} rel="prev">
-            <span>{t(locale, "unitTopic.previous")}</span>
-            <strong>{previous.shortTitle}</strong>
-          </a>
-        : <a href={withBase(unit.route)} rel="prev">
-            <span>{t(locale, "unitTopic.previous")}</span>
-            <strong>{t(locale, "unitTopic.unitIndex")}</strong>
-          </a>}
-
+        ? <a href={withBase(previous.route)} rel="prev"><span>{t(locale, "unitTopic.previous")}</span><strong>{previous.shortTitle}</strong></a>
+        : <a href={withBase(unit.route)} rel="prev"><span>{t(locale, "unitTopic.previous")}</span><strong>{t(locale, "unitTopic.unitIndex")}</strong></a>}
       {next
-        ? <a href={withBase(next.route)} rel="next">
-            <span>{t(locale, "unitTopic.next")}</span>
-            <strong>{next.shortTitle}</strong>
-          </a>
-        : <a href={withBase(unit.practiceRoute)} rel="next">
-            <span>{t(locale, "unitTopic.continue")}</span>
-            <strong>{t(locale, "unitTopic.unitPractice")}</strong>
-          </a>}
+        ? <a href={withBase(next.route)} rel="next"><span>{t(locale, "unitTopic.next")}</span><strong>{next.shortTitle}</strong></a>
+        : <a href={withBase(unit.practiceRoute)} rel="next"><span>{t(locale, "unitTopic.continue")}</span><strong>{t(locale, "unitTopic.unitPractice")}</strong></a>}
     </nav>
 
     <aside class="unit-practice-cta">
-      <div>
-        <p class="academic-label">{t(locale, "unitTopic.practice")}</p>
-        <h2>{t(locale, "unitTopic.practiceTitle")}</h2>
-        <p>{t(locale, "unitTopic.practiceDescription")}</p>
-      </div>
-      <a class="text-link" href={withBase(unit.practiceRoute)}>
-        {t(locale, "unitTopic.openPractice")}
-      </a>
+      <div><p class="academic-label">{t(locale, "unitTopic.practice")}</p><h2>{t(locale, "unitTopic.practiceTitle")}</h2><p>{t(locale, "unitTopic.practiceDescription")}</p></div>
+      <a class="text-link" href={withBase(unit.practiceRoute)}>{t(locale, "unitTopic.openPractice", { unit: unit.shortTitle })}</a>
     </aside>
   </article>
 </BaseLayout>

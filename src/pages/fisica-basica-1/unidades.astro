@@ -1,152 +1,49 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
-
 import { localizeCourseData } from "../../data/course-localize.js";
-import { UNIT_1 } from "../../data/physics/unit-1/unit.js";
+import { getDevelopedAcademicUnits } from "../../data/physics/index.js";
 import { ROUTE_IDS } from "../../i18n/routes.js";
+import { t } from "../../i18n/index.js";
 import { withBase } from "../../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
 const { COURSE, UNITS } = localizeCourseData(locale);
+const developedUnits = new Map(getDevelopedAcademicUnits(locale).map((unit) => [unit.number, unit]));
 ---
 
-<BaseLayout
-  title={`Unidades y apuntes · ${COURSE.name}`}
-  description={`Unidades temáticas y contenidos de ${COURSE.name}.`}
-  locale={locale}
-  routeId={ROUTE_IDS.COURSE_UNITS}
->
+<BaseLayout title={`${t(locale, "unitsCatalog.pageTitle")} · ${COURSE.name}`} description={t(locale, "unitsCatalog.metaDescription", { course: COURSE.name })} locale={locale} routeId={ROUTE_IDS.COURSE_UNITS}>
   <article class="course-subpage">
-    <CoursePageHeader
-      title="Unidades y apuntes"
-      description="Organización temática del curso y espacio destinado a los materiales preparados para cada unidad."
-      locale={locale}
-    />
+    <CoursePageHeader title={t(locale, "unitsCatalog.pageTitle")} description={t(locale, "unitsCatalog.headerDescription")} locale={locale} />
 
-    <section
-      class="units-introduction"
-      aria-labelledby="units-introduction-title"
-    >
-      <div>
-        <p class="course-section__index">Estructura</p>
-
-        <h2 id="units-introduction-title">
-          Siete unidades de mecánica newtoniana
-        </h2>
-      </div>
-
-      <p>
-        Los temas se presentan en el orden general del
-        curso. Los apuntes, guías y materiales propios se
-        incorporarán progresivamente dentro de cada
-        unidad.
-      </p>
+    <section class="units-introduction" aria-labelledby="units-introduction-title">
+      <div><p class="course-section__index">{t(locale, "unitsCatalog.structure")}</p><h2 id="units-introduction-title">{t(locale, "unitsCatalog.sevenUnits")}</h2></div>
+      <p>{t(locale, "unitsCatalog.introduction")}</p>
     </section>
 
-    <nav
-      class="unit-index"
-      aria-label="Índice de unidades"
-    >
-      {
-        UNITS.map((unit) => (
-          <a href={`#unidad-${unit.number}`}>
-            <span>
-              {String(unit.number).padStart(2, "0")}
-            </span>
-
-            <strong>{unit.title}</strong>
-          </a>
-        ))
-      }
+    <nav class="unit-index" aria-label={t(locale, "unitsCatalog.indexLabel")}>
+      {UNITS.map((unit) => <a href={`#unidad-${unit.number}`}><span>{String(unit.number).padStart(2, "0")}</span><strong>{unit.title}</strong></a>)}
     </nav>
 
     <div class="unit-catalog">
-      {
-        UNITS.map((unit) => (
-          <section
-            class="unit-detail"
-            id={`unidad-${unit.number}`}
-            aria-labelledby={`unit-title-${unit.number}`}
-          >
+      {UNITS.map((unit) => {
+        const developed = developedUnits.get(unit.number);
+        return (
+          <section class="unit-detail" id={`unidad-${unit.number}`} aria-labelledby={`unit-title-${unit.number}`}>
             <header class="unit-detail__header">
-              <div class="unit-detail__number">
-                <span>Unidad</span>
-
-                <strong>
-                  {String(unit.number).padStart(2, "0")}
-                </strong>
-              </div>
-
-              <div>
-                <p class="unit-detail__chapters">
-                  {unit.chapters}
-                </p>
-
-                <h2 id={`unit-title-${unit.number}`}>
-                  {unit.title}
-                </h2>
-
-                <p class="unit-detail__description">
-                  {unit.description}
-                </p>
-              </div>
+              <div class="unit-detail__number"><span>{t(locale, "unitsCatalog.unit")}</span><strong>{String(unit.number).padStart(2, "0")}</strong></div>
+              <div><p class="unit-detail__chapters">{unit.chapters}</p><h2 id={`unit-title-${unit.number}`}>{unit.title}</h2><p class="unit-detail__description">{unit.description}</p></div>
             </header>
-
             <div class="unit-detail__content">
-              <div>
-                <h3>Temas</h3>
-
-                <ul class="unit-topic-list">
-                  {
-                    unit.topics.map((topic, index) => (
-                      <li>
-                        <span>
-                          {String(index + 1).padStart(
-                            2,
-                            "0"
-                          )}
-                        </span>
-
-                        <p>{topic}</p>
-                      </li>
-                    ))
-                  }
-                </ul>
-              </div>
-
+              <div><h3>{t(locale, "unitsCatalog.topics")}</h3><ul class="unit-topic-list">{unit.topics.map((topic, index) => <li><span>{String(index + 1).padStart(2, "0")}</span><p>{topic}</p></li>)}</ul></div>
               <aside class="unit-materials">
-                <p class="course-section__index">
-                  Materiales
-                </p>
-
-                {unit.number === UNIT_1.number
-                  ? <>
-                      <h3>Contenido disponible</h3>
-                      <p>
-                        Contenido por temas, fórmulas con condiciones,
-                        visualizaciones SVG y práctica.
-                      </p>
-                      <a class="text-link" href={withBase(UNIT_1.route)}>
-                        Abrir {UNIT_1.shortTitle}
-                      </a>
-                    </>
-                  : <>
-                      <h3>Contenido en preparación</h3>
-                      <p>
-                        Este espacio reunirá apuntes, guías,
-                        problemas seleccionados y recursos
-                        propios de la unidad.
-                      </p>
-                      <span class="unit-materials__status">
-                        Próximamente
-                      </span>
-                    </>}
+                <p class="course-section__index">{t(locale, "unitsCatalog.materials")}</p>
+                {developed ? <><p>{t(locale, "unitsCatalog.availableDescription")}</p><a class="text-link" href={withBase(developed.route)}>{t(locale, "unitsCatalog.openUnit", { unit: developed.shortTitle })}</a></> : <><h3>{t(locale, "unitsCatalog.preparingTitle")}</h3><p>{t(locale, "unitsCatalog.preparingDescription")}</p><span class="unit-materials__status">{t(locale, "unitsCatalog.comingSoon")}</span></>}
               </aside>
             </div>
           </section>
-        ))
-      }
+        );
+      })}
     </div>
   </article>
 </BaseLayout>
