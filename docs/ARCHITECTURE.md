@@ -104,9 +104,13 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
   descripción accesible y estado inicial en HTML; monta el renderer
   `p5-projectile-2d` sobre Canvas 2D solo cuando la experiencia lo necesita.
 - `simulations/ForcesFrictionSimulation.astro` y `CircularRadialSimulation.astro`:
-  presentan escenas p5 dominantes, controles HTML, estados, medidores y lecturas.
-  Sus runtimes coordinan el reloj, pero la física permanece en modelos puros
-  independientes del renderer.
+  presentan escenas p5 dominantes y reservan el Canvas para la escena física.
+  DCL, ecuaciones, medidores, lecturas y gráficas viven en HTML/MathML/SVG
+  accesible fuera del lienzo. Sus runtimes coordinan el reloj, pero la física
+  permanece en modelos puros independientes del renderer.
+- `simulations/SimulationFloatingPlayback.astro`: proyecta el estado del runtime
+  canónico en las cuatro simulaciones públicas cuando sus controles completos
+  salen del viewport; nunca aparece en previews ni posee estado físico propio.
 - `simulations/SimulationExperienceRenderer.astro`: dispatcher validado que
   selecciona uno de los cuatro componentes reales a partir de los registros de
   modelo y renderer; los slots ocultos del Laboratorio no inicializan runtime.
