@@ -13,6 +13,16 @@ export const SIMULATION_RENDERERS = Object.freeze([
     modelId: "projectile-2d",
     technology: "p5.js Canvas 2D",
   }),
+  Object.freeze({
+    id: "p5-forces-friction",
+    modelId: "forces-friction",
+    technology: "p5.js Canvas 2D",
+  }),
+  Object.freeze({
+    id: "p5-circular-radial-force",
+    modelId: "circular-radial-force",
+    technology: "p5.js Canvas 2D",
+  }),
 ]);
 
 export const SIMULATION_RENDERER_IDS = Object.freeze(

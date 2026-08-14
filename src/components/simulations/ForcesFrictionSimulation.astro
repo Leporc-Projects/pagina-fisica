@@ -1,0 +1,82 @@
+---
+import { getSimulationExperienceById, localizeSimulationExperience } from "../../data/simulation-experiences.js";
+import { getSimulationModelById, localizeSimulationModel } from "../../data/simulation-models.js";
+import { formatNumber, t } from "../../i18n/index.js";
+import { normalizeSimulationExperience, validateSimulationExperience } from "../../utils/simulation-experience.js";
+import { createForcesFrictionState, getForcesFrictionReadings } from "../../utils/forces-friction.js";
+import SimulationParameterFields from "./SimulationParameterFields.astro";
+import "../../styles/dynamics-simulations.css";
+
+const { experience: suppliedExperience = getSimulationExperienceById("forces-friction"), preview = false, locale = "es" } = Astro.props;
+const canonical = normalizeSimulationExperience(suppliedExperience);
+const validation = validateSimulationExperience(canonical);
+if (!validation.valid) throw new TypeError(`Experiencia de fuerzas inválida: ${validation.errors.join(" ")}`);
+const experience = localizeSimulationExperience(canonical, locale);
+const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
+if (model?.rendererId !== "p5-forces-friction") throw new TypeError("ForcesFrictionSimulation requiere p5-forces-friction.");
+const controls = Object.entries(model.parameters).map(([key, definition]) => ({ key, ...definition, ...experience.parameters[key] }));
+const primary = controls.filter(({ key }) => ["F", "beta", "muS", "muK"].includes(key));
+const advanced = controls.filter(({ key }) => ["m", "alpha", "g", "v0"].includes(key));
+const parameters = Object.fromEntries(controls.map(({ key, default: value }) => [key, value]));
+const initialState = createForcesFrictionState(parameters);
+const readings = getForcesFrictionReadings(initialState, parameters);
+const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
+const display = (value) => formatNumber(locale, value, { maximumFractionDigits: 2 });
+const readingItems = [
+  ["t", "simulation.reading.time", "t", "s"], ["s", "forcesFriction.position", "s", "m"],
+  ["v", "simulation.reading.velocity", "v", "m/s"], ["a", "simulation.reading.acceleration", "a", "m/s²"],
+  ["normal", "forcesFriction.normal", "N", "N"], ["friction", "forcesFriction.friction", "f", "N"],
+  ["netParallel", "forcesFriction.netParallel", "ΣF∥", "N"],
+];
+---
+
+<section class="dynamics-simulation" data-forces-friction-simulation data-experience={serializedExperience} data-locale={locale} data-preview={preview ? "true" : undefined}>
+  <div class="dynamics-workspace">
+    <div class="dynamics-visual-column">
+      <figure class="dynamics-canvas theme-canvas">
+        <figcaption>
+          <div><p class="academic-label">{t(locale, "forcesFriction.canvas")}</p><h2>{t(locale, "forcesFriction.canvasTitle")}</h2><p>{t(locale, "forcesFriction.canvasHelp")}</p></div>
+          <div class="dynamics-status" data-regime={readings.regime}><span>{t(locale, "simulation.state")}</span><strong data-status-text>{t(locale, "forcesFriction.status.static")}</strong></div>
+        </figcaption>
+        <div class="dynamics-canvas__surface" data-forces-friction-canvas role="img" aria-label={t(locale, "forcesFriction.sceneAria")} aria-describedby="forces-friction-scene-description"></div>
+        <p id="forces-friction-scene-description" class="sr-only">{t(locale, "forcesFriction.sceneDescription")}</p>
+        <div class="dynamics-view-toggles">
+          <label><input type="checkbox" data-toggle="fbd" checked /> {t(locale, "forcesFriction.showFbd")}</label>
+          <p>{t(locale, "forcesFriction.vectorLegend")}</p>
+        </div>
+      </figure>
+
+      <div class="dynamics-data-grid">
+        <section class="dynamics-meter" aria-labelledby="friction-meter-title">
+          <div><p class="academic-label">{t(locale, "forcesFriction.threshold")}</p><h2 id="friction-meter-title">{t(locale, "forcesFriction.meterTitle")}</h2></div>
+          <progress data-friction-progress max={Math.max(readings.maximumStatic, 1e-9)} value={Math.abs(readings.requiredStatic)}></progress>
+          <dl><div><dt>{t(locale, "forcesFriction.required")}</dt><dd><span data-meter-required>{display(Math.abs(readings.requiredStatic))}</span> N</dd></div><div><dt>{t(locale, "forcesFriction.maximum")}</dt><dd><span data-meter-maximum>{display(readings.maximumStatic)}</span> N</dd></div><div><dt>{t(locale, "forcesFriction.currentKinetic")}</dt><dd><span data-meter-kinetic>{display(Math.abs(readings.friction))}</span> N</dd></div></dl>
+          <p data-meter-note>{t(locale, "forcesFriction.meterStatic")}</p>
+        </section>
+        <section class="dynamics-readings" aria-labelledby="forces-readings-title">
+          <div><p class="academic-label">{t(locale, "simulation.liveReadings")}</p><h2 id="forces-readings-title">{t(locale, "simulation.physicalState")}</h2></div>
+          <dl>{readingItems.map(([key, label, symbol, unit]) => <div><dt>{t(locale, label)} <span>{symbol}</span></dt><dd><span data-reading={key}>{display(readings[key])}</span> <small>{unit}</small></dd></div>)}</dl>
+        </section>
+      </div>
+      <div class="dynamics-contact-warning" data-contact-warning hidden role="alert">{t(locale, "forcesFriction.contactInvalid")}</div>
+    </div>
+
+    <aside class="dynamics-controls" aria-labelledby="forces-controls-title">
+      <div><p class="academic-label">{t(locale, "simulation.parameters")}</p><h2 id="forces-controls-title">{t(locale, "forcesFriction.configure")}</h2><p>{t(locale, "forcesFriction.changeHelp")}</p></div>
+      <fieldset class="dynamics-presets"><legend>{t(locale, "simulation.studyCases")}</legend><div data-presets-list>{experience.presets.map((preset) => <button type="button" data-preset={preset.id} aria-pressed="false">{preset.label}</button>)}</div></fieldset>
+      <form data-parameter-form novalidate><SimulationParameterFields controls={primary} locale={locale} prefix="forces" /><details><summary>{t(locale, "simulation.advancedParameters")}</summary><SimulationParameterFields controls={advanced} locale={locale} prefix="forces" /></details></form>
+    </aside>
+  </div>
+  <section class="dynamics-playback" aria-label={t(locale, "simulation.playback")}>
+    <div><button type="button" data-action="toggle" aria-pressed="false"><span data-playback-icon aria-hidden="true">▶</span> <span data-playback-label>{t(locale, "simulation.play")}</span></button><button type="button" data-action="reset"><span aria-hidden="true">↺</span> {t(locale, "simulation.reset")}</button></div>
+    <p data-playback-state>{t(locale, "simulation.paused")}</p><p class="sr-only" aria-live="polite" data-simulation-live></p>
+  </section>
+  <noscript><p class="dynamics-noscript">{t(locale, "simulation.javascriptFallback")}</p></noscript>
+</section>
+
+<script>
+  import { initializeForcesFrictionSimulation } from "../../scripts/forces-friction.js";
+  document.querySelectorAll("[data-forces-friction-simulation]").forEach((root) => {
+    if (!root.closest("[data-renderer-slot][hidden]")) initializeForcesFrictionSimulation(root);
+  });
+</script>

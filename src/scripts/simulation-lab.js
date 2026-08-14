@@ -400,7 +400,7 @@ export const initializeSimulationLab = async () => {
   };
 
   const renderPreview = async (experience) => {
-    root.querySelectorAll("[data-kinematics-simulation], [data-projectile-simulation]").forEach((entry) => { entry.dataset.locale = previewLocale; });
+    root.querySelectorAll("[data-kinematics-simulation], [data-projectile-simulation], [data-forces-friction-simulation], [data-circular-radial-simulation]").forEach((entry) => { entry.dataset.locale = previewLocale; });
     await mountSimulationExperienceRenderer(rendererRoot, experience);
     const localized = localizeSimulationExperience(experience, previewLocale);
     if (previewHeading) previewHeading.textContent = localized.title;

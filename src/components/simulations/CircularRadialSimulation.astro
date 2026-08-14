@@ -1,0 +1,53 @@
+---
+import { getSimulationExperienceById, localizeSimulationExperience } from "../../data/simulation-experiences.js";
+import { getSimulationModelById, localizeSimulationModel } from "../../data/simulation-models.js";
+import { formatNumber, t } from "../../i18n/index.js";
+import { normalizeSimulationExperience, validateSimulationExperience } from "../../utils/simulation-experience.js";
+import { createCircularRadialState, getCircularRadialReadings } from "../../utils/circular-radial-force.js";
+import SimulationParameterFields from "./SimulationParameterFields.astro";
+import "../../styles/dynamics-simulations.css";
+
+const { experience: suppliedExperience = getSimulationExperienceById("circular-radial-force"), preview = false, locale = "es" } = Astro.props;
+const canonical = normalizeSimulationExperience(suppliedExperience);
+const validation = validateSimulationExperience(canonical);
+if (!validation.valid) throw new TypeError(`Experiencia circular inválida: ${validation.errors.join(" ")}`);
+const experience = localizeSimulationExperience(canonical, locale);
+const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
+if (model?.rendererId !== "p5-circular-radial-force") throw new TypeError("CircularRadialSimulation requiere p5-circular-radial-force.");
+const controls = Object.entries(model.parameters).map(([key, definition]) => ({ key, ...definition, ...experience.parameters[key] }));
+const primary = controls.filter(({ key }) => key !== "m");
+const advanced = controls.filter(({ key }) => key === "m");
+const parameters = Object.fromEntries(controls.map(({ key, default: value }) => [key, value]));
+const state = createCircularRadialState(parameters);
+const readings = getCircularRadialReadings(state, parameters);
+const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
+const display = (value) => formatNumber(locale, value, { maximumFractionDigits: 2 });
+const readingItems = [["t", "simulation.reading.time", "t", "s"], ["theta", "circularDynamics.theta", "θ", "°"], ["omega", "circularDynamics.omega", "ω", "rad/s"], ["radius", "circularDynamics.radius", "R", "m"], ["speed", "simulation.reading.speed", "v", "m/s"], ["radialAcceleration", "circularDynamics.radialAcceleration", "aᵣ", "m/s²"], ["requiredTension", "circularDynamics.requiredTension", "T", "N"], ["maximumTension", "circularDynamics.maximumTension", "T_max", "N"]];
+---
+
+<section class="dynamics-simulation" data-circular-radial-simulation data-experience={serializedExperience} data-locale={locale} data-preview={preview ? "true" : undefined}>
+  <div class="dynamics-workspace">
+    <div class="dynamics-visual-column">
+      <figure class="dynamics-canvas theme-canvas">
+        <figcaption><div><p class="academic-label">{t(locale, "circularDynamics.canvas")}</p><h2>{t(locale, "circularDynamics.canvasTitle")}</h2><p>{t(locale, "circularDynamics.canvasHelp")}</p></div><div class="dynamics-status" data-regime="connected"><span>{t(locale, "simulation.state")}</span><strong data-status-text>{t(locale, "circularDynamics.status.connected")}</strong></div></figcaption>
+        <div class="dynamics-canvas__surface" data-circular-radial-canvas role="img" aria-label={t(locale, "circularDynamics.sceneAria")} aria-describedby="circular-scene-description"></div>
+        <p id="circular-scene-description" class="sr-only">{t(locale, "circularDynamics.sceneDescription")}</p>
+        <fieldset class="dynamics-view-toggles"><legend>{t(locale, "simulation.vectors")}</legend><label><input type="checkbox" data-vector-toggle="velocity" checked /> {t(locale, "circularDynamics.velocityVector")}</label><label><input type="checkbox" data-vector-toggle="acceleration" checked /> {t(locale, "circularDynamics.accelerationVector")}</label><label><input type="checkbox" data-vector-toggle="tension" checked /> {t(locale, "circularDynamics.tensionVector")}</label></fieldset>
+      </figure>
+      <div class="dynamics-data-grid">
+        <section class="dynamics-meter" aria-labelledby="tension-meter-title"><div><p class="academic-label">{t(locale, "circularDynamics.stringLimit")}</p><h2 id="tension-meter-title">{t(locale, "circularDynamics.meterTitle")}</h2></div><progress data-tension-progress max={parameters.Tmax} value={readings.requiredTension}></progress><dl><div><dt>{t(locale, "circularDynamics.required")}</dt><dd><span data-meter-required>{display(readings.requiredTension)}</span> N</dd></div><div><dt>{t(locale, "circularDynamics.limit")}</dt><dd><span data-meter-limit>{display(parameters.Tmax)}</span> N</dd></div><div><dt>{t(locale, "circularDynamics.ratio")}</dt><dd><span data-meter-ratio>{display(readings.requiredTension / parameters.Tmax * 100)}</span> %</dd></div></dl><p data-meter-note>{t(locale, "circularDynamics.meterWithin")}</p></section>
+        <section class="dynamics-readings" aria-labelledby="circular-readings-title"><div><p class="academic-label">{t(locale, "simulation.liveReadings")}</p><h2 id="circular-readings-title">{t(locale, "simulation.physicalState")}</h2></div><dl>{readingItems.map(([key, label, symbol, unit]) => <div><dt>{t(locale, label)} <span>{symbol}</span></dt><dd><span data-reading={key}>{display(readings[key])}</span> <small>{unit}</small></dd></div>)}</dl><p data-flight-status hidden>{t(locale, "circularDynamics.tangentialFlight")}</p></section>
+      </div>
+    </div>
+    <aside class="dynamics-controls" aria-labelledby="circular-controls-title"><div><p class="academic-label">{t(locale, "simulation.parameters")}</p><h2 id="circular-controls-title">{t(locale, "circularDynamics.configure")}</h2><p>{t(locale, "circularDynamics.changeHelp")}</p></div><fieldset class="dynamics-presets"><legend>{t(locale, "simulation.studyCases")}</legend><div data-presets-list>{experience.presets.map((preset) => <button type="button" data-preset={preset.id} aria-pressed="false">{preset.label}</button>)}</div></fieldset><form data-parameter-form novalidate><SimulationParameterFields controls={primary} locale={locale} prefix="circular" /><details><summary>{t(locale, "simulation.advancedParameters")}</summary><SimulationParameterFields controls={advanced} locale={locale} prefix="circular" /></details></form></aside>
+  </div>
+  <section class="dynamics-playback" aria-label={t(locale, "simulation.playback")}><div><button type="button" data-action="toggle" aria-pressed="false"><span data-playback-icon aria-hidden="true">▶</span> <span data-playback-label>{t(locale, "simulation.play")}</span></button><button type="button" data-action="reset"><span aria-hidden="true">↺</span> {t(locale, "simulation.reset")}</button><button type="button" data-action="cut">✂ {t(locale, "circularDynamics.cutString")}</button></div><p data-playback-state>{t(locale, "simulation.paused")}</p><p class="sr-only" aria-live="polite" data-simulation-live></p></section>
+  <noscript><p class="dynamics-noscript">{t(locale, "simulation.javascriptFallback")}</p></noscript>
+</section>
+
+<script>
+  import { initializeCircularRadialSimulation } from "../../scripts/circular-radial-force.js";
+  document.querySelectorAll("[data-circular-radial-simulation]").forEach((root) => {
+    if (!root.closest("[data-renderer-slot][hidden]")) initializeCircularRadialSimulation(root);
+  });
+</script>

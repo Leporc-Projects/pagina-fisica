@@ -4,6 +4,8 @@
 
 import { KINEMATICS_LIMITS } from "../utils/kinematics-1d.js";
 import { PROJECTILE_LIMITS } from "../utils/projectile-2d.js";
+import { FORCES_FRICTION_LIMITS } from "../utils/forces-friction.js";
+import { CIRCULAR_RADIAL_LIMITS } from "../utils/circular-radial-force.js";
 export { SIMULATION_RENDERER_IDS } from "./simulation-renderers.js";
 
 const parameter = ({ label, symbol, unit, limits, defaultStep }) =>
@@ -138,6 +140,62 @@ export const SIMULATION_MODELS = Object.freeze([
         velocityComponents: "Velocity components",
         keyPoints: "Launch, apex, and impact points",
       }
+    ),
+  }),
+  Object.freeze({
+    id: "forces-friction",
+    name: "Fuerzas, fricción y movimiento",
+    category: "Dinámica",
+    rendererId: "p5-forces-friction",
+    parameters: Object.freeze({
+      F: parameter({ label: "Fuerza aplicada", symbol: "F", unit: "N", limits: FORCES_FRICTION_LIMITS.F, defaultStep: 1 }),
+      beta: parameter({ label: "Inclinación de la superficie", symbol: "β", unit: "°", limits: FORCES_FRICTION_LIMITS.beta, defaultStep: 1 }),
+      muS: parameter({ label: "Coeficiente de fricción estática", symbol: "μ_s", unit: "", limits: FORCES_FRICTION_LIMITS.muS, defaultStep: 0.05 }),
+      muK: parameter({ label: "Coeficiente de fricción cinética", symbol: "μ_k", unit: "", limits: FORCES_FRICTION_LIMITS.muK, defaultStep: 0.05 }),
+      m: parameter({ label: "Masa", symbol: "m", unit: "kg", limits: FORCES_FRICTION_LIMITS.m, defaultStep: 0.5 }),
+      alpha: parameter({ label: "Ángulo de la fuerza respecto a la superficie", symbol: "α", unit: "°", limits: FORCES_FRICTION_LIMITS.alpha, defaultStep: 1 }),
+      g: parameter({ label: "Gravedad", symbol: "g", unit: "m/s²", limits: FORCES_FRICTION_LIMITS.g, defaultStep: 0.1 }),
+      v0: parameter({ label: "Velocidad inicial sobre la superficie", symbol: "v₀", unit: "m/s", limits: FORCES_FRICTION_LIMITS.v0, defaultStep: 0.5 }),
+    }),
+    views: Object.freeze({
+      scene: view("Escena sobre la superficie", true),
+      readings: view("Lecturas instantáneas"),
+      vectors: view("Vectores físicos"),
+      freeBodyDiagram: view("Diagrama de cuerpo libre", true),
+      frictionMeter: view("Medidor del umbral de fricción", true),
+      historyGraph: view("Historia de velocidad y fuerza neta", true),
+    }),
+    translations: translations(
+      "Forces, friction, and motion",
+      "Dynamics",
+      { F: "Applied force", beta: "Surface angle", muS: "Static-friction coefficient", muK: "Kinetic-friction coefficient", m: "Mass", alpha: "Force angle relative to the surface", g: "Gravity", v0: "Initial velocity along the surface" },
+      { scene: "Scene along the surface", readings: "Live readings", vectors: "Physical vectors", freeBodyDiagram: "Free-body diagram", frictionMeter: "Friction-threshold meter", historyGraph: "Velocity and net-force history" }
+    ),
+  }),
+  Object.freeze({
+    id: "circular-radial-force",
+    name: "Movimiento circular y fuerza radial",
+    category: "Dinámica",
+    rendererId: "p5-circular-radial-force",
+    parameters: Object.freeze({
+      v: parameter({ label: "Rapidez", symbol: "v", unit: "m/s", limits: CIRCULAR_RADIAL_LIMITS.v, defaultStep: 0.1 }),
+      R: parameter({ label: "Radio", symbol: "R", unit: "m", limits: CIRCULAR_RADIAL_LIMITS.R, defaultStep: 0.1 }),
+      Tmax: parameter({ label: "Tensión máxima de la cuerda", symbol: "T_max", unit: "N", limits: CIRCULAR_RADIAL_LIMITS.Tmax, defaultStep: 1 }),
+      m: parameter({ label: "Masa", symbol: "m", unit: "kg", limits: CIRCULAR_RADIAL_LIMITS.m, defaultStep: 0.1 }),
+    }),
+    views: Object.freeze({
+      scene: view("Escena circular", true),
+      readings: view("Lecturas instantáneas"),
+      vectors: view("Vectores físicos"),
+      freeBodyDiagram: view("Diagrama de cuerpo libre", true),
+      tensionMeter: view("Medidor del límite de tensión", true),
+      trail: view("Rastro y círculo de referencia", true),
+    }),
+    translations: translations(
+      "Circular motion and radial force",
+      "Dynamics",
+      { v: "Speed", R: "Radius", Tmax: "Maximum string tension", m: "Mass" },
+      { scene: "Circular scene", readings: "Live readings", vectors: "Physical vectors", freeBodyDiagram: "Free-body diagram", tensionMeter: "Tension-limit meter", trail: "Trail and reference circle" }
     ),
   }),
 ]);

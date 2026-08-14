@@ -43,6 +43,18 @@ export const SIMULATION_CATALOG = Object.freeze([
     route: "/simulaciones/proyectil-2d",
     category: "Cinemática",
   }),
+  Object.freeze({
+    experienceId: "forces-friction",
+    route: "/simulaciones/fuerzas-friccion",
+    enRoute: "/en/simulations/forces-friction",
+    category: "Dinámica",
+  }),
+  Object.freeze({
+    experienceId: "circular-radial-force",
+    route: "/simulaciones/dinamica-circular",
+    enRoute: "/en/simulations/circular-dynamics",
+    category: "Dinámica",
+  }),
 ]);
 
 export const SIMULATIONS = Object.freeze(SIMULATION_CATALOG.map((catalogEntry) => {
@@ -97,7 +109,7 @@ export const getPublishedSimulationsForLocale = (locale = "es") =>
     );
     const model = getSimulationModelById(experience.modelId);
     const route = locale === "en"
-      ? `/en/simulations/${experience.id}`
+      ? catalogEntry.enRoute ?? `/en/simulations/${experience.id}`
       : catalogEntry.route;
     return {
       id: experience.id,

@@ -1,6 +1,8 @@
 ---
 import KinematicsSimulation from "./KinematicsSimulation.astro";
 import ProjectileSimulation from "./ProjectileSimulation.astro";
+import ForcesFrictionSimulation from "./ForcesFrictionSimulation.astro";
+import CircularRadialSimulation from "./CircularRadialSimulation.astro";
 import {
   getSimulationExperienceByModelId,
 } from "../../data/simulation-experiences.js";
@@ -32,8 +34,16 @@ const kinematicsExperience = model.id === "kinematics-1d"
 const projectileExperience = model.id === "projectile-2d"
   ? experience
   : getSimulationExperienceByModelId("projectile-2d");
+const forcesExperience = model.id === "forces-friction"
+  ? experience
+  : getSimulationExperienceByModelId("forces-friction");
+const circularExperience = model.id === "circular-radial-force"
+  ? experience
+  : getSimulationExperienceByModelId("circular-radial-force");
 const renderKinematics = includeAllRenderers || renderer.id === "svg-kinematics-1d";
 const renderProjectile = includeAllRenderers || renderer.id === "p5-projectile-2d";
+const renderForces = includeAllRenderers || renderer.id === "p5-forces-friction";
+const renderCircular = includeAllRenderers || renderer.id === "p5-circular-radial-force";
 ---
 
 <div
@@ -49,6 +59,16 @@ const renderProjectile = includeAllRenderers || renderer.id === "p5-projectile-2
   {renderProjectile && (
     <div data-renderer-slot="p5-projectile-2d" hidden={renderer.id !== "p5-projectile-2d"}>
       <ProjectileSimulation experience={projectileExperience} preview={preview} locale={locale} />
+    </div>
+  )}
+  {renderForces && (
+    <div data-renderer-slot="p5-forces-friction" hidden={renderer.id !== "p5-forces-friction"}>
+      <ForcesFrictionSimulation experience={forcesExperience} preview={preview} locale={locale} />
+    </div>
+  )}
+  {renderCircular && (
+    <div data-renderer-slot="p5-circular-radial-force" hidden={renderer.id !== "p5-circular-radial-force"}>
+      <CircularRadialSimulation experience={circularExperience} preview={preview} locale={locale} />
     </div>
   )}
 </div>

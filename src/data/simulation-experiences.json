@@ -235,5 +235,117 @@
         ]
       }
     ]
+  },
+  {
+    "schemaVersion": "2.0.0",
+    "id": "forces-friction",
+    "version": 1,
+    "modelId": "forces-friction",
+    "title": "Fuerzas, fricción y movimiento",
+    "summary": "Explora cómo la fuerza aplicada, la inclinación de la superficie y la fricción estática o cinética determinan si un bloque permanece en reposo, comienza a deslizar o cambia su movimiento.",
+    "status": "published",
+    "translations": {
+      "en": {
+        "title": "Forces, friction, and motion",
+        "summary": "Explore how applied force, surface angle, and static or kinetic friction determine whether a block remains at rest, begins to slide, or changes its motion.",
+        "presetLabels": {
+          "static-below-limit": "Static friction adjusts",
+          "static-breaks": "Exceeds the threshold",
+          "incline-holds": "Incline held by static friction",
+          "incline-slides": "Sliding incline",
+          "angled-pull": "Pulling reduces the normal force"
+        },
+        "observations": [
+          "Use “Static friction adjusts” and increase F slowly. Notice that f_s matches the required force before reaching its maximum.",
+          "Cross the static threshold and compare μ_sN with the kinetic friction that follows.",
+          "Compare the inclined-plane presets: the weight component may be smaller or larger than the maximum static friction.",
+          "In “Pulling reduces the normal force”, change alpha and observe how an applied-force component changes N and therefore the available friction.",
+          "Give the block a positive initial velocity and configure a negative net force: velocity and acceleration can point in opposite directions while the block slows down."
+        ]
+      }
+    },
+    "parameters": {
+      "F": { "default": 20, "minimum": 0, "maximum": 60, "step": 1, "editable": true },
+      "beta": { "default": 0, "minimum": 0, "maximum": 35, "step": 1, "editable": true },
+      "muS": { "default": 0.5, "minimum": 0, "maximum": 0.8, "step": 0.05, "editable": true },
+      "muK": { "default": 0.3, "minimum": 0, "maximum": 0.8, "step": 0.05, "editable": true },
+      "m": { "default": 10, "minimum": 2, "maximum": 20, "step": 0.5, "editable": true },
+      "alpha": { "default": 0, "minimum": -30, "maximum": 30, "step": 1, "editable": true },
+      "g": { "default": 9.8, "minimum": 1, "maximum": 15, "step": 0.1, "editable": true },
+      "v0": { "default": 0, "minimum": -6, "maximum": 6, "step": 0.5, "editable": true }
+    },
+    "views": { "scene": true, "readings": true, "vectors": true, "freeBodyDiagram": true, "frictionMeter": true, "historyGraph": true },
+    "presets": [
+      { "id": "static-below-limit", "label": "Fricción estática se ajusta", "parameters": { "F": 20, "beta": 0, "muS": 0.5, "muK": 0.3, "m": 10, "alpha": 0, "g": 9.8, "v0": 0 } },
+      { "id": "static-breaks", "label": "Supera el umbral", "parameters": { "F": 55, "beta": 0, "muS": 0.5, "muK": 0.3, "m": 10, "alpha": 0, "g": 9.8, "v0": 0 } },
+      { "id": "incline-holds", "label": "Plano inclinado en reposo", "parameters": { "F": 0, "beta": 20, "muS": 0.4, "muK": 0.3, "m": 10, "alpha": 0, "g": 9.8, "v0": 0 } },
+      { "id": "incline-slides", "label": "Plano inclinado desliza", "parameters": { "F": 0, "beta": 30, "muS": 0.3, "muK": 0.2, "m": 10, "alpha": 0, "g": 9.8, "v0": 0 } },
+      { "id": "angled-pull", "label": "Tirar reduce la normal", "parameters": { "F": 50, "beta": 0, "muS": 0.5, "muK": 0.25, "m": 10, "alpha": 30, "g": 9.8, "v0": 0 } }
+    ],
+    "observations": [
+      "Usa “Fricción estática se ajusta” y aumenta F lentamente. Observa que f_s iguala la fuerza necesaria antes de llegar a su máximo.",
+      "Cruza el umbral estático y compara μ_sN con la fricción cinética posterior.",
+      "Compara los presets de plano inclinado: la componente del peso puede ser menor o mayor que la fricción estática máxima.",
+      "En “Tirar reduce la normal”, cambia alpha y observa cómo una componente de la fuerza aplicada modifica N y, con ello, la fricción disponible.",
+      "Da una velocidad inicial positiva y configura una fuerza neta negativa: velocidad y aceleración pueden apuntar en sentidos opuestos mientras el bloque se frena."
+    ],
+    "contexts": [
+      { "courseId": "fisica-basica-1", "unit": 2, "topics": ["fuerzas-interacciones", "segunda-ley", "diagramas-cuerpo-libre"] },
+      { "courseId": "fisica-basica-1", "unit": 3, "topics": ["dinamica-particulas", "fuerza-normal", "friccion"] }
+    ]
+  },
+  {
+    "schemaVersion": "2.0.0",
+    "id": "circular-radial-force",
+    "version": 1,
+    "modelId": "circular-radial-force",
+    "title": "Movimiento circular y fuerza radial",
+    "summary": "Explora la relación entre rapidez, radio, masa y fuerza radial mediante un cuerpo atado a una cuerda, y observa qué ocurre al cortar la cuerda o superar su tensión máxima.",
+    "status": "published",
+    "translations": {
+      "en": {
+        "title": "Circular motion and radial force",
+        "summary": "Explore how speed, radius, mass, and radial force are related for a body attached to a string, and observe what happens when the string is cut or its tension limit is exceeded.",
+        "presetLabels": {
+          "gentle-orbit": "Stable orbit",
+          "near-limit": "Near the limit",
+          "speed-breaks": "Speed breaks the string",
+          "mass-effect": "Effect of mass",
+          "wide-radius": "Larger radius"
+        },
+        "observations": [
+          "Double v while keeping m and R fixed: compare T_required before and after. It should increase by a factor of four.",
+          "Double R with m and v fixed: radial acceleration and required tension are halved.",
+          "Change only m: radial acceleration does not change, but required tension is proportional to m.",
+          "Press “Cut string” at different positions and observe that the free trajectory begins tangent to the circle.",
+          "Use “Speed breaks the string”: exceeding T_max does not create an orbit with a different radius; it removes the constraint that sustained circular motion."
+        ]
+      }
+    },
+    "parameters": {
+      "v": { "default": 4, "minimum": 0.5, "maximum": 10, "step": 0.1, "editable": true },
+      "R": { "default": 2, "minimum": 0.5, "maximum": 4, "step": 0.1, "editable": true },
+      "Tmax": { "default": 20, "minimum": 1, "maximum": 100, "step": 1, "editable": true },
+      "m": { "default": 1.5, "minimum": 0.5, "maximum": 5, "step": 0.1, "editable": true }
+    },
+    "views": { "scene": true, "readings": true, "vectors": true, "freeBodyDiagram": true, "tensionMeter": true, "trail": true },
+    "presets": [
+      { "id": "gentle-orbit", "label": "Órbita estable", "parameters": { "v": 2.5, "R": 2, "Tmax": 20, "m": 1 } },
+      { "id": "near-limit", "label": "Cerca del límite", "parameters": { "v": 4.8, "R": 2, "Tmax": 24, "m": 2 } },
+      { "id": "speed-breaks", "label": "La rapidez rompe la cuerda", "parameters": { "v": 6, "R": 2, "Tmax": 30, "m": 2 } },
+      { "id": "mass-effect", "label": "Efecto de la masa", "parameters": { "v": 4, "R": 2, "Tmax": 40, "m": 4 } },
+      { "id": "wide-radius", "label": "Radio mayor", "parameters": { "v": 5, "R": 4, "Tmax": 20, "m": 2 } }
+    ],
+    "observations": [
+      "Duplica v manteniendo m y R: compara T_required antes y después. Debe crecer por un factor de cuatro.",
+      "Duplica R con m y v fijos: la aceleración radial y la tensión requerida se reducen a la mitad.",
+      "Cambia solo m: la aceleración radial no cambia, pero la tensión requerida sí es proporcional a m.",
+      "Pulsa “Cortar cuerda” en distintas posiciones y observa que la trayectoria libre comienza tangente al círculo.",
+      "Usa “La rapidez rompe la cuerda”: superar T_max no crea una órbita de radio distinto; desaparece la restricción que mantenía el movimiento circular."
+    ],
+    "contexts": [
+      { "courseId": "fisica-basica-1", "unit": 1, "topics": ["circular-relativo"] },
+      { "courseId": "fisica-basica-1", "unit": 3, "topics": ["dinamica-circular"] }
+    ]
   }
 ]

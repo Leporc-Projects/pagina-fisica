@@ -21,6 +21,20 @@ const rendererClients = Object.freeze({
       destroy: module.destroyProjectileSimulation,
     })),
   }),
+  "p5-forces-friction": Object.freeze({
+    selector: "[data-forces-friction-simulation]",
+    load: () => import("./forces-friction.js").then((module) => ({
+      initialize: module.initializeForcesFrictionSimulation,
+      destroy: module.destroyForcesFrictionSimulation,
+    })),
+  }),
+  "p5-circular-radial-force": Object.freeze({
+    selector: "[data-circular-radial-simulation]",
+    load: () => import("./circular-radial-force.js").then((module) => ({
+      initialize: module.initializeCircularRadialSimulation,
+      destroy: module.destroyCircularRadialSimulation,
+    })),
+  }),
 });
 
 const mountedRenderers = new WeakMap();
