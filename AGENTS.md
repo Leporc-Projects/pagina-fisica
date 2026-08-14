@@ -37,6 +37,8 @@ Consult these guides before working on related tasks:
 
 ## Academic clarity
 
+- Register every developed unit explicitly in `src/data/physics/index.js` and route shared renderers through its adapter; do not discover units from folders or import a particular unit from generic components.
+- Exercise enums and the generic builder belong under `src/data/physics/`; unit modules may wrap them but must not duplicate the schema.
 - Conceptual difficulty must come from physics and reasoning, never from ambiguous wording.
 - Every core academic section develops one concept through four required layers: Essential explains its physical meaning accessibly, Understand develops relations and application, Deepen formalizes it, and Explore generalizes or connects it.
 - Keep only Essential visible initially; use native disclosures for Understand, Deepen, and Explore, with all content readable in print.

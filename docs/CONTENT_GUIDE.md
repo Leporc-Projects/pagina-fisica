@@ -119,7 +119,8 @@ Una modificación requiere:
 
 Cuando una unidad pase de catálogo a contenido desarrollado, debe tener su
 propio módulo bajo `src/data/physics/` y registrarse en
-`src/data/physics/index.js`. La Unidad 1 sirve como contrato de referencia:
+`src/data/physics/index.js`. Las Unidades 1 y 2 implementan el mismo contrato;
+una unidad nueva debe reutilizarlo:
 
 ```text
 unit.js          rutas, orden, fuentes y prioridad editorial
@@ -129,13 +130,15 @@ visualizations.js datos físicos y descripciones de figuras
 common-errors.js errores reutilizables
 exercises.js     banco original y metadatos editoriales
 math-content.js  presentación literal de expresiones inline con MathML
+localize.js      proyección ES/EN de teoría, fórmulas, figuras y errores
+bank.js          composición de ejercicios fijos y familias
 ```
 
 Para añadir un tema a una unidad ya implementada:
 
 1. registrarlo en `unit.js` con `order`, `slug`, título, ruta y prioridad;
 2. crear su entrada en `content.js` usando el mismo `slug`;
-3. añadir una ruta Astro breve que delegue en la plantilla de la unidad;
+3. añadir una ruta Astro breve por locale que delegue en el renderer académico común;
 4. referenciar fórmulas, figuras y errores por sus identificadores existentes;
 5. crear un identificador nuevo solo cuando el contrato realmente sea distinto;
 6. ejecutar las validaciones para detectar referencias huérfanas, orden o rutas inválidas.
@@ -190,10 +193,12 @@ Los apuntes y guías pueden incorporarse cuando sean propios, estén revisados y
 
 ## Añadir un ejercicio
 
-La Unidad 1 mantiene los ítems fijos en `exercises.js` y
-`additional-exercises.js`, las familias parametrizadas en `families.js` y los
-borradores importados en `teacher-questions.json`. `bank.js` compone esas
-fuentes para los consumidores. Los ejercicios son originales o parten
+Cada unidad mantiene sus ítems fijos en `exercises.js`, sus familias
+parametrizadas en `families.js` y la composición pública en `bank.js`. Unidad 1
+conserva además `additional-exercises.js` y los borradores importados en
+`teacher-questions.json`. Los enums viven una sola vez en
+`src/data/physics/exercise-schema.js`; `exercise-builder.js` contiene los
+defaults compartidos y cada unidad lo envuelve fijando su número. Los ejercicios son originales o parten
 de semillas expresamente aprobadas; no se copian bancos ni solucionarios
 comerciales. Cada registro usa un identificador estable y declara:
 
@@ -244,7 +249,7 @@ asociados a errores identificados. El fallback debe ser neutral porque una
 actividad puede ser conceptual, gráfica o numérica. Esta estructura no implica
 un motor adaptativo ni autoriza generar retroalimentación durante el uso.
 
-La práctica de Unidad 1 consume ítems fijos e instancias parametrizadas mediante
+La práctica de cada unidad desarrollada consume ítems fijos e instancias parametrizadas mediante
 `OpenPractice.astro`. JavaScript selecciona una tanda de hasta cinco ejercicios
 con variedad razonable y permite filtrar por tema, dificultad y tipo. El hash
 usa el `id` estable para volver a un ejercicio y el HTML conserva todos los
@@ -412,7 +417,7 @@ Los estados editoriales internos permanecen intactos.
 
 ## Añadir una fórmula
 
-Las fórmulas de la Unidad 1 viven en `formulas.js` y se referencian desde el
+Las fórmulas de cada unidad desarrollada viven en su `formulas.js` y se referencian desde el
 contenido por `id`. Cada registro debe incluir:
 
 - MathML nativo con la expresión, sin convertirla en imagen;
@@ -439,7 +444,7 @@ de `src/utils/mathml.js`. El registro aporta:
 - el árbol MathML construido con `mi`, `mn`, `sub`, `sup`, `frac`, `sqrt` y demás utilidades pequeñas.
 
 No se añade una regla genérica para interpretar guiones bajos, exponentes o
-paréntesis. Si aparece una expresión nueva, se registra de forma explícita y se
+paréntesis. Cada unidad mantiene sus literales en `math-content.js`; si aparece una expresión nueva, se registra de forma explícita y se
 revisa junto con su significado. `RichText.astro` la renderiza durante el
 build; no añade MathJax, KaTeX ni JavaScript cliente.
 
@@ -536,8 +541,8 @@ Estos valores desplazan únicamente la presentación del texto en unidades del
 `viewBox`; nunca modifican el vector, punto o trayectoria física. Deben usarse
 con moderación y revisarse en claro, oscuro y tamaños estrechos.
 
-En la Unidad 1, los contratos de las figuras viven en
-`src/data/physics/unit-1/visualizations.js`. Una sección solo guarda el `id` de
+Los contratos de las figuras viven en `src/data/physics/<unidad>/visualizations.js`.
+Una sección solo guarda el `id` de
 la figura que necesita. Así, datos físicos, transformación, geometría SVG y
 presentación visual permanecen en capas distintas.
 

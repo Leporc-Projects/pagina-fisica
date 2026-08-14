@@ -49,8 +49,9 @@ El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fe
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
-- `physics/index.js`: registro de unidades que ya tienen implementación académica.
-- `physics/unit-1/`: contrato modular de la primera unidad. Separa metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`) y ejercicios fijos (`exercises.js` y `additional-exercises.js`). `families.js` contiene generadores parametrizados auditables, `teacher-questions.json` conserva borradores importados y `bank.js` compone esas fuentes sin confundirlas. `math-content.js` es una capa de presentación: asocia fragmentos literales registrados con MathML sin modificar esas fuentes.
+- `physics/index.js`: registro explícito de las Unidades 1 y 2 desarrolladas y sus adapters de localización, contenido, fórmulas, figuras, errores, banco y MathML.
+- `physics/exercise-schema.js` y `exercise-builder.js`: taxonomía y construcción compartidas; cada unidad fija su número y su política de elegibilidad sin duplicar enums.
+- `physics/unit-1/` y `physics/unit-2/`: contratos modulares paralelos. Separan metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`), ejercicios fijos, familias y localización. Unidad 1 conserva además los Bonos y las preguntas docentes importadas; Unidad 2 no declara Bonos.
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -109,11 +110,11 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
   mismos renderers de producción para previsualizar.
 
 Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes y el texto secundario vive en `translations`. Los avisos usan esquema `3.0.0` y exigen locale explícito. Ningún adaptador aplica fallback editorial entre idiomas.
-- `academic/UnitTopicPage.astro`: plantilla común de las siete páginas de la Unidad 1; resuelve datos, profundidad, fórmulas, figuras, comprobaciones y navegación.
+- `academic/AcademicUnitLanding.astro`, `AcademicUnitPracticePage.astro` y `UnitTopicPage.astro`: renderers multiunidad que resuelven el adapter registrado y componen landing, práctica y temas sin importar módulos de una unidad concreta.
 - `academic/AcademicSection.astro`, `FormulaBlock.astro`, `ConceptCheck.astro` y `CommonErrors.astro`: presentan contratos académicos reutilizables sin duplicar su contenido en las rutas.
 - `academic/RichText.astro` e `InlineMath.astro`: convierten el contrato mixto texto/MathML en HTML estático; nunca interpretan entrada del navegador.
 - `academic/UnitLearningMap.astro`: índice visual reutilizable. Calcula la geometría desde el orden y cantidad de temas, pero conserva los enlaces en un `ol` navegable.
-- `academic/UnitOneNav.astro`: navegación local compacta alimentada por `UNIT_1.topics`; usa `details` nativo para evitar una segunda barra extensa durante la lectura.
+- `academic/AcademicUnitNav.astro`: navegación compacta alimentada por `unit.topics`; `UnitOneNav.astro` permanece como wrapper de compatibilidad.
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
 - `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
 - `bank/QuestionBankEditor.astro`: formulario docente local para previsualizar preguntas fijas y preparar un paquete JSON de borradores; no modifica el banco público.
@@ -466,6 +467,12 @@ prueba de autenticidad, firma ni certificación.
 editan desde el navegador. `UNIT_1_BANK_ITEMS` es la composición explícita que
 consumen Práctica y Bonos.
 
+Unidad 2 conserva su composición separada en `UNIT_2_BANK_ITEMS`. El runtime de
+Práctica consulta `physics/family-registry.js`, un registro ligero y explícito
+que materializa familias de ambas unidades sin cargar el resto del contenido
+académico ni acoplar el componente a Unidad 1. Solo el banco de Unidad 1 entra
+en Bonos, porque Unidad 2 no publica blueprints de Bono.
+
 Una instancia parametrizada recibe un ID derivado de su familia y de los
 parámetros, pero la interfaz no presenta el `familyId`. En Práctica se genera al
 entrar en una tanda. En Bono se materializa antes de crear el intento, y el
@@ -534,7 +541,7 @@ banco mediante `UNIT_1_EXERCISES`/`UNIT_1_BANK_ITEMS`. No se introduce un
 repositorio genérico. El reemplazo por un CMS se describe en
 [`CMS_ROADMAP.md`](./CMS_ROADMAP.md).
 
-### Arquitectura académica de la Unidad 1
+### Arquitectura académica multiunidad
 
 La implementación distingue los metadatos estables del curso, el contenido
 de cada unidad y su presentación:
@@ -542,13 +549,11 @@ de cada unidad y su presentación:
 ```text
 course.js (catálogo estable de siete unidades)
    ↓
-physics/index.js → unit-1/unit.js (rutas, orden y prioridad)
-   ↓
-content.js ─┬─ formulas.js
-            ├─ visualizations.js
-            ├─ common-errors.js
-            └─ exercises.js
-                 ↓ math-content.js (presentación literal texto + MathML)
+physics/index.js → adapter explícito → unit-1/ o unit-2/
+   ↓                                ├─ metadata + rutas
+renderer académico común             ├─ contenido + fórmulas
+                                    ├─ figuras + errores
+                                    └─ banco + presenter MathML
    ↓
 componentes academic/* + visualization/*
    ↓
@@ -556,8 +561,8 @@ rutas Astro breves, estáticas y base-aware
 ```
 
 Cada tema tiene una ruta explícita y delega su composición a
-`UnitTopicPage.astro`. Esta decisión permite que Astro detecte las páginas sin
-introducir una ruta dinámica y evita siete copias de la misma estructura. La
+`UnitTopicPage.astro`. Las rutas de Unidad 2 son wrappers estáticos breves, de
+modo que Astro detecta cada página sin una ruta dinámica ni copias del renderer. La
 plantilla busca las referencias declaradas por identificador; por eso una
 fórmula, figura o error puede reutilizarse sin duplicar su definición.
 
@@ -568,9 +573,9 @@ El contenido se ofrece con profundidad progresiva:
 - `deepen`: condiciones, matices o desarrollo formal;
 - `explore`: extensión opcional que no debe confundirse con un requisito.
 
-`UnitTopicPage` deja visibles `essential` y `understand`. `deepen` y `explore`
-usan `details` nativo; así reducen la longitud percibida sin ocultar la base
-necesaria para comprender el tema. Al imprimir, CSS revela esos bloques. El
+`AcademicSection` deja visible solo `essential`. `understand`, `deepen` y
+`explore` usan `details` nativo; así reducen la longitud percibida sin ocultar
+la base necesaria para comprender el tema. Al imprimir, CSS revela esos bloques. El
 índice lateral orienta la página, pero no es sticky: el único elemento
 contextual que sigue el scroll en escritorio es el resumen compacto de la
 unidad.
@@ -602,8 +607,8 @@ explícita. `purpose` separa
 `restricted`. La página solo consume ejercicios públicos de aprendizaje que no
 estén en borrador. Todavía no existe un banco de medición.
 
-Un ejercicio puede declarar `visualizationId`. `OpenPractice` lo resuelve contra
-`UNIT_1_VISUALIZATIONS` y entrega el mismo registro a
+Un ejercicio puede declarar `visualizationId`. El adapter de la unidad lo
+resuelve contra su registro y `OpenPractice` entrega la misma figura a
 `AcademicVisualization`; `exercises.js` nunca contiene copias de SVG. Las
 representaciones `graphical` y `visual` se validan contra una figura existente.
 
@@ -661,12 +666,12 @@ etiquetas sin alterar las coordenadas físicas; el componente limita su ancla al
 
 ### Mapa de aprendizaje
 
-El índice de Unidad 1 pasa `UNIT_1.topics` a `UnitLearningMap`. El componente
+Cada landing pasa `unit.topics` a `UnitLearningMap`. El componente
 deriva los puntos del número y orden de temas, dibuja conexiones decorativas en
 SVG y posiciona encima enlaces HTML reales. El SVG no es la fuente de verdad ni
 duplica títulos o rutas. En móvil, el mismo `ol` abandona la geometría radial y
 se presenta como un camino vertical; en impresión se convierte en una lista.
-La API (`unitLabel`, `unitTitle`, `topics`) permite reutilizarlo en Unidades 2–7.
+La API (`unitLabel`, `unitTitle`, `topics`) ya se comparte entre las Unidades 1 y 2 y queda disponible para unidades registradas posteriormente.
 
 ### Dominio y rutas de publicación
 
