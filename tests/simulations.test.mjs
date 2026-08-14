@@ -15,6 +15,7 @@ import {
   getSimulationsForCourseTopic,
 } from "../src/data/simulations.js";
 import { UNIT_1 } from "../src/data/physics/unit-1/unit.js";
+import { getAcademicUnitForContext } from "../src/data/physics/index.js";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 
@@ -38,20 +39,20 @@ test("categorías y estados pertenecen a taxonomías válidas", () => {
 
 test("la consulta pública excluye estados no publicados", () => {
   assert.ok(getPublishedSimulations().every((item) => item.status === "published"));
-  assert.equal(getPublishedSimulations().length, 2);
+  assert.equal(getPublishedSimulations().length, 4);
 });
 
-test("la consulta por categoría encuentra Cinemática y no inventa recursos", () => {
+test("la consulta por categoría encuentra Cinemática y Dinámica", () => {
   assert.deepEqual(getSimulationsByCategory("Cinemática").map((item) => item.id), [
     "kinematics-1d",
     "projectile-2d",
   ]);
-  assert.deepEqual(getSimulationsByCategory("Dinámica"), []);
+  assert.deepEqual(getSimulationsByCategory("Dinámica").map((item) => item.id), ["forces-friction", "circular-radial-force"]);
 });
 
 test("las categorías públicas se derivan de recursos publicados", () => {
   const categories = getPublishedSimulationCategories();
-  assert.deepEqual(categories, ["Cinemática"]);
+  assert.deepEqual(categories, ["Cinemática", "Dinámica"]);
   assert.ok(categories.every((category) => getSimulationsByCategory(category).length > 0));
 });
 
@@ -66,13 +67,12 @@ test("el catálogo no muestra categorías vacías ni badges promocionales", () =
 
 test("los contextos apuntan a cursos, unidades y temas reales", () => {
   const courseIds = new Set(COURSES.map((course) => course.id));
-  const topicSlugs = new Set(UNIT_1.topics.map((topic) => topic.slug));
-
   assert.ok(SIMULATIONS.every((simulation) =>
     simulation.contexts.every((context) =>
       courseIds.has(context.courseId) &&
-      context.unit === UNIT_1.number &&
-      context.topics.every((topic) => topicSlugs.has(topic))
+      context.topics.every((topic) =>
+        getAcademicUnitForContext(context.courseId, context.unit)?.topics.some(({ slug }) => slug === topic)
+      )
     )
   ));
 });
@@ -86,6 +86,8 @@ test("la consulta contextual aparece solo en los dos temas declarados", () => {
     ).map((item) => item.id);
     const expected = topic.slug === "movimiento-2d"
       ? ["projectile-2d"]
+      : topic.slug === "circular-relativo"
+        ? ["circular-radial-force"]
       : ["movimiento-1d", "ecuaciones-movimiento"].includes(topic.slug)
         ? ["kinematics-1d"]
         : [];

@@ -40,13 +40,15 @@ import {
 const clone = (value) => structuredClone(value);
 const fixedCrypto = { getRandomValues(bytes) { bytes.fill(0xcd); return bytes; } };
 
-test("registra dos modelos y dos renderers con relaciones únicas", () => {
-  assert.deepEqual(SIMULATION_MODELS.map((model) => model.id), ["kinematics-1d", "projectile-2d"]);
+test("registra cuatro modelos y cuatro renderers con relaciones únicas", () => {
+  assert.deepEqual(SIMULATION_MODELS.map((model) => model.id), ["kinematics-1d", "projectile-2d", "forces-friction", "circular-radial-force"]);
   assert.deepEqual(SIMULATION_RENDERERS.map((renderer) => renderer.id), [
     "svg-kinematics-1d",
     "p5-projectile-2d",
+    "p5-forces-friction",
+    "p5-circular-radial-force",
   ]);
-  assert.equal(new Set(SIMULATION_MODELS.map((model) => model.rendererId)).size, 2);
+  assert.equal(new Set(SIMULATION_MODELS.map((model) => model.rendererId)).size, 4);
   SIMULATION_MODELS.forEach((model) => {
     assert.equal(getSimulationRendererById(model.rendererId).modelId, model.id);
   });
@@ -62,10 +64,12 @@ test("cada vista declara label docente y condición visual", () => {
   });
 });
 
-test("las dos experiencias publicadas cumplen el contrato 2.0.0", () => {
+test("las cuatro experiencias publicadas cumplen el contrato 2.0.0", () => {
   assert.deepEqual(SIMULATION_EXPERIENCES.map((experience) => experience.id), [
     "kinematics-1d",
     "projectile-2d",
+    "forces-friction",
+    "circular-radial-force",
   ]);
   assert.ok(SIMULATION_EXPERIENCES.every((experience) => validateSimulationExperience(experience).valid));
 });
@@ -93,10 +97,12 @@ test("la regla de visualización se deriva de metadata del modelo", () => {
   }
 });
 
-test("el catálogo recupera ambas simulaciones y el contexto 2D correcto", () => {
+test("el catálogo recupera las cuatro simulaciones y sus contextos", () => {
   assert.deepEqual(getPublishedSimulations().map((simulation) => simulation.id), [
     "kinematics-1d",
     "projectile-2d",
+    "forces-friction",
+    "circular-radial-force",
   ]);
   assert.deepEqual(
     getSimulationsForCourseTopic("fisica-basica-1", 1, "movimiento-2d").map((item) => item.id),
@@ -106,13 +112,19 @@ test("el catálogo recupera ambas simulaciones y el contexto 2D correcto", () =>
     getSimulationsForCourseTopic("fisica-basica-1", 1, "movimiento-1d").map((item) => item.id),
     ["kinematics-1d"]
   );
+  assert.deepEqual(getSimulationsForCourseTopic("fisica-basica-1", 2, "segunda-ley").map((item) => item.id), ["forces-friction"]);
+  assert.deepEqual(getSimulationsForCourseTopic("fisica-basica-1", 3, "dinamica-circular").map((item) => item.id), ["circular-radial-force"]);
 });
 
 test("el Laboratorio construye configuraciones base independientes", () => {
   const kinematics = createSimulationLabBaseConfiguration("kinematics-1d");
   const projectile = createSimulationLabBaseConfiguration("projectile-2d");
+  const forces = createSimulationLabBaseConfiguration("forces-friction");
+  const circular = createSimulationLabBaseConfiguration("circular-radial-force");
   assert.deepEqual(Object.keys(kinematics.parameters), ["x0", "v0", "a", "T"]);
   assert.deepEqual(Object.keys(projectile.parameters), ["y0", "v0", "theta", "g"]);
+  assert.deepEqual(Object.keys(forces.parameters), ["F", "beta", "muS", "muK", "m", "alpha", "g", "v0"]);
+  assert.deepEqual(Object.keys(circular.parameters), ["v", "R", "Tmax", "m"]);
   kinematics.parameters.v0.default = -20;
   assert.equal(projectile.parameters.v0.default, 20);
   assert.throws(() => createSimulationLabBaseConfiguration("future-model"), RangeError);
@@ -165,9 +177,11 @@ test("el importador CLI acepta proyectil y conserva revisión", (context) => {
 });
 
 test("el lookup cliente solo reconoce renderers registrados", () => {
-  assert.deepEqual(getSimulationRendererClientIds(), ["svg-kinematics-1d", "p5-projectile-2d"]);
+  assert.deepEqual(getSimulationRendererClientIds(), ["svg-kinematics-1d", "p5-projectile-2d", "p5-forces-friction", "p5-circular-radial-force"]);
   assert.ok(getSimulationRendererClient("svg-kinematics-1d"));
   assert.ok(getSimulationRendererClient("p5-projectile-2d"));
+  assert.ok(getSimulationRendererClient("p5-forces-friction"));
+  assert.ok(getSimulationRendererClient("p5-circular-radial-force"));
   assert.equal(getSimulationRendererClient("arbitrary-renderer"), undefined);
   assert.equal(getSimulationModelById("projectile-2d").rendererId, "p5-projectile-2d");
 });

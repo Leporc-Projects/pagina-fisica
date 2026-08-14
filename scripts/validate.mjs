@@ -74,7 +74,7 @@ import { DEFAULT_LOCALE, LOCALES, SUPPORTED_LOCALES } from "../src/i18n/config.j
 import { UI_DICTIONARIES, getDictionaryKeys, t } from "../src/i18n/index.js";
 import { LOCALIZED_ROUTES, ROUTE_IDS, getRouteCounterpart } from "../src/i18n/routes.js";
 import { getLanguageMetadata } from "../src/i18n/metadata.js";
-import { ACADEMIC_UNITS } from "../src/data/physics/index.js";
+import { ACADEMIC_UNITS, getAcademicUnitForContext } from "../src/data/physics/index.js";
 import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
 import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
 import {
@@ -486,7 +486,6 @@ check(
 
 const simulationIds = SIMULATIONS.map((simulation) => simulation.id);
 const simulationRoutes = SIMULATIONS.map((simulation) => simulation.route);
-const unit1TopicSet = new Set(UNIT_1.topics.map((topic) => topic.slug));
 const simulationModelIds = SIMULATION_MODELS.map((model) => model.id);
 const simulationExperienceIds = SIMULATION_EXPERIENCES.map((experience) => experience.id);
 const simulationRendererIds = SIMULATION_RENDERERS.map((renderer) => renderer.id);
@@ -503,7 +502,7 @@ check(
         parameter.type === "number" &&
         parameter.label &&
         parameter.symbol &&
-        parameter.unit &&
+        typeof parameter.unit === "string" &&
         Number.isFinite(parameter.hardMinimum) &&
         Number.isFinite(parameter.hardMaximum) &&
         parameter.hardMinimum < parameter.hardMaximum &&
@@ -549,7 +548,7 @@ check(
 );
 
 check(
-  getPublishedSimulationCategories().join(",") === "Cinemática" &&
+  getPublishedSimulationCategories().join(",") === "Cinemática,Dinámica" &&
     getPublishedSimulationCategories().every((category) =>
       getPublishedSimulations().some((simulation) => simulation.category === category)
     ),
@@ -558,7 +557,7 @@ check(
 
 check(
   getPublishedSimulations().map((simulation) => simulation.id).join(",") ===
-    "kinematics-1d,projectile-2d" &&
+    "kinematics-1d,projectile-2d,forces-friction,circular-radial-force" &&
     getSimulationsForCourseTopic(
       COURSE.id,
       UNIT_1.number,
@@ -574,14 +573,18 @@ check(
       UNIT_1.number,
       "movimiento-2d"
     )[0]?.id === "projectile-2d" &&
+    getSimulationsForCourseTopic(COURSE.id, 2, "segunda-ley")[0]?.id === "forces-friction" &&
+    getSimulationsForCourseTopic(COURSE.id, 3, "dinamica-circular")[0]?.id === "circular-radial-force" &&
     SIMULATIONS.every((simulation) =>
       simulation.contexts.every((context) =>
         getCourseById(context.courseId) &&
-        context.unit === UNIT_1.number &&
-        context.topics.every((topic) => unit1TopicSet.has(topic))
+        getAcademicUnitForContext(context.courseId, context.unit)?.topics &&
+        context.topics.every((topic) =>
+          getAcademicUnitForContext(context.courseId, context.unit).topics.some(({ slug }) => slug === topic)
+        )
       )
     ),
-  "Las simulaciones 1D y de proyectil están publicadas en sus contextos académicos reales."
+  "Las cuatro simulaciones están publicadas en sus contextos académicos reales."
 );
 
 const projectileExperience = getSimulationExperienceById("projectile-2d");
