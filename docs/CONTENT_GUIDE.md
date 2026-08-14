@@ -119,7 +119,7 @@ Una modificación requiere:
 
 Cuando una unidad pase de catálogo a contenido desarrollado, debe tener su
 propio módulo bajo `src/data/physics/` y registrarse en
-`src/data/physics/index.js`. Las Unidades 1 y 2 implementan el mismo contrato;
+`src/data/physics/index.js`. Las Unidades 1, 2 y 3 implementan el mismo contrato;
 una unidad nueva debe reutilizarlo:
 
 ```text
@@ -127,12 +127,23 @@ unit.js          rutas, orden, fuentes y prioridad editorial
 content.js       explicación organizada por tema y profundidad
 formulas.js      expresiones MathML y condiciones de uso
 visualizations.js datos físicos y descripciones de figuras
+examples.js       ejemplos resueltos estáticos, sin grading ni estado estudiantil
 common-errors.js errores reutilizables
 exercises.js     banco original y metadatos editoriales
 math-content.js  presentación literal de expresiones inline con MathML
 localize.js      proyección ES/EN de teoría, fórmulas, figuras y errores
 bank.js          composición de ejercicios fijos y familias
 ```
+
+Los ejemplos resueltos se referencian por ID desde `content.js` y se localizan
+sin cambiar sus referencias a fórmulas o visualizaciones. Son exposición
+académica: no declaran respuesta calificable, feedback, intento, progreso ni
+estado estudiantil.
+
+La ley de Hooke aparece en una fuente de organización posterior, pero no forma
+parte del alcance autorizado de la Unidad 3. La reconciliación de esa
+discrepancia queda registrada para la revisión académica transversal del
+Bloque 9; no se añade como tema ni como deuda de implementación de esta unidad.
 
 Para añadir un tema a una unidad ya implementada:
 

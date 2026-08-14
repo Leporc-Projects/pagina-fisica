@@ -49,9 +49,9 @@ El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fe
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
-- `physics/index.js`: registro explícito de las Unidades 1 y 2 desarrolladas y sus adapters de localización, contenido, fórmulas, figuras, errores, banco y MathML.
+- `physics/index.js`: registro explícito de las Unidades 1, 2 y 3 desarrolladas y sus adapters de localización, contenido, fórmulas, figuras, ejemplos resueltos, errores, banco y MathML.
 - `physics/exercise-schema.js` y `exercise-builder.js`: taxonomía y construcción compartidas; cada unidad fija su número y su política de elegibilidad sin duplicar enums.
-- `physics/unit-1/` y `physics/unit-2/`: contratos modulares paralelos. Separan metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`), ejercicios fijos, familias y localización. Unidad 1 conserva además los Bonos y las preguntas docentes importadas; Unidad 2 no declara Bonos.
+- `physics/unit-1/`, `physics/unit-2/` y `physics/unit-3/`: contratos modulares paralelos. Separan metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`), ejercicios fijos, familias y localización. Unidad 3 añade ejemplos resueltos estáticos referenciados desde la teoría. Unidad 1 conserva además los Bonos y las preguntas docentes importadas; las Unidades 2 y 3 no declaran Bonos.
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -467,11 +467,12 @@ prueba de autenticidad, firma ni certificación.
 editan desde el navegador. `UNIT_1_BANK_ITEMS` es la composición explícita que
 consumen Práctica y Bonos.
 
-Unidad 2 conserva su composición separada en `UNIT_2_BANK_ITEMS`. El runtime de
+Las Unidades 2 y 3 conservan composiciones separadas en `UNIT_2_BANK_ITEMS` y
+`UNIT_3_BANK_ITEMS`. El runtime de
 Práctica consulta `physics/family-registry.js`, un registro ligero y explícito
-que materializa familias de ambas unidades sin cargar el resto del contenido
+que materializa familias de las tres unidades sin cargar el resto del contenido
 académico ni acoplar el componente a Unidad 1. Solo el banco de Unidad 1 entra
-en Bonos, porque Unidad 2 no publica blueprints de Bono.
+en Bonos, porque las Unidades 2 y 3 no publican blueprints de Bono.
 
 Una instancia parametrizada recibe un ID derivado de su familia y de los
 parámetros, pero la interfaz no presenta el `familyId`. En Práctica se genera al
@@ -549,10 +550,10 @@ de cada unidad y su presentación:
 ```text
 course.js (catálogo estable de siete unidades)
    ↓
-physics/index.js → adapter explícito → unit-1/ o unit-2/
+physics/index.js → adapter explícito → unit-1/, unit-2/ o unit-3/
    ↓                                ├─ metadata + rutas
 renderer académico común             ├─ contenido + fórmulas
-                                    ├─ figuras + errores
+                                    ├─ figuras + ejemplos + errores
                                     └─ banco + presenter MathML
    ↓
 componentes academic/* + visualization/*
@@ -561,7 +562,7 @@ rutas Astro breves, estáticas y base-aware
 ```
 
 Cada tema tiene una ruta explícita y delega su composición a
-`UnitTopicPage.astro`. Las rutas de Unidad 2 son wrappers estáticos breves, de
+`UnitTopicPage.astro`. Las rutas de las Unidades 2 y 3 son wrappers estáticos breves, de
 modo que Astro detecta cada página sin una ruta dinámica ni copias del renderer. La
 plantilla busca las referencias declaradas por identificador; por eso una
 fórmula, figura o error puede reutilizarse sin duplicar su definición.
@@ -671,7 +672,7 @@ deriva los puntos del número y orden de temas, dibuja conexiones decorativas en
 SVG y posiciona encima enlaces HTML reales. El SVG no es la fuente de verdad ni
 duplica títulos o rutas. En móvil, el mismo `ol` abandona la geometría radial y
 se presenta como un camino vertical; en impresión se convierte en una lista.
-La API (`unitLabel`, `unitTitle`, `topics`) ya se comparte entre las Unidades 1 y 2 y queda disponible para unidades registradas posteriormente.
+La API (`unitLabel`, `unitTitle`, `topics`) ya se comparte entre las Unidades 1, 2 y 3 y queda disponible para unidades registradas posteriormente.
 
 ### Dominio y rutas de publicación
 

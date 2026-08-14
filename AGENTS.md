@@ -43,6 +43,7 @@ Consult these guides before working on related tasks:
 - Every core academic section develops one concept through four required layers: Essential explains its physical meaning accessibly, Understand develops relations and application, Deepen formalizes it, and Explore generalizes or connects it.
 - Keep only Essential visible initially; use native disclosures for Understand, Deepen, and Explore, with all content readable in print.
 - Keep semantic MathML typographically integrated with surrounding text through the shared inline-math contract; do not add per-formula alignment hacks.
+- Keep worked examples static and explanatory: they may reference shared formulas and visualizations but must not carry grading, progress, or student-state fields.
 - A public simulations catalog represents published resources, not a roadmap. Derive visible categories from published simulations and do not add promotional availability or novelty badges to finished features.
 
 ## Code comments
