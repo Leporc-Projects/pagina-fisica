@@ -1616,11 +1616,8 @@ const learningMapSource = fs.readFileSync(
   path.join(projectRoot, "src/components/academic/UnitLearningMap.astro"),
   "utf8"
 );
-const unitIndexSource = fs.readFileSync(
-  path.join(
-    projectRoot,
-    "src/pages/fisica-basica-1/unidades/unidad-1/index.astro"
-  ),
+const academicLandingSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/AcademicUnitLanding.astro"),
   "utf8"
 );
 
@@ -1629,11 +1626,11 @@ check(
     learningMapSource.includes("<ol") &&
     learningMapSource.includes("<svg") &&
     learningMapSource.includes("withBase(topic.route)") &&
-    UNIT_1.topics.every((topic) =>
+    ACADEMIC_UNITS.flatMap((unit) => unit.topics).every((topic) =>
       !learningMapSource.includes(topic.route)
     ) &&
-    unitIndexSource.includes("topics={UNIT_1.topics}"),
-  "El mapa deriva nodos y rutas de UNIT_1.topics sin duplicarlos."
+    academicLandingSource.includes("topics={unit.topics}"),
+  "El mapa deriva nodos y rutas de la unidad registrada sin duplicarlos."
 );
 
 const topicPageSource = fs.readFileSync(
@@ -1646,7 +1643,7 @@ const academicSectionSource = fs.readFileSync(
 );
 
 check(
-    topicPageSource.includes("present={presentUnit1RichText}") &&
+    topicPageSource.includes("present={adapter.presentRichText}") &&
     academicSectionSource.includes("academic-layer--essential") &&
     academicSectionSource.includes("academic-details--understand") &&
     academicSectionSource.includes("academic-details--deepen") &&
