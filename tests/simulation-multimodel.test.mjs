@@ -64,6 +64,20 @@ test("cada vista declara label docente y condición visual", () => {
   });
 });
 
+test("las vistas de análisis dinámico mantienen paridad ES/EN sin cambiar schema", () => {
+  const forcesModel = getSimulationModelById("forces-friction");
+  const circularModel = getSimulationModelById("circular-radial-force");
+  assert.ok(forcesModel.views.frictionRelationGraph);
+  assert.ok(circularModel.views.relationshipGraphs);
+  assert.equal(getSimulationExperienceByModelId("forces-friction").views.frictionRelationGraph, true);
+  assert.equal(getSimulationExperienceByModelId("circular-radial-force").views.relationshipGraphs, true);
+  for (const id of ["forces-friction", "circular-radial-force"]) {
+    const experience = getSimulationExperienceByModelId(id);
+    assert.equal(experience.schemaVersion, "2.0.0");
+    assert.deepEqual(localizeSimulationExperience(experience, "es").views, localizeSimulationExperience(experience, "en").views);
+  }
+});
+
 test("las cuatro experiencias publicadas cumplen el contrato 2.0.0", () => {
   assert.deepEqual(SIMULATION_EXPERIENCES.map((experience) => experience.id), [
     "kinematics-1d",

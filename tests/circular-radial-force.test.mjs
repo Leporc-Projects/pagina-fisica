@@ -5,6 +5,7 @@ import {
   createCircularRadialState,
   cutCircularString,
   getConnectedCircularState,
+  getCircularRadialReadings,
   stepCircularRadial,
 } from "../src/utils/circular-radial-force.js";
 
@@ -58,6 +59,19 @@ test("tras el corte el movimiento es rectilíneo, uniforme y tangente", () => {
   assert.deepEqual(free.velocity, cut.velocity);
   assert.deepEqual(free.acceleration, { x: 0, y: 0 });
   assert.equal(free.tension, 0);
+  const readings = getCircularRadialReadings(free, base);
+  assert.equal(readings.tension, 0);
+  close(readings.requiredTension, base.m * base.v ** 2 / base.R);
+});
+
+test("la tensión actual desaparece tras corte o sobrecarga sin borrar la requerida", () => {
+  const manual = getCircularRadialReadings(cutCircularString(createCircularRadialState(base), base), base);
+  close(manual.tension, 0);
+  close(manual.requiredTension, base.m * base.v ** 2 / base.R);
+  const overloadParams = { ...base, v: 10, Tmax: 1 };
+  const overload = getCircularRadialReadings(stepCircularRadial(createCircularRadialState(overloadParams), overloadParams, 0.1), overloadParams);
+  close(overload.tension, 0);
+  close(overload.requiredTension, overloadParams.m * overloadParams.v ** 2 / overloadParams.R);
 });
 
 test("masa, rapidez y radio siguen las proporcionalidades exactas", () => {
