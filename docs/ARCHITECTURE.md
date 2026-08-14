@@ -103,10 +103,15 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `simulations/ProjectileSimulation.astro`: conserva controles, lecturas,
   descripción accesible y estado inicial en HTML; monta el renderer
   `p5-projectile-2d` sobre Canvas 2D solo cuando la experiencia lo necesita.
+- `simulations/ForcesFrictionSimulation.astro` y `CircularRadialSimulation.astro`:
+  presentan escenas p5 dominantes, controles HTML, estados, medidores y lecturas.
+  Sus runtimes coordinan el reloj, pero la física permanece en modelos puros
+  independientes del renderer.
 - `simulations/SimulationExperienceRenderer.astro`: dispatcher validado que
-  selecciona el componente real a partir de los registros de modelo y renderer.
+  selecciona uno de los cuatro componentes reales a partir de los registros de
+  modelo y renderer; los slots ocultos del Laboratorio no inicializan runtime.
 - `simulations/SimulationLab.astro`: constructor visual local de experiencias de
-  Cinemática 1D o Proyectil 2D; usa registros reales, controles nativos y los
+  cualquiera de los cuatro modelos; usa registros reales, controles nativos y los
   mismos renderers de producción para previsualizar.
 
 Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes y el texto secundario vive en `translations`. Los avisos usan esquema `3.0.0` y exigen locale explícito. Ningún adaptador aplica fallback editorial entre idiomas.
@@ -181,6 +186,8 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/simulaciones.astro` | `/simulaciones` |
 | `src/pages/simulaciones/cinematica-1d.astro` | `/simulaciones/cinematica-1d` |
 | `src/pages/simulaciones/proyectil-2d.astro` | `/simulaciones/proyectil-2d` |
+| `src/pages/simulaciones/fuerzas-friccion.astro` | `/simulaciones/fuerzas-friccion` |
+| `src/pages/simulaciones/dinamica-circular.astro` | `/simulaciones/dinamica-circular` |
 | `src/pages/herramientas.astro` | `/herramientas` |
 | `src/pages/actividades.astro` | `/actividades` |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
@@ -856,7 +863,7 @@ cambio de sentido; no conoce SVG ni la experiencia. La definición
 `kinematics-1d` expone `x0`, `v0`, `a` y `T`, con límites duros respectivos
 `[-50,50]`, `[-20,20]`, `[-10,10]` y `[1,20]`, y señala únicamente el renderer
 permitido `svg-kinematics-1d`. La experiencia `kinematics-1d` usa esquema
-`1.0.0` y configura rangos pedagógicos, defaults, bloqueo, vistas, presets,
+`2.0.0` y configura rangos pedagógicos, defaults, bloqueo, vistas, presets,
 observaciones y contextos; no admite funciones, HTML, CSS, URL, fórmulas ni
 propiedades silenciosas.
 
@@ -918,7 +925,7 @@ sirve desde el bundle local, sin CDN, y se atribuye en
 `/fisica-basica-1/herramientas/simulaciones` ofrece el primer constructor visual
 seguro. Presenta los modelos reales registrados y obtiene límites, etiquetas,
 vistas y renderer desde metadata. Título, resumen, parámetros, bloqueo, hasta
-cinco presets, hasta seis observaciones y contextos de Unidad 1 se mantienen en
+cinco presets, hasta seis observaciones y contextos de las unidades registradas se mantienen en
 memoria. Recargar descarta la sesión.
 
 ```text
@@ -926,7 +933,7 @@ formulario docente
    ↓ createSimulationExperienceDraft() + validación estricta
 experiencia draft
    ├─ dispatcher → renderer real del modelo seleccionado
-   └─ simulation pack 1.0.0 → descarga JSON explícita
+   └─ simulation pack 2.0.0 → descarga JSON explícita
                                   ↓
                      npm run import:simulations
                                   ↓ fuerza review
@@ -940,13 +947,13 @@ válido reconstruye la geometría una vez. El runtime mantiene un solo
 `requestAnimationFrame`, lo cancela al pausar y expone `destroy()` para abandonar
 la herramienta sin dejar listeners o animaciones activos.
 
-El pack y la experiencia usan esquemas separados `1.0.0`. El pack declara ID
+El pack y la experiencia usan esquemas separados `2.0.0`. El pack declara ID
 aleatorio, `createdAt`, `source: teacher` y experiencias `draft`; no incluye
 cuentas, cookies, almacenamiento, dispositivo ni datos estudiantiles. El
 importador solo lee JSON, valida el registro completo, rechaza IDs existentes y
 escribe mediante archivo temporal con estado `review`.
 
-El diseño ya registra un renderer SVG y otro p5/Canvas 2D. Añadir una tercera
+El diseño registra un renderer SVG y tres renderers p5/Canvas 2D. Añadir otra
 familia requiere modelo puro, metadata, renderer con ciclo de vida, experiencia
 validada y pruebas; el contenido no puede inyectar un renderer arbitrario.
 No existe editor de código o p5, parser de fórmulas, WebGL, sandbox, CMS, backend,

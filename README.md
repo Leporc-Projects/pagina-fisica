@@ -76,10 +76,14 @@ La cobertura actual está completa en español e inglés, tanto para el recorrid
 - `/simulaciones`: catálogo canónico cuyas categorías se derivan de las simulaciones publicadas.
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
 - `/simulaciones/proyectil-2d`: simulación propia de movimiento parabólico en Canvas 2D.
+- `/simulaciones/fuerzas-friccion`: fuerzas, fricción y movimiento sobre una superficie.
+- `/simulaciones/dinamica-circular`: fuerza radial, tensión y salida tangencial.
 - `/en/`: portada y recorrido público completo en inglés.
 - `/en/simulations`: catálogo completo de simulaciones en inglés.
 - `/en/simulations/kinematics-1d`: Cinemática 1D en inglés.
 - `/en/simulations/projectile-2d`: Proyectil 2D en inglés.
+- `/en/simulations/forces-friction`: Fuerzas y fricción en inglés.
+- `/en/simulations/circular-dynamics`: Dinámica circular en inglés.
 - `/en/basic-physics-1/tools`: hub docente y contrapartes inglesas completas de las cinco herramientas.
 - `/herramientas`: acceso de compatibilidad al hub docente del curso.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
@@ -179,9 +183,9 @@ git status
 ## Simulaciones publicadas
 
 Las experiencias interactivas comparten un contrato declarativo, pero cada
-modelo conserva su renderer. Cinemática 1D usa SVG y el proyectil 2D usa p5.js
-en modo instancia sobre Canvas 2D. Los modelos físicos puros viven en
-`src/utils/kinematics-1d.js` y `src/utils/projectile-2d.js`; sus parámetros,
+modelo conserva su renderer. Cinemática 1D usa SVG; proyectil, fuerzas/fricción
+y dinámica circular usan p5.js en modo instancia sobre Canvas 2D. Los cuatro
+modelos físicos puros viven en `src/utils/`; sus parámetros,
 límites y vistas se registran en `src/data/simulation-models.js`; la relación
 cerrada modelo/renderer vive en `src/data/simulation-renderers.js`; y la
 configuración pedagógica publicada vive en
@@ -192,8 +196,9 @@ El contrato de experiencia y el de paquete usan esquema `2.0.0`. Una experiencia
 solo contiene datos: defaults y rangos pedagógicos, parámetros editables o
 bloqueados, vistas, hasta cinco casos de estudio, guía en texto plano y
 contextos académicos opcionales. Los renderers reales son
-`svg-kinematics-1d` y `p5-projectile-2d`. Ambos reciben estado ya calculado por
-los modelos puros: el dibujo no incorpora ecuaciones físicas nuevas.
+`svg-kinematics-1d`, `p5-projectile-2d`, `p5-forces-friction` y
+`p5-circular-radial-force`. Todos reciben estado ya calculado por los modelos
+puros: el dibujo no incorpora ecuaciones físicas nuevas.
 
 Los tres casos publicados son movimiento uniforme (`x₀=-6`, `v₀=2,5`, `a=0`,
 `T=6`), parte del reposo (`x₀=-4`, `v₀=0`, `a=1,5`, `T=6`) y frena y regresa
@@ -203,7 +208,7 @@ iniciales útiles cuando JavaScript está desactivado.
 
 El Laboratorio de simulaciones funciona completamente en memoria, no usa red,
 `localStorage` ni identidad docente. Previsualiza mediante el mismo componente y
-runtime que producción para cualquiera de los dos modelos registrados y descarga
+runtime que producción para cualquiera de los cuatro modelos registrados y descarga
 un `simulation experience pack` en estado `draft`. Al cambiar de modelo reinicia
 parámetros, vistas, presets y contextos incompatibles. Para incorporarlo al
 almacenamiento editorial:
