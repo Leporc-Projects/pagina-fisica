@@ -7,6 +7,7 @@ import AcademicUnitNav from "./AcademicUnitNav.astro";
 import CommonErrors from "./CommonErrors.astro";
 import ConceptCheck from "./ConceptCheck.astro";
 import FormulaBlock from "./FormulaBlock.astro";
+import WorkedExample from "./WorkedExample.astro";
 import { getAcademicUnitAdapter } from "../../data/physics/index.js";
 import { COURSE } from "../../data/course.js";
 import { getSimulationsForCourseTopic } from "../../data/simulations.js";
@@ -73,6 +74,10 @@ let checkNumber = 0;
       <div class="unit-topic-content">
         {content.sections.map((section, sectionIndex) => (
           <AcademicSection section={section} index={sectionIndex + 1} present={adapter.presentRichText} locale={locale}>
+            {(section.examples ?? []).map((exampleId) => {
+              const example = adapter.getExample?.(exampleId, locale);
+              return example ? <WorkedExample example={example} present={adapter.presentRichText} locale={locale} /> : null;
+            })}
             {(section.formulas ?? []).map((formulaId) => {
               const formula = adapter.getFormula(formulaId, locale);
               return formula ? <FormulaBlock formula={formula} present={adapter.presentRichText} locale={locale} /> : null;

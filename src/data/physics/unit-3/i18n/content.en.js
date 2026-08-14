@@ -1,0 +1,252 @@
+const section = (title, essential, understand, deepen, explore, checks) => ({
+  title, essential: [essential], understand: [understand], deepen: [deepen], explore: [explore], ...(checks ? { checks } : {}),
+});
+const check = (question, answer) => ({ question, answer });
+
+export default {
+  equilibrio: {
+    introduction: "Translational equilibrium does not mean that «nothing happens»: it means that the velocity vector does not change. Solving an equilibrium problem requires choosing the system, representing every external force, and checking that their vector sum is zero.",
+    sections: {
+      "condicion-de-equilibrio": section(
+        "Equilibrium condition",
+        "An object is in translational equilibrium when its acceleration is zero. In an inertial frame this requires zero net force. The object may be at rest or move in a straight line at constant velocity.",
+        "Zero net force does not mean that no forces exist. Several forces may act and balance one another. The condition is vectorial: if any component of net force is nonzero, there is acceleration along that component.",
+        "The condition is ΣF_ext = 0. In Cartesian coordinates this means ΣF_x = 0, ΣF_y = 0 and, when needed, ΣF_z = 0. These are component equations of one vector balance.",
+        "Equilibrium depends on the chosen system and reference frame. The same scene can be analysed with different systems, but each choice changes which forces are external and which unknowns appear. The goal is not to memorize equations but to build a consistent balance.",
+        [check("A box moves at constant velocity in +x. Can it be in translational equilibrium?", "Yes. Equilibrium means zero acceleration, not zero velocity."), check("Three forces act on a ring and ΣF_x=0, but ΣF_y=4 N. Is it in equilibrium?", "No. One nonzero net-force component is enough to produce acceleration.")],
+      ),
+      "estrategia-equilibrio": section(
+        "A strategy for equilibrium",
+        "Before calculating, isolate the body or system, draw its FBD, choose axes, and name each force by its agent. Then write one equilibrium equation for each necessary direction.",
+        "Choose axes that simplify components. On an incline, for example, axes parallel and perpendicular to the surface can avoid decomposing the normal force.",
+        "Compare the number of useful equations with the number of unknowns. Missing equations often indicate a geometric constraint or an additional physical relation. Extra «forces» in an FBD often reveal that a non-force quantity has been included.",
+        "A strong solution also checks signs, dimensions, and limiting cases. If an expression predicts a negative tension or a normal force incompatible with contact, the assumed physical regime may have changed.",
+        [check("Why are axes parallel and perpendicular to an incline often useful?", "They can reduce the number of forces that need to be decomposed.")],
+      ),
+      "equilibrio-con-angulos": section(
+        "Equilibrium with angled forces",
+        "When a force is angled relative to the axes, its effect along each direction is described by components. Equilibrium requires positive and negative components to balance separately.",
+        "The correct sine or cosine depends on the axis from which the angle is measured. Before writing a component, identify geometrically which projection lies along the axis and what sign it has.",
+        "A force of magnitude F at angle θ from +x has components F_x = F cosθ and F_y = F sinθ. Equilibrium equations can then determine unknown tensions, applied forces, or reactions.",
+        "Vector diagrams can predict the structure of the answer before algebra. For two symmetric ropes holding a load, horizontal components must cancel. Using that symmetry reduces unnecessary calculation.",
+      ),
+    },
+  },
+  "dinamica-particulas": {
+    introduction: "In dynamics the net force is no longer zero: its direction and magnitude determine acceleration. The main difficulty is often modelling interactions and constraints correctly before solving the equations.",
+    sections: {
+      "del-dcl-a-la-ecuacion": section(
+        "From the FBD to the equation",
+        "The basic procedure is: choose the system, draw the FBD, select axes, sum force components, and apply ΣF_ext = ma.",
+        "Acceleration must refer to the same system as the forces. If the system is a box, its equation cannot contain a force that acts on the rope or another block.",
+        "For constant mass, each component satisfies ΣF_i = ma_i. One component may be in equilibrium while another accelerates; for example a_y = 0 while a_x ≠ 0.",
+        "Separating modelling from algebra makes the same structure reusable across many problems. Geometry changes components, not the underlying dynamical balance.",
+      ),
+      "sistemas-con-varios-cuerpos": section(
+        "Multi-body systems",
+        "When several bodies interact, analyse them separately or choose them as a single system. The best choice depends on the unknown you need.",
+        "Separate-body analysis exposes internal forces such as tension or contact. Grouping the bodies can remove those internal forces from the external balance, making the common acceleration easier to find.",
+        "If masses m1 and m2 move together under a horizontal force F and other horizontal external forces are negligible, the combined system satisfies F = (m1+m2)a. A second equation for one block can then determine the internal contact force.",
+        "A larger system simplifies some unknowns while hiding others. This freedom is a modelling tool: there is not one universal FBD for a scene, but one correct FBD for each declared system.",
+        [check("Two blocks move together. Can the pair be analysed as one system?", "Yes. Internal contact forces can cancel from the external-force balance.")],
+      ),
+      "restricciones-de-movimiento": section(
+        "Motion constraints",
+        "Connected bodies cannot always accelerate independently. An inextensible rope or contact surface may impose a relation between their motions.",
+        "For a simple ideal rope over a fixed pulley, motion of one end must be matched by the other end so the total rope length remains constant.",
+        "Geometric constraints provide extra kinematic equations. For one inextensible rope over an ideal fixed pulley, the acceleration magnitudes of the ends are equal, although signs depend on the chosen axes.",
+        "Movable-pulley systems can produce relations such as 2a_A + a_B = 0. Such relations should be derived from the total rope length rather than memorized.",
+      ),
+      "comprobacion-fisica": section(
+        "Physical checks",
+        "After solving, ask whether the acceleration direction and force magnitudes make physical sense.",
+        "An algebraic result may be mathematically valid but incompatible with the assumed regime. A negative normal force may indicate loss of contact; a required static friction larger than μ_sN means the assumed rest state cannot persist.",
+        "Limiting cases help validate expressions. If an applied force tends to zero, the solution should approach the corresponding unforced behaviour. If mass becomes very large under the same net force, acceleration should decrease.",
+        "These checks are part of scientific modelling. Equations do more than produce numbers: they also reveal when an assumption becomes inconsistent.",
+        [check("A solution gives a=0 although external net force is nonzero. What should be checked first?", "The FBD, signs and components, and whether forces and acceleration refer to the same system.")],
+      ),
+    },
+  },
+  "fuerza-normal": {
+    introduction: "The normal force is the perpendicular component of a contact interaction between surfaces. Its magnitude is not universal; it must follow from the dynamical balance perpendicular to the contact.",
+    sections: {
+      "significado-de-normal": section(
+        "Meaning of the normal force",
+        "A surface can push a body perpendicular to itself. This contact component is the normal force.",
+        "«Normal» means perpendicular, not «equal to weight.» On a horizontal table with only weight and vertical support and with a_y = 0, N = mg; that equality follows from those specific conditions.",
+        "The normal force arises from microscopic deformation of the surfaces. In the macroscopic model it behaves as a constraint force whose value adjusts to prevent interpenetration while contact exists.",
+        "An ordinary surface normal can push but not pull. If the equations require N < 0, the assumed contact is no longer physically possible and the model must change.",
+        [check("A block is on a horizontal table and someone pulls partly upward. Must N still equal mg?", "No. The upward component of the applied force can reduce N.")],
+      ),
+      "normal-en-superficie-inclinada": section(
+        "Normal force on an incline",
+        "On an incline, the normal force remains perpendicular to the surface, not vertical.",
+        "If there is no acceleration perpendicular to the plane and no other force has a normal component, weight contributes mg cosθ into the plane, giving N = mg cosθ.",
+        "An applied force with a perpendicular component changes N. Therefore N = mg cosθ is not a universal identity but the result of a specific balance.",
+        "Pushing an object into a surface increases N; pulling partly away reduces it. Because many friction models depend on N, the direction of an applied force can also change the available friction.",
+      ),
+      "normal-en-sistemas-acelerados": section(
+        "Normal force in vertically accelerating systems",
+        "A scale or elevator floor exerts a normal force on a person. This normal may be greater than, less than, or equal to mg depending on acceleration.",
+        "With +y upward, N - mg = ma_y. Upward acceleration gives N > mg; downward acceleration while contact remains gives N < mg.",
+        "Many «weight» scales actually measure the normal force and convert it to a mass reading through calibration. The reading may change while the person's mass does not.",
+        "In ideal free fall, a_y = -g and the equation gives N = 0. This is apparent weightlessness: gravity still acts, but the support force vanishes.",
+        [check("During ideal free fall in an elevator, what happens to N?", "N=0 while the body is not supported by the floor.")],
+      ),
+    },
+  },
+  tension: {
+    introduction: "Tension models the force transmitted by a stretched rope, string, or cable. Its value depends on the system and on the idealizations used for ropes and pulleys.",
+    sections: {
+      "que-es-la-tension": section(
+        "What tension means",
+        "A taut rope pulls bodies attached to its ends along the local direction of the rope. An ideal rope does not push.",
+        "In a body's FBD, tension points away from the body along the rope. The third-law partner acts on the rope and belongs to a different system.",
+        "Tension can be interpreted as the internal force transmitted across an ideal rope section. For a massless rope with no pulley dynamics, a finite tension difference would imply an unbounded acceleration of an ideal massless element; the model therefore gives uniform tension along a connected segment.",
+        "In a massive rope, tension may vary with position because different sections must accelerate different amounts of mass. «Same tension» is an idealization, not a universal law.",
+      ),
+      "cuerda-y-polea-ideales": section(
+        "Ideal rope and pulley",
+        "For an inextensible massless rope over an ideal pulley, tension has the same magnitude on both sides of the same rope.",
+        "The ideal pulley changes the direction of tension without loss or a magnitude difference. Constant rope length also constrains the connected bodies' motion.",
+        "For two masses connected over an ideal fixed pulley, write two Newton equations plus the kinematic constraint. The common acceleration and tension come from solving the system; T = mg is not assumed.",
+        "A pulley with rotational inertia generally requires different tensions on its two sides to produce torque. That belongs to rotational dynamics, not the ideal pulley model used here.",
+        [check("Why is the same T used on both sides of an ideal rope over an ideal pulley?", "It follows from the massless-rope and ideal-pulley model; it is not universal.")],
+      ),
+      "tension-y-geometria": section(
+        "Tension and geometry",
+        "When several ropes support a body, each tension points along its rope. Their components combine in the body's force balance.",
+        "Two symmetric ropes can cancel their horizontal components while their vertical components support a load.",
+        "If two equal tensions T make angle θ above the horizontal and support a mass in equilibrium, 2T sinθ = mg. As θ becomes small, T must become very large to keep the same vertical component.",
+        "A nearly horizontal cable can support a load only with very large tension. This explains why cable geometry and anchor design matter in real structures.",
+        [check("Two nearly horizontal cables support a load. What happens to T as the angle above horizontal approaches zero?", "It grows very large because the vertical component is T sinθ.")],
+      ),
+    },
+  },
+  friccion: {
+    introduction: "Friction is a tangential contact force. Introductory friction models are empirical and approximate: they capture useful regularities without modelling all microscopic details of real surfaces.",
+    sections: {
+      "direccion-de-friccion": section(
+        "Direction of friction",
+        "Friction opposes relative sliding between surfaces or the tendency to slide that would occur without friction.",
+        "It does not always point opposite the object's motion relative to the ground. When walking without slipping, for example, static friction from the ground on the foot can point forward.",
+        "Determine the direction by first imagining the relative motion at the contact if friction vanished. Friction acts to oppose that relative motion or tendency.",
+        "For wheels, belts, or stacked bodies, friction direction can be unintuitive. Therefore it should not be assigned from a memorized rule such as «always opposite the centre-of-mass velocity.»",
+        [check("Does friction always point opposite the centre-of-mass velocity?", "No. It opposes relative sliding or its tendency at the contact.")],
+      ),
+      "friccion-estatica": section(
+        "Static friction",
+        "Static friction acts when the surfaces do not slide relative to one another. Its magnitude adjusts to what is needed to prevent sliding, up to a maximum.",
+        "The model is 0 ≤ f_s ≤ μ_s N. Equality f_s = μ_sN applies only at impending slip, not in every static situation.",
+        "To test whether rest is possible, first calculate the friction required by equilibrium. Then check whether |f_s,required| ≤ μ_sN. If not, the assumed static regime is inconsistent.",
+        "The coefficient μ_s summarizes properties of a surface pair under specified conditions. It is not a fundamental constant and may vary with contamination, temperature, surface preparation, and other factors.",
+        [check("A block is at rest and μ_sN=50 N. It is pushed with 12 N and does not slip. What is f_s?", "12 N opposite the push, not 50 N.")],
+      ),
+      "friccion-cinetica": section(
+        "Kinetic friction",
+        "When surfaces slide, the introductory model uses kinetic friction with approximate magnitude f_k = μ_kN, opposite the relative sliding velocity.",
+        "Kinetic friction is not chosen to balance other forces. Within the model its magnitude follows from μ_k and N; the resulting net force then determines acceleration.",
+        "For many dry surface pairs, μ_k is approximately smaller than μ_s, but this is not a fundamental law. The simple model also neglects dependence on speed, temperature, and microscopic contact conditions.",
+        "When Coulomb friction is inadequate, a more specific force law is needed. Recognizing a model's limit is better than forcing μ_kN onto every situation.",
+        [check("Once a block is sliding, can f_k be chosen to force ΣF=0?", "No. In the model f_k=μ_kN and Newton's second law then determines a.")],
+      ),
+      "rodamiento-y-limites": section(
+        "Rolling resistance and model limits",
+        "Rolling without slipping does not mean that friction is absent. Static friction may act at the contact, and real systems can also lose energy through deformation.",
+        "Rolling resistance is not the same as kinetic sliding friction. A rolling tyre may have nearly static instantaneous contact while still dissipating energy through deformation of tyre and road.",
+        "This unit does not introduce a universal quantitative law for rolling resistance. The distinction is conceptual so that μ_kN is not used when there is no sliding.",
+        "Friction models are phenomenological. Choosing among static friction, kinetic friction, rolling resistance, or fluid drag depends on the dominant physical mechanism and required accuracy.",
+      ),
+    },
+  },
+  "resistencia-fluidos": {
+    introduction: "A body moving relative to a fluid can experience a drag force opposite that relative velocity. Its dependence on speed changes with flow regime and geometry.",
+    sections: {
+      "fuerza-de-arrastre": section(
+        "Drag force",
+        "Fluid resistance acts against relative motion between a body and the fluid. If the air itself moves, the relevant velocity is the body's velocity relative to the air, not necessarily relative to the ground.",
+        "At low speeds in some viscous regimes, a linear model F_D = -b v_rel is useful. In other regimes, a force approximately quadratic in speed is common.",
+        "A useful vector form of quadratic drag is F_D = -c |v_rel| v_rel. The magnitude is c v_rel² and the vector form guarantees opposition to the relative velocity.",
+        "Coefficients b and c depend on fluid, shape, size, and flow regime. They are not universal constants. A change of regime can change the functional form itself.",
+        [check("A cyclist has a tailwind. Which velocity determines aerodynamic drag?", "The cyclist's velocity relative to the air.")],
+      ),
+      "rapidez-terminal": section(
+        "Terminal speed",
+        "A falling body in a fluid may accelerate at first and then approach a constant speed when drag balances weight.",
+        "Terminal speed occurs when net force is zero, not when gravity disappears. Weight still acts and is balanced by drag and, in a more complete model, by other forces such as buoyancy.",
+        "For a simple vertical model neglecting buoyancy, linear drag gives terminal speed magnitude v_t = mg/b; quadratic drag gives v_t = sqrt(mg/c). These results depend on the stated model.",
+        "The approach to v_t can be gradual. With linear drag and downward positive, m dv/dt = mg - bv. Its solution contains a time scale m/b, although deriving the full solution is not a core requirement here.",
+        [check("At terminal speed, does weight disappear?", "No. Net force is zero because drag balances weight in the simple model.")],
+      ),
+      "modelo-y-realidad": section(
+        "Model versus reality",
+        "There is no single drag formula valid for every fluid and every speed.",
+        "Before using b v or c v², state the model. A numerical answer without that assumption may look precise while representing the system poorly.",
+        "Flow regime is often characterized by dimensionless parameters such as Reynolds number. This unit uses that idea only to explain why drag laws change; it does not develop fluid dynamics.",
+        "Comparing a model with experimental data can estimate drag coefficients and identify the speed range over which an approximation is useful.",
+      ),
+    },
+  },
+  "dinamica-circular": {
+    introduction: "Circular motion requires radial acceleration toward the centre. That acceleration does not create a new force: it must be produced by the radial component of the physical forces already present in the FBD.",
+    sections: {
+      "fuerza-radial-neta": section(
+        "Net radial force",
+        "For speed v on a circular path of radius R, radial acceleration has magnitude v²/R and points toward the centre.",
+        "The radial dynamical equation is ΣF_r = m a_r. If inward is chosen positive, it can be written ΣF_inward = m v²/R.",
+        "«Centripetal» describes the direction of acceleration or radial resultant; it is not an additional interaction. Tension, normal force, gravity, or friction may supply the radial force depending on the system.",
+        "If speed changes, tangential acceleration may also exist. Newton's second law then separates naturally into radial and tangential directions.",
+        [check("On a flat curve, should a «centripetal force» arrow be added in addition to friction?", "No. Friction can be the physical force providing the radial resultant."), check("In uniform circular motion, is a=0 because speed is constant?", "No. The direction of v changes, so radial acceleration exists.")],
+      ),
+      "curva-horizontal": section(
+        "Horizontal curve",
+        "On a flat unbanked curve, static friction between tyres and road may provide the horizontal force that keeps a vehicle on a circular path.",
+        "For a horizontal road with no vertical acceleration, N = mg. The required friction is m v²/R and must not exceed μ_sN if slipping is to be avoided.",
+        "The condition m v²/R ≤ μ_s mg gives v ≤ sqrt(μ_s g R) in this model. Mass cancels, so the ideal limit depends on μ_s, g, and R.",
+        "This does not mean all real vehicles share the same limit. Tyres, aerodynamics, suspension, and load distribution can make the simple model inadequate.",
+      ),
+      "curva-peraltada": section(
+        "Banked curve",
+        "A banked road tilts the normal force so that it has a horizontal component toward the centre of the curve.",
+        "At one design speed, an ideal banked curve can use the horizontal component of N to supply the entire radial force without friction.",
+        "With no friction and bank angle θ above horizontal: N cosθ = mg and N sinθ = m v²/R. Dividing gives tanθ = v²/(Rg).",
+        "If speed differs from the design value, friction may be needed and its direction depends on the tendency to slide up or down the bank. This is an extension, not a rule to memorize.",
+        [check("On an ideal frictionless banked curve at design speed, which force provides the horizontal radial component?", "The normal force.")],
+      ),
+      "circulo-vertical": section(
+        "Vertical circle",
+        "On a vertical circular path, the inward direction changes with position, so weight may help or oppose the required radial force.",
+        "At the top, weight and an inward normal or tension can both contribute to m v²/R. At the bottom, weight points opposite the inward radial direction.",
+        "Write the local equation using a clear radial sign convention. At the bottom of a track with an upward normal force, for example, N - mg = m v²/R.",
+        "If a track can only push, N ≥ 0 determines whether contact can be maintained. This block does not use energy to determine v; speed must be given or come from information within Unit 3 scope.",
+      ),
+    },
+  },
+  "fuerzas-fundamentales": {
+    introduction: "Everyday forces look diverse, but modern physics describes fundamental interactions in four classes. Macroscopic contact forces arise mainly from electromagnetic interactions.",
+    sections: {
+      "cuatro-interacciones": section(
+        "The four interactions",
+        "The four fundamental interactions are gravitational, electromagnetic, strong nuclear, and weak nuclear.",
+        "Gravity acts on mass-energy and dominates large astronomical structures. Electromagnetism acts on charge and explains much of matter, chemistry, and contact forces. The strong interaction binds quarks and contributes residually to nuclear binding. The weak interaction participates in processes such as some radioactive decays.",
+        "The interactions differ in effective strength, range, and the objects on which they act. Comparing «strengths» without specifying scale and process can be misleading, so this unit uses qualitative comparisons.",
+        "In the Standard Model, electromagnetic, weak, and strong interactions are described by quantum field theories. Gravity does not yet have a complete, accepted quantum description in the same framework.",
+      ),
+      "fuerzas-cotidianas-emergentes": section(
+        "Everyday emergent forces",
+        "Normal force, friction, and tension are not additional fundamental forces. They are macroscopic models of interactions among enormous numbers of atoms.",
+        "When surfaces touch, electron clouds and atomic structures produce electromagnetic responses that we describe macroscopically as normal force and friction.",
+        "An effective model can be useful without tracking every microscopic particle. Mechanics therefore introduces phenomenological forces with measured parameters, such as μ or drag coefficients.",
+        "Distinguishing «fundamental» from «effective» avoids a false hierarchy of usefulness. An effective force can be exactly the right engineering description even when it emerges from deeper interactions.",
+        [check("Is the normal force a fifth fundamental interaction?", "No. It is an effective macroscopic contact description, mainly electromagnetic in origin.")],
+      ),
+      "alcance-de-la-mecanica-newtoniana": section(
+        "Scope of Newtonian mechanics",
+        "This course treats many interactions as forces within Newtonian mechanics, provided the regime makes that approximation useful.",
+        "At speeds much smaller than the speed of light and on macroscopic scales, Newton's laws describe many systems with excellent accuracy.",
+        "The existence of broader theories does not make Newtonian mechanics «wrong» inside its domain. An effective theory can appear as a limiting case of a more general one.",
+        "Recognizing domains of validity is a recurring idea in physics. The same logic that limits Coulomb friction or linear drag also limits Newtonian mechanics in relativistic or quantum regimes.",
+      ),
+    },
+  },
+};

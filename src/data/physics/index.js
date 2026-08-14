@@ -25,8 +25,21 @@ import {
 import { getLocalizedUnit2BankItems, getLocalizedUnit2Exercises } from "./unit-2/exercise-localize.js";
 import { UNIT_2_VISUALIZATIONS } from "./unit-2/visualizations.js";
 import { presentUnit2RichText } from "./unit-2/math-content.js";
+import { UNIT_3 } from "./unit-3/unit.js";
+import {
+  getLocalizedUnit3ErrorsByTopics,
+  getLocalizedUnit3Formula,
+  getLocalizedUnit3Visualization,
+  getLocalizedUnit3WorkedExample,
+  getUnit3TopicRouteId,
+  localizeUnit3,
+  localizeUnit3Content,
+} from "./unit-3/localize.js";
+import { getLocalizedUnit3BankItems, getLocalizedUnit3Exercises } from "./unit-3/exercise-localize.js";
+import { UNIT_3_VISUALIZATIONS } from "./unit-3/visualizations.js";
+import { presentUnit3RichText } from "./unit-3/math-content.js";
 
-export const ACADEMIC_UNITS = Object.freeze([UNIT_1, UNIT_2]);
+export const ACADEMIC_UNITS = Object.freeze([UNIT_1, UNIT_2, UNIT_3]);
 
 const ACADEMIC_UNIT_ADAPTERS = new Map([
   [1, Object.freeze({
@@ -54,6 +67,20 @@ const ACADEMIC_UNIT_ADAPTERS = new Map([
     getBankItems: getLocalizedUnit2BankItems,
     visualizationIds: Object.freeze(Object.keys(UNIT_2_VISUALIZATIONS)),
     presentRichText: presentUnit2RichText,
+  })],
+  [3, Object.freeze({
+    unit: UNIT_3,
+    localizeUnit: localizeUnit3,
+    getContent: localizeUnit3Content,
+    getFormula: getLocalizedUnit3Formula,
+    getVisualization: getLocalizedUnit3Visualization,
+    getExample: getLocalizedUnit3WorkedExample,
+    getErrors: getLocalizedUnit3ErrorsByTopics,
+    getTopicRouteId: getUnit3TopicRouteId,
+    getFixedExercises: getLocalizedUnit3Exercises,
+    getBankItems: getLocalizedUnit3BankItems,
+    visualizationIds: Object.freeze(Object.keys(UNIT_3_VISUALIZATIONS)),
+    presentRichText: presentUnit3RichText,
   })],
 ]);
 

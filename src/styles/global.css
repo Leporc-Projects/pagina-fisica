@@ -3538,6 +3538,73 @@ main {
   margin-top: clamp(2rem, 5vw, 3.5rem);
 }
 
+.worked-example {
+  max-width: 60rem;
+  overflow: hidden;
+  border: 1px solid var(--status-info-border);
+  border-radius: var(--radius-md);
+  background: var(--content-canvas);
+}
+
+.worked-example__header,
+.worked-example__setup,
+.worked-example__steps,
+.worked-example__conclusion {
+  padding: 1rem clamp(1rem, 3vw, 1.5rem);
+}
+
+.worked-example__header {
+  border-bottom: 1px solid var(--border);
+}
+
+.worked-example__header h3 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+}
+
+.worked-example__header>p:last-child,
+.worked-example__setup p,
+.worked-example__steps p,
+.worked-example__conclusion p {
+  margin-top: 0.45rem;
+  color: var(--text-muted);
+}
+
+.worked-example__setup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.worked-example__setup ul {
+  margin-top: 0.45rem;
+  padding-left: 1.2rem;
+  list-style: square;
+}
+
+.worked-example__steps {
+  display: grid;
+  gap: 0.9rem;
+  padding-left: clamp(2.5rem, 6vw, 3.5rem);
+}
+
+.worked-example__steps li::marker {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.worked-example__conclusion {
+  border-top: 1px solid var(--status-info-border);
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
+}
+
+.worked-example__conclusion p {
+  color: inherit;
+}
+
 .formula-block {
   min-width: 0;
   max-width: 60rem;

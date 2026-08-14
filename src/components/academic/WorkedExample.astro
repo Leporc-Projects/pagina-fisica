@@ -1,0 +1,42 @@
+---
+// Ejemplo editorial estático: explica el modelo sin grading, progreso ni estado.
+import RichText from "./RichText.astro";
+import { t } from "../../i18n/index.js";
+
+interface Props {
+  example: {
+    id: string;
+    title: string;
+    context: string;
+    givens?: string[];
+    target?: string;
+    steps: Array<{ step: number; title: string; text: string }>;
+    conclusion: string;
+  };
+  present?: (value: string) => string | Array<{ type: string; value?: string; mathml?: string }>;
+  locale?: "es" | "en";
+}
+
+const { example, present = (value) => value, locale = "es" } = Astro.props;
+---
+
+<article class="worked-example" aria-labelledby={`${example.id}-title`}>
+  <header class="worked-example__header">
+    <p class="academic-label">{t(locale, "academic.workedExample")}</p>
+    <h3 id={`${example.id}-title`}>{example.title}</h3>
+    <p><RichText content={present(example.context)} /></p>
+  </header>
+  {(example.givens?.length || example.target) && (
+    <div class="worked-example__setup">
+      {example.givens?.length ? <div><strong>{t(locale, "academic.givens")}</strong><ul>{example.givens.map((item) => <li><RichText content={present(item)} /></li>)}</ul></div> : null}
+      {example.target ? <div><strong>{t(locale, "academic.target")}</strong><p><RichText content={present(example.target)} /></p></div> : null}
+    </div>
+  )}
+  <ol class="worked-example__steps">
+    {example.steps.map((step) => <li><strong>{step.title}</strong><p><RichText content={present(step.text)} /></p></li>)}
+  </ol>
+  <footer class="worked-example__conclusion">
+    <strong>{t(locale, "academic.conclusion")}</strong>
+    <p><RichText content={present(example.conclusion)} /></p>
+  </footer>
+</article>

@@ -4,10 +4,13 @@ import { UNIT_1_EXERCISE_FAMILIES } from "./unit-1/families.js";
 import { generateLocalizedUnit1FamilyInstance } from "./unit-1/family-localize.js";
 import { UNIT_2_EXERCISE_FAMILIES } from "./unit-2/families.js";
 import { generateLocalizedUnit2FamilyInstance } from "./unit-2/family-localize.js";
+import { UNIT_3_EXERCISE_FAMILIES } from "./unit-3/families.js";
+import { generateLocalizedUnit3FamilyInstance } from "./unit-3/family-localize.js";
 
 const FAMILY_REGISTRY = new Map([
   ...UNIT_1_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit1FamilyInstance }]),
   ...UNIT_2_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit2FamilyInstance }]),
+  ...UNIT_3_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit3FamilyInstance }]),
 ]);
 
 export const getAcademicExerciseFamily = (id) => FAMILY_REGISTRY.get(id)?.family ?? null;
