@@ -6,11 +6,14 @@ import {
   PARTICIPATION_COLLECTIONS,
   LEGACY_PARTICIPATION_SCHEMA_VERSION,
   PARTICIPATION_SCHEMA_VERSION,
+  PARTICIPATION_SCHEMA_VERSION_1_1_0,
   PARTICIPATION_PRIVACY_LEVELS,
   PARTICIPATION_PURPOSES,
+  SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS,
   createParticipationResponse,
   escapeCsvField,
   isResponseId,
+  participationContextLabel,
   participationFilename,
   responseIdFromBytes,
   toParticipationCSV,
@@ -23,10 +26,14 @@ const ENVIRONMENT = {
   responseId: "resp_00112233445566778899aabbccddeeff",
   createdAt: "2026-08-08T20:15:30.000Z",
 };
+// La mayoría de los ejemplos usan Física Básica I, Unidad 1, para poder
+// reutilizar temas reales sin repetir la resolución en cada prueba.
+const unit1Context = { scope: { type: "course", courseId: "fisica-basica-1" }, unitNumber: 1 };
 
 const conceptResponse = (payload = {}) => createParticipationResponse({
-  activityType: "concept-difficulty",
+  ...unit1Context,
   topicSlug: "movimiento-1d",
+  activityType: "concept-difficulty",
   payload: {
     unclearPoint: "No conecto la pendiente de x(t)\ncon el signo de v.",
     ...payload,
@@ -82,7 +89,7 @@ test("crea una reflexión local, anónima y de aprendizaje", () => {
   const response = conceptResponse({ helpfulSupport: "graph" });
 
   assert.equal(validateParticipationResponse(response).valid, true);
-  assert.equal(response.schemaVersion, "1.1.0");
+  assert.equal(response.schemaVersion, "1.2.0");
   assert.equal(response.schemaVersion, PARTICIPATION_SCHEMA_VERSION);
   assert.equal(response.purpose, "learning");
   assert.equal(response.collection, "local");
@@ -94,8 +101,9 @@ test("crea una reflexión local, anónima y de aprendizaje", () => {
 
 test("mantiene las propuestas estudiantiles fuera del banco académico", () => {
   const response = createParticipationResponse({
-    activityType: "student-question-proposal",
+    ...unit1Context,
     topicSlug: "vectores",
+    activityType: "student-question-proposal",
     payload: {
       proposalType: "graph-question",
       statement: "Una curva incluye los puntos \"A, B\".\n¿Qué representa su pendiente?",
@@ -119,8 +127,9 @@ test("mantiene las propuestas estudiantiles fuera del banco académico", () => {
 
 test("crea feedback sin valoración artificial obligatoria", () => {
   const response = createParticipationResponse({
-    activityType: "improvement-feedback",
+    ...unit1Context,
     topicSlug: "herramientas",
+    activityType: "improvement-feedback",
     payload: {
       area: "accessibility",
       improvement: "Añadir una descripción más clara a la gráfica.",
@@ -135,8 +144,9 @@ test("crea feedback sin valoración artificial obligatoria", () => {
 test("omite campos opcionales vacíos", () => {
   const concept = conceptResponse({ helpfulSupport: "" });
   const proposal = createParticipationResponse({
-    activityType: "student-question-proposal",
+    ...unit1Context,
     topicSlug: "movimiento-2d",
+    activityType: "student-question-proposal",
     payload: {
       proposalType: "problem",
       statement: "Construye un modelo para la trayectoria.",
@@ -182,11 +192,50 @@ test("normaliza fuera el detalle cuando la ayuda seleccionada no es other", () =
   assert.equal(validateParticipationResponse(invalid).valid, false);
 });
 
+// Las formas 1.0.0 y 1.1.0 se escriben literalmente, tal como las produjo el
+// sitio antes de este bloque: sin `scope`, con course/unit fijos de Física
+// Básica I y Unidad 1. No se derivan clonando una respuesta 1.2.0, porque esa
+// migración nunca ocurrió en los archivos que ya existen en disco.
+const legacyBase = (schemaVersion, extraPayload = {}) => ({
+  schemaVersion,
+  responseId: "resp_00000000000000000000000000000010",
+  activityType: "concept-difficulty",
+  course: { code: "0302270", slug: "fisica-basica-1", title: "Física Básica I" },
+  unit: { number: 1, slug: "unidad-1", title: "Vectores y cinemática" },
+  topic: { slug: "movimiento-1d", title: "Movimiento en una dimensión" },
+  createdAt: "2026-01-10T12:00:00.000Z",
+  purpose: "learning",
+  collection: "local",
+  privacy: "anonymous",
+  submissionTarget: null,
+  payload: { unclearPoint: "No distingo velocidad de rapidez.", ...extraPayload },
+});
+
 test("acepta respuestas históricas válidas del esquema 1.0.0", () => {
-  const legacy = structuredClone(conceptResponse({ helpfulSupport: "example" }));
-  legacy.schemaVersion = LEGACY_PARTICIPATION_SCHEMA_VERSION;
+  const legacy = legacyBase(LEGACY_PARTICIPATION_SCHEMA_VERSION);
 
   assert.equal(validateParticipationResponse(legacy).valid, true);
+  // 1.0.0 no admite el detalle de "otra ayuda": su presencia invalida el archivo.
+  const withOtherDetail = legacyBase(LEGACY_PARTICIPATION_SCHEMA_VERSION, {
+    helpfulSupport: "other",
+    helpfulSupportOther: "Detalle que 1.0.0 no puede llevar.",
+  });
+  assert.equal(validateParticipationResponse(withOtherDetail).valid, false);
+});
+
+test("acepta respuestas históricas válidas del esquema 1.1.0 con helpfulSupportOther", () => {
+  const legacy = legacyBase(PARTICIPATION_SCHEMA_VERSION_1_1_0, {
+    helpfulSupport: "other",
+    helpfulSupportOther: "Una comparación con un ejemplo resuelto.",
+  });
+
+  assert.equal(validateParticipationResponse(legacy).valid, true);
+  // helpfulSupportOther solo es válido cuando helpfulSupport vale "other".
+  const mismatched = legacyBase(PARTICIPATION_SCHEMA_VERSION_1_1_0, {
+    helpfulSupport: "graph",
+    helpfulSupportOther: "Texto que no debería estar.",
+  });
+  assert.equal(validateParticipationResponse(mismatched).valid, false);
 });
 
 test("rechaza campos requeridos y enums fuera del contrato", () => {
@@ -200,16 +249,18 @@ test("rechaza campos requeridos y enums fuera del contrato", () => {
   );
   assert.throws(
     () => createParticipationResponse({
-      activityType: "research",
+      ...unit1Context,
       topicSlug: "vectores",
+      activityType: "research",
       payload: {},
     }, ENVIRONMENT),
     /tipo de actividad/
   );
   assert.throws(
     () => createParticipationResponse({
-      activityType: "concept-difficulty",
+      ...unit1Context,
       topicSlug: "unidad-inventada",
+      activityType: "concept-difficulty",
       payload: { unclearPoint: "Texto" },
     }, ENVIRONMENT),
     /tema/
@@ -240,7 +291,10 @@ test("JSON conserva el contrato completo, Unicode y saltos de línea", () => {
   assert.deepEqual(parsed, response);
   assert.match(parsed.payload.unclearPoint, /\n/);
   assert.match(json, /"submissionTarget": null/);
-  assert.equal(/name|email|document|userAgent|timezone|ipAddress/.test(json), false);
+  // "course.name" es el nombre editorial del curso (Física Básica I), no un
+  // dato personal: se excluye explícitamente antes de buscar señales de PII.
+  const withoutCourseName = json.replace(`"name": ${JSON.stringify(response.course.name)}`, "");
+  assert.equal(/name|email|document|userAgent|timezone|ipAddress/.test(withoutCourseName), false);
 });
 
 test("JSON, TXT y CSV conservan el detalle de otra ayuda", () => {
@@ -266,7 +320,7 @@ test("TXT produce una representación legible de la misma respuesta", () => {
   const text = toParticipationText(response);
 
   assert.match(text, /Aula Física/);
-  assert.match(text, /Tema: Movimiento en una dimensión/);
+  assert.match(text, /Contexto: Movimiento en una dimensión/);
   assert.match(text, /Podría ayudar: Una gráfica/);
   assert.match(text, new RegExp(response.responseId));
   assert.match(text, /no envía ni guarda/i);
@@ -296,4 +350,223 @@ test("los nombres de archivo derivan solo de la respuesta, no del estudiante", (
     filename,
     "participacion-concept-difficulty-resp_00112233445566778899aabbccddeeff.json"
   );
+});
+
+// --- Esquema 1.2.0: ámbito, curso, unidad y tema opcionales -----------------
+
+test("1.2.0 global: sin curso, sin unidad, sin tema", () => {
+  const response = createParticipationResponse({
+    scope: { type: "global" },
+    activityType: "improvement-feedback",
+    payload: { area: "design", improvement: "El contraste podría mejorar." },
+  }, ENVIRONMENT);
+
+  assert.equal(response.schemaVersion, "1.2.0");
+  assert.deepEqual(response.scope, { type: "global" });
+  assert.equal(response.course, null);
+  assert.equal(response.unit, null);
+  assert.equal(response.topic, null);
+  assert.equal(validateParticipationResponse(response).valid, true);
+});
+
+test("1.2.0 de curso sin tema: el feedback de curso es válido sin unidad", () => {
+  const response = createParticipationResponse({
+    scope: { type: "course", courseId: "fisica-basica-1" },
+    activityType: "improvement-feedback",
+    payload: { area: "navigation", improvement: "El menú del curso podría ser más claro." },
+  }, ENVIRONMENT);
+
+  assert.equal(response.scope.courseId, "fisica-basica-1");
+  assert.equal(response.course.id, "fisica-basica-1");
+  assert.equal(response.unit, null);
+  assert.equal(response.topic, null);
+  assert.equal(validateParticipationResponse(response).valid, true);
+});
+
+test("1.2.0 de curso con unidad y sin tema: unidad completa", () => {
+  const response = createParticipationResponse({
+    scope: { type: "course", courseId: "fisica-basica-1" },
+    unitNumber: 2,
+    activityType: "improvement-feedback",
+    payload: { area: "example", improvement: "Un ejemplo más de la segunda ley." },
+  }, ENVIRONMENT);
+
+  assert.equal(response.unit.number, 2);
+  assert.equal(response.unit.slug, "unidad-2");
+  assert.equal(response.topic, null);
+  assert.equal(validateParticipationResponse(response).valid, true);
+});
+
+test("1.2.0 de curso con Unidad 1 y tema", () => {
+  const response = createParticipationResponse({
+    ...unit1Context,
+    topicSlug: "vectores",
+    activityType: "concept-difficulty",
+    payload: { unclearPoint: "No distingo componente de proyección." },
+  }, ENVIRONMENT);
+
+  assert.equal(response.unit.number, 1);
+  assert.equal(response.topic.slug, "vectores");
+  assert.equal(validateParticipationResponse(response).valid, true);
+});
+
+test("1.2.0 de curso con Unidad 2 y tema", () => {
+  const response = createParticipationResponse({
+    scope: { type: "course", courseId: "fisica-basica-1" },
+    unitNumber: 2,
+    topicSlug: "tercera-ley",
+    activityType: "concept-difficulty",
+    payload: { unclearPoint: "No veo por qué el par actúa sobre cuerpos distintos." },
+  }, ENVIRONMENT);
+
+  assert.equal(response.unit.number, 2);
+  assert.equal(response.topic.slug, "tercera-ley");
+  assert.equal(validateParticipationResponse(response).valid, true);
+});
+
+test("1.2.0 de curso con Unidad 3 y tema", () => {
+  const response = createParticipationResponse({
+    scope: { type: "course", courseId: "fisica-basica-1" },
+    unitNumber: 3,
+    topicSlug: "friccion",
+    activityType: "concept-difficulty",
+    payload: { unclearPoint: "No sé cuándo usar fricción estática o cinética." },
+  }, ENVIRONMENT);
+
+  assert.equal(response.unit.number, 3);
+  assert.equal(response.topic.slug, "friccion");
+  assert.equal(validateParticipationResponse(response).valid, true);
+});
+
+test("rechaza un scope inválido", () => {
+  assert.throws(
+    () => createParticipationResponse({
+      scope: { type: "site" },
+      activityType: "improvement-feedback",
+      payload: { area: "design", improvement: "x" },
+    }, ENVIRONMENT),
+    /ámbito/
+  );
+});
+
+test("rechaza un courseId no registrado", () => {
+  assert.throws(
+    () => createParticipationResponse({
+      scope: { type: "course", courseId: "curso-inventado" },
+      activityType: "improvement-feedback",
+      payload: { area: "design", improvement: "x" },
+    }, ENVIRONMENT),
+    /ámbito/
+  );
+});
+
+test("ignora/rechaza combinaciones de unidad y tema fuera del invariante", () => {
+  // scope global no admite unidad ni tema.
+  assert.throws(
+    () => createParticipationResponse({
+      scope: { type: "global" },
+      unitNumber: 1,
+      activityType: "improvement-feedback",
+      payload: { area: "design", improvement: "x" },
+    }, ENVIRONMENT),
+    /contexto académico/
+  );
+  // topic requiere unit.
+  assert.throws(
+    () => createParticipationResponse({
+      scope: { type: "course", courseId: "fisica-basica-1" },
+      topicSlug: "vectores",
+      activityType: "improvement-feedback",
+      payload: { area: "design", improvement: "x" },
+    }, ENVIRONMENT),
+    /contexto académico/
+  );
+  // unidad inexistente en el curso.
+  assert.throws(
+    () => createParticipationResponse({
+      scope: { type: "course", courseId: "fisica-basica-1" },
+      unitNumber: 99,
+      activityType: "improvement-feedback",
+      payload: { area: "design", improvement: "x" },
+    }, ENVIRONMENT),
+    /unidad/
+  );
+});
+
+test("la validación 1.2.0 rechaza course/unit/topic ajenos al invariante", () => {
+  const global = createParticipationResponse({
+    scope: { type: "global" },
+    activityType: "improvement-feedback",
+    payload: { area: "design", improvement: "x" },
+  }, ENVIRONMENT);
+  const withCourse = structuredClone(global);
+  withCourse.course = { id: "fisica-basica-1", name: "Física Básica I" };
+  assert.equal(validateParticipationResponse(withCourse).valid, false);
+
+  const withTopicNoUnit = createParticipationResponse({
+    scope: { type: "course", courseId: "fisica-basica-1" },
+    unitNumber: 1,
+    topicSlug: "vectores",
+    activityType: "concept-difficulty",
+    payload: { unclearPoint: "x" },
+  }, ENVIRONMENT);
+  const broken = structuredClone(withTopicNoUnit);
+  broken.unit = null;
+  assert.equal(validateParticipationResponse(broken).valid, false);
+});
+
+test("participationContextLabel resuelve del más específico al más general", () => {
+  const topicResponse = createParticipationResponse({
+    ...unit1Context,
+    topicSlug: "vectores",
+    activityType: "concept-difficulty",
+    payload: { unclearPoint: "x" },
+  }, ENVIRONMENT);
+  const unitResponse = createParticipationResponse({
+    scope: { type: "course", courseId: "fisica-basica-1" },
+    unitNumber: 2,
+    activityType: "improvement-feedback",
+    payload: { area: "design", improvement: "x" },
+  }, ENVIRONMENT);
+  const courseResponse = createParticipationResponse({
+    scope: { type: "course", courseId: "fisica-basica-1" },
+    activityType: "improvement-feedback",
+    payload: { area: "design", improvement: "x" },
+  }, ENVIRONMENT);
+  const globalResponse = createParticipationResponse({
+    scope: { type: "global" },
+    activityType: "improvement-feedback",
+    payload: { area: "design", improvement: "x" },
+  }, ENVIRONMENT);
+
+  assert.equal(participationContextLabel(topicResponse, "es"), "Vectores");
+  assert.equal(participationContextLabel(unitResponse, "es"), "Leyes de Newton");
+  assert.equal(participationContextLabel(courseResponse, "es"), "Física Básica I");
+  assert.equal(participationContextLabel(globalResponse, "es"), "Aula Física en general");
+  assert.equal(participationContextLabel(globalResponse, "en"), "Aula Física overall");
+});
+
+test("el CSV 1.2.0 añade scope_type, course_id y course_name al final sin reordenar", () => {
+  const response = createParticipationResponse({
+    ...unit1Context,
+    topicSlug: "vectores",
+    activityType: "concept-difficulty",
+    payload: { unclearPoint: "x" },
+  }, ENVIRONMENT);
+  const rows = parseCsv(toParticipationCSV(response));
+
+  assert.deepEqual(
+    PARTICIPATION_CSV_COLUMNS.slice(-3),
+    ["scope_type", "course_id", "course_name"]
+  );
+  assert.equal(rows[1][PARTICIPATION_CSV_COLUMNS.indexOf("scope_type")], "course");
+  assert.equal(rows[1][PARTICIPATION_CSV_COLUMNS.indexOf("course_id")], "fisica-basica-1");
+  assert.equal(rows[1][PARTICIPATION_CSV_COLUMNS.indexOf("course_name")], "Física Básica I");
+  // Las columnas históricas conservan su posición y contenido habitual.
+  assert.equal(rows[1][PARTICIPATION_CSV_COLUMNS.indexOf("unit_number")], "1");
+  assert.equal(rows[1][PARTICIPATION_CSV_COLUMNS.indexOf("topic_slug")], "vectores");
+});
+
+test("el esquema soportado incluye 1.0.0, 1.1.0 y 1.2.0 en orden", () => {
+  assert.deepEqual(SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS, ["1.0.0", "1.1.0", "1.2.0"]);
 });

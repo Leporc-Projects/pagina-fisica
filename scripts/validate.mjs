@@ -72,12 +72,14 @@ import {
 import { resolveBasePath } from "../src/utils/paths.js";
 import { DEFAULT_LOCALE, LOCALES, SUPPORTED_LOCALES } from "../src/i18n/config.js";
 import { UI_DICTIONARIES, getDictionaryKeys, t } from "../src/i18n/index.js";
-import { LOCALIZED_ROUTES, ROUTE_IDS, getRouteCounterpart } from "../src/i18n/routes.js";
+import { LOCALIZED_ROUTES, ROUTE_IDS, getLocalizedPath, getRouteCounterpart } from "../src/i18n/routes.js";
 import { getLanguageMetadata } from "../src/i18n/metadata.js";
 import {
   ACADEMIC_UNITS,
   getAcademicUnitAdapter,
   getAcademicUnitForContext,
+  getDevelopedAcademicUnitsForCourse,
+  getLocalizedAcademicUnit,
 } from "../src/data/physics/index.js";
 import {
   ARROWHEAD_LENGTH,
@@ -116,11 +118,9 @@ import { getLocalizedUnit1Bonuses } from "../src/data/physics/unit-1/localize.js
 import { UNIT_1_VISUALIZATIONS } from "../src/data/physics/unit-1/visualizations.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "../src/data/physics/unit-1/families.js";
 import { UNIT_1_BANK_ITEMS } from "../src/data/physics/unit-1/bank.js";
-import {
-  ACTIVITY_TYPES,
-  PARTICIPATION_TOPICS,
-} from "../src/data/participation.js";
+import { ACTIVITY_TYPES } from "../src/data/participation.js";
 import { localizeParticipationData } from "../src/data/participation-localize.js";
+import { TEACHER_TOOLS, getPublishedTeacherTools } from "../src/data/teacher-tools.js";
 import {
   REVIEW_FILE_MAX_BYTES,
   REVIEW_SESSION_SCHEMA_VERSION,
@@ -139,8 +139,10 @@ import {
   eligiblePoolForBonus,
 } from "../src/utils/bonus.js";
 import {
+  LEGACY_PARTICIPATION_SCHEMA_VERSION,
   PARTICIPATION_PURPOSES,
   PARTICIPATION_SCHEMA_VERSION,
+  PARTICIPATION_SCHEMA_VERSION_1_1_0,
   SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS,
   createParticipationResponse,
   validateParticipationResponse,
@@ -327,8 +329,13 @@ check(
 
 check(
   NAV.map((item) => item.label).join("|") ===
-    ["Inicio", COURSE.name, "Simulaciones", "Avisos"].join("|"),
-  "La navegación global contiene solo las cuatro secciones vigentes."
+    ["Inicio", COURSE.name, "Simulaciones", "Avisos", "Participa"].join("|"),
+  "La navegación global contiene las cinco secciones vigentes, con Participa tras Avisos."
+);
+
+check(
+  NAV.at(-1)?.label === "Participa" && NAV.at(-1)?.href === "/participa",
+  "Participa es la quinta sección global y enlaza a la ruta general, no a la del curso."
 );
 
 check(
@@ -353,7 +360,7 @@ check(
 check(
   !NAV.flatMap((item) => item.children ?? [])
     .some((item) => item.href === "/fisica-basica-1/participa"),
-  "Participa no aparece en la navegación global."
+  "El enlace de Participa específico del curso no se filtra al submenú global del curso."
 );
 
 check(
@@ -365,30 +372,63 @@ check(
   "Participación ofrece exactamente los tres modos iniciales."
 );
 
+const participationUnitsEs = getDevelopedAcademicUnitsForCourse(COURSE_IDS.PHYSICS_BASIC_1, "es");
+
 check(
-  PARTICIPATION_TOPICS.map((topic) => topic.slug).join(",") ===
-    UNIT_1.topics.map((topic) => topic.slug).join(","),
-  "Participación deriva sus temas de la Unidad 1 real."
+  participationUnitsEs.map((unit) => unit.number).join(",") === "1,2,3" &&
+    localizeParticipationData("es").topics.map((topic) => topic.slug).join(",") ===
+      participationUnitsEs.flatMap((unit) => unit.topics.map((topic) => topic.slug)).join(",") &&
+    UNIT_1.topics.every((topic) => localizeParticipationData("es").topics.some((entry) => entry.slug === topic.slug)),
+  "Participación deriva sus temas de las tres unidades desarrolladas, no de un import directo de la Unidad 1."
 );
 
-const validationParticipationResponse = createParticipationResponse({
-  activityType: "concept-difficulty",
-  topicSlug: UNIT_1.topics[0].slug,
-  payload: { unclearPoint: "Respuesta determinista de validación." },
-}, {
+const VALIDATION_ENVIRONMENT = {
   responseId: "resp_00112233445566778899aabbccddeeff",
   createdAt: "2026-08-08T00:00:00.000Z",
-});
+};
+
+const globalResponse = createParticipationResponse({
+  scope: { type: "global" },
+  activityType: "improvement-feedback",
+  payload: { area: "design", improvement: "Respuesta determinista de validación." },
+}, VALIDATION_ENVIRONMENT);
+
+const courseOnlyResponse = createParticipationResponse({
+  scope: { type: "course", courseId: COURSE_IDS.PHYSICS_BASIC_1 },
+  activityType: "improvement-feedback",
+  payload: { area: "design", improvement: "Respuesta determinista de validación." },
+}, VALIDATION_ENVIRONMENT);
+
+const unitTopicResponse = createParticipationResponse({
+  scope: { type: "course", courseId: COURSE_IDS.PHYSICS_BASIC_1 },
+  unitNumber: 1,
+  topicSlug: UNIT_1.topics[0].slug,
+  activityType: "concept-difficulty",
+  payload: { unclearPoint: "Respuesta determinista de validación." },
+}, VALIDATION_ENVIRONMENT);
 
 check(
-  validateParticipationResponse(validationParticipationResponse).valid &&
-    PARTICIPATION_SCHEMA_VERSION === "1.1.0" &&
-    SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS.join(",") === "1.0.0,1.1.0" &&
-    validationParticipationResponse.schemaVersion === "1.1.0" &&
-    validationParticipationResponse.collection === "local" &&
-    validationParticipationResponse.privacy === "anonymous" &&
-    validationParticipationResponse.submissionTarget === null,
-  "El contrato de participación es local, anónimo y no tiene destino de envío."
+  PARTICIPATION_SCHEMA_VERSION === "1.2.0" &&
+    SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS.join(",") === "1.0.0,1.1.0,1.2.0" &&
+    LEGACY_PARTICIPATION_SCHEMA_VERSION === "1.0.0" &&
+    PARTICIPATION_SCHEMA_VERSION_1_1_0 === "1.1.0",
+  "Participación 1.2.0 conserva 1.0.0 y 1.1.0 como versiones soportadas."
+);
+
+check(
+  [globalResponse, courseOnlyResponse, unitTopicResponse].every(
+    (response) => validateParticipationResponse(response).valid &&
+      response.schemaVersion === PARTICIPATION_SCHEMA_VERSION &&
+      response.collection === "local" &&
+      response.privacy === "anonymous" &&
+      response.submissionTarget === null
+  ) &&
+    globalResponse.scope.type === "global" &&
+    globalResponse.course === null && globalResponse.unit === null && globalResponse.topic === null &&
+    courseOnlyResponse.scope.courseId === COURSE_IDS.PHYSICS_BASIC_1 &&
+    courseOnlyResponse.unit === null && courseOnlyResponse.topic === null &&
+    unitTopicResponse.unit?.number === 1 && unitTopicResponse.topic?.slug === UNIT_1.topics[0].slug,
+  "Participación 1.2.0 es local, anónima, sin destino de envío, y unit/topic son opcionales bajo scope de curso."
 );
 
 check(
@@ -407,42 +447,66 @@ const reviewStatuses = [
 ];
 
 check(
-  routes.has(reviewRoute) &&
-    !COURSE_NAV.some((item) => item.href === reviewRoute) &&
-    !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === reviewRoute),
-  "El Centro de revisión existe sin convertirse en navegación estudiantil prominente."
-);
-
-check(
-  REVIEW_SESSION_SCHEMA_VERSION === "1.0.0" &&
+  REVIEW_SESSION_SCHEMA_VERSION === "1.1.0" &&
     REVIEW_FILE_MAX_BYTES === 5 * 1024 * 1024 &&
     REVIEW_STATUSES.map(([value]) => value).join(",") === reviewStatuses.join(","),
   "La sesión de revisión declara versión, límite y estados docentes estables."
 );
 
-const resultsRoute = "/fisica-basica-1/herramientas/notas";
+// Solo Notices y Results están publicadas; Bank, Simulation Lab y Review
+// conservan su implementación (componentes, scripts, estilos) pero ya no
+// tienen ruta pública. El registro es la única fuente de esa decisión.
+const publishedTools = getPublishedTeacherTools();
+const hiddenTools = TEACHER_TOOLS.filter((tool) => !tool.published);
+
 check(
-  routes.has(resultsRoute) &&
-    !COURSE_NAV.some((item) => item.href === resultsRoute) &&
-    !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === resultsRoute),
-  "El Organizador existe como herramienta docente sin entrar a la navegación global."
+  TEACHER_TOOLS.length === 5 &&
+    publishedTools.map((tool) => tool.id).join(",") === "notices,results" &&
+    hiddenTools.map((tool) => tool.id).join(",") === "bank,simulations,review",
+  "Solo Notices y Results están publicadas; Bank, Simulation Lab y Review permanecen ocultas."
 );
 
-const teacherToolRoutes = [
-  "/fisica-basica-1/herramientas",
-  "/fisica-basica-1/herramientas/banco",
-  "/fisica-basica-1/herramientas/avisos",
-  "/fisica-basica-1/herramientas/simulaciones",
-  reviewRoute,
-  resultsRoute,
-];
 check(
-  teacherToolRoutes.every((route) => routes.has(route)) &&
-    teacherToolRoutes.every((route) => !COURSE_NAV.some((item) => item.href === route)) &&
-    teacherToolRoutes.every((route) =>
-      !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === route)
+  publishedTools.every((tool) =>
+    ["es", "en"].every((locale) => routes.has(normalizeRoute(getLocalizedPath(tool.routeId, locale))))
+  ) &&
+    routes.has("/fisica-basica-1/herramientas") &&
+    routes.has("/en/basic-physics-1/tools"),
+  "Toda herramienta publicada tiene wrapper ES y EN, igual que el hub."
+);
+
+check(
+  hiddenTools.every((tool) =>
+    ["es", "en"].every((locale) => !routes.has(normalizeRoute(getLocalizedPath(tool.routeId, locale))))
+  ),
+  "Ninguna herramienta oculta genera ruta ES ni EN: no existen en dist/production."
+);
+
+check(
+  hiddenTools.every((tool) =>
+    !COURSE_NAV.some((item) => item.href === getLocalizedPath(tool.routeId, "es")) &&
+      !NAV.flatMap((item) => item.children ?? [])
+        .some((item) => item.href === getLocalizedPath(tool.routeId, "es"))
+  ) &&
+    ["/fisica-basica-1/herramientas", reviewRoute, "/fisica-basica-1/herramientas/notas"].every(
+      (route) => !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === route)
     ),
-  "El hub y sus cinco herramientas existen fuera del menú estudiantil principal."
+  "El hub y las herramientas docentes existen fuera del menú estudiantil principal."
+);
+
+check(
+  fs.existsSync(path.join(projectRoot, "src/components/teacher/QuestionBankPage.astro")) &&
+    fs.existsSync(path.join(projectRoot, "src/components/teacher/SimulationLabPage.astro")) &&
+    fs.existsSync(path.join(projectRoot, "src/components/teacher/ReviewCenterPage.astro")) &&
+    fs.existsSync(path.join(projectRoot, "src/components/bank/QuestionBankEditor.astro")) &&
+    fs.existsSync(path.join(projectRoot, "src/components/simulations/SimulationLab.astro")) &&
+    fs.existsSync(path.join(projectRoot, "src/components/review/ReviewCenter.astro")),
+  "Las herramientas ocultas conservan su implementación completa para reactivarse más adelante."
+);
+
+check(
+  !fs.existsSync(path.join(projectRoot, "src/pages/herramientas.astro")),
+  "La superficie legacy /herramientas quedó retirada; no se creó un equivalente /en/tools solo por conservarla."
 );
 
 check(
@@ -458,7 +522,7 @@ check(
   "El Organizador declara formatos, políticas, incidencias y límites explícitos."
 );
 
-const reviewDocument = JSON.parse(JSON.stringify(validationParticipationResponse));
+const reviewDocument = JSON.parse(JSON.stringify(unitTopicResponse));
 const reviewImport = addReviewImportEntries(createReviewSession(), [
   {
     name: "respuesta.json",
@@ -488,7 +552,7 @@ check(
     reviewSummary.uniqueRecords === 1 &&
     reviewSummary.duplicates === 1 &&
     reviewSummary.incidents.invalid === 1 &&
-    reviewExport.items[0].original.responseId === validationParticipationResponse.responseId &&
+    reviewExport.items[0].original.responseId === unitTopicResponse.responseId &&
     reviewExport.authenticity === "local-editable-file",
   "La revisión valida por archivo, deduplica sin inflar conteos y conserva el original."
 );
@@ -710,15 +774,21 @@ check(
     ) &&
     course.EVALUATION.length === EVALUATION.length && course.EVALUATION.every((item) => item.name && item.content) &&
     bonuses.length === BONUSES.length && bonuses.every((bonus) => bonus.title && bonus.description) &&
-    participation.topics.length === PARTICIPATION_TOPICS.length && participation.topics.every((topic) => topic.title) &&
+    participation.topics.length === participationUnitsEs.flatMap((unit) => unit.topics).length &&
+      participation.topics.every((topic) => topic.title) &&
     participation.activityOptions.length === ACTIVITY_TYPES.length && participation.activityOptions.every((option) => option.label && option.description) &&
     videoTypes.length === 4 && videoTypes.every(Boolean)
   ),
   "Todo el contenido público core declara presentación estructural completa en ES y EN."
 );
 
-const requiredLocalizedRoutes = Object.values(LOCALIZED_ROUTES)
-  .flatMap((localized) => Object.values(localized))
+// Un route ID de herramienta oculta se conserva para simplificar su futura
+// reactivación, pero deliberadamente no genera página: se excluye de la
+// exigencia general de que todo route ID registrado exista en dist.
+const hiddenToolRouteIds = new Set(hiddenTools.map((tool) => tool.routeId));
+const requiredLocalizedRoutes = Object.entries(LOCALIZED_ROUTES)
+  .filter(([routeId]) => !hiddenToolRouteIds.has(routeId))
+  .flatMap(([, localized]) => Object.values(localized))
   .filter(Boolean)
   .map(normalizeRoute);
 
@@ -1167,7 +1237,34 @@ check(
 check(
   UNIT_1.topics.find((topic) => topic.slug === "coordenadas-polares")
     ?.priority === "extension",
-  "Coordenadas polares se conserva como ampliación de menor prioridad."
+  "Coordenadas polares se conserva como ampliación de menor prioridad editorial interna."
+);
+
+const academicUnitNavSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/AcademicUnitNav.astro"),
+  "utf8"
+);
+const unitLearningMapSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/UnitLearningMap.astro"),
+  "utf8"
+);
+const unitTopicPageSource = fs.readFileSync(
+  path.join(projectRoot, "src/components/academic/UnitTopicPage.astro"),
+  "utf8"
+);
+
+check(
+  !/ampliaci[oó]n|extension/i.test(
+    UNIT_1.topics.find((topic) => topic.slug === "coordenadas-polares")?.title ?? ""
+  ) &&
+    !/ampliaci[oó]n|extension/i.test(
+      getLocalizedAcademicUnit(1, "en").topics.find((topic) => topic.slug === "coordenadas-polares")?.title ?? ""
+    ) &&
+    !academicUnitNavSource.includes("--extension") &&
+    !unitLearningMapSource.includes("--extension") &&
+    !unitTopicPageSource.includes("extension-notice") &&
+    !unitTopicPageSource.includes("extensionEyebrow"),
+  "La prioridad editorial interna no se proyecta en ninguna superficie pública del estudiante."
 );
 
 const referencedFormulaIds = Object.values(UNIT_1_CONTENT)

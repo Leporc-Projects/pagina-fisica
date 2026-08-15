@@ -3,12 +3,12 @@ import test from "node:test";
 
 import { UNIT_1_BONUSES } from "../src/data/physics/unit-1/bonuses.js";
 import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
-import { REVIEW_FILE_MAX_BYTES } from "../src/data/review.js";
+import { REVIEW_FILE_MAX_BYTES, REVIEW_SESSION_SCHEMA_VERSION } from "../src/data/review.js";
 import {
   completeBonusAttempt,
   createBonusAttempt,
 } from "../src/utils/bonus.js";
-import { createParticipationResponse } from "../src/utils/participation.js";
+import { createParticipationResponse, participationContextLabel } from "../src/utils/participation.js";
 import {
   addReviewImportEntries,
   aggregateReviewSession,
@@ -33,10 +33,13 @@ const ids = {
   proposal: "resp_00000000000000000000000000000002",
   improvement: "resp_00000000000000000000000000000003",
 };
+// Las tres fijas comparten curso y Unidad 1; cada respuesta añade su propio tema.
+const unit1Context = { scope: { type: "course", courseId: "fisica-basica-1" }, unitNumber: 1 };
 
 const difficulty = createParticipationResponse({
-  activityType: "concept-difficulty",
+  ...unit1Context,
   topicSlug: "vectores",
+  activityType: "concept-difficulty",
   payload: {
     unclearPoint: "No veo por qué A · B representa una proyección.",
     helpfulSupport: "graph",
@@ -44,8 +47,9 @@ const difficulty = createParticipationResponse({
 }, { responseId: ids.difficulty, createdAt: at });
 
 const difficultyOther = createParticipationResponse({
-  activityType: "concept-difficulty",
+  ...unit1Context,
   topicSlug: "vectores",
+  activityType: "concept-difficulty",
   payload: {
     unclearPoint: "No identifico la dirección de la proyección.",
     helpfulSupport: "other",
@@ -54,8 +58,9 @@ const difficultyOther = createParticipationResponse({
 }, { responseId: "resp_00000000000000000000000000000004", createdAt: at });
 
 const proposal = createParticipationResponse({
-  activityType: "student-question-proposal",
+  ...unit1Context,
   topicSlug: "movimiento-1d",
+  activityType: "student-question-proposal",
   payload: {
     proposalType: "graph-question",
     statement: "¿Qué significa una pendiente negativa en x(t)?",
@@ -67,14 +72,23 @@ const proposal = createParticipationResponse({
 }, { responseId: ids.proposal, createdAt: at });
 
 const improvement = createParticipationResponse({
-  activityType: "improvement-feedback",
+  ...unit1Context,
   topicSlug: "movimiento-2d",
+  activityType: "improvement-feedback",
   payload: {
     area: "accessibility",
     improvement: "<strong>Más contraste</strong> y una descripción de la gráfica.",
     helpfulness: "partly-helped",
   },
 }, { responseId: ids.improvement, createdAt: at });
+
+// Respuesta general, sin curso ni unidad, para probar que el Centro de
+// revisión también procesa el ámbito más amplio de Participa.
+const generalFeedback = createParticipationResponse({
+  scope: { type: "global" },
+  activityType: "improvement-feedback",
+  payload: { area: "navigation", improvement: "El menú podría ser más claro." },
+}, { responseId: "resp_00000000000000000000000000000005", createdAt: at });
 
 const entry = (name, document) => ({
   name,
@@ -107,8 +121,24 @@ test("acepta una respuesta JSON canónica de Participa", () => {
 });
 
 test("acepta archivos históricos válidos de Participa 1.0.0", () => {
-  const legacy = structuredClone(difficulty);
-  legacy.schemaVersion = "1.0.0";
+  // Forma exacta del esquema legado: sin `scope`, `course`/`unit` con code/slug/
+  // title fijos. No se deriva clonando una respuesta 1.2.0: esa migración nunca
+  // ocurrió en disco y la validación legada debe seguir aceptando el archivo tal
+  // como lo generó el sitio en su momento.
+  const legacy = {
+    schemaVersion: "1.0.0",
+    responseId: "resp_00000000000000000000000000000009",
+    activityType: "concept-difficulty",
+    course: { code: "0302270", slug: "fisica-basica-1", title: "Física Básica I" },
+    unit: { number: 1, slug: "unidad-1", title: "Vectores y cinemática" },
+    topic: { slug: "vectores", title: "Vectores" },
+    createdAt: at,
+    purpose: "learning",
+    collection: "local",
+    privacy: "anonymous",
+    submissionTarget: null,
+    payload: { unclearPoint: "No veo por qué A · B representa una proyección." },
+  };
 
   const result = validateImportedDocument(legacy);
   assert.equal(result.status, "valid");
@@ -239,7 +269,7 @@ test("exporta JSON de revisión con original y overlay", () => {
   }, reviewedAt);
   const exported = createReviewExport(session, reviews, reviewedAt);
   const json = JSON.parse(toReviewJSON(exported));
-  assert.equal(json.schemaVersion, "1.0.0");
+  assert.equal(json.schemaVersion, REVIEW_SESSION_SCHEMA_VERSION);
   assert.equal(json.items[0].original.responseId, ids.proposal);
   assert.equal(json.items[0].review.status, "interesting");
   assert.equal(getProposalRecords(session).length, 1);
@@ -300,4 +330,26 @@ test("maneja 300 archivos pequeños de forma determinista", () => {
   assert.equal(session.records.length, 300);
   assert.equal(aggregateReviewSession(session).difficultyTopics.vectores, 300);
   assert.equal(filterParticipationRecords(session, { page: 15 }).records.length, 20);
+});
+
+test("procesa una respuesta general de Participa sin curso ni unidad", () => {
+  const result = validateImportedDocument(generalFeedback);
+  assert.equal(result.status, "valid");
+  assert.equal(result.original.scope.type, "global");
+  assert.equal(result.original.course, null);
+
+  const session = addReviewImportEntries(createReviewSession(), [
+    entry("general.json", generalFeedback),
+  ]);
+  const summary = aggregateReviewSession(session);
+  assert.equal(summary.withoutTopic, 1);
+  assert.equal(summary.improvementAreas.navigation, 1);
+
+  const csv = toReviewCSV(createReviewExport(session, {}, reviewedAt), { includeBom: false });
+  const [, row] = csv.split("\r\n");
+  const cells = row.split(",");
+  assert.equal(cells[REVIEW_CSV_COLUMNS.indexOf("unit")], '""');
+  assert.equal(cells[REVIEW_CSV_COLUMNS.indexOf("topic")], '""');
+  assert.equal(cells[REVIEW_CSV_COLUMNS.indexOf("scope_type")], '"global"');
+  assert.equal(participationContextLabel(generalFeedback, "es"), "Aula Física en general");
 });
