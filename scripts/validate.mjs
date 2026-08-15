@@ -74,7 +74,25 @@ import { DEFAULT_LOCALE, LOCALES, SUPPORTED_LOCALES } from "../src/i18n/config.j
 import { UI_DICTIONARIES, getDictionaryKeys, t } from "../src/i18n/index.js";
 import { LOCALIZED_ROUTES, ROUTE_IDS, getRouteCounterpart } from "../src/i18n/routes.js";
 import { getLanguageMetadata } from "../src/i18n/metadata.js";
-import { ACADEMIC_UNITS, getAcademicUnitForContext } from "../src/data/physics/index.js";
+import {
+  ACADEMIC_UNITS,
+  getAcademicUnitAdapter,
+  getAcademicUnitForContext,
+} from "../src/data/physics/index.js";
+import {
+  ARROWHEAD_LENGTH,
+  ARROWHEAD_WIDTH,
+  DIAGRAM_ANNOTATION_MAX_LENGTH,
+  DIAGRAM_LABEL_METRICS,
+  DIAGRAM_METRIC_NAMES,
+  DIAGRAM_SENTENCE_FREE_FAMILIES,
+  boxOutsideAmount,
+  boxOverlapArea,
+  createArrowheadBox,
+  createLabelBox,
+  estimateLabelWidth,
+} from "../src/utils/diagram-layout.js";
+import { collectDiagramLabels, prepareDiagram } from "../src/utils/diagram-geometry.js";
 import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
 import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
 import {
@@ -152,12 +170,13 @@ const projectRoot = fileURLToPath(
 const failures = [];
 
 // Registra cada contrato sin interrumpir la ejecución en el primer error.
-const check = (condition, message) => {
+const check = (condition, message, detail = "") => {
   if (condition) {
     console.log(`[ok] ${message}`);
   } else {
     failures.push(message);
     console.error(`[error] ${message}`);
+    if (detail) console.error(`    ${detail}`);
   }
 };
 
@@ -1707,16 +1726,192 @@ const diagramComponentSource = fs.readFileSync(
   path.join(projectRoot, "src/components/visualization/AcademicDiagram.astro"),
   "utf8"
 );
+const diagramGeometrySource = fs.readFileSync(
+  path.join(projectRoot, "src/utils/diagram-geometry.js"),
+  "utf8"
+);
 
+// El componente no debe recalcular la composición por su cuenta: si volviera a
+// resolver encuadre o etiquetas, el verificador de colisiones de más abajo
+// dejaría de describir lo que realmente se publica.
 check(
-  diagramComponentSource.includes('scaleMode = "isotropic"') &&
-    diagramComponentSource.includes("createIsotropicTransform") &&
-    diagramComponentSource.includes("labelOffset") &&
-    diagramComponentSource.includes("labelAnchor") &&
-    diagramComponentSource.includes("keepLabelVisible") &&
+  diagramComponentSource.includes("prepareDiagram") &&
+    !diagramComponentSource.includes("createIsotropicTransform") &&
+    !diagramComponentSource.includes("resolveLabelPlacement") &&
+    diagramGeometrySource.includes("createIsotropicTransform") &&
+    diagramGeometrySource.includes('scaleMode = "isotropic"') &&
     chartComponentSource.includes("createCartesianTransform") &&
     !chartComponentSource.includes("createIsotropicTransform"),
-  "Diagramas físicos usan escala isotrópica y las gráficas conservan escalas independientes."
+  "Diagramas físicos usan escala isotrópica compartida y las gráficas conservan escalas independientes."
+);
+
+check(
+  diagramComponentSource.includes("--diagram-label-size") &&
+    diagramComponentSource.includes("DIAGRAM_LABEL_METRICS") &&
+    !globalCss.includes("baseline-shift") &&
+    extractCssBlock(globalCss, ".academic-diagram__labels text")
+      .includes("vector-effect: non-scaling-stroke;") &&
+    extractCssBlock(globalCss, ".academic-diagram__labels text")
+      .includes("font-size: var(--diagram-label-size"),
+  "La métrica tipográfica de las etiquetas tiene una sola fuente y el halo no escala con el viewBox."
+);
+
+check(
+  extractCssBlock(globalCss, '.academic-diagram [data-diagram-style="region"]')
+    .includes("--diagram-color:") &&
+    extractCssBlock(globalCss, '.academic-diagram [data-diagram-style="highlight"]')
+      .includes("--diagram-color:") &&
+    extractCssBlock(globalCss, ".academic-diagram__rectangle").includes("stroke: var(--diagram-color)"),
+  "Cada estilo del union de diagrama resuelve un color y las regiones tienen presentación propia."
+);
+
+check(
+  diagramComponentSource.includes('markerUnits="userSpaceOnUse"') &&
+    diagramComponentSource.includes("markerWidth={ARROWHEAD_LENGTH}") &&
+    diagramComponentSource.includes("markerHeight={ARROWHEAD_WIDTH}") &&
+    ARROWHEAD_LENGTH <= 4 &&
+    ARROWHEAD_WIDTH <= DIAGRAM_LABEL_METRICS.mobile.fontSize,
+  "La punta de flecha mide en unidades del viewBox y no supera el cuerpo de letra."
+);
+
+// Verificador de colisiones: recorre las figuras registradas, reproduce la
+// geometría real con el módulo compartido y falla ante cualquier etiqueta
+// superpuesta, encima de una punta de flecha o recortada contra el borde.
+// Corre en los dos locales y con las dos métricas tipográficas porque cada
+// combinación produce cajas de texto distintas.
+const diagramCollisions = [];
+let verifiedFigures = 0;
+
+for (const metricName of DIAGRAM_METRIC_NAMES) {
+  const { fontSize } = DIAGRAM_LABEL_METRICS[metricName];
+
+  for (const locale of SUPPORTED_LOCALES) {
+    for (const unit of ACADEMIC_UNITS) {
+      const adapter = getAcademicUnitAdapter(unit.number);
+
+      for (const visualizationId of adapter.visualizationIds) {
+        const visualization = adapter.getVisualization(visualizationId, locale);
+        verifiedFigures += 1;
+
+        if (visualization.kind !== "diagram") continue;
+
+        const report = (kind, detail) => diagramCollisions.push(
+          `${visualizationId} [${locale}/${metricName}] ${kind}: ${detail}`
+        );
+
+        let diagram;
+
+        try {
+          diagram = prepareDiagram({
+            props: { ...visualization.props, family: visualization.family },
+            fontSize: DIAGRAM_LABEL_METRICS.mobile.fontSize,
+          });
+        } catch (error) {
+          report("contrato", error.message);
+          continue;
+        }
+
+        if (
+          DIAGRAM_SENTENCE_FREE_FAMILIES.includes(visualization.family) &&
+          (visualization.props.annotations ?? []).some(
+            (annotation) => [...annotation.label].length > DIAGRAM_ANNOTATION_MAX_LENGTH
+          )
+        ) {
+          report(
+            "anotación",
+            `la familia ${visualization.family} no admite frases dentro del SVG; usa explanation.`
+          );
+        }
+
+        const labels = collectDiagramLabels(diagram).map((label) => ({
+          text: label.text,
+          box: createLabelBox({
+            x: label.x,
+            y: label.y,
+            width: estimateLabelWidth(label.text, fontSize),
+            fontSize,
+            anchor: label.anchor,
+          }),
+        }));
+        const arrowheads = diagram.vectors.map((vector) => ({
+          label: vector.label,
+          box: createArrowheadBox(vector.svgStart, vector.svgEnd),
+        }));
+
+        labels.forEach((label, index) => {
+          for (const other of labels.slice(index + 1)) {
+            const area = boxOverlapArea(label.box, other.box);
+            if (area > 0.01) {
+              report("etiquetas", `«${label.text}» y «${other.text}» solapan ${area.toFixed(2)} u².`);
+            }
+          }
+
+          for (const arrowhead of arrowheads) {
+            const area = boxOverlapArea(label.box, arrowhead.box);
+            if (area > 0.01) {
+              report("punta", `«${label.text}» invade la punta de «${arrowhead.label}» en ${area.toFixed(2)} u².`);
+            }
+          }
+
+          const outside = boxOutsideAmount(label.box, diagram.plot);
+          if (outside > 0.05) {
+            report("recorte", `«${label.text}» sobresale ${outside.toFixed(2)} u del área de trazado.`);
+          }
+        });
+      }
+    }
+  }
+}
+
+// Traducción silenciosa: los diccionarios de figura sustituyen literales exactos,
+// de modo que editar el texto español sin actualizar su clave deja la cadena en
+// castellano dentro de la página inglesa sin que nada falle. Título, descripción
+// y explicación son siempre frases completas: si coinciden entre locales, la
+// clave quedó obsoleta. Los números visibles siguen además el locale registrado.
+const diagramTranslationGaps = [];
+const spanishDecimal = /\d,\d/;
+
+for (const unit of ACADEMIC_UNITS) {
+  const adapter = getAcademicUnitAdapter(unit.number);
+
+  for (const visualizationId of adapter.visualizationIds) {
+    const spanish = adapter.getVisualization(visualizationId, "es");
+    const english = adapter.getVisualization(visualizationId, "en");
+
+    for (const field of ["explanation", "relationLabel"]) {
+      if (spanish[field] && spanish[field] === english[field]) {
+        diagramTranslationGaps.push(`${visualizationId}: ${field} sigue en español.`);
+      }
+    }
+
+    for (const field of ["title", "description"]) {
+      if (spanish.props[field] === english.props[field]) {
+        diagramTranslationGaps.push(`${visualizationId}: props.${field} sigue en español.`);
+      }
+    }
+
+    if (english.kind !== "diagram") continue;
+
+    for (const plural of ["vectors", "segments", "points", "rectangles", "annotations"]) {
+      for (const primitive of english.props[plural] ?? []) {
+        if (primitive.label && spanishDecimal.test(primitive.label)) {
+          diagramTranslationGaps.push(`${visualizationId}: «${primitive.label}» conserva la coma decimal española.`);
+        }
+      }
+    }
+  }
+}
+
+check(
+  diagramTranslationGaps.length === 0,
+  "Las figuras registradas no publican texto español ni comas decimales en la versión inglesa.",
+  diagramTranslationGaps.slice(0, 20).join("\n    ")
+);
+
+check(
+  diagramCollisions.length === 0,
+  `Las figuras registradas publican etiquetas legibles en ES/EN y en ambas métricas (${verifiedFigures} comprobaciones).`,
+  diagramCollisions.slice(0, 80).join("\n    ")
 );
 
 check(
