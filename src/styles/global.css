@@ -3891,6 +3891,29 @@ main {
   --diagram-color: var(--chart-label);
 }
 
+/* Regiones: `region` delimita un sistema o un cuerpo neutro y `highlight`
+   destaca una frontera interior. Sin estos dos valores el union quedaba
+   incompleto y los elementos que los declaraban heredaban un color sin
+   resolver, es decir, se dibujaban invisibles. */
+.academic-diagram [data-diagram-style="region"] {
+  --diagram-color: var(--chart-label);
+  --diagram-fill-opacity: 0.06;
+}
+
+.academic-diagram [data-diagram-style="highlight"] {
+  --diagram-color: var(--chart-reference);
+  --diagram-fill-opacity: 0.12;
+}
+
+.academic-diagram__rectangle {
+  fill: var(--diagram-color);
+  fill-opacity: var(--diagram-fill-opacity, 0.05);
+  stroke: var(--diagram-color);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
 .academic-diagram__curve,
 .academic-diagram__circle,
 .academic-diagram__segment,
@@ -3921,15 +3944,21 @@ main {
   fill: var(--diagram-color);
 }
 
+/* El cuerpo de letra llega desde diagram-layout.js a través del componente: es
+   el mismo valor con el que se calcula el ancho estimado de cada etiqueta, de
+   modo que CSS y geometría no pueden divergir. El halo se mide en píxeles de
+   pantalla (`non-scaling-stroke`); un halo en unidades del viewBox crecía hasta
+   rellenar los trazos internos de las letras. */
 .academic-diagram__labels text {
   fill: var(--text);
   font-family: var(--font-mono);
-  font-size: 2.4px;
+  font-size: var(--diagram-label-size, 2.4px);
   font-weight: 700;
   paint-order: stroke;
   stroke: var(--chart-annotation-halo);
   stroke-linejoin: round;
-  stroke-width: 1.4;
+  stroke-width: var(--diagram-label-halo, 0.6);
+  vector-effect: non-scaling-stroke;
 }
 
 .academic-diagram__labels text[data-diagram-style] {
@@ -3947,7 +3976,6 @@ main {
 
 .academic-diagram__math-sub {
   font-size: 70%;
-  baseline-shift: sub;
 }
 
 /* Práctica abierta: el banco completo permanece en HTML; data-enhanced limita
@@ -4415,8 +4443,8 @@ main {
   }
 
   .academic-diagram__labels text {
-    font-size: 3.2px;
-    stroke-width: 1.7;
+    font-size: var(--diagram-label-size-mobile, 3.2px);
+    stroke-width: var(--diagram-label-halo-mobile, 0.8);
   }
 
   .unit-topic-pagination a+a {

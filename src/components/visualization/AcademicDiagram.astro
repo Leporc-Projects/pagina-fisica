@@ -1,16 +1,43 @@
 ---
 // Diagrama SVG para relaciones físicas o geométricas. La escala isotrópica
 // predeterminada evita deformar ángulos, circunferencias y longitudes relativas.
+// Este componente solo pinta: la composición —encuadre, colocación de etiquetas
+// y validación del contrato— vive en diagram-geometry.js, el mismo módulo que
+// `validate.mjs` ejecuta para comprobar que ninguna figura publique etiquetas
+// superpuestas, sobre una punta de flecha o recortadas contra el borde.
 import {
-  clipSegmentToDomain,
-  createCartesianTransform,
-  createClippedSegments,
-  createIsotropicTransform,
-  segmentsToSvgPath,
-} from "../../utils/chart.js";
+  DIAGRAM_STYLES,
+  prepareDiagram,
+} from "../../utils/diagram-geometry.js";
+import {
+  ARROWHEAD_LENGTH,
+  ARROWHEAD_WIDTH,
+  DIAGRAM_LABEL_METRICS,
+} from "../../utils/diagram-layout.js";
 
 type Domain = [number, number];
-type DiagramStyle = "primary" | "secondary" | "tertiary" | "reference";
+type DiagramStyle =
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "reference"
+  | "region"
+  | "highlight";
+type DiagramPlacement =
+  | "above"
+  | "below"
+  | "left"
+  | "right"
+  | "normal"
+  | "beyond-tip"
+  | "inside";
+type DiagramFamily =
+  | "vector-geometry"
+  | "system-boundary"
+  | "free-body"
+  | "motion-sketch"
+  | "concept-map"
+  | "force-sum";
 
 interface Point {
   x: number;
@@ -34,7 +61,7 @@ interface VectorSpec {
   ariaLabel?: string;
   labelOffset?: Point;
   labelAnchor?: "start" | "middle" | "end";
-  labelPosition?: "start" | "middle" | "end";
+  labelPosition?: DiagramPlacement;
 }
 
 interface SegmentSpec {
@@ -45,7 +72,7 @@ interface SegmentSpec {
   lineStyle?: "solid" | "dashed" | "dotted";
   labelOffset?: Point;
   labelAnchor?: "start" | "middle" | "end";
-  labelPosition?: "start" | "middle" | "end";
+  labelPosition?: DiagramPlacement;
 }
 
 interface CurveSpec {
@@ -62,17 +89,31 @@ interface CircleSpec {
   style?: DiagramStyle;
 }
 
+/** x,y son la esquina inferior izquierda en coordenadas físicas. */
+interface RectangleSpec {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label?: string;
+  style?: DiagramStyle;
+  labelAnchor?: "start" | "middle" | "end";
+  labelPosition?: "inside" | "above" | "below";
+}
+
 interface PointSpec extends Point {
   label?: string;
   style?: DiagramStyle;
   labelOffset?: Point;
   labelAnchor?: "start" | "middle" | "end";
+  labelPosition?: DiagramPlacement;
 }
 
 interface AnnotationSpec extends Point {
   label: string;
   offset?: Point;
   labelAnchor?: "start" | "middle" | "end";
+  labelPosition?: DiagramPlacement;
 }
 
 interface GridSpec {
@@ -85,12 +126,14 @@ interface Props {
   id: string;
   title: string;
   description: string;
+  family: DiagramFamily;
   xDomain: Domain;
   yDomain: Domain;
   vectors?: VectorSpec[];
   segments?: SegmentSpec[];
   curves?: CurveSpec[];
   circles?: CircleSpec[];
+  rectangles?: RectangleSpec[];
   points?: PointSpec[];
   annotations?: AnnotationSpec[];
   grid?: GridSpec;
@@ -98,232 +141,48 @@ interface Props {
   aspectRatio?: number;
 }
 
-const {
-  id,
-  title,
-  description,
-  xDomain,
-  yDomain,
-  vectors = [],
-  segments = [],
-  curves = [],
-  circles = [],
-  points = [],
-  annotations = [],
-  grid,
-  scaleMode = "isotropic",
-  aspectRatio = 0.64,
-} = Astro.props;
-
-if (!/^[a-z][a-z0-9-]*$/.test(id)) {
-  throw new Error("AcademicDiagram requiere un id estable en minúsculas y con guiones.");
-}
-
-const viewBoxWidth = 100;
-const viewBoxHeight = viewBoxWidth * aspectRatio;
-const requestedPlot = {
-  left: 6,
-  top: 6,
-  width: 88,
-  height: viewBoxHeight - 12,
-};
-const transform = scaleMode === "isotropic"
-  ? createIsotropicTransform({ xDomain, yDomain, plot: requestedPlot })
-  : createCartesianTransform({ xDomain, yDomain, plot: requestedPlot });
-const plot = transform.plot;
-const domains = { xDomain, yDomain };
+const { id, title, description, grid } = Astro.props;
+const diagram = prepareDiagram({
+  props: Astro.props,
+  fontSize: DIAGRAM_LABEL_METRICS.mobile.fontSize,
+});
+const { plot } = diagram;
 const clipId = `${id}-diagram-clip`;
 const descriptionId = `${id}-description`;
-const styles: DiagramStyle[] = ["primary", "secondary", "tertiary", "reference"];
 const markerId = (style: DiagramStyle) => `${id}-arrow-${style}`;
-const clamp = (value: number, minimum: number, maximum: number) =>
-  Math.min(maximum, Math.max(minimum, value));
-const estimateLabelWidth = (
-  label = "",
-  mathLabel?: DiagramMathLabel
-) => {
-  const content = mathLabel
-    ? `${mathLabel.base}${mathLabel.sub ?? ""}${mathLabel.suffix ?? ""}`
-    : label;
 
-  return clamp(
-    Math.max(2.4, [...content].length * 1.45),
-    2.4,
-    plot.width - 3
-  );
-};
-
-const keepLabelVisible = (
-  point: Point,
-  label = "",
-  anchor: "start" | "middle" | "end" = "start",
-  mathLabel?: DiagramMathLabel
-) => {
-  const padding = 1.2;
-  const width = estimateLabelWidth(label, mathLabel);
-  const minimumX = anchor === "end"
-    ? plot.left + padding + width
-    : anchor === "middle"
-      ? plot.left + padding + width / 2
-      : plot.left + padding;
-  const maximumX = anchor === "start"
-    ? plot.left + plot.width - padding - width
-    : anchor === "middle"
-      ? plot.left + plot.width - padding - width / 2
-      : plot.left + plot.width - padding;
-
-  return {
-    x: clamp(point.x, minimumX, maximumX),
-    y: clamp(point.y, plot.top + 2.4, plot.top + plot.height - 1.4),
-  };
-};
-const resolveLabelPoint = (
-  start: Point,
-  end: Point,
-  position: "start" | "middle" | "end" = "middle"
-) => position === "start"
-  ? start
-  : position === "end"
-    ? end
-    : { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
-
-const preparedVectors = vectors
-  .map((vector) => ({
-    ...vector,
-    style: vector.style ?? "primary",
-    lineStyle: vector.lineStyle ?? "solid",
-    clipped: clipSegmentToDomain(vector.start, vector.end, domains),
-  }))
-  .filter((vector) => vector.clipped)
-  .map((vector) => ({
-    ...vector,
-    svgStart: transform.point(vector.clipped![0]),
-    svgEnd: transform.point(vector.clipped![1]),
-  }))
-  .map((vector) => {
-    const labelBase = resolveLabelPoint(
-      vector.svgStart,
-      vector.svgEnd,
-      vector.labelPosition
-    );
-    const offset = vector.labelOffset ?? { x: 1.2, y: -1.2 };
-    return {
-      ...vector,
-      labelAnchor: vector.labelAnchor ?? "start",
-      labelSvg: keepLabelVisible({
-        x: labelBase.x + offset.x,
-        y: labelBase.y + offset.y,
-      }, vector.label, vector.labelAnchor ?? "start", vector.mathLabel),
-    };
-  });
-
-const preparedSegments = segments
-  .map((segment) => ({
-    ...segment,
-    style: segment.style ?? "reference",
-    lineStyle: segment.lineStyle ?? "dashed",
-    clipped: clipSegmentToDomain(segment.start, segment.end, domains),
-  }))
-  .filter((segment) => segment.clipped)
-  .map((segment) => ({
-    ...segment,
-    svgStart: transform.point(segment.clipped![0]),
-    svgEnd: transform.point(segment.clipped![1]),
-  }))
-  .map((segment) => {
-    const labelBase = resolveLabelPoint(
-      segment.svgStart,
-      segment.svgEnd,
-      segment.labelPosition
-    );
-    const offset = segment.labelOffset ?? { x: 1.2, y: -1.2 };
-    return {
-      ...segment,
-      labelAnchor: segment.labelAnchor ?? "start",
-      labelSvg: keepLabelVisible({
-        x: labelBase.x + offset.x,
-        y: labelBase.y + offset.y,
-      }, segment.label, segment.labelAnchor ?? "start"),
-    };
-  });
-
-const preparedCurves = curves.map((curve) => ({
-  ...curve,
-  style: curve.style ?? "primary",
-  lineStyle: curve.lineStyle ?? "solid",
-  path: segmentsToSvgPath(
-    createClippedSegments(curve.points, domains),
-    transform
-  ),
-}));
-
-const preparedCircles = circles.map((circle) => {
-  const center = transform.point(circle.center);
-  return {
-    ...circle,
-    style: circle.style ?? "reference",
-    center,
-    radiusX: Math.abs(transform.x(circle.center.x + circle.radius) - center.x),
-    radiusY: Math.abs(transform.y(circle.center.y + circle.radius) - center.y),
-  };
-});
-
-const preparedPoints = points
-  .filter(transform.isVisible)
-  .map((point) => ({
-    ...point,
-    style: point.style ?? "primary",
-    svg: transform.point(point),
-  }))
-  .map((point) => {
-    const offset = point.labelOffset ?? { x: 1.2, y: -1.2 };
-    return {
-      ...point,
-      labelAnchor: point.labelAnchor ?? "start",
-      labelSvg: keepLabelVisible({
-        x: point.svg.x + offset.x,
-        y: point.svg.y + offset.y,
-      }, point.label, point.labelAnchor ?? "start"),
-    };
-  });
-
-const preparedAnnotations = annotations
-  .filter(transform.isVisible)
-  .map((annotation) => ({
-    ...annotation,
-    svg: transform.point(annotation),
-    offset: annotation.offset ?? { x: 1.2, y: -1.2 },
-    labelAnchor: annotation.labelAnchor ?? "start",
-  }))
-  .map((annotation) => ({
-    ...annotation,
-    labelSvg: keepLabelVisible({
-      x: annotation.svg.x + annotation.offset.x,
-      y: annotation.svg.y + annotation.offset.y,
-    }, annotation.label, annotation.labelAnchor),
-  }));
-
-const gridX = (grid?.x ?? [])
-  .filter((value) => Number.isFinite(value) && value >= xDomain[0] && value <= xDomain[1])
-  .map((value) => ({ value, position: transform.x(value) }));
-const gridY = (grid?.y ?? [])
-  .filter((value) => Number.isFinite(value) && value >= yDomain[0] && value <= yDomain[1])
-  .map((value) => ({ value, position: transform.y(value) }));
+// El desplazamiento del subíndice es explícito: `baseline-shift` combinado con
+// halo grueso e itálica producía glifos atravesados en las etiquetas mathLabel.
+const subscriptShift = DIAGRAM_LABEL_METRICS.desktop.fontSize * 0.25;
+// El cuerpo de letra llega a CSS desde el mismo módulo que calcula el ancho
+// estimado de cada etiqueta, de modo que geometría y hoja de estilos no pueden
+// divergir sin que el verificador de colisiones lo note.
+const labelSizeStyle = [
+  `--diagram-label-size: ${DIAGRAM_LABEL_METRICS.desktop.fontSize}px`,
+  `--diagram-label-size-mobile: ${DIAGRAM_LABEL_METRICS.mobile.fontSize}px`,
+  `--diagram-label-halo: ${DIAGRAM_LABEL_METRICS.desktop.haloWidth}`,
+  `--diagram-label-halo-mobile: ${DIAGRAM_LABEL_METRICS.mobile.haloWidth}`,
+].join("; ");
 ---
 
-<figure class="academic-diagram theme-canvas" data-diagram-id={id}>
+<figure
+  class="academic-diagram theme-canvas"
+  data-diagram-id={id}
+  data-diagram-family={diagram.family}
+  style={labelSizeStyle}
+>
   <svg
     class="academic-diagram__svg"
-    viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+    viewBox={`0 0 ${diagram.viewBoxWidth} ${diagram.viewBoxHeight}`}
     preserveAspectRatio="xMidYMid meet"
     role="img"
     aria-label={title}
     aria-describedby={descriptionId}
-    data-x-min={xDomain[0]}
-    data-x-max={xDomain[1]}
-    data-y-min={yDomain[0]}
-    data-y-max={yDomain[1]}
-    data-scale-mode={scaleMode}
+    data-x-min={Astro.props.xDomain[0]}
+    data-x-max={Astro.props.xDomain[1]}
+    data-y-min={Astro.props.yDomain[0]}
+    data-y-max={Astro.props.yDomain[1]}
+    data-scale-mode={diagram.scaleMode}
   >
     <desc id={descriptionId}>{description}</desc>
 
@@ -331,20 +190,21 @@ const gridY = (grid?.y ?? [])
       <clipPath id={clipId}>
         <rect x={plot.left} y={plot.top} width={plot.width} height={plot.height} />
       </clipPath>
-      {styles.map((style) => (
+      {DIAGRAM_STYLES.map((style) => (
         <marker
           id={markerId(style)}
-          viewBox="0 0 10 10"
-          refX="8"
-          refY="5"
-          markerWidth="4"
-          markerHeight="4"
+          viewBox="0 0 10 7"
+          refX="10"
+          refY="3.5"
+          markerUnits="userSpaceOnUse"
+          markerWidth={ARROWHEAD_LENGTH}
+          markerHeight={ARROWHEAD_WIDTH}
           orient="auto-start-reverse"
         >
           <path
             class="academic-diagram__arrowhead"
             data-diagram-style={style}
-            d="M 0 0 L 10 5 L 0 10 Z"
+            d="M 0 0 L 10 3.5 L 0 7 Z"
           />
         </marker>
       ))}
@@ -360,7 +220,7 @@ const gridY = (grid?.y ?? [])
 
     {grid && (
       <g class="academic-diagram__grid" aria-hidden="true" clip-path={`url(#${clipId})`}>
-        {gridX.map((line) => (
+        {diagram.gridX.map((line) => (
           <line
             class:list={{ "academic-diagram__axis": line.value === 0 }}
             x1={line.position}
@@ -369,7 +229,7 @@ const gridY = (grid?.y ?? [])
             y2={plot.top + plot.height}
           />
         ))}
-        {gridY.map((line) => (
+        {diagram.gridY.map((line) => (
           <line
             class:list={{ "academic-diagram__axis": line.value === 0 }}
             x1={plot.left}
@@ -381,10 +241,23 @@ const gridY = (grid?.y ?? [])
       </g>
     )}
 
-    <!-- Curvas y círculos describen trayectorias; no son imágenes decorativas. -->
+    <!-- Regiones, curvas y círculos describen el contexto físico; vectores y
+         puntos se dibujan encima para que ninguna frontera los tape. -->
     <g clip-path={`url(#${clipId})`}>
-      {preparedCircles.map((circle) => (
-        scaleMode === "isotropic"
+      {diagram.rectangles.map((rectangle) => (
+        <rect
+          class="academic-diagram__rectangle"
+          data-diagram-style={rectangle.style}
+          x={rectangle.svg.x}
+          y={rectangle.svg.y}
+          width={rectangle.svg.width}
+          height={rectangle.svg.height}
+          role={rectangle.label ? "img" : undefined}
+          aria-label={rectangle.label}
+        />
+      ))}
+      {diagram.circles.map((circle) => (
+        diagram.scaleMode === "isotropic"
           ? <circle
               class="academic-diagram__circle"
               data-diagram-style={circle.style}
@@ -405,7 +278,7 @@ const gridY = (grid?.y ?? [])
               aria-label={circle.label}
             />
       ))}
-      {preparedCurves.map((curve) => (
+      {diagram.curves.map((curve) => (
         <path
           class="academic-diagram__curve"
           data-diagram-style={curve.style}
@@ -415,7 +288,7 @@ const gridY = (grid?.y ?? [])
           aria-label={curve.label}
         />
       ))}
-      {preparedSegments.map((segment) => (
+      {diagram.segments.map((segment) => (
         <line
           class="academic-diagram__segment"
           data-diagram-style={segment.style}
@@ -426,7 +299,7 @@ const gridY = (grid?.y ?? [])
           y2={segment.svgEnd.y}
         />
       ))}
-      {preparedVectors.map((vector) => (
+      {diagram.vectors.map((vector) => (
         <line
           class="academic-diagram__vector"
           data-diagram-style={vector.style}
@@ -440,7 +313,7 @@ const gridY = (grid?.y ?? [])
           aria-label={vector.ariaLabel ?? vector.label}
         />
       ))}
-      {preparedPoints.map((point) => (
+      {diagram.points.map((point) => (
         <circle
           class="academic-diagram__point"
           data-diagram-style={point.style}
@@ -453,11 +326,21 @@ const gridY = (grid?.y ?? [])
 
     <!-- Las etiquetas repiten la identidad de cada vector para no depender del color. -->
     <g class="academic-diagram__labels">
-      {preparedVectors.map((vector) => (
+      {diagram.rectangles.map((rectangle) => (
+        rectangle.labelSvg
+          ? <text
+              x={rectangle.labelSvg.x}
+              y={rectangle.labelSvg.y}
+              text-anchor={rectangle.labelSvg.anchor}
+              data-diagram-style={rectangle.style}
+            >{rectangle.label}</text>
+          : null
+      ))}
+      {diagram.vectors.map((vector) => (
         <text
           x={vector.labelSvg.x}
           y={vector.labelSvg.y}
-          text-anchor={vector.labelAnchor}
+          text-anchor={vector.labelSvg.anchor}
           data-diagram-style={vector.style}
         >
           {vector.mathLabel
@@ -470,45 +353,49 @@ const gridY = (grid?.y ?? [])
                   }}
                 >{vector.mathLabel.base}</tspan>
                 {vector.mathLabel.sub && (
-                  <tspan class="academic-diagram__math-sub">{vector.mathLabel.sub}</tspan>
+                  <tspan class="academic-diagram__math-sub" dy={subscriptShift}>
+                    {vector.mathLabel.sub}
+                  </tspan>
                 )}
                 {vector.mathLabel.suffix && (
-                  <tspan class="academic-diagram__math-suffix" dx="0.35">
-                    {vector.mathLabel.suffix}
-                  </tspan>
+                  <tspan
+                    class="academic-diagram__math-suffix"
+                    dx="0.35"
+                    dy={vector.mathLabel.sub ? -subscriptShift : 0}
+                  >{vector.mathLabel.suffix}</tspan>
                 )}
               </Fragment>
             : vector.label}
         </text>
       ))}
-      {preparedSegments.map((segment) => (
-        segment.label
+      {diagram.segments.map((segment) => (
+        segment.labelSvg
           ? <text
               x={segment.labelSvg.x}
               y={segment.labelSvg.y}
-              text-anchor={segment.labelAnchor}
+              text-anchor={segment.labelSvg.anchor}
               data-diagram-style={segment.style}
             >{segment.label}</text>
           : null
       ))}
-      {preparedPoints.map((point) => (
-        point.label
+      {diagram.points.map((point) => (
+        point.labelSvg
           ? <text
               x={point.labelSvg.x}
               y={point.labelSvg.y}
-              text-anchor={point.labelAnchor}
+              text-anchor={point.labelSvg.anchor}
             >{point.label}</text>
           : null
       ))}
-      {preparedAnnotations.map((annotation) => (
+      {diagram.annotations.map((annotation) => (
         <text
           x={annotation.labelSvg.x}
           y={annotation.labelSvg.y}
-          text-anchor={annotation.labelAnchor}
+          text-anchor={annotation.labelSvg.anchor}
         >{annotation.label}</text>
       ))}
 
-      {grid?.labels && gridX.map((line) => (
+      {grid?.labels && diagram.gridX.map((line) => (
         <text
           class="academic-diagram__tick-label"
           x={line.position}
@@ -516,7 +403,7 @@ const gridY = (grid?.y ?? [])
           text-anchor="middle"
         >{line.value}</text>
       ))}
-      {grid?.labels && gridY.slice(1).map((line) => (
+      {grid?.labels && diagram.gridY.slice(1).map((line) => (
         <text
           class="academic-diagram__tick-label"
           x={plot.left + 1}

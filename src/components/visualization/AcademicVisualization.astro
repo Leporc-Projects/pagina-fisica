@@ -11,6 +11,7 @@ type RichContent = string | Array<{ type: string; value?: string; mathml?: strin
 interface Visualization {
   id: string;
   kind: "cartesian" | "diagram";
+  family?: string;
   relationLabel?: string;
   explanation?: string;
   props: Record<string, unknown>;
@@ -40,7 +41,7 @@ const {
 
   {visualization.kind === "cartesian"
     ? <CartesianChart {...visualization.props} legendLabel={t(locale, "visualization.chartLegend")} />
-    : <AcademicDiagram {...visualization.props} />}
+    : <AcademicDiagram {...visualization.props} family={visualization.family} />}
 
   {showExplanation && visualization.explanation && (
     <p class="academic-figure-group__caption">
