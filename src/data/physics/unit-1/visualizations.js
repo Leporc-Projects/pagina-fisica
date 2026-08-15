@@ -21,6 +21,7 @@ export const UNIT_1_VISUALIZATIONS = {
   "vector-components": {
     id: "vector-components",
     kind: "diagram",
+    family: "vector-geometry",
     explanation:
       "El vector A no cambia al descomponerse: Aₓ y Aᵧ son proyecciones con signo sobre los ejes elegidos y forman el mismo desplazamiento resultante.",
     props: {
@@ -28,24 +29,25 @@ export const UNIT_1_VISUALIZATIONS = {
       title: "Vector A y sus componentes cartesianas",
       description:
         "Un vector A parte del origen y termina en el primer cuadrante. La componente A x es horizontal y la componente A y completa verticalmente el vector.",
-      xDomain: [-0.5, 4.2],
-      yDomain: [-0.6, 3.4],
+      xDomain: [-1.2, 4.9],
+      yDomain: [-0.9, 2.7],
       vectors: [
         { start: { x: 0, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "A", style: "primary" },
-        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "Aₓ", mathLabel: { base: "A", sub: "x" }, ariaLabel: "componente x de A", style: "secondary" },
+        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "Aₓ", mathLabel: { base: "A", sub: "x" }, ariaLabel: "componente x de A", style: "secondary", labelPosition: "below" },
         { start: { x: 3.2, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "Aᵧ", mathLabel: { base: "A", sub: "y" }, ariaLabel: "componente y de A", style: "tertiary" },
       ],
       segments: [
         { start: { x: -0.35, y: 0 }, end: { x: 3.8, y: 0 }, style: "reference", lineStyle: "solid" },
         { start: { x: 0, y: -0.35 }, end: { x: 0, y: 3.0 }, style: "reference", lineStyle: "solid" },
       ],
-      points: [{ x: 0, y: 0, label: "O", style: "reference" }],
+      points: [{ x: 0, y: 0, label: "O", style: "reference", labelPosition: "left" }],
     },
   },
 
   "vector-sum": {
     id: "vector-sum",
     kind: "diagram",
+    family: "vector-geometry",
     explanation:
       "La regla punta-cola conserva cada vector. La resultante A+B conecta el origen del primero con la punta del segundo.",
     props: {
@@ -53,20 +55,21 @@ export const UNIT_1_VISUALIZATIONS = {
       title: "Suma geométrica de los vectores A y B",
       description:
         "A parte del origen. B parte de la punta de A. La resultante A más B conecta el origen con la punta final.",
-      xDomain: [-0.5, 4.8],
-      yDomain: [-0.5, 3.8],
+      xDomain: [-1, 5],
+      yDomain: [-0.8, 2.7],
       vectors: [
-        { start: { x: 0, y: 0 }, end: { x: 2.4, y: 1.0 }, label: "A", style: "primary", labelOffset: { x: 0.8, y: 1.6 } },
-        { start: { x: 2.4, y: 1.0 }, end: { x: 3.7, y: 3.0 }, label: "B", style: "secondary", labelOffset: { x: 1.2, y: -0.3 } },
-        { start: { x: 0, y: 0 }, end: { x: 3.7, y: 3.0 }, label: "A + B", style: "tertiary", lineStyle: "dashed", labelOffset: { x: -1, y: -1.8 }, labelAnchor: "end" },
+        { start: { x: 0, y: 0 }, end: { x: 2.4, y: 1.0 }, label: "A", style: "primary", labelPosition: "below" },
+        { start: { x: 2.4, y: 1.0 }, end: { x: 3.7, y: 3.0 }, label: "B", style: "secondary", labelPosition: "right" },
+        { start: { x: 0, y: 0 }, end: { x: 3.7, y: 3.0 }, label: "A + B", style: "tertiary", lineStyle: "dashed" },
       ],
-      points: [{ x: 0, y: 0, label: "O", style: "reference" }],
+      points: [{ x: 0, y: 0, label: "O", style: "reference", labelPosition: "left" }],
     },
   },
 
   "dot-projection": {
     id: "dot-projection",
     kind: "diagram",
+    family: "vector-geometry",
     explanation:
       "La proyección de A sobre la dirección de B mide la parte de A alineada con B. El producto escalar multiplica esa proyección por la magnitud de B.",
     props: {
@@ -74,12 +77,12 @@ export const UNIT_1_VISUALIZATIONS = {
       title: "Producto escalar interpretado como proyección",
       description:
         "El vector B se ubica sobre el eje horizontal. El vector A forma un ángulo agudo y una guía perpendicular muestra su proyección sobre B.",
-      xDomain: [-0.5, 5],
-      yDomain: [-0.6, 3.5],
+      xDomain: [-0.6, 5.2],
+      yDomain: [-1.1, 2.4],
       vectors: [
         { start: { x: 0, y: 0 }, end: { x: 3.2, y: 2.4 }, label: "A", style: "primary" },
-        { start: { x: 0, y: 0 }, end: { x: 4.3, y: 0 }, label: "B", style: "secondary", labelPosition: "end", labelOffset: { x: -1.2, y: 2.4 }, labelAnchor: "end" },
-        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "proy_B A", mathLabel: { base: "proy", sub: "B", suffix: "A", baseRole: "operator" }, ariaLabel: "proyección de A sobre B", style: "tertiary", labelOffset: { x: 0, y: -2.4 }, labelAnchor: "middle" },
+        { start: { x: 0, y: 0 }, end: { x: 4.3, y: 0 }, label: "B", style: "secondary", labelPosition: "beyond-tip" },
+        { start: { x: 0, y: 0 }, end: { x: 3.2, y: 0 }, label: "proy_B A", mathLabel: { base: "proy", sub: "B", suffix: "A", baseRole: "operator" }, ariaLabel: "proyección de A sobre B", style: "tertiary", labelPosition: "below" },
       ],
       segments: [
         { start: { x: 3.2, y: 0 }, end: { x: 3.2, y: 2.4 }, style: "reference", lineStyle: "dashed" },
@@ -228,14 +231,16 @@ export const UNIT_1_VISUALIZATIONS = {
   "circular-motion": {
     id: "circular-motion",
     kind: "diagram",
+    family: "motion-sketch",
     explanation:
       "La velocidad es tangente a la circunferencia. La aceleración radial es perpendicular a la velocidad y apunta hacia el centro, aunque la rapidez sea constante.",
     props: {
       id: "circular-motion-diagram",
       title: "Velocidad tangencial y aceleración radial",
       description: "Una partícula está en el primer cuadrante de una circunferencia. Su velocidad es tangente y su aceleración apunta hacia el centro.",
-      xDomain: [-3.5, 4.3],
-      yDomain: [-3.5, 4.1],
+      xDomain: [-3.7, 3.7],
+      yDomain: [-3.1, 3.5],
+      aspectRatio: 0.9,
       circles: [{ center: { x: 0, y: 0 }, radius: 2.6, label: "trayectoria circular", style: "reference" }],
       vectors: [
         {
@@ -243,15 +248,13 @@ export const UNIT_1_VISUALIZATIONS = {
           end: { x: circularPoint.x - 1.5 * Math.sin(circularAngle), y: circularPoint.y + 1.5 * Math.cos(circularAngle) },
           label: "v tangente",
           style: "primary",
-          labelPosition: "end",
-          labelOffset: { x: -1.2, y: -1.4 },
-          labelAnchor: "end",
+          labelPosition: "beyond-tip",
         },
-        { start: circularPoint, end: { x: 0, y: 0 }, label: "a_r", mathLabel: { base: "a", sub: "r" }, ariaLabel: "aceleración radial", style: "secondary", labelOffset: { x: -2, y: -2 }, labelAnchor: "end" },
+        { start: circularPoint, end: { x: 0, y: 0 }, label: "a_r", mathLabel: { base: "a", sub: "r" }, ariaLabel: "aceleración radial", style: "secondary", labelPosition: "normal" },
       ],
       points: [
-        { ...circularPoint, label: "partícula", style: "tertiary", labelOffset: { x: 1.4, y: 2.1 } },
-        { x: 0, y: 0, label: "centro", style: "reference", labelOffset: { x: 1.4, y: -1.4 } },
+        { ...circularPoint, label: "partícula", style: "tertiary", labelPosition: "right" },
+        { x: 0, y: 0, label: "centro", style: "reference", labelPosition: "below" },
       ],
     },
   },
@@ -259,18 +262,19 @@ export const UNIT_1_VISUALIZATIONS = {
   "relative-velocity": {
     id: "relative-velocity",
     kind: "diagram",
+    family: "vector-geometry",
     explanation:
       "La construcción punta-cola representa v_A/C = v_A/B + v_B/C. Las etiquetas conservan objeto y marco para evitar sumar cantidades ambiguas.",
     props: {
       id: "relative-velocity-diagram",
       title: "Composición de velocidades relativas",
       description: "Dos velocidades relativas se colocan punta-cola y producen una velocidad resultante entre el primer objeto y el marco final.",
-      xDomain: [-0.6, 5.2],
-      yDomain: [-0.8, 3.8],
+      xDomain: [-0.8, 5],
+      yDomain: [-0.7, 2.7],
       vectors: [
-        { start: { x: 0, y: 0 }, end: { x: 2.3, y: 0.8 }, label: "v_A/B", mathLabel: { base: "v", sub: "A/B" }, ariaLabel: "velocidad de A respecto a B", style: "primary", labelOffset: { x: 0.4, y: 1.8 } },
-        { start: { x: 2.3, y: 0.8 }, end: { x: 4.2, y: 2.8 }, label: "v_B/C", mathLabel: { base: "v", sub: "B/C" }, ariaLabel: "velocidad de B respecto a C", style: "secondary", labelOffset: { x: 1.2, y: -0.6 } },
-        { start: { x: 0, y: 0 }, end: { x: 4.2, y: 2.8 }, label: "v_A/C", mathLabel: { base: "v", sub: "A/C" }, ariaLabel: "velocidad de A respecto a C", style: "tertiary", lineStyle: "dashed", labelOffset: { x: -0.8, y: -1.7 }, labelAnchor: "end" },
+        { start: { x: 0, y: 0 }, end: { x: 2.3, y: 0.8 }, label: "v_A/B", mathLabel: { base: "v", sub: "A/B" }, ariaLabel: "velocidad de A respecto a B", style: "primary", labelPosition: "below" },
+        { start: { x: 2.3, y: 0.8 }, end: { x: 4.2, y: 2.8 }, label: "v_B/C", mathLabel: { base: "v", sub: "B/C" }, ariaLabel: "velocidad de B respecto a C", style: "secondary", labelPosition: "right" },
+        { start: { x: 0, y: 0 }, end: { x: 4.2, y: 2.8 }, label: "v_A/C", mathLabel: { base: "v", sub: "A/C" }, ariaLabel: "velocidad de A respecto a C", style: "tertiary", lineStyle: "dashed" },
       ],
     },
   },
@@ -278,18 +282,19 @@ export const UNIT_1_VISUALIZATIONS = {
   "polar-basis": {
     id: "polar-basis",
     kind: "diagram",
+    family: "vector-geometry",
     explanation:
       "r̂ apunta desde el origen hacia la partícula y θ̂ es perpendicular en el sentido de aumento de θ. Ambos unitarios rotan cuando cambia el ángulo.",
     props: {
       id: "polar-basis-diagram",
       title: "Base radial y transversal en coordenadas polares",
       description: "Una partícula se encuentra sobre un rayo a cuarenta y cinco grados. El unitario radial apunta hacia afuera y el transversal es perpendicular.",
-      xDomain: [-0.7, 4.2],
-      yDomain: [-0.7, 4.2],
+      xDomain: [-1.6, 5.4],
+      yDomain: [-0.5, 3.6],
       vectors: [
-        { start: { x: 0, y: 0 }, end: { x: 2.2, y: 2.2 }, label: "r", style: "reference", labelOffset: { x: 0.8, y: 1.6 } },
-        { start: { x: 2.2, y: 2.2 }, end: { x: 3.2, y: 3.2 }, label: "r̂", style: "primary", labelPosition: "end", labelOffset: { x: -0.8, y: -1.4 }, labelAnchor: "end" },
-        { start: { x: 2.2, y: 2.2 }, end: { x: 1.2, y: 3.2 }, label: "θ̂", style: "secondary", labelPosition: "end", labelOffset: { x: 1.2, y: -1.4 } },
+        { start: { x: 0, y: 0 }, end: { x: 2.2, y: 2.2 }, label: "r", style: "reference", labelPosition: "below" },
+        { start: { x: 2.2, y: 2.2 }, end: { x: 3.2, y: 3.2 }, label: "r̂", style: "primary", labelPosition: "beyond-tip" },
+        { start: { x: 2.2, y: 2.2 }, end: { x: 1.2, y: 3.2 }, label: "θ̂", style: "secondary", labelPosition: "beyond-tip" },
       ],
       curves: [
         {
@@ -302,8 +307,8 @@ export const UNIT_1_VISUALIZATIONS = {
       segments: [
         { start: { x: 0, y: 0 }, end: { x: 3.7, y: 0 }, style: "reference", lineStyle: "solid" },
       ],
-      points: [{ x: 2.2, y: 2.2, label: "(r, θ)", style: "tertiary", labelOffset: { x: 1.6, y: 2.2 } }],
-      annotations: [{ x: 0.65, y: 0.27, label: "θ" }],
+      points: [{ x: 2.2, y: 2.2, label: "(r, θ)", style: "tertiary", labelPosition: "right" }],
+      annotations: [{ x: 0.75, y: 0.3, label: "θ", labelPosition: "right" }],
     },
   },
 
@@ -357,35 +362,39 @@ export const UNIT_1_VISUALIZATIONS = {
   "vis-vector-grid": {
     id: "vis-vector-grid",
     kind: "diagram",
+    family: "vector-geometry",
     explanation: "La cuadrícula es la fuente de las componentes; no se muestran valores numéricos junto a la flecha.",
     props: {
       id: "vis-vector-grid-diagram",
       title: "Vector A sobre una cuadrícula cartesiana",
       description: "Un vector parte del origen y termina tres unidades a la izquierda y cuatro unidades arriba.",
-      xDomain: [-4.5, 1.5],
-      yDomain: [-1, 5],
+      xDomain: [-4.6, 1.6],
+      yDomain: [-1.1, 5.1],
+      aspectRatio: 1,
       grid: { x: integerRange(-4, 1), y: integerRange(-1, 5), labels: true },
-      vectors: [{ start: { x: 0, y: 0 }, end: { x: -3, y: 4 }, label: "A", style: "primary", labelPosition: "end", labelOffset: { x: 1.2, y: -1.4 } }],
-      points: [{ x: 0, y: 0, label: "O", style: "reference", labelOffset: { x: 1.2, y: 2 } }],
+      vectors: [{ start: { x: 0, y: 0 }, end: { x: -3, y: 4 }, label: "A", style: "primary", labelPosition: "beyond-tip" }],
+      points: [{ x: 0, y: 0, label: "O", style: "reference", labelPosition: "right" }],
     },
   },
 
   "vis-vector-sum-grid": {
     id: "vis-vector-sum-grid",
     kind: "diagram",
+    family: "vector-geometry",
     explanation: "Las dos flechas conservan sus componentes en la traslación punta-cola; la resultante se deja para el estudiante.",
     props: {
       id: "vis-vector-sum-grid-diagram",
       title: "Construcción punta-cola de A más B",
       description: "A va del origen al punto cuatro coma uno. Desde allí B avanza una unidad a la izquierda y tres hacia arriba. No se dibuja la resultante.",
-      xDomain: [-1, 5],
-      yDomain: [-1, 5],
+      xDomain: [-1.1, 5.1],
+      yDomain: [-1.1, 5.1],
+      aspectRatio: 1,
       grid: { x: integerRange(-1, 5), y: integerRange(-1, 5), labels: true },
       vectors: [
-        { start: { x: 0, y: 0 }, end: { x: 4, y: 1 }, label: "A", style: "primary", labelOffset: { x: 0, y: 1.7 } },
-        { start: { x: 4, y: 1 }, end: { x: 3, y: 4 }, label: "B", style: "secondary", labelOffset: { x: 1.4, y: -0.4 } },
+        { start: { x: 0, y: 0 }, end: { x: 4, y: 1 }, label: "A", style: "primary", labelPosition: "below" },
+        { start: { x: 4, y: 1 }, end: { x: 3, y: 4 }, label: "B", style: "secondary", labelPosition: "right" },
       ],
-      points: [{ x: 0, y: 0, label: "O", style: "reference", labelOffset: { x: 1.2, y: 2 } }],
+      points: [{ x: 0, y: 0, label: "O", style: "reference", labelPosition: "right" }],
     },
   },
 
@@ -407,40 +416,43 @@ export const UNIT_1_VISUALIZATIONS = {
   "vis-circular-directions": {
     id: "vis-circular-directions",
     kind: "diagram",
+    family: "motion-sketch",
     explanation: "El círculo y el punto fijan la geometría; no se dibujan las flechas de velocidad ni aceleración que debe inferir el estudiante.",
     props: {
       id: "vis-circular-directions-diagram",
       title: "Partícula en movimiento circular antihorario",
       description: "Una circunferencia con centro marcado y una partícula situada en un punto del primer cuadrante. El movimiento se declara antihorario.",
       xDomain: [-3.5, 3.5],
-      yDomain: [-3.5, 3.5],
+      yDomain: [-3.1, 3.1],
+      aspectRatio: 0.9,
       circles: [{ center: { x: 0, y: 0 }, radius: 2.6, label: "trayectoria circular", style: "reference" }],
       points: [
-        { ...circularPoint, label: "partícula", style: "primary", labelOffset: { x: 1.4, y: -1.8 } },
-        { x: 0, y: 0, label: "centro", style: "reference", labelOffset: { x: 1.4, y: -1.4 } },
+        { ...circularPoint, label: "partícula", style: "primary", labelPosition: "right" },
+        { x: 0, y: 0, label: "centro", style: "reference", labelPosition: "below" },
       ],
-      annotations: [{ x: -2.1, y: -2.2, label: "sentido antihorario", offset: { x: 0, y: 0 } }],
+      annotations: [{ x: 0, y: -2.9, label: "sentido antihorario", labelPosition: "below" }],
     },
   },
 
   "vis-boat-current": {
     id: "vis-boat-current",
     kind: "diagram",
+    family: "vector-geometry",
     explanation: "La construcción separa velocidad respecto al agua, corriente y velocidad respecto al suelo mediante objeto y marco.",
     props: {
       id: "vis-boat-current-diagram",
       title: "Composición vectorial de embarcación y corriente",
       description: "La corriente apunta al este. La velocidad de la embarcación respecto al agua apunta al noroeste y la resultante respecto al suelo es vertical hacia el norte.",
-      xDomain: [-2.5, 2.5],
-      yDomain: [-0.8, 3.4],
+      xDomain: [-3.6, 3.6],
+      yDomain: [-1.1, 3.2],
       segments: [
-        { start: { x: -2.2, y: 0 }, end: { x: 2.2, y: 0 }, label: "E", style: "reference", lineStyle: "solid", labelPosition: "end", labelOffset: { x: -1, y: 2 }, labelAnchor: "end" },
-        { start: { x: 0, y: -0.5 }, end: { x: 0, y: 3.1 }, label: "N", style: "reference", lineStyle: "solid", labelPosition: "end", labelOffset: { x: 1, y: 1.5 } },
+        { start: { x: -2.2, y: 0 }, end: { x: 2.2, y: 0 }, label: "E", style: "reference", lineStyle: "solid", labelPosition: "beyond-tip" },
+        { start: { x: 0, y: -0.7 }, end: { x: 0, y: 3 }, label: "N", style: "reference", lineStyle: "solid", labelPosition: "beyond-tip" },
       ],
       vectors: [
-        { start: { x: 0, y: 0 }, end: { x: -1.5, y: 2 }, label: "barco/agua", ariaLabel: "velocidad de la embarcación respecto al agua, 2,5 metros por segundo", style: "primary", labelOffset: { x: -1, y: -1.5 }, labelAnchor: "end" },
-        { start: { x: -1.5, y: 2 }, end: { x: 0, y: 2 }, label: "corriente 1,5 m/s", style: "secondary", labelOffset: { x: 0, y: -1.5 }, labelAnchor: "middle" },
-        { start: { x: 0, y: 0 }, end: { x: 0, y: 2 }, label: "respecto al suelo", style: "tertiary", lineStyle: "dashed", labelOffset: { x: 1.4, y: 0 }, labelAnchor: "start" },
+        { start: { x: 0, y: 0 }, end: { x: -1.5, y: 2 }, label: "barco/agua", ariaLabel: "velocidad de la embarcación respecto al agua, 2,5 metros por segundo", style: "primary", labelPosition: "left" },
+        { start: { x: -1.5, y: 2 }, end: { x: 0, y: 2 }, label: "corriente 1,5 m/s", style: "secondary", labelPosition: "above" },
+        { start: { x: 0, y: 0 }, end: { x: 0, y: 2 }, label: "respecto al suelo", style: "tertiary", lineStyle: "dashed", labelPosition: "right" },
       ],
     },
   },
@@ -480,16 +492,19 @@ export const UNIT_1_VISUALIZATIONS = {
   "vis-stroboscopic-spacing": {
     id: "vis-stroboscopic-spacing",
     kind: "diagram",
+    family: "motion-sketch",
     explanation: "Cada marca corresponde a un segundo adicional; usa la geometría de la secuencia como fuente de información.",
     props: {
       id: "vis-stroboscopic-spacing-diagram",
       title: "Posiciones estroboscópicas sobre el eje x",
       description: "Cinco posiciones en cero, uno, tres, seis y diez metros, tomadas a intervalos de un segundo, muestran separaciones crecientes hacia la derecha.",
-      xDomain: [-1, 11],
-      yDomain: [-1.2, 1.2],
-      aspectRatio: 0.5,
-      segments: [{ start: { x: -0.7, y: 0 }, end: { x: 10.7, y: 0 }, label: "+x", style: "reference", lineStyle: "solid", labelPosition: "end", labelOffset: { x: -1, y: 4 }, labelAnchor: "end" }],
-      points: [0, 1, 3, 6, 10].map((x, index) => ({ x, y: 0, label: `t=${index} s`, style: index === 0 ? "reference" : "primary", labelOffset: { x: 0, y: index % 2 === 0 ? -2 : 3 }, labelAnchor: "middle" })),
+      xDomain: [-1.7, 11.7],
+      yDomain: [-1.7, 1.7],
+      aspectRatio: 0.34,
+      segments: [{ start: { x: -0.7, y: 0 }, end: { x: 10.7, y: 0 }, label: "+x", style: "reference", lineStyle: "solid", labelPosition: "beyond-tip" }],
+      // Las marcas alternan lado para que las separaciones crecientes queden
+      // legibles incluso cuando dos instantes casi se tocan.
+      points: [0, 1, 3, 6, 10].map((x, index) => ({ x, y: 0, label: `t=${index} s`, style: index === 0 ? "reference" : "primary", labelPosition: index % 2 === 0 ? "above" : "below" })),
     },
   },
 
@@ -512,16 +527,17 @@ export const UNIT_1_VISUALIZATIONS = {
   "vis-parametric-trajectory": {
     id: "vis-parametric-trajectory",
     kind: "diagram",
+    family: "motion-sketch",
     explanation: "La curva conserva la escala física en x e y; la orientación local se interpreta mediante su tangente, no por deformación del viewBox.",
     props: {
       id: "vis-parametric-trajectory-diagram",
       title: "Trayectoria paramétrica en el plano",
       description: "Una trayectoria parabólica parte del origen, alcanza el punto cuatro coma cuatro en dos segundos y termina sobre el eje x en ocho metros a los cuatro segundos.",
-      xDomain: [-1, 9],
-      yDomain: [-1, 5],
+      xDomain: [-0.7, 8.7],
+      yDomain: [-1.1, 5.1],
       grid: { x: integerRange(0, 8), y: integerRange(0, 5), labels: true },
       curves: [{ points: sampleRange(0, 4, 81, (t) => ({ x: 2 * t, y: 4 * t - t ** 2 })), label: "trayectoria r de t", style: "primary" }],
-      points: [{ x: 4, y: 4, label: "t = 2 s", style: "tertiary", labelOffset: { x: 0, y: -1.8 }, labelAnchor: "middle" }],
+      points: [{ x: 4, y: 4, label: "t = 2 s", style: "tertiary", labelPosition: "above" }],
     },
   },
 };

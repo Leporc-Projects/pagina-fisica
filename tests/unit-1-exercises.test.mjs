@@ -47,8 +47,11 @@ test("la proyección conserva notación matemática clara y una descripción acc
     suffix: "A",
     baseRole: "operator",
   });
-  assert.deepEqual(projection.labelOffset, { x: 0, y: -2.4 });
-  assert.equal(projection.labelAnchor, "middle");
+  // La proyección es colineal con B: su etiqueta debe salir por el lado opuesto
+  // para que ambas se lean. Se comprueba la política declarada, no un
+  // desplazamiento numérico que dependa de la implementación del renderer.
+  assert.equal(projection.labelPosition, "below");
+  assert.equal(projection.ariaLabel, "proyección de A sobre B");
 });
 
 test("VIS-01 conserva pendientes, reposo, desplazamiento y distancia", () => {

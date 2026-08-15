@@ -42,6 +42,7 @@ export default Object.freeze({
     "La masa de 10 kg es la misma en ambos lugares. Con g = 9,8 m/s² el peso es 98 N; con g = 1,6 m/s² es 16 N.": "The 10 kg mass is the same in both places. With g = 9.8 m/s² weight is 98 N; with g = 1.6 m/s² it is 16 N.",
     "La misma masa en dos campos gravitacionales": "The same mass in two gravitational fields",
     "Dos cuerpos idénticos de diez kilogramos muestran flechas de peso diferentes para dos valores de campo gravitacional.": "Two identical ten-kilogram bodies show different weight arrows for two gravitational-field values.",
+    "g = 9,8 m/s²": "g = 9.8 m/s²", "g = 1,6 m/s²": "g = 1.6 m/s²",
   },
   "third-law-pair": {
     "Cada flecha está aplicada a un cuerpo distinto. Las fuerzas son simultáneas, de igual magnitud y sentidos opuestos.": "Each arrow is applied to a different body. The forces are simultaneous, equal in magnitude, and opposite in direction.",
