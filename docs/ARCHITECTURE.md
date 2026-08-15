@@ -135,6 +135,8 @@ Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes 
 - `results/`: importación del listado, configuración de fuentes, resumen, incidencias, consolidado y exportaciones del Organizador de resultados. Cada componente representa una etapa visible; el estado y los cálculos permanecen fuera de Astro y del DOM.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
+- `src/utils/diagram-layout.js`: geometría pura de colocación de etiquetas —métrica tipográfica, cajas de texto y de punta, separaciones, políticas de colocación y presets por familia—. No conoce el DOM.
+- `src/utils/diagram-geometry.js`: composición completa de un diagrama a partir de sus datos físicos. Única fuente compartida por el componente y por el verificador de colisiones del build.
 - `src/utils/kinematics-1d.js`: modelo puro de aceleración constante; valida
   parámetros y tiempo, calcula estado, retorno, distancia por tramos, muestras,
   extremos y dominios físicos finitos.
@@ -672,9 +674,52 @@ escala disponible, centra el área física y deja letterboxing en el eje
 sobrante. Así una unidad física en x ocupa lo mismo que una en y y una
 circunferencia no se convierte en elipse. `scaleMode: "stretch"` queda
 disponible solo para diagramas no geométricos que justifiquen explícitamente la
-distorsión. `labelOffset`, `labelAnchor` y `labelPosition` permiten separar
-etiquetas sin alterar las coordenadas físicas; el componente limita su ancla al
-área visible.
+distorsión.
+
+### Composición de un diagrama académico
+
+`AcademicDiagram.astro` solo pinta. La composición completa —validación del
+contrato, encuadre y colocación de cada etiqueta— vive en
+`src/utils/diagram-geometry.js`, y la geometría pura de etiquetado en
+`src/utils/diagram-layout.js`. Esa separación existe para que `validate.mjs`
+reproduzca durante el build exactamente lo que se va a publicar:
+
+```text
+figura registrada (familia + dominio + primitivas físicas)
+   ↓ prepareDiagram() — chart.js para la transformación
+geometría SVG + caja de cada etiqueta
+   ├─ AcademicDiagram.astro → SVG accesible
+   └─ validate.mjs → verificador de colisiones ES/EN × escritorio/móvil
+```
+
+Cada figura declara una `family` obligatoria: `vector-geometry`,
+`system-boundary`, `free-body`, `motion-sketch`, `concept-map` o `force-sum`.
+La familia fija relación de aspecto sugerida, respiro del área de trazado,
+política de colocación por primitiva y estilos por defecto; no contiene lógica
+de transformación. Una figura puede sobrescribir `aspectRatio` cuando su
+composición lo exige, como las circulares y la secuencia estroboscópica.
+
+Las primitivas son `vectors`, `segments`, `curves`, `circles`, `rectangles`,
+`points`, `annotations` y `grid`. `rectangles` describe regiones con la esquina
+inferior izquierda en coordenadas físicas; su etiqueta va dentro cuando cabe y
+sobre el borde cuando no, y esa decisión es del renderer. Un segmento es una
+línea real —plano, cuerda, eje— salvo que declare `lineStyle: "dashed"`.
+
+`labelPosition` elige entre `above`, `below`, `left`, `right`, `normal`,
+`beyond-tip` e `inside`; `labelAnchor` y `labelOffset` quedan como anulaciones
+editoriales explícitas. Una prop, un estilo o una colocación fuera del contrato
+detienen el build: el fallo silencioso anterior mantuvo doce figuras publicando
+menos de lo que declaraban.
+
+Las familias `free-body` y `system-boundary` no admiten anotaciones en prosa
+dentro del SVG. Una explicación pertenece al campo `explanation` del grupo de
+figura, que ya se localiza y se lee en impresión.
+
+La métrica tipográfica de las etiquetas se declara una sola vez en
+`diagram-layout.js`; el componente la publica como variables CSS para que
+global.css no conserve una copia. El ancho estimado de una etiqueta se deriva
+del tamaño de fuente efectivo, de modo que la comprobación vale también con la
+métrica mayor de móvil.
 
 ### Mapa de aprendizaje
 
