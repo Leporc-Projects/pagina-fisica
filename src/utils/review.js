@@ -1,10 +1,10 @@
 import { BONUSES } from "../data/bonuses/index.js";
+import { COURSE } from "../data/course.js";
+import { COURSE_IDS } from "../data/courses.js";
 import {
   ACTIVITY_OPTIONS,
   HELPFULNESS_OPTIONS,
   IMPROVEMENT_AREAS,
-  PARTICIPATION_CONTEXT,
-  PARTICIPATION_TOPICS,
   PROPOSAL_TYPES,
   STUDENT_DIFFICULTY_ESTIMATES,
   SUPPORT_OPTIONS,
@@ -44,7 +44,16 @@ export const REVIEW_LABELS = {
   reviewStatus: labelMap(REVIEW_STATUSES),
 };
 
-const topicMap = new Map(PARTICIPATION_TOPICS.map((topic) => [topic.slug, topic]));
+// Identidad fija del curso que sirve el Centro de revisión, independiente del
+// ámbito de cada respuesta importada (que puede ser general o de cualquier
+// curso registrado).
+const REVIEW_COURSE = Object.freeze({
+  code: COURSE.code,
+  slug: COURSE_IDS.PHYSICS_BASIC_1,
+  title: COURSE.name,
+});
+
+const topicMap = new Map(localizeParticipationData("es").topics.map((topic) => [topic.slug, topic]));
 const bonusMap = new Map(BONUSES.map((bonus) => [bonus.id, bonus]));
 
 const isExactIsoDate = (value) => {
@@ -351,8 +360,7 @@ export const createReviewExport = (
   return {
     schemaVersion: REVIEW_SESSION_SCHEMA_VERSION,
     generatedAt,
-    course: { ...PARTICIPATION_CONTEXT.course },
-    unit: { ...PARTICIPATION_CONTEXT.unit },
+    course: { ...REVIEW_COURSE },
     summary: aggregateReviewSession(session),
     items: session.records.map((record) => ({
       kind: record.kind,
@@ -385,6 +393,11 @@ export const REVIEW_CSV_COLUMNS = [
   "review_status",
   "review_note",
   "reviewed_at",
+  // 1.2.0 añade estas al final: el ámbito de la respuesta y, cuando aplica,
+  // el curso. `unit`/`topic` ya cubrían la unidad y el tema.
+  "scope_type",
+  "course_id",
+  "course_name",
 ];
 
 const participationCsvRow = (item) => {
@@ -411,8 +424,8 @@ const participationCsvRow = (item) => {
     schema_version: response.schemaVersion,
     response_id: response.responseId,
     activity_type: response.activityType,
-    unit: response.unit.number,
-    topic: response.topic.slug,
+    unit: response.unit?.number,
+    topic: response.topic?.slug,
     created_at: response.createdAt,
     purpose: response.purpose,
     privacy: response.privacy,
@@ -423,6 +436,9 @@ const participationCsvRow = (item) => {
     review_status: item.review?.status ?? "",
     review_note: item.review?.note ?? "",
     reviewed_at: item.review?.reviewedAt ?? "",
+    scope_type: response.scope?.type ?? "",
+    course_id: response.course?.id ?? "",
+    course_name: response.course?.name ?? "",
   };
 };
 

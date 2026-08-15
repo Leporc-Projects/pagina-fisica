@@ -2,6 +2,7 @@ import { localizeReviewData } from "../data/review-localize.js";
 import { LOCALES } from "../i18n/config.js";
 import { t } from "../i18n/index.js";
 import { attemptIdentity } from "../utils/bonus.js";
+import { participationContextLabel } from "../utils/participation.js";
 import { downloadLocalFile } from "./local-export.js";
 import {
   addReviewImportEntries,
@@ -249,7 +250,7 @@ export const initializeReviewCenter = () => {
         const title = createElement("h3", labels.activity[response.activityType]);
         const meta = createElement(
           "p",
-          `${response.topic.title} · ${formatDate(response.createdAt, locale)}`,
+          `${participationContextLabel(response, locale)} · ${formatDate(response.createdAt, locale)}`,
           "review-response__meta"
         );
         header.append(title, meta);
@@ -329,7 +330,7 @@ export const initializeReviewCenter = () => {
         header.append(
           createElement("p", t(locale, "teacher.review.proposal.anonymous"), "academic-label"),
           createElement("h3", proposal.statement),
-          createElement("p", `${response.topic.title} · ${formatDate(response.createdAt, locale)}`, "review-response__meta")
+          createElement("p", `${participationContextLabel(response, locale)} · ${formatDate(response.createdAt, locale)}`, "review-response__meta")
         );
         const facts = createElement("dl", undefined, "review-proposal__facts");
         addProposalFact(facts, t(locale, "teacher.review.detail.type"), labels.proposalType[proposal.kind]);
@@ -597,7 +598,7 @@ export const initializeReviewCenter = () => {
         const article = createElement("article");
         article.append(
           createElement("h3", `${index + 1}. ${labels.activity[response.activityType]}`),
-          createElement("p", `${response.topic.title} · ${response.responseId}`),
+          createElement("p", `${participationContextLabel(response, locale)} · ${response.responseId}`),
           createElement("p", participationMainText(response))
         );
         target.append(article);
