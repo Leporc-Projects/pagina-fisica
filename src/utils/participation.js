@@ -2,22 +2,26 @@ import {
   ACTIVITY_TYPES,
   HELPFULNESS_OPTIONS,
   IMPROVEMENT_AREAS,
-  PARTICIPATION_CONTEXT,
-  PARTICIPATION_TOPICS,
   PROPOSAL_TYPES,
   STUDENT_DIFFICULTY_ESTIMATES,
   SUPPORT_OPTIONS,
 } from "../data/participation.js";
 import { localizeParticipationData } from "../data/participation-localize.js";
+import { COURSE } from "../data/course.js";
+import { COURSE_IDS } from "../data/courses.js";
+import { getDevelopedAcademicUnitsForCourse, getLocalizedAcademicUnit } from "../data/physics/index.js";
+import { contentScopeLabel, normalizeContentScope, validateContentScope } from "./content-scope.js";
 import { t } from "../i18n/index.js";
 import { recordsToCsv } from "./local-export.js";
 
 export { escapeCsvField } from "./local-export.js";
 
-export const PARTICIPATION_SCHEMA_VERSION = "1.1.0";
+export const PARTICIPATION_SCHEMA_VERSION = "1.2.0";
+export const PARTICIPATION_SCHEMA_VERSION_1_1_0 = "1.1.0";
 export const LEGACY_PARTICIPATION_SCHEMA_VERSION = "1.0.0";
 export const SUPPORTED_PARTICIPATION_SCHEMA_VERSIONS = Object.freeze([
   LEGACY_PARTICIPATION_SCHEMA_VERSION,
+  PARTICIPATION_SCHEMA_VERSION_1_1_0,
   PARTICIPATION_SCHEMA_VERSION,
 ]);
 export const STUDENT_PROPOSAL_SCHEMA_VERSION = "1.0.0";
@@ -43,7 +47,29 @@ const PROPOSAL_TYPE_VALUES = optionValues(PROPOSAL_TYPES);
 const DIFFICULTY_VALUES = optionValues(STUDENT_DIFFICULTY_ESTIMATES);
 const IMPROVEMENT_AREA_VALUES = optionValues(IMPROVEMENT_AREAS);
 const HELPFULNESS_VALUES = optionValues(HELPFULNESS_OPTIONS);
-const TOPIC_SLUGS = PARTICIPATION_TOPICS.map((topic) => topic.slug);
+
+// Los esquemas 1.0.0 y 1.1.0 fijaban Física Básica I y la Unidad 1 sin campo
+// de ámbito. Esos archivos ya existen en discos de estudiantes y no se migran:
+// sus valores esperados quedan congelados aquí, derivados del registro
+// académico genérico (nunca de un import directo de unit-1/unit.js) para que
+// coincidan exactamente con lo que el generador histórico producía.
+const LEGACY_COURSE = Object.freeze({
+  code: COURSE.code,
+  slug: COURSE_IDS.PHYSICS_BASIC_1,
+  title: COURSE.name,
+});
+const legacyUnitEs = getLocalizedAcademicUnit(1, "es");
+if (!legacyUnitEs) {
+  throw new Error("El registro académico no expone la Unidad 1 requerida por el contrato legado de Participa.");
+}
+const LEGACY_UNIT = Object.freeze({
+  number: legacyUnitEs.number,
+  slug: legacyUnitEs.slug,
+  title: legacyUnitEs.title,
+});
+const LEGACY_TOPICS = Object.freeze(
+  legacyUnitEs.topics.map((topic) => Object.freeze({ slug: topic.slug, title: topic.title }))
+);
 
 const cleanRequiredText = (value, label, locale) => {
   if (typeof value !== "string" || value.trim() === "") {
@@ -200,6 +226,64 @@ const normalizePayload = (activityType, payload = {}, locale = "es") => {
   throw new TypeError("El tipo de actividad no pertenece al contrato.");
 };
 
+// Resuelve scope + curso + unidad + tema para una respuesta 1.2.0. unitNumber
+// y topicSlug son contexto académico opcional: requieren scope de curso, y
+// topicSlug requiere además unitNumber (invariante: topic !== null ⇒ unit !== null).
+const resolveAcademicContext = (input, locale) => {
+  const scopeInput = input?.scope ?? { type: "global" };
+  const scopeValidation = validateContentScope(scopeInput);
+  if (!scopeValidation.valid) {
+    throw new TypeError(
+      t(locale, "participation.validation.invalid", { label: t(locale, "participation.field.scope") })
+    );
+  }
+  const scope = normalizeContentScope(scopeInput);
+  const hasUnit = input?.unitNumber !== undefined && input?.unitNumber !== null;
+  const hasTopic = typeof input?.topicSlug === "string" && input.topicSlug !== "";
+
+  if (scope.type === "global") {
+    if (hasUnit || hasTopic) {
+      throw new TypeError(
+        t(locale, "participation.validation.invalid", { label: t(locale, "participation.field.context") })
+      );
+    }
+
+    return { scope, course: null, unit: null, topic: null };
+  }
+
+  const course = { id: scope.courseId, name: contentScopeLabel(scope, locale) };
+
+  if (!hasUnit) {
+    if (hasTopic) {
+      throw new TypeError(
+        t(locale, "participation.validation.invalid", { label: t(locale, "participation.field.context") })
+      );
+    }
+
+    return { scope, course, unit: null, topic: null };
+  }
+
+  const developedUnit = getDevelopedAcademicUnitsForCourse(scope.courseId, locale)
+    .find((candidate) => candidate.number === input.unitNumber);
+  if (!developedUnit) {
+    throw new TypeError(
+      t(locale, "participation.validation.invalid", { label: t(locale, "participation.field.unit") })
+    );
+  }
+  const unit = { number: developedUnit.number, slug: developedUnit.slug, title: developedUnit.title };
+
+  if (!hasTopic) return { scope, course, unit, topic: null };
+
+  const developedTopic = developedUnit.topics.find((candidate) => candidate.slug === input.topicSlug);
+  if (!developedTopic) {
+    throw new TypeError(
+      t(locale, "participation.validation.invalid", { label: t(locale, "participation.field.topic") })
+    );
+  }
+
+  return { scope, course, unit, topic: { slug: developedTopic.slug, title: developedTopic.title } };
+};
+
 export const createParticipationResponse = (input, environment = {}) => {
   const locale = environment.locale ?? "es";
   const activityType = assertEnum(
@@ -208,13 +292,7 @@ export const createParticipationResponse = (input, environment = {}) => {
     t(locale, "participation.field.activity"),
     locale
   );
-  const topicSlug = assertEnum(
-    input?.topicSlug,
-    TOPIC_SLUGS,
-    t(locale, "participation.field.topic"),
-    locale
-  );
-  const topic = PARTICIPATION_TOPICS.find((item) => item.slug === topicSlug);
+  const { scope, course, unit, topic } = resolveAcademicContext(input, locale);
   const createdAt = environment.createdAt ?? new Date().toISOString();
   const responseId = environment.responseId ?? generateResponseId();
 
@@ -222,9 +300,10 @@ export const createParticipationResponse = (input, environment = {}) => {
     schemaVersion: PARTICIPATION_SCHEMA_VERSION,
     responseId,
     activityType,
-    course: { ...PARTICIPATION_CONTEXT.course },
-    unit: { ...PARTICIPATION_CONTEXT.unit },
-    topic: { ...topic },
+    scope,
+    course,
+    unit,
+    topic,
     createdAt,
     purpose: ACTIVITY_PURPOSE[activityType],
     collection: "local",
@@ -248,6 +327,7 @@ const isExactIsoDate = (value) => {
 };
 
 const hasText = (value) => typeof value === "string" && value.trim() !== "";
+const isNonEmptyString = (value) => typeof value === "string" && value.length > 0;
 
 export const validateParticipationResponse = (response) => {
   const errors = [];
@@ -261,25 +341,6 @@ export const validateParticipationResponse = (response) => {
   );
   require(isResponseId(response?.responseId), "responseId inválido.");
   require(ACTIVITY_TYPES.includes(response?.activityType), "activityType inválido.");
-  require(
-    response?.course?.code === PARTICIPATION_CONTEXT.course.code &&
-      response?.course?.slug === PARTICIPATION_CONTEXT.course.slug &&
-      response?.course?.title === PARTICIPATION_CONTEXT.course.title,
-    "course inválido."
-  );
-  require(
-    response?.unit?.number === PARTICIPATION_CONTEXT.unit.number &&
-      response?.unit?.slug === PARTICIPATION_CONTEXT.unit.slug &&
-      response?.unit?.title === PARTICIPATION_CONTEXT.unit.title,
-    "unit inválida."
-  );
-  const expectedTopic = PARTICIPATION_TOPICS.find(
-    (topic) => topic.slug === response?.topic?.slug
-  );
-  require(
-    expectedTopic !== undefined && response?.topic?.title === expectedTopic.title,
-    "topic inválido."
-  );
   require(isExactIsoDate(response?.createdAt), "createdAt debe usar ISO 8601.");
   require(
     PARTICIPATION_PURPOSES.includes(response?.purpose) &&
@@ -290,6 +351,69 @@ export const validateParticipationResponse = (response) => {
   require(PARTICIPATION_PRIVACY_LEVELS.includes(response?.privacy), "privacy inválida.");
   require(response?.submissionTarget === null, "submissionTarget debe permanecer vacío.");
 
+  const isLegacy = response?.schemaVersion === LEGACY_PARTICIPATION_SCHEMA_VERSION ||
+    response?.schemaVersion === PARTICIPATION_SCHEMA_VERSION_1_1_0;
+
+  if (isLegacy) {
+    // Contrato histórico: Física Básica I, Unidad 1 y tema obligatorios, sin
+    // campo scope. No se relee del registro académico vigente: se compara
+    // contra el valor congelado para no invalidar archivos ya existentes si
+    // el contenido editorial de la Unidad 1 cambiara en el futuro.
+    require(
+      response?.course?.code === LEGACY_COURSE.code &&
+        response?.course?.slug === LEGACY_COURSE.slug &&
+        response?.course?.title === LEGACY_COURSE.title,
+      "course inválido."
+    );
+    require(
+      response?.unit?.number === LEGACY_UNIT.number &&
+        response?.unit?.slug === LEGACY_UNIT.slug &&
+        response?.unit?.title === LEGACY_UNIT.title,
+      "unit inválida."
+    );
+    const expectedTopic = LEGACY_TOPICS.find((topic) => topic.slug === response?.topic?.slug);
+    require(
+      expectedTopic !== undefined && response?.topic?.title === expectedTopic.title,
+      "topic inválido."
+    );
+  } else if (response?.schemaVersion === PARTICIPATION_SCHEMA_VERSION) {
+    const scopeValidation = validateContentScope(response?.scope);
+    require(scopeValidation.valid, "scope inválido.");
+
+    if (scopeValidation.valid && response.scope.type === "global") {
+      require(
+        response?.course === null && response?.unit === null && response?.topic === null,
+        "El ámbito general no admite course, unit ni topic."
+      );
+    }
+
+    if (scopeValidation.valid && response.scope.type === "course") {
+      require(
+        response?.course !== null &&
+          typeof response.course === "object" &&
+          response.course.id === response.scope.courseId &&
+          isNonEmptyString(response.course.name),
+        "course inválido."
+      );
+      require(
+        response?.unit === null || (
+          Number.isInteger(response?.unit?.number) &&
+          isNonEmptyString(response?.unit?.slug) &&
+          isNonEmptyString(response?.unit?.title)
+        ),
+        "unit inválida."
+      );
+      require(response?.unit !== null || response?.topic === null, "topic requiere unit.");
+      require(
+        response?.topic === null || (
+          isNonEmptyString(response?.topic?.slug) &&
+          isNonEmptyString(response?.topic?.title)
+        ),
+        "topic inválido."
+      );
+    }
+  }
+
   if (response?.activityType === "concept-difficulty") {
     require(hasText(response?.payload?.unclearPoint), "Falta la dificultad conceptual.");
     require(
@@ -297,7 +421,9 @@ export const validateParticipationResponse = (response) => {
         SUPPORT_VALUES.includes(response.payload.helpfulSupport),
       "La ayuda sugerida es inválida."
     );
-    if (response?.schemaVersion === PARTICIPATION_SCHEMA_VERSION) {
+    const supportsOtherDetail = response?.schemaVersion === PARTICIPATION_SCHEMA_VERSION_1_1_0 ||
+      response?.schemaVersion === PARTICIPATION_SCHEMA_VERSION;
+    if (supportsOtherDetail) {
       require(
         response?.payload?.helpfulSupport !== "other" ||
           hasText(response?.payload?.helpfulSupportOther),
@@ -346,6 +472,31 @@ export const validateParticipationResponse = (response) => {
   return { valid: errors.length === 0, errors };
 };
 
+// Etiqueta del contexto académico de una respuesta ya validada, del más
+// específico al más general: tema, unidad, curso o ámbito general. Vuelve a
+// localizar contra el registro vigente cuando el slug/número sigue existiendo
+// y solo cae al título almacenado en la respuesta como último recurso.
+export const participationContextLabel = (response, locale = "es") => {
+  if (response.topic) {
+    const presentation = localizeParticipationData(locale);
+    return presentation.topics.find((topic) => topic.slug === response.topic.slug)?.title
+      ?? response.topic.title;
+  }
+
+  if (response.unit && response.course) {
+    const units = getDevelopedAcademicUnitsForCourse(response.course.id, locale);
+    return units.find((unit) => unit.number === response.unit.number)?.title
+      ?? response.unit.title;
+  }
+
+  if (response.course) {
+    const scopeValidation = validateContentScope(response.scope);
+    return scopeValidation.valid ? contentScopeLabel(response.scope, locale) : response.course.name;
+  }
+
+  return t(locale, "participation.context.general");
+};
+
 export const participationSummary = (response, locale = "es") => {
   const result = validateParticipationResponse(response);
   if (!result.valid) throw new TypeError(result.errors.join(" "));
@@ -362,7 +513,7 @@ export const participationSummary = (response, locale = "es") => {
 
   const common = {
     type: labels.activity[response.activityType],
-    topic: presentation.topics.find((topic) => topic.slug === response.topic.slug)?.title ?? response.topic.title,
+    topic: participationContextLabel(response, locale),
   };
 
   if (response.activityType === "concept-difficulty") {
@@ -481,6 +632,11 @@ export const PARTICIPATION_CSV_COLUMNS = [
   "improvement_text",
   "helpfulness",
   "payload_json",
+  // 1.2.0 añade estas tres al final; las columnas anteriores nunca cambian de
+  // posición para no romper una reimportación tabular de archivos previos.
+  "scope_type",
+  "course_id",
+  "course_name",
 ];
 
 const participationCsvRecord = (response) => {
@@ -489,12 +645,12 @@ const participationCsvRecord = (response) => {
     schema_version: response.schemaVersion,
     response_id: response.responseId,
     activity_type: response.activityType,
-    course_code: response.course.code,
-    course_slug: response.course.slug,
-    unit_number: response.unit.number,
-    unit_slug: response.unit.slug,
-    topic_slug: response.topic.slug,
-    topic_title: response.topic.title,
+    course_code: response.course?.code,
+    course_slug: response.course?.slug ?? response.course?.id,
+    unit_number: response.unit?.number,
+    unit_slug: response.unit?.slug,
+    topic_slug: response.topic?.slug,
+    topic_title: response.topic?.title,
     created_at: response.createdAt,
     purpose: response.purpose,
     collection: response.collection,
@@ -518,6 +674,9 @@ const participationCsvRecord = (response) => {
     improvement_text: response.payload.improvement,
     helpfulness: response.payload.helpfulness,
     payload_json: JSON.stringify(response.payload),
+    scope_type: response.scope?.type,
+    course_id: response.course?.id,
+    course_name: response.course?.name,
   };
 };
 

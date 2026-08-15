@@ -1,16 +1,14 @@
 import { assertSupportedLocale } from "../i18n/config.js";
-import { localizeCourseData } from "./course-localize.js";
+import { COURSE_IDS } from "./courses.js";
+import { getDevelopedAcademicUnitsForCourse } from "./physics/index.js";
 import {
   ACTIVITY_OPTIONS,
   HELPFULNESS_OPTIONS,
   IMPROVEMENT_AREAS,
-  PARTICIPATION_CONTEXT,
-  PARTICIPATION_TOPICS,
   PROPOSAL_TYPES,
   STUDENT_DIFFICULTY_ESTIMATES,
   SUPPORT_OPTIONS,
 } from "./participation.js";
-import { localizeUnit1 } from "./physics/unit-1/localize.js";
 
 const EN = Object.freeze({
   activities: Object.freeze([
@@ -30,12 +28,23 @@ const localizePairs = (source, labels) => {
   return source.map(([value], index) => [value, labels[index]]);
 };
 
+/**
+ * Vocabulario público de Participa: actividades, opciones y el catálogo de
+ * unidades/temas de Física Básica I, localizados. Las unidades se derivan del
+ * registro académico genérico (`getDevelopedAcademicUnitsForCourse`), así que
+ * Unidades 4-7 se incorporan sin editar este módulo. `topics` aplana ese
+ * catálogo para los consumidores que solo necesitan slug + título, como el
+ * filtro de tema del Centro de revisión.
+ */
 export const localizeParticipationData = (locale) => {
   assertSupportedLocale(locale);
+  const units = getDevelopedAcademicUnitsForCourse(COURSE_IDS.PHYSICS_BASIC_1, locale);
+  const topics = units.flatMap((unit) => unit.topics.map((topic) => ({ slug: topic.slug, title: topic.title })));
+
   if (locale === "es") {
     return {
-      context: PARTICIPATION_CONTEXT,
-      topics: PARTICIPATION_TOPICS,
+      units,
+      topics,
       activityOptions: ACTIVITY_OPTIONS,
       supportOptions: SUPPORT_OPTIONS,
       proposalTypes: PROPOSAL_TYPES,
@@ -45,18 +54,9 @@ export const localizeParticipationData = (locale) => {
     };
   }
 
-  const { COURSE } = localizeCourseData(locale);
-  const unit = localizeUnit1(locale);
   return {
-    context: {
-      course: { ...PARTICIPATION_CONTEXT.course, title: COURSE.name },
-      unit: { ...PARTICIPATION_CONTEXT.unit, title: unit.title },
-    },
-    topics: PARTICIPATION_TOPICS.map((topic) => ({
-      ...topic,
-      title: unit.topics.find((candidate) => candidate.slug === topic.slug)?.title
-        ?? (() => { throw new RangeError(`Missing English participation topic: ${topic.slug}`); })(),
-    })),
+    units,
+    topics,
     activityOptions: ACTIVITY_OPTIONS.map((option, index) => ({
       ...option,
       label: EN.activities[index][0],

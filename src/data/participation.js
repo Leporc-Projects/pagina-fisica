@@ -1,26 +1,6 @@
-// Configuración pública de la participación local. Deriva temas e identidad
-// académica de las fuentes canónicas sin incorporar respuestas estudiantiles.
-import { COURSE } from "./course.js";
-import { UNIT_1 } from "./physics/unit-1/unit.js";
-
-export const PARTICIPATION_CONTEXT = {
-  course: {
-    code: COURSE.code,
-    slug: "fisica-basica-1",
-    title: COURSE.name,
-  },
-  unit: {
-    number: UNIT_1.number,
-    slug: UNIT_1.slug,
-    title: UNIT_1.title,
-  },
-};
-
-export const PARTICIPATION_TOPICS = UNIT_1.topics.map((topic) => ({
-  slug: topic.slug,
-  title: topic.title,
-}));
-
+// Vocabulario editorial público de la participación local. El ámbito, el
+// curso, la unidad y el tema se resuelven en utils/participation.js contra el
+// registro académico genérico; este módulo no importa una unidad concreta.
 export const ACTIVITY_TYPES = [
   "concept-difficulty",
   "student-question-proposal",

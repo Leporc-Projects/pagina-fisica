@@ -94,3 +94,10 @@ export const getLocalizedAcademicUnit = (unitNumber, locale) => ACADEMIC_UNIT_AD
 export const getDevelopedAcademicUnits = (locale) => ACADEMIC_UNITS.map((unit) => getLocalizedAcademicUnit(unit.number, locale));
 export const getAcademicUnitForContext = (courseId, unitNumber) =>
   ACADEMIC_CONTEXTS.find((context) => context.courseId === courseId)?.units.find((unit) => unit.number === unitNumber) ?? null;
+
+// Unidades desarrolladas de un curso concreto, localizadas. Un curso sin
+// contexto académico registrado devuelve una lista vacía en lugar de lanzar:
+// consumidores como Participa siguen siendo válidos sin unidad ni tema.
+export const getDevelopedAcademicUnitsForCourse = (courseId, locale) =>
+  (ACADEMIC_CONTEXTS.find((context) => context.courseId === courseId)?.units ?? [])
+    .map((unit) => getLocalizedAcademicUnit(unit.number, locale));
