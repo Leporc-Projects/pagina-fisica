@@ -129,14 +129,18 @@ Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes 
 - `bank/QuestionBankEditor.astro`: formulario docente local para previsualizar preguntas fijas y preparar un paquete JSON de borradores; no modifica el banco público.
 - `notices/NoticeEditor.astro`: formulario local para preparar y previsualizar avisos como texto, sin publicar ni enviar datos.
 - `NoticeCard.astro`: presentación pública compartida; conserva enlaces internos y HTTPS seguros también en su variante compacta.
-- `teacher/TeacherToolsNav.astro`: navegación común del hub, los dos editores, el Centro de revisión y el Organizador.
-- `participation/`: selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
+- `teacher/TeacherToolsNav.astro`: navegación del hub y de las herramientas publicadas; deriva su lista de `src/data/teacher-tools.js`, no de un array local.
+- `academic/TopicCta.astro`: gramática compartida de los CTA de cierre de tema (simulación, práctica, Participa); recibe `eyebrow`/`title`/`description`/`href`/`linkLabel` ya resueltos y no decide rutas.
+- `participation/`: paso de contexto (`ParticipationContext.astro`), selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
 - `review/`: importación accesible, agregados descriptivos, listado paginado, revisión de propuestas, incidencias y exportación de una sesión docente local. La ruta de la herramienta los compone sin incorporar lógica de contratos.
 - `results/`: importación del listado, configuración de fuentes, resumen, incidencias, consolidado y exportaciones del Organizador de resultados. Cada componente representa una etapa visible; el estado y los cálculos permanecen fuera de Astro y del DOM.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
 - `src/utils/diagram-layout.js`: geometría pura de colocación de etiquetas —métrica tipográfica, cajas de texto y de punta, separaciones, políticas de colocación y presets por familia—. No conoce el DOM.
 - `src/utils/diagram-geometry.js`: composición completa de un diagrama a partir de sus datos físicos. Única fuente compartida por el componente y por el verificador de colisiones del build.
+- `src/utils/content-scope.js`: contrato de ámbito (`global` o `course`) compartido por Avisos y Participa; valida, normaliza y produce la etiqueta localizada de un `scope`.
+- `src/utils/participation-precontext.js`: traduce query params en un contexto inicial seguro para Participa, validando curso/unidad/tema contra el registro vigente y cayendo a ámbito general ante cualquier valor inválido.
+- `src/data/teacher-tools.js`: registro explícito de herramientas docentes con `published`. El hub y `TeacherToolsNav` derivan su lista de ahí; una herramienta no publicada conserva su implementación pero no genera ruta.
 - `src/utils/kinematics-1d.js`: modelo puro de aceleración constante; valida
   parámetros y tiempo, calcula estado, retorno, distancia por tramos, muestras,
   extremos y dominios físicos finitos.
@@ -194,7 +198,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/simulaciones/proyectil-2d.astro` | `/simulaciones/proyectil-2d` |
 | `src/pages/simulaciones/fuerzas-friccion.astro` | `/simulaciones/fuerzas-friccion` |
 | `src/pages/simulaciones/dinamica-circular.astro` | `/simulaciones/dinamica-circular` |
-| `src/pages/herramientas.astro` | `/herramientas` |
+| `src/pages/participa.astro` | `/participa` |
 | `src/pages/actividades.astro` | `/actividades` |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
 | `src/pages/fisica-basica-1/avisos.astro` | `/fisica-basica-1/avisos` |
@@ -206,7 +210,6 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/recursos.astro` | `/fisica-basica-1/recursos` |
 | `src/pages/fisica-basica-1/participa.astro` | `/fisica-basica-1/participa` |
 | `src/pages/fisica-basica-1/herramientas/index.astro` | `/fisica-basica-1/herramientas` |
-| `src/pages/fisica-basica-1/herramientas/simulaciones.astro` | `/fisica-basica-1/herramientas/simulaciones` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/index.astro` | `/fisica-basica-1/unidades/unidad-1` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/herramientas.astro` | `/fisica-basica-1/unidades/unidad-1/herramientas` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/vectores.astro` | `/fisica-basica-1/unidades/unidad-1/vectores` |
@@ -218,12 +221,16 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/ejercicios/unidad-1.astro` | `/fisica-basica-1/ejercicios/unidad-1` |
 | `src/pages/fisica-basica-1/bonos/index.astro` | `/fisica-basica-1/bonos` |
 | `src/pages/fisica-basica-1/bonos/[slug].astro` | `/fisica-basica-1/bonos/<slug>` |
-| `src/pages/fisica-basica-1/herramientas/revision.astro` | `/fisica-basica-1/herramientas/revision` |
-| `src/pages/fisica-basica-1/herramientas/banco.astro` | `/fisica-basica-1/herramientas/banco` |
 | `src/pages/fisica-basica-1/herramientas/avisos.astro` | `/fisica-basica-1/herramientas/avisos` |
 | `src/pages/fisica-basica-1/herramientas/notas.astro` | `/fisica-basica-1/herramientas/notas` |
 
 `index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
+
+Banco de preguntas, Laboratorio de simulaciones y Centro de revisión no tienen
+wrapper de página en `src/pages/fisica-basica-1/herramientas/` ni en su
+contraparte inglesa: `published: false` en `src/data/teacher-tools.js` retira
+su ruta pública sin tocar su implementación. Ver
+«[Recopilación controlada y revisión docente](#recopilación-controlada-y-revisión-docente)».
 
 Los recursos pertenecen al curso que los selecciona. Por eso la página real
 forma parte de `COURSE_NAV`; `/recursos` no mantiene contenido duplicado y
@@ -232,21 +239,29 @@ solo produce una redirección estática base-aware para enlaces anteriores.
 `Participa` también pertenece a `COURSE_NAV`, pero declara
 `includeInGlobalMenu: false`. `CourseNav` presenta la lista completa dentro de
 Física Básica I y `site.js` filtra esa entrada al construir el submenú global.
-Así la ruta permanece en el contexto del curso y no aparece en portada ni como
-sección general del sitio.
+Así la ruta de curso permanece en el contexto del curso y no se duplica en el
+menú general. Además de esa ruta, `ROUTE_IDS.PARTICIPATE` registra una
+identidad **global** (`/participa`, `/en/participate`) que sí forma parte de
+`NAV`, como quinta sección tras Avisos. Las dos rutas renderizan la misma
+composición (`ParticipationPage.astro`) con un `scope` inicial distinto; ninguna
+sustituye a la otra.
 
 ### Participación y exportación local
 
-La participación aplica mejora progresiva sobre tres formularios HTML
-independientes. Elegir una actividad revela únicamente su formulario; preparar
-una respuesta crea un solo objeto en memoria y oculta los controles durante la
-previsualización. Editar vuelve al formulario sin almacenar una copia.
+La participación aplica mejora progresiva sobre dos pasos y tres formularios
+HTML independientes. El primer paso (`ParticipationContext.astro`) elige el
+ámbito —Aula Física en general o un curso— y, si el curso tiene unidades
+desarrolladas, la unidad y el tema opcionales, agrupados por unidad. El
+segundo paso (`ParticipationChooser.astro`) elige una de las tres actividades
+y revela únicamente su formulario. Preparar una respuesta crea un solo objeto
+en memoria y oculta los controles durante la previsualización; editar vuelve a
+los formularios sin almacenar una copia.
 
 ```text
-campos del formulario activo
+contexto compartido (ámbito, curso, unidad, tema) + campos del formulario activo
    ↓ src/scripts/participation.js
 createParticipationResponse()
-   ↓ valida esquema, enums, requeridos, tema, ID y fecha
+   ↓ valida esquema, scope, enums, requeridos, ID y fecha
 objeto único de respuesta en memoria
    ├─ participationSummary() → previsualización
    ├─ toParticipationText() → copiar / TXT
@@ -255,26 +270,48 @@ objeto único de respuesta en memoria
    └─ CSS @media print + window.print() → impresión / Guardar como PDF
 ```
 
-El generador público emite el contrato `1.1.0`, que contiene `schemaVersion`, `responseId`,
-`activityType`, contexto de curso/unidad/tema, `createdAt`, `purpose`,
-`collection`, `privacy`, `submissionTarget` y `payload`. `createdAt` se conserva
-en ISO 8601 y solo se presenta con el locale del navegador; no se registra la
-zona horaria como campo. `responseId` representa 128 bits generados con
-`crypto.getRandomValues()` y solo identifica el archivo, sin IP, user-agent ni
-datos del dispositivo.
+El generador público emite el contrato `1.2.0`, que contiene `schemaVersion`,
+`responseId`, `activityType`, `scope`, `course`/`unit`/`topic`, `createdAt`,
+`purpose`, `collection`, `privacy`, `submissionTarget` y `payload`. `scope`
+reutiliza `src/utils/content-scope.js` (`{ type: "global" }` o
+`{ type: "course", courseId }`); bajo ámbito general, `course`/`unit`/`topic`
+son `null`. Bajo ámbito de curso, `course` siempre existe y `unit`/`topic` son
+contexto académico opcional con el invariante `topic !== null ⇒ unit !== null`.
+Unidad y tema se resuelven contra el registro académico genérico
+(`getDevelopedAcademicUnitsForCourse`), nunca contra una unidad importada
+directamente. `createdAt` se conserva en ISO 8601 y solo se presenta con el
+locale del navegador; no se registra la zona horaria como campo. `responseId`
+representa 128 bits generados con `crypto.getRandomValues()` y solo identifica
+el archivo, sin IP, user-agent ni datos del dispositivo.
 
-El cambio `1.1.0` añade `helpfulSupportOther`: solo existe y es obligatorio
-cuando `helpfulSupport` vale `other`. La normalización lo elimina al elegir otra
-opción. Los lectores y el Centro de revisión aceptan tanto respuestas válidas
-`1.0.0` como `1.1.0`; no migran archivos del disco. Preview, TXT, JSON y CSV
-parten del mismo objeto validado, y el CSV reserva la columna estable
-`helpful_support_other`.
+Los esquemas `1.0.0` y `1.1.0` predatan `scope`: fijaban Física Básica I y la
+Unidad 1 con tema obligatorio. Sus respuestas ya existentes se siguen
+validando contra ese contrato histórico congelado —no contra el registro
+académico vigente—, así que un cambio editorial futuro en la Unidad 1 no
+invalida archivos que un estudiante ya exportó. `1.1.0` añade
+`helpfulSupportOther`, que `1.2.0` conserva: solo existe y es obligatorio
+cuando `helpfulSupport` vale `other`; la normalización lo elimina al elegir
+otra opción. El Centro de revisión acepta las tres versiones sin migrar
+archivos del disco. Preview, TXT, JSON y CSV parten del mismo objeto validado;
+`participationContextLabel()` resuelve la etiqueta mostrada del más específico
+al más general —tema, unidad, curso, ámbito general— y vuelve a localizar
+contra el registro vigente cuando el slug o número siguen existiendo, en vez de
+depender solo del texto guardado en la respuesta.
 
 Los propósitos de participación son `learning`, `feedback` y `contribution`.
 No incluyen `research` ni `measurement`. `collection` es únicamente `local`,
-`privacy` es `anonymous` y `submissionTarget` permanece `null`. Un adaptador de
-entrega futuro deberá recibir el mismo objeto después de definir propósito,
-consentimiento y flujo docente; no debe reescribir el contrato desde el DOM.
+`privacy` es `anonymous` y `submissionTarget` permanece `null` en las dos
+rutas. Un adaptador de entrega futuro deberá recibir el mismo objeto después de
+definir propósito, consentimiento y flujo docente; no debe reescribir el
+contrato desde el DOM.
+
+Cada tema académico cierra con tres CTA de la misma gramática
+(`TopicCta.astro`): simulación relacionada cuando aplica, práctica de la
+unidad y, siempre después de práctica, Participa. El enlace de Participa
+apunta a la ruta **global**, no a la de curso, y precontextualiza curso, unidad
+y tema mediante query string (`scope`, `courseId`, `unit`, `topic`); la página
+de destino vuelve a validar esos parámetros contra el registro y cae a ámbito
+general ante cualquier valor inválido o manipulado.
 
 Las propuestas estudiantiles poseen un subcontrato propio con fuente
 `student`, estado `unreviewed`, identificador de ejercicio académico nulo y
@@ -287,7 +324,11 @@ El CSV escribe siempre las mismas columnas y una fila, encierra todos los
 campos entre comillas, duplica comillas internas y conserva comas, saltos de
 línea, Unicode y textos largos. Incluye columnas específicas por actividad y
 `payload_json` para preservar el contenido completo al combinar archivos
-posteriormente. El prefijo BOM facilita que lectores tabulares reconozcan UTF-8.
+posteriormente. `1.2.0` añade `scope_type`, `course_id` y `course_name` al
+final de `PARTICIPATION_CSV_COLUMNS`, sin reordenar ni renombrar ninguna
+columna anterior: una hoja que ya combinaba exportaciones `1.0.0`/`1.1.0` sigue
+alineando sus columnas históricas. El prefijo BOM facilita que lectores
+tabulares reconozcan UTF-8.
 
 La impresión elimina cabecera, navegación, formularios, botones y decoración;
 conserva marca, tipo, tema, respuesta, campos presentes, ID y fecha. No existe
@@ -298,10 +339,17 @@ en [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
 
 ### Recopilación controlada y revisión docente
 
-`/fisica-basica-1/herramientas/revision` es una herramienta docente discreta,
-enlazada desde Recursos pero ausente de `COURSE_NAV` y de la navegación global.
-No representa un área privada: no tiene autenticación, backend ni control de
-acceso. Todo el procesamiento ocurre en la pestaña mediante File API.
+El Centro de revisión (`src/components/review/`, servido por
+`ReviewCenterPage.astro`) conserva su implementación completa, pero
+`published: false` en `src/data/teacher-tools.js` retira su wrapper de página:
+`/fisica-basica-1/herramientas/revision` y `/en/basic-physics-1/tools/review`
+no existen en `dist`, no aparecen en el hub ni en `TeacherToolsNav`, y no están
+enlazadas desde ninguna superficie pública. Reactivarla exige solo volver a
+crear el wrapper (`import ReviewCenterPage from "…/ReviewCenterPage.astro"`) y
+marcar `published: true`; el componente, sus scripts y sus tests no cambian.
+Publicada, tampoco representaría un área privada: no tiene autenticación,
+backend ni control de acceso. Todo el procesamiento ocurre en la pestaña
+mediante File API.
 
 El flujo canónico usa los archivos JSON exportados por Participa. Un formulario
 externo, cuando el equipo docente decida utilizarlo, sirve únicamente como
@@ -493,9 +541,11 @@ entrar en una tanda. En Bono se materializa antes de crear el intento, y el
 snapshot conserva enunciado, respuesta, parámetros, versión e ID de instancia;
 la corrección y las exportaciones nunca regeneran la pregunta.
 
-`/fisica-basica-1/herramientas/banco` y su contraparte inglesa no son administración ni tienen
-autenticación ficticia. Previsualizan `singleChoice`, `number` y `multiNumber`,
-mantienen borradores en memoria y exportan `aula-fisica-question-pack-*.json` con
+El Editor de banco (`src/components/bank/QuestionBankEditor.astro`) sigue sin
+ruta pública —`published: false` en `src/data/teacher-tools.js`—, pero
+conserva su implementación intacta. No es administración ni tiene
+autenticación ficticia: previsualiza `singleChoice`, `number` y `multiNumber`,
+mantiene borradores en memoria y exporta `aula-fisica-question-pack-*.json` con
 Question Pack `2.0.0`, `authorSource: "teacher"` y `status: "draft"`. Cada Question 2.0 conserva una sola identidad, interacción y calificación, junto a `presentations.es` y `presentations.en`; la proyección pública deriva texto localizado sin cambiar IDs, unidades, tolerancias ni respuestas. Contenido
 con `requiresEditorialMath: true` queda fuera de Bonos hasta composición y
 revisión editorial.
@@ -971,11 +1021,13 @@ sirve desde el bundle local, sin CDN, y se atribuye en
 
 ### Autoría declarativa de simulaciones
 
-`/fisica-basica-1/herramientas/simulaciones` ofrece el primer constructor visual
-seguro. Presenta los modelos reales registrados y obtiene límites, etiquetas,
-vistas y renderer desde metadata. Título, resumen, parámetros, bloqueo, hasta
-cinco presets, hasta seis observaciones y contextos de las unidades registradas se mantienen en
-memoria. Recargar descarta la sesión.
+El Laboratorio de simulaciones (`src/components/simulations/SimulationLab.astro`,
+servido por `SimulationLabPage.astro`) es el primer constructor visual seguro,
+aunque `published: false` retira su wrapper de página mientras no se decida
+publicarlo. Presenta los modelos reales registrados y obtiene límites,
+etiquetas, vistas y renderer desde metadata. Título, resumen, parámetros,
+bloqueo, hasta cinco presets, hasta seis observaciones y contextos de las
+unidades registradas se mantienen en memoria. Recargar descarta la sesión.
 
 ```text
 formulario docente

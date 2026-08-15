@@ -43,11 +43,22 @@ El objeto local puede contener:
 
 - versión del esquema e ID aleatorio del archivo/respuesta;
 - tipo de actividad;
-- curso, unidad y tema seleccionado;
+- ámbito (general o de un curso registrado) y, cuando el ámbito es de curso,
+  el curso y, opcionalmente, la unidad y el tema seleccionados — nunca un
+  tema sin unidad;
 - fecha ISO 8601 de preparación;
 - propósito, modo de recopilación y nivel de privacidad;
 - contenido escrito y opciones escogidas para la actividad;
 - `submissionTarget: null` como punto de extensión sin entrega configurada.
+
+Desde el esquema 1.2.0, Participa existe en una ruta general (`/participa`)
+además de la ruta de curso. Una respuesta preparada desde la ruta general
+declara ámbito general y no lleva curso, unidad ni tema; una preparada desde
+la ruta de curso, o desde la ruta general con un curso elegido explícitamente,
+declara ese curso y, si el estudiante lo precisa, la unidad y el tema. Ningún
+flujo envía ni guarda la respuesta automáticamente en ninguna de las dos
+rutas: la preparación, la copia, la descarga y la impresión siguen siendo
+acciones explícitas del estudiante.
 
 No contiene nombre, correo, documento, ID institucional, grupo, nota, IP,
 user-agent, dispositivo, navegador, tamaño de pantalla ni zona horaria como

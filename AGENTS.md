@@ -45,6 +45,16 @@ Consult these guides before working on related tasks:
 - Keep semantic MathML typographically integrated with surrounding text through the shared inline-math contract; do not add per-formula alignment hacks.
 - Keep worked examples static and explanatory: they may reference shared formulas and visualizations but must not carry grading, progress, or student-state fields.
 - A public simulations catalog represents published resources, not a roadmap. Derive visible categories from published simulations and do not add promotional availability or novelty badges to finished features.
+- The student interface never encodes editorial priority through color, badges, eyebrows, or special notices unless there is an explicitly approved pedagogical reason. Internal fields such as `priority` may still exist for editorial use; they simply must not be projected into the public UI.
+
+## Participation and teacher tools
+
+- Participation exists at a global route (`/participa`, `/en/participate`) and, unchanged, at the course-scoped route (`/fisica-basica-1/participa`, `/en/basic-physics-1/participate`); both render the same `ParticipationPage.astro` composition and remain independently valid.
+- The 1.2.0 response schema reuses `src/utils/content-scope.js` for its `scope`: `{ type: "global" }` or `{ type: "course", courseId }`. `unit`/`topic` are optional academic context under a course scope, gated by the invariant `topic !== null ⇒ unit !== null`. Never invent a second scope system.
+- Historical 1.0.0/1.1.0 participation responses keep validating against their frozen, hardcoded contract (Física Básica I, Unit 1, mandatory topic); they are never migrated on disk.
+- Derive Participation's units and topics from the generic academic registry (`getDevelopedAcademicUnitsForCourse`), never from a direct import of a specific unit module.
+- Participation stays local-only: `collection: "local"`, `privacy: "anonymous"`, `submissionTarget: null`. Do not add a delivery mechanism, consent flow, or backend without an explicit, separate decision.
+- A teacher tool is publicly reachable only when `published: true` in `src/data/teacher-tools.js`. An unpublished tool keeps its full implementation (components, scripts, styles, tests) and its `ROUTE_IDS`/`LOCALIZED_ROUTES` entry for easy reactivation, but must not generate a page, appear in the hub, or appear in `TeacherToolsNav`.
 
 ## Code comments
 

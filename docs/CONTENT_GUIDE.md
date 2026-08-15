@@ -159,8 +159,12 @@ ni conexiones manuales a `UnitLearningMap.astro`. Un tema nuevo con orden y
 ruta válidos entra tanto al mapa de escritorio como al camino móvil.
 
 No debe declararse una prioridad de evaluación, obligatoriedad o exclusión a
-partir de la ubicación visual. La clasificación `extension` solo comunica una
-menor prioridad expositiva dentro del sitio.
+partir de la ubicación visual. La clasificación `extension` es metadato
+editorial interno: orienta el orden de trabajo del equipo docente, pero no se
+proyecta en ninguna superficie pública mediante color, insignia, eyebrow o
+aviso especial. `coordenadas-polares` (Unidad 1) usa `priority: "extension"`
+y se presenta con el mismo fondo, borde, forma y jerarquía que sus hermanos en
+`AcademicUnitNav`, `UnitLearningMap` y `UnitTopicPage`.
 
 ## Profundidad progresiva del contenido
 
