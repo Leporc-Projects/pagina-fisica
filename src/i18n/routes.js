@@ -56,6 +56,7 @@ export const ROUTE_IDS = Object.freeze({
   FORCES_FRICTION: "simulation.forces-friction",
   CIRCULAR_RADIAL_FORCE: "simulation.circular-radial-force",
   NOTICES: "notices",
+  PARTICIPATE: "participate",
 });
 
 export const LOCALIZED_ROUTES = Object.freeze({
@@ -114,6 +115,7 @@ export const LOCALIZED_ROUTES = Object.freeze({
   [ROUTE_IDS.FORCES_FRICTION]: Object.freeze({ es: "/simulaciones/fuerzas-friccion", en: "/en/simulations/forces-friction" }),
   [ROUTE_IDS.CIRCULAR_RADIAL_FORCE]: Object.freeze({ es: "/simulaciones/dinamica-circular", en: "/en/simulations/circular-dynamics" }),
   [ROUTE_IDS.NOTICES]: Object.freeze({ es: "/avisos", en: "/en/notices" }),
+  [ROUTE_IDS.PARTICIPATE]: Object.freeze({ es: "/participa", en: "/en/participate" }),
 });
 
 const normalizePath = (path) => {

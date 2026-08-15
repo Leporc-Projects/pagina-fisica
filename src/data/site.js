@@ -33,6 +33,11 @@ export const getNavigation = (locale) => [
     href: getLocalizedPath(ROUTE_IDS.NOTICES, locale),
     disabled: !getLocalizedPath(ROUTE_IDS.NOTICES, locale),
   },
+  {
+    labelKey: "nav.participate",
+    href: getLocalizedPath(ROUTE_IDS.PARTICIPATE, locale),
+    disabled: !getLocalizedPath(ROUTE_IDS.PARTICIPATE, locale),
+  },
 ];
 
 /**
@@ -59,6 +64,10 @@ export const NAV = [
   {
     label: "Avisos",
     href: "/avisos",
+  },
+  {
+    label: "Participa",
+    href: "/participa",
   },
 ];
 
