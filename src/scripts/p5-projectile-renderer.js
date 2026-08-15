@@ -62,6 +62,15 @@ const drawScene = (p, frame, container, locale) => {
   const vertex = transform.point(summary.vertex);
   const impact = transform.point({ x: summary.range, y: 0 });
   const groundY = transform.y(0);
+  // Los tres puntos clave rotulan siempre por encima y a la derecha de su
+  // marca. La lectura de posición necesita conocerlos para no escribirse
+  // encima cuando la partícula coincide con uno de ellos, que es exactamente
+  // el estado inicial por defecto: t = 0 sobre el punto de lanzamiento.
+  const keyPoints = [
+    [launch, t(locale, "projectile.launch")],
+    [vertex, t(locale, "projectile.apex")],
+    [impact, t(locale, "projectile.impact")],
+  ];
 
   p.background(colors.background);
   p.textFont("system-ui, sans-serif");
@@ -87,7 +96,11 @@ const drawScene = (p, frame, container, locale) => {
     drawArrow(p, { x: yAxisX, y: transform.plot.top + 22 }, { x: 0, y: -20 }, colors.axis, "+y");
     p.noStroke();
     p.fill(colors.label);
-    p.text(t(locale, "projectile.groundLabel"), transform.plot.left + 8, groundY - 8);
+    // El rótulo del suelo vive en el extremo derecho del eje: en el origen
+    // competía con la marca de lanzamiento y con la lectura de posición.
+    p.textAlign(p.RIGHT);
+    p.text(t(locale, "projectile.groundLabel"), transform.plot.right - 30, groundY - 8);
+    p.textAlign(p.LEFT);
     p.text("x (m)", transform.plot.right - 24, groundY + 28);
     p.text("y (m)", transform.x(0) + 9, transform.plot.top + 13);
   }
@@ -105,12 +118,7 @@ const drawScene = (p, frame, container, locale) => {
   }
 
   if (views.keyPoints) {
-    const points = [
-      [launch, t(locale, "projectile.launch")],
-      [vertex, t(locale, "projectile.apex")],
-      [impact, t(locale, "projectile.impact")],
-    ];
-    points.forEach(([point, label]) => {
+    keyPoints.forEach(([point, label]) => {
       p.fill(colors.background);
       p.stroke(colors.reference);
       p.strokeWeight(2);
@@ -159,7 +167,17 @@ const drawScene = (p, frame, container, locale) => {
   p.fill(colors.label);
   p.textStyle(p.BOLD);
   const positionLabel = `(${formatNumber(locale, state.position.x)}, ${formatNumber(locale, state.position.y)}) m`;
-  p.text(positionLabel, Math.min(current.x + 10, p.width - 120), Math.max(18, current.y - 11));
+  // Subiendo, la trayectoria ocupa el espacio superior y la lectura baja;
+  // bajando ocurre lo contrario. Junto a un punto clave siempre baja, porque
+  // esa banda superior ya está rotulada.
+  const nearKeyPoint = views.keyPoints && keyPoints.some(
+    ([point]) => Math.hypot(point.x - current.x, point.y - current.y) < 18
+  );
+  const readoutBelow = state.velocity.y >= 0 || nearKeyPoint;
+  const readoutY = readoutBelow
+    ? Math.min(p.height - 8, current.y + 22)
+    : Math.max(18, current.y - 14);
+  p.text(positionLabel, Math.min(current.x + 10, p.width - 120), readoutY);
   p.textStyle(p.NORMAL);
 };
 
