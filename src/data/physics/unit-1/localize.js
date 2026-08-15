@@ -23,7 +23,7 @@ const EN_UNIT = Object.freeze({
     "ecuaciones-movimiento": Object.freeze({ title: "Equations of motion", shortTitle: "Equations", summary: "Constant acceleration, change of direction, free fall, and integration for variable acceleration." }),
     "movimiento-2d": Object.freeze({ title: "Motion in two and three dimensions", shortTitle: "2D/3D motion", summary: "Position, velocity, and acceleration vectors, trajectory components, and projectiles." }),
     "circular-relativo": Object.freeze({ title: "Circular motion and relative velocity", shortTitle: "Circular and relative", summary: "Radial acceleration, variable speed, velocity composition, and reference frames." }),
-    "coordenadas-polares": Object.freeze({ title: "Extension: polar coordinates", shortTitle: "Polar coordinates", summary: "Radial/transverse basis, velocity, and acceleration in polar coordinates." }),
+    "coordenadas-polares": Object.freeze({ title: "Polar coordinates", shortTitle: "Polar coordinates", summary: "Radial/transverse basis, velocity, and acceleration in polar coordinates." }),
   }),
 });
 

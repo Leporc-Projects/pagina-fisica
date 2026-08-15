@@ -512,7 +512,7 @@ export const UNIT_1_CONTENT = {
 
   "coordenadas-polares": {
     introduction:
-      "Esta ampliación presenta una base móvil útil para trayectorias con geometría radial. Complementa el alcance curricular sin desplazar la prioridad de los temas desarrollados explícitamente en las sesiones 2–6.",
+      "Una posición en el plano también puede describirse con una distancia radial y un ángulo, en vez de componentes cartesianas. Esta base cambia de dirección con el movimiento, lo que introduce términos adicionales en velocidad y aceleración.",
     errorTopics: ["coordenadas-polares"],
     sections: [
       {

@@ -1,0 +1,25 @@
+---
+// Gramática compartida de los CTA de cierre de un tema: simulación
+// relacionada, práctica de la unidad y Participa. El identity visual (fondo,
+// borde, jerarquía) vive en .unit-practice-cta; este componente solo aporta
+// contenido y no decide rutas, que ya llegan resueltas desde el llamador.
+interface Props {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  linkLabel: string;
+  variant?: "simulation";
+}
+
+const { eyebrow, title, description, href, linkLabel, variant } = Astro.props;
+---
+
+<aside class:list={["unit-practice-cta", variant === "simulation" && "unit-simulation-cta"]}>
+  <div>
+    <p class="academic-label">{eyebrow}</p>
+    <h2>{title}</h2>
+    <p>{description}</p>
+  </div>
+  <a class="text-link" href={href}>{linkLabel}</a>
+</aside>

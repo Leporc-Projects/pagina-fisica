@@ -88,7 +88,7 @@ export const UNIT_1 = {
     {
       order: 7,
       slug: "coordenadas-polares",
-      title: "Ampliación: coordenadas polares",
+      title: "Coordenadas polares",
       shortTitle: "Coordenadas polares",
       route: `${unitRoute}/coordenadas-polares`,
       priority: "extension",

@@ -7,6 +7,7 @@ import AcademicUnitNav from "./AcademicUnitNav.astro";
 import CommonErrors from "./CommonErrors.astro";
 import ConceptCheck from "./ConceptCheck.astro";
 import FormulaBlock from "./FormulaBlock.astro";
+import TopicCta from "./TopicCta.astro";
 import WorkedExample from "./WorkedExample.astro";
 import { getAcademicUnitAdapter } from "../../data/physics/index.js";
 import { COURSE } from "../../data/course.js";
@@ -34,6 +35,13 @@ const next = unit.topics[topicIndex + 1] ?? null;
 const errors = adapter.getErrors(content.errorTopics, locale);
 const relatedSimulations = getSimulationsForCourseTopic(COURSE.id, unit.number, slug, locale);
 let checkNumber = 0;
+
+// Precontextualiza Participa con el curso, la unidad y el tema actuales. El
+// query string se valida de nuevo al llegar a la página (nunca se confía en
+// él ciegamente), así que un enlace roto o manipulado cae a ámbito general.
+const participateHref = `${withBase(getLocalizedPath(ROUTE_IDS.PARTICIPATE, locale))}?${
+  new URLSearchParams({ scope: "course", courseId: COURSE.id, unit: unit.slug, topic: slug }).toString()
+}`;
 ---
 
 <BaseLayout title={`${topic.title} · ${unit.shortTitle}`} description={topic.summary} locale={locale} routeId={adapter.getTopicRouteId(slug)}>
@@ -46,16 +54,11 @@ let checkNumber = 0;
       </nav>
       <div class="unit-topic-hero__heading">
         <p class="eyebrow eyebrow--dark">
-          {topic.priority === "extension"
-            ? t(locale, "unitTopic.extensionEyebrow")
-            : `${unit.shortTitle} · ${t(locale, "unitTopic.topicNumber", { number: String(topic.order).padStart(2, "0") })}`}
+          {unit.shortTitle} · {t(locale, "unitTopic.topicNumber", { number: String(topic.order).padStart(2, "0") })}
         </p>
         <h1>{topic.title}</h1>
         <p>{content.introduction}</p>
       </div>
-      {topic.priority === "extension" && (
-        <aside class="extension-notice"><strong>{t(locale, "unitTopic.editorialPriority")}</strong><p>{t(locale, "unitTopic.extensionNotice")}</p></aside>
-      )}
     </header>
 
     <AcademicUnitNav unit={unit} activeSlug={slug} locale={locale} />
@@ -97,10 +100,14 @@ let checkNumber = 0;
     </div>
 
     {relatedSimulations.map((simulation) => (
-      <aside class="unit-practice-cta unit-simulation-cta">
-        <div><p class="academic-label">{t(locale, "unitTopic.relatedSimulation")}</p><h2>{simulation.title}</h2><p>{simulation.description}</p></div>
-        <a class="text-link" href={withBase(simulation.route)}>{t(locale, "unitTopic.exploreSimulation")}</a>
-      </aside>
+      <TopicCta
+        variant="simulation"
+        eyebrow={t(locale, "unitTopic.relatedSimulation")}
+        title={simulation.title}
+        description={simulation.description}
+        href={withBase(simulation.route)}
+        linkLabel={t(locale, "unitTopic.exploreSimulation")}
+      />
     ))}
 
     <nav class="unit-topic-pagination" aria-label={t(locale, "unitTopic.pagination")}>
@@ -112,9 +119,20 @@ let checkNumber = 0;
         : <a href={withBase(unit.practiceRoute)} rel="next"><span>{t(locale, "unitTopic.continue")}</span><strong>{t(locale, "unitTopic.unitPractice")}</strong></a>}
     </nav>
 
-    <aside class="unit-practice-cta">
-      <div><p class="academic-label">{t(locale, "unitTopic.practice")}</p><h2>{t(locale, "unitTopic.practiceTitle")}</h2><p>{t(locale, "unitTopic.practiceDescription")}</p></div>
-      <a class="text-link" href={withBase(unit.practiceRoute)}>{t(locale, "unitTopic.openPractice", { unit: unit.shortTitle })}</a>
-    </aside>
+    <TopicCta
+      eyebrow={t(locale, "unitTopic.practice")}
+      title={t(locale, "unitTopic.practiceTitle")}
+      description={t(locale, "unitTopic.practiceDescription")}
+      href={withBase(unit.practiceRoute)}
+      linkLabel={t(locale, "unitTopic.openPractice", { unit: unit.shortTitle })}
+    />
+
+    <TopicCta
+      eyebrow={t(locale, "unitPage.participation")}
+      title={t(locale, "unitPage.unclear")}
+      description={t(locale, "unitTopic.participationDescription")}
+      href={participateHref}
+      linkLabel={t(locale, "unitPage.openParticipation")}
+    />
   </article>
 </BaseLayout>

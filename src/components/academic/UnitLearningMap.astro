@@ -66,19 +66,12 @@ const routePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
 
     <ol class="learning-map__nodes">
       {points.map(({ topic, x, y }) => (
-        <li
-          class:list={[
-            "learning-map__node",
-            topic.priority === "extension" && "learning-map__node--extension",
-          ]}
-          style={`--map-x: ${x}%; --map-y: ${y}%;`}
-        >
+        <li class="learning-map__node" style={`--map-x: ${x}%; --map-y: ${y}%;`}>
           <a href={withBase(topic.route)} aria-describedby={`map-summary-${topic.slug}`}>
             <span class="learning-map__number">
               {String(topic.order).padStart(2, "0")}
             </span>
             <strong>{topic.shortTitle}</strong>
-            {topic.priority === "extension" && <small>{t(locale, "unitPage.extension")}</small>}
             <span class="sr-only" id={`map-summary-${topic.slug}`}>
               {topic.title}. {topic.summary}
             </span>

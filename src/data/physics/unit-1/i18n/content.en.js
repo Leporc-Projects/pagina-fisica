@@ -313,7 +313,7 @@ export default Object.freeze({
     },
   },
   "coordenadas-polares": {
-    introduction: "This extension introduces a moving basis useful for trajectories with radial geometry. It complements the curriculum without displacing the priority of topics explicitly developed in sessions 2–6.",
+    introduction: "A position in the plane can also be described with a radial distance and an angle, instead of Cartesian components. This basis changes direction with motion, which introduces additional terms in velocity and acceleration.",
     sections: {
       "base-polar": {
         title: "Coordinates r and θ and a moving basis",

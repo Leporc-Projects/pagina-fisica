@@ -30,7 +30,7 @@ const currentLabel = activeSlug === "index"
     </a>
     {unit.topics.map((topic) => (
       <a
-        class:list={["unit-topic-nav__link", topic.priority === "extension" && "unit-topic-nav__link--extension"]}
+        class="unit-topic-nav__link"
         href={withBase(topic.route)}
         aria-current={activeSlug === topic.slug ? "page" : undefined}
       >

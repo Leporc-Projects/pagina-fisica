@@ -3113,12 +3113,6 @@ main {
   color: var(--nav-active-text);
 }
 
-.unit-topic-nav__link--extension:not([aria-current="page"]) {
-  border-left: 2px solid var(--status-event-border);
-  background: var(--status-event-bg);
-  color: var(--status-event-text);
-}
-
 .unit-study-guide,
 .unit-source-note,
 .unit-practice-cta {
@@ -3336,12 +3330,6 @@ main {
   box-shadow: var(--shadow-lg);
 }
 
-.learning-map__node--extension a {
-  border-style: dashed;
-  border-color: var(--status-event-border);
-  background: var(--status-event-bg);
-}
-
 .unit-practice-cta {
   align-items: end;
 }
@@ -3354,7 +3342,6 @@ main {
   justify-self: end;
 }
 
-.extension-notice,
 .practice-policy {
   max-width: 52rem;
   border-left: 3px solid var(--status-event-border);
@@ -3363,7 +3350,6 @@ main {
   padding: 1rem 1.25rem;
 }
 
-.extension-notice p,
 .practice-policy p {
   margin-top: 0.35rem;
 }
