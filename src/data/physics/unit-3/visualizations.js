@@ -54,20 +54,21 @@ export const UNIT_3_VISUALIZATIONS = {
     "Fronteras para dos bloques en contacto",
     "Dos bloques tocándose aparecen dentro de una frontera conjunta; otra frontera aísla el segundo bloque y una fuerza externa empuja el primero.",
     {
-      xDomain: [-0.15, 5.75],
-      yDomain: [0.6, 4],
+      xDomain: [-0.1, 6.5],
+      yDomain: [0.4, 4.2],
       // Los bloques se tocan: el contacto solo existe si comparten una cara.
-      // Las dos fronteras contienen otros elementos, así que su etiqueta va
-      // sobre el borde superior para no caer encima de lo que encierran.
+      // Las fronteras encierran otros elementos, así que rotulan fuera de su
+      // borde, y los bloques son altos para que la etiqueta del contacto quepa
+      // dentro del bloque 2 sin escribirse sobre ninguna línea de frontera.
       rectangles: [
-        { x: 0.8, y: 1, width: 4.6, height: 2.6, label: "sistema 1+2", style: "region", labelPosition: "above" },
-        { x: 3, y: 1.45, width: 2, height: 1.5, label: "sistema 2", style: "highlight", labelPosition: "below" },
-        { x: 1.4, y: 1.6, width: 1.8, height: 1.3, label: "m₁", style: "primary" },
-        { x: 3.2, y: 1.6, width: 1.6, height: 1.3, label: "m₂", style: "secondary" },
+        { x: 0.8, y: 0.75, width: 5.4, height: 3.05, label: "sistema 1+2", style: "region", labelPosition: "above" },
+        { x: 3, y: 1.15, width: 2.8, height: 2.2, label: "sistema 2", style: "highlight", labelPosition: "below" },
+        { x: 1.4, y: 1.4, width: 1.8, height: 1.7, label: "m₁", style: "primary" },
+        { x: 3.2, y: 1.4, width: 2.4, height: 1.7, label: "m₂", style: "secondary" },
       ],
       vectors: [
         { start: { x: 0.2, y: 2.25 }, end: { x: 1.4, y: 2.25 }, label: "F externa", style: "primary", labelPosition: "above" },
-        { start: { x: 3.2, y: 2.7 }, end: { x: 4.3, y: 2.7 }, label: "contacto sobre 2", style: "tertiary", labelPosition: "above" },
+        { start: { x: 3.2, y: 2 }, end: { x: 5.4, y: 2 }, label: "contacto sobre 2", style: "tertiary", labelPosition: "below" },
       ],
     }
   ),
@@ -113,7 +114,9 @@ export const UNIT_3_VISUALIZATIONS = {
         { start: { x: 0, y: 0 }, end: { x: 6, y: 3 }, style: "reference" },
         { start: { x: 3.1, y: 2 }, end: { x: 1.9, y: 1.4 }, style: "reference", lineStyle: "dashed" },
       ],
-      rectangles: [{ x: 2.5, y: 1.5, width: 1.3, height: 0.9, label: "bloque", style: "region", labelPosition: "below" }],
+      // La etiqueta sube y ancla a la derecha: abajo cruzaba la línea del plano
+      // y centrada caía sobre el origen común de N y mg.
+      rectangles: [{ x: 2.5, y: 1.5, width: 1.3, height: 0.9, label: "bloque", style: "region", labelPosition: "above", labelAnchor: "start" }],
       vectors: [
         { start: { x: 3.15, y: 1.95 }, end: { x: 2.2, y: 3.85 }, label: "N", style: "primary" },
         { start: { x: 3.15, y: 1.95 }, end: { x: 3.15, y: -0.35 }, label: "mg", style: "secondary" },
@@ -193,19 +196,19 @@ export const UNIT_3_VISUALIZATIONS = {
     "Curva plana y DCL desde arriba",
     "Un automóvil sobre una trayectoria circular tiene velocidad tangente y fricción radial hacia el centro en un DCL separado.",
     {
-      xDomain: [0.1, 6],
-      yDomain: [0.35, 4.25],
+      xDomain: [0.1, 6.4],
+      yDomain: [0.2, 4.35],
       circles: [
         { center: { x: 1.8, y: 2.2 }, radius: 1.4, label: "trayectoria", style: "reference" },
         { center: { x: 1.8, y: 2.2 }, radius: 0.15, label: "centro", style: "highlight" },
       ],
       rectangles: [
         { x: 2.8, y: 1.9, width: 0.9, height: 0.6, label: "auto", style: "region", labelPosition: "below" },
-        { x: 4.3, y: 1.6, width: 1.4, height: 1, label: "DCL", style: "highlight", labelPosition: "above" },
+        { x: 3.9, y: 1.5, width: 2.2, height: 1.2, label: "DCL", style: "highlight", labelPosition: "above" },
       ],
       vectors: [
         { start: { x: 3.25, y: 2.2 }, end: { x: 3.25, y: 3.8 }, label: "v tangente", style: "primary" },
-        { start: { x: 5.4, y: 2.1 }, end: { x: 4.4, y: 2.1 }, label: "f_s hacia centro", style: "secondary", labelPosition: "below" },
+        { start: { x: 5.9, y: 2.1 }, end: { x: 4.2, y: 2.1 }, label: "f_s hacia centro", style: "secondary", labelPosition: "below" },
       ],
     }
   ),
@@ -224,7 +227,9 @@ export const UNIT_3_VISUALIZATIONS = {
         { start: { x: 3.3, y: 2.25 }, end: { x: 3.3, y: 4.2 }, style: "reference", lineStyle: "dashed" },
         { start: { x: 3.3, y: 4.2 }, end: { x: 1.8, y: 4.2 }, style: "reference", lineStyle: "dashed" },
       ],
-      rectangles: [{ x: 2.75, y: 1.75, width: 1.1, height: 0.8, label: "vehículo", style: "region", labelPosition: "below" }],
+      // Debajo, la etiqueta se escribía sobre la línea de la carretera; anclada
+      // a la derecha del centro deja libres la normal y la guía vertical.
+      rectangles: [{ x: 2.75, y: 1.75, width: 1.1, height: 0.8, label: "vehículo", style: "region", labelPosition: "above", labelAnchor: "start" }],
       vectors: [
         { start: { x: 3.3, y: 2.15 }, end: { x: 1.8, y: 4.2 }, label: "N", style: "primary" },
         { start: { x: 3.3, y: 2.15 }, end: { x: 3.3, y: 0 }, label: "mg", style: "secondary", labelPosition: "right" },

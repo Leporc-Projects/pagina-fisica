@@ -214,7 +214,10 @@ export const prepareDiagram = ({ props, fontSize }) => {
     .map((segment) => ({
       ...segment,
       style: segment.style ?? preset.styles.segment,
-      lineStyle: segment.lineStyle ?? "dashed",
+      // Un segmento representa un objeto real —plano, cuerda, cable, eje—
+      // salvo que la figura lo declare guía. El defecto contrario dibujaba
+      // punteados un plano inclinado, una cuerda y dos cables.
+      lineStyle: segment.lineStyle ?? "solid",
       clipped: clipSegmentToDomain(segment.start, segment.end, domains),
     }))
     .filter((segment) => segment.clipped)
