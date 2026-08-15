@@ -5,15 +5,10 @@ import { t } from "../../i18n/index.js";
 import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
 import TeacherToolsNav from "./TeacherToolsNav.astro";
+import { getPublishedTeacherTools } from "../../data/teacher-tools.js";
 
 const { locale = "es" } = Astro.props;
-const tools = [
-  ["bank", ROUTE_IDS.COURSE_TOOL_QUESTION_BANK],
-  ["notices", ROUTE_IDS.COURSE_TOOL_NOTICES],
-  ["simulations", ROUTE_IDS.COURSE_TOOL_SIMULATION_LAB],
-  ["review", ROUTE_IDS.COURSE_TOOL_REVIEW],
-  ["results", ROUTE_IDS.COURSE_TOOL_RESULTS],
-];
+const tools = getPublishedTeacherTools();
 ---
 
 <BaseLayout title={`${t(locale, "teacher.hub.title")} · ${t(locale, "teacher.courseName")}`} description={t(locale, "teacher.hub.metaDescription")} locale={locale} routeId={ROUTE_IDS.COURSE_TOOLS}>
@@ -26,11 +21,11 @@ const tools = [
         <p>{t(locale, "teacher.hub.intro")}</p>
       </header>
       <div class="teacher-tools-grid">
-        {tools.map(([key, routeId]) => (
+        {tools.map((tool) => (
           <article class="teacher-tool-card">
-            <h3>{t(locale, `teacher.nav.${key}`)}</h3>
-            <p>{t(locale, `teacher.hub.${key}Description`)}</p>
-            <a class="text-link" href={withBase(getLocalizedPath(routeId, locale))}>{t(locale, "teacher.hub.open")}</a>
+            <h3>{t(locale, `teacher.nav.${tool.id}`)}</h3>
+            <p>{t(locale, `teacher.hub.${tool.id}Description`)}</p>
+            <a class="text-link" href={withBase(getLocalizedPath(tool.routeId, locale))}>{t(locale, "teacher.hub.open")}</a>
           </article>
         ))}
       </div>

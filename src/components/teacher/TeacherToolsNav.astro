@@ -2,28 +2,30 @@
 import { t } from "../../i18n/index.js";
 import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
 import { withBase } from "../../utils/paths.js";
+import { getPublishedTeacherTools } from "../../data/teacher-tools.js";
 
 const { current = "hub", locale = "es" } = Astro.props;
-const tools = [
-  { id: "hub", labelKey: "teacher.nav.hub", routeId: ROUTE_IDS.COURSE_TOOLS },
-  { id: "banco", labelKey: "teacher.nav.bank", routeId: ROUTE_IDS.COURSE_TOOL_QUESTION_BANK },
-  { id: "avisos", labelKey: "teacher.nav.notices", routeId: ROUTE_IDS.COURSE_TOOL_NOTICES },
-  { id: "simulaciones", labelKey: "teacher.nav.simulations", routeId: ROUTE_IDS.COURSE_TOOL_SIMULATION_LAB },
-  { id: "revision", labelKey: "teacher.nav.review", routeId: ROUTE_IDS.COURSE_TOOL_REVIEW },
-  { id: "notas", labelKey: "teacher.nav.results", routeId: ROUTE_IDS.COURSE_TOOL_RESULTS },
-];
+const tools = getPublishedTeacherTools();
 ---
 
 <nav class="teacher-tools-nav" aria-label={t(locale, "teacher.nav.label")}>
   <ul>
+    <li>
+      <a
+        href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_TOOLS, locale))}
+        aria-current={current === "hub" ? "page" : undefined}
+      >
+        {t(locale, "teacher.nav.hub")}
+      </a>
+    </li>
     {
       tools.map((tool) => (
         <li>
           <a
             href={withBase(getLocalizedPath(tool.routeId, locale))}
-            aria-current={tool.id === current ? "page" : undefined}
+            aria-current={tool.currentId === current ? "page" : undefined}
           >
-            {t(locale, tool.labelKey)}
+            {t(locale, `teacher.nav.${tool.id}`)}
           </a>
         </li>
       ))
