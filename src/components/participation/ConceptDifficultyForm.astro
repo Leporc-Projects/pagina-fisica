@@ -1,5 +1,4 @@
 ---
-import TopicSelect from "./TopicSelect.astro";
 import { localizeParticipationData } from "../../data/participation-localize.js";
 import { t } from "../../i18n/index.js";
 
@@ -20,8 +19,6 @@ const { supportOptions } = localizeParticipationData(locale);
   </div>
 
   <form data-activity-form="concept-difficulty">
-    <TopicSelect id="concept-topic" locale={locale} />
-
     <div class="participation-field">
       <label for="unclear-point">{t(locale, "participation.unclear")}</label>
       <textarea

@@ -1,0 +1,12 @@
+---
+// Participa general: ámbito Aula Física por defecto. El sitio es estático, así
+// que el contexto inicial seguro por query string (scope, courseId, unit,
+// topic) se resuelve en el navegador —ver ParticipationContext.astro—, no
+// aquí: Astro.url.searchParams solo refleja la petición real en un servidor,
+// y esta página se sirve como HTML prerenderizado sin backend.
+import ParticipationPage from "../components/participation/ParticipationPage.astro";
+
+const { locale = "es" } = Astro.props;
+---
+
+<ParticipationPage locale={locale} scope="global" />

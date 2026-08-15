@@ -1,0 +1,177 @@
+---
+// Paso 1 de Participa: elige el ámbito (general o de curso) y, si hay
+// unidades desarrolladas para el curso elegido, la unidad y el tema
+// opcionales. El curso, la unidad y el tema provienen del registro académico
+// genérico (courses.js + physics/index.js), nunca de una unidad importada
+// directamente, así que nuevas unidades desarrolladas aparecen sin editar
+// este componente.
+//
+// El sitio es estático: `initialScope`/`initialCourseId` fijan el estado
+// accesible sin JavaScript (el mismo en cada visita), y la precontextualización
+// por query string (?scope=course&courseId=…&unit=…&topic=…) solo puede
+// resolverse en el navegador, donde `location.search` sí refleja la petición
+// real. Ver el script al final de este archivo.
+import { getActiveCourses } from "../../data/courses.js";
+import { getDevelopedAcademicUnitsForCourse } from "../../data/physics/index.js";
+import { contentScopeLabel } from "../../utils/content-scope.js";
+import { t } from "../../i18n/index.js";
+
+interface Props {
+  locale?: "es" | "en";
+  initialScope?: "global" | "course";
+  initialCourseId?: string | null;
+}
+
+const {
+  locale = "es",
+  initialScope = "global",
+  initialCourseId = null,
+} = Astro.props;
+
+const courses = getActiveCourses();
+const resolvedCourseId = initialScope === "course"
+  ? (courses.some((course) => course.id === initialCourseId) ? initialCourseId : courses[0]?.id ?? null)
+  : null;
+---
+
+<fieldset
+  class="participation-chooser participation-context"
+  data-participation-context
+  data-force-course-id={initialScope === "course" ? resolvedCourseId : undefined}
+>
+  <legend>{t(locale, "participation.context.legend")}</legend>
+  <p>{t(locale, "participation.context.help")}</p>
+
+  <div class="participation-context__body">
+    <div class="participation-radio-list participation-radio-list--pair">
+      <label>
+        <input
+          type="radio"
+          name="participation-scope"
+          value="global"
+          data-context-scope
+          checked={initialScope !== "course"}
+        />
+        <span>{t(locale, "participation.context.general")}</span>
+      </label>
+      <label>
+        <input
+          type="radio"
+          name="participation-scope"
+          value="course"
+          data-context-scope
+          checked={initialScope === "course"}
+        />
+        <span>{t(locale, "participation.context.course")}</span>
+      </label>
+    </div>
+
+    <div class="participation-field" data-context-course-field hidden={initialScope !== "course"}>
+      <label for="participation-context-course">{t(locale, "participation.context.selectCourse")}</label>
+      <select id="participation-context-course" data-context-course>
+        {courses.map((course) => (
+          <option value={course.id} selected={course.id === resolvedCourseId}>
+            {contentScopeLabel({ type: "course", courseId: course.id }, locale)}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {courses.map((course) => {
+      const units = getDevelopedAcademicUnitsForCourse(course.id, locale);
+      if (units.length === 0) return null;
+      const isSelectedCourse = initialScope === "course" && course.id === resolvedCourseId;
+
+      return (
+        <div
+          class="participation-field"
+          data-context-unittopic-field
+          data-context-for-course={course.id}
+          hidden={!isSelectedCourse}
+        >
+          <label for={`participation-context-unittopic-${course.id}`}>
+            {t(locale, "participation.context.unitTopicLabel")} <span>{t(locale, "participation.optional")}</span>
+          </label>
+          <select
+            id={`participation-context-unittopic-${course.id}`}
+            data-context-unittopic
+            data-context-for-course={course.id}
+          >
+            <option value="">
+              {t(locale, "participation.context.noUnitTopic")}
+            </option>
+            {units.map((unit) => (
+              <optgroup label={unit.shortTitle}>
+                <option value={`unit:${unit.number}`}>
+                  {t(locale, "participation.context.unitOnly")}
+                </option>
+                {unit.topics.map((topic) => (
+                  <option value={`topic:${unit.number}:${topic.slug}`}>
+                    {topic.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      );
+    })}
+  </div>
+</fieldset>
+
+<script>
+  import { resolveParticipationPrecontext } from "../../utils/participation-precontext.js";
+
+  // Muestra únicamente el selector de curso y el de unidad/tema del curso
+  // elegido; nunca dos bloques de unidad/tema simultáneos aunque existan
+  // varios cursos con unidades registradas.
+  document.querySelectorAll<HTMLElement>("[data-participation-context]").forEach((context) => {
+    const locale = context.closest<HTMLElement>("[data-locale]")?.dataset.locale === "en" ? "en" : "es";
+    const scopeInputs = [...context.querySelectorAll<HTMLInputElement>("[data-context-scope]")];
+    const courseField = context.querySelector<HTMLElement>("[data-context-course-field]");
+    const courseSelect = context.querySelector<HTMLSelectElement>("[data-context-course]");
+    const unitTopicFields = [...context.querySelectorAll<HTMLElement>("[data-context-unittopic-field]")];
+
+    const sync = () => {
+      const isCourse = scopeInputs.find((input) => input.checked)?.value === "course";
+      if (courseField) courseField.hidden = !isCourse;
+      const selectedCourseId = courseSelect?.value;
+      unitTopicFields.forEach((field) => {
+        field.hidden = !(isCourse && field.dataset.contextForCourse === selectedCourseId);
+      });
+    };
+
+    // El prerender no conoce la petición real (el sitio es estático), así que
+    // la precontextualización desde un CTA de tema se resuelve aquí, en el
+    // navegador, contra el mismo registro que validó el servidor de origen.
+    // Un valor inválido o manipulado deja el ámbito general por defecto.
+    const applyPrecontext = () => {
+      const result = resolveParticipationPrecontext(
+        new URLSearchParams(window.location.search),
+        locale,
+        { forceCourseId: context.dataset.forceCourseId || undefined }
+      );
+      if (result.scope !== "course") return;
+
+      const courseRadio = scopeInputs.find((input) => input.value === "course");
+      if (courseRadio) courseRadio.checked = true;
+      if (courseSelect) courseSelect.value = result.courseId;
+      if (!result.unitNumber) return;
+
+      const unitTopicSelect = context.querySelector<HTMLSelectElement>(
+        `[data-context-unittopic][data-context-for-course="${result.courseId}"]`
+      );
+      const value = result.topicSlug
+        ? `topic:${result.unitNumber}:${result.topicSlug}`
+        : `unit:${result.unitNumber}`;
+      if (unitTopicSelect && [...unitTopicSelect.options].some((option) => option.value === value)) {
+        unitTopicSelect.value = value;
+      }
+    };
+
+    applyPrecontext();
+    scopeInputs.forEach((input) => input.addEventListener("change", sync));
+    courseSelect?.addEventListener("change", sync);
+    sync();
+  });
+</script>

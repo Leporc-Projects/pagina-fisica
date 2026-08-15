@@ -120,12 +120,44 @@ if (app instanceof HTMLElement) {
     return typeof value === "string" ? value : "";
   };
 
+  // El contexto académico (ámbito, curso, unidad, tema) vive en un único paso
+  // compartido antes de las tres actividades, no dentro de cada formulario.
+  const readSharedContext = () => {
+    const context = app.querySelector("[data-participation-context]");
+    if (!(context instanceof HTMLElement)) return { scope: { type: "global" } };
+
+    const scopeInput = context.querySelector('[data-context-scope]:checked');
+    if (!(scopeInput instanceof HTMLInputElement) || scopeInput.value !== "course") {
+      return { scope: { type: "global" } };
+    }
+
+    const courseSelect = context.querySelector("[data-context-course]");
+    const courseId = courseSelect instanceof HTMLSelectElement ? courseSelect.value : "";
+    if (!courseId) return { scope: { type: "global" } };
+
+    const unitTopicSelect = context.querySelector(
+      `[data-context-unittopic][data-context-for-course="${courseId}"]`
+    );
+    const raw = unitTopicSelect instanceof HTMLSelectElement ? unitTopicSelect.value : "";
+
+    if (raw.startsWith("topic:")) {
+      const [, unitNumber, topicSlug] = raw.split(":");
+      return { scope: { type: "course", courseId }, unitNumber: Number(unitNumber), topicSlug };
+    }
+
+    if (raw.startsWith("unit:")) {
+      return { scope: { type: "course", courseId }, unitNumber: Number(raw.slice(5)) };
+    }
+
+    return { scope: { type: "course", courseId } };
+  };
+
   const responseInputFromForm = (form) => {
     const formData = new FormData(form);
     const activityType = form.dataset.activityForm;
     const common = {
       activityType,
-      topicSlug: stringValue(formData, "topicSlug"),
+      ...readSharedContext(),
     };
 
     if (activityType === "concept-difficulty") {

@@ -172,12 +172,6 @@
   gap: var(--space-6);
 }
 
-.participation-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
 .participation-field {
   min-width: 0;
   display: grid;
@@ -235,6 +229,22 @@
 
 .participation-radio-list--short {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.participation-radio-list--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 30rem;
+}
+
+.participation-context__body {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+  max-width: 34rem;
+}
+
+.participation-context .participation-field[hidden] {
+  display: none;
 }
 
 .participation-radio-list label {
@@ -461,7 +471,6 @@
 
 @media (max-width: 640px) {
   .participation-intro,
-  .participation-form-grid,
   .response-preview__facts,
   .response-preview__details,
   .response-preview__metadata {

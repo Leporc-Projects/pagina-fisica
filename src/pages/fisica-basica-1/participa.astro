@@ -1,56 +1,12 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-import CoursePageHeader from "../../components/course/CoursePageHeader.astro";
-import ParticipationChooser from "../../components/participation/ParticipationChooser.astro";
-import ConceptDifficultyForm from "../../components/participation/ConceptDifficultyForm.astro";
-import QuestionProposalForm from "../../components/participation/QuestionProposalForm.astro";
-import FeedbackForm from "../../components/participation/FeedbackForm.astro";
-import ResponsePreview from "../../components/participation/ResponsePreview.astro";
-import { localizeCourseData } from "../../data/course-localize.js";
-import { t } from "../../i18n/index.js";
-import { ROUTE_IDS } from "../../i18n/routes.js";
-import "../../styles/participation.css";
+// Participa de Física Básica I: ámbito de curso fijo en el prerender. Un
+// query ?unit=<slug>&topic=<slug> válido sigue precontextualizando unidad y
+// tema, resuelto en el navegador por ParticipationContext.astro (ver
+// src/pages/participa.astro sobre por qué no se resuelve aquí).
+import ParticipationPage from "../../components/participation/ParticipationPage.astro";
+import { COURSE_IDS } from "../../data/courses.js";
 
 const { locale = "es" } = Astro.props;
-const { COURSE } = localizeCourseData(locale);
 ---
 
-<BaseLayout
-  title={t(locale, "participation.pageTitle", { course: COURSE.name })}
-  description={t(locale, "participation.meta", { course: COURSE.name })}
-  locale={locale}
-  routeId={ROUTE_IDS.COURSE_PARTICIPATE}
->
-  <article class="course-subpage participation-shell" data-participation-app data-locale={locale}>
-    <CoursePageHeader
-      title={t(locale, "participation.title")}
-      description={t(locale, "participation.description")}
-      locale={locale}
-    />
-
-    <section class="participation-intro" aria-labelledby="participation-local-title">
-      <div>
-        <p class="participation-kicker">{t(locale, "participation.localAnonymous")}</p>
-        <h2 id="participation-local-title">{t(locale, "participation.staysWithYou")}</h2>
-      </div>
-      <div>
-        <p><strong>{t(locale, "participation.notSentStrong")}</strong></p>
-        <p>{t(locale, "participation.privacy")}</p>
-      </div>
-    </section>
-
-    <div class="participation-workspace">
-      <ParticipationChooser locale={locale} />
-      <ConceptDifficultyForm locale={locale} />
-      <QuestionProposalForm locale={locale} />
-      <FeedbackForm locale={locale} />
-      <ResponsePreview locale={locale} />
-    </div>
-
-    <p class="participation-status" aria-live="polite" aria-atomic="true" data-participation-status></p>
-  </article>
-</BaseLayout>
-
-<script>
-  import "../../scripts/participation.js";
-</script>
+<ParticipationPage locale={locale} scope="course" initialCourseId={COURSE_IDS.PHYSICS_BASIC_1} />

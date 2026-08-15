@@ -1,0 +1,90 @@
+---
+// Composición compartida entre la ruta global (/participa) y la ruta de
+// curso (/fisica-basica-1/participa). El formulario, la validación y el
+// contrato de respuesta son un único objeto; solo cambian la cabecera, el
+// routeId para canonical/hreflang y el contexto académico preseleccionado.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../PageHeader.astro";
+import CoursePageHeader from "../course/CoursePageHeader.astro";
+import ParticipationContext from "./ParticipationContext.astro";
+import ParticipationChooser from "./ParticipationChooser.astro";
+import ConceptDifficultyForm from "./ConceptDifficultyForm.astro";
+import QuestionProposalForm from "./QuestionProposalForm.astro";
+import FeedbackForm from "./FeedbackForm.astro";
+import ResponsePreview from "./ResponsePreview.astro";
+import { localizeCourseData } from "../../data/course-localize.js";
+import { t } from "../../i18n/index.js";
+import { ROUTE_IDS } from "../../i18n/routes.js";
+import "../../styles/participation.css";
+
+interface Props {
+  locale?: "es" | "en";
+  scope?: "global" | "course";
+  initialCourseId?: string | null;
+}
+
+const {
+  locale = "es",
+  scope = "global",
+  initialCourseId = null,
+} = Astro.props;
+
+const routeId = scope === "course" ? ROUTE_IDS.COURSE_PARTICIPATE : ROUTE_IDS.PARTICIPATE;
+const { COURSE } = localizeCourseData(locale);
+const pageTitle = scope === "course"
+  ? t(locale, "participation.pageTitle", { course: COURSE.name })
+  : t(locale, "participation.pageTitleGeneral");
+const pageMeta = scope === "course"
+  ? t(locale, "participation.meta", { course: COURSE.name })
+  : t(locale, "participation.metaGeneral");
+---
+
+<BaseLayout title={pageTitle} description={pageMeta} locale={locale} routeId={routeId}>
+  <article class="course-subpage participation-shell" data-participation-app data-locale={locale}>
+    {scope === "course"
+      ? (
+        <CoursePageHeader
+          title={t(locale, "participation.title")}
+          description={t(locale, "participation.description")}
+          locale={locale}
+        />
+      )
+      : (
+        <PageHeader
+          eyebrow={t(locale, "participation.localAnonymous")}
+          title={t(locale, "participation.title")}
+          description={t(locale, "participation.description")}
+        />
+      )}
+
+    <section class="participation-intro" aria-labelledby="participation-local-title">
+      <div>
+        <p class="participation-kicker">{t(locale, "participation.localAnonymous")}</p>
+        <h2 id="participation-local-title">{t(locale, "participation.staysWithYou")}</h2>
+      </div>
+      <div>
+        <p><strong>{t(locale, "participation.notSentStrong")}</strong></p>
+        <p>{t(locale, "participation.privacy")}</p>
+      </div>
+    </section>
+
+    <div class="participation-workspace">
+      <ParticipationContext
+        locale={locale}
+        initialScope={scope}
+        initialCourseId={initialCourseId}
+      />
+      <ParticipationChooser locale={locale} />
+      <ConceptDifficultyForm locale={locale} />
+      <QuestionProposalForm locale={locale} />
+      <FeedbackForm locale={locale} />
+      <ResponsePreview locale={locale} />
+    </div>
+
+    <p class="participation-status" aria-live="polite" aria-atomic="true" data-participation-status></p>
+  </article>
+</BaseLayout>
+
+<script>
+  import "../../scripts/participation.js";
+</script>

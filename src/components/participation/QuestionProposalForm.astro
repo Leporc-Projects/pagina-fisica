@@ -1,5 +1,4 @@
 ---
-import TopicSelect from "./TopicSelect.astro";
 import { localizeParticipationData } from "../../data/participation-localize.js";
 import { t } from "../../i18n/index.js";
 
@@ -20,16 +19,12 @@ const { difficultyEstimates, proposalTypes } = localizeParticipationData(locale)
   </div>
 
   <form data-activity-form="student-question-proposal">
-    <div class="participation-form-grid">
-      <TopicSelect id="proposal-topic" locale={locale} />
-
-      <div class="participation-field">
-        <label for="proposal-type">{t(locale, "participation.proposalType")}</label>
-        <select id="proposal-type" name="proposalType" required>
-          <option value="">{t(locale, "participation.selectType")}</option>
-          {proposalTypes.map(([value, label]) => <option value={value}>{label}</option>)}
-        </select>
-      </div>
+    <div class="participation-field">
+      <label for="proposal-type">{t(locale, "participation.proposalType")}</label>
+      <select id="proposal-type" name="proposalType" required>
+        <option value="">{t(locale, "participation.selectType")}</option>
+        {proposalTypes.map(([value, label]) => <option value={value}>{label}</option>)}
+      </select>
     </div>
 
     <div class="participation-field">
