@@ -19,7 +19,7 @@ interface Visualization {
 
 interface Props {
   visualization: Visualization;
-  present?: (value: string) => RichContent;
+  present?: (value: string, locale?: "es" | "en") => RichContent;
   showExplanation?: boolean;
   locale?: "es" | "en";
 }
@@ -35,7 +35,7 @@ const {
 <div class="academic-figure-group" data-visualization-id={visualization.id}>
   {visualization.relationLabel && (
     <p class="academic-figure-group__relation">
-      <RichText content={present(visualization.relationLabel)} />
+      <RichText content={present(visualization.relationLabel, locale)} />
     </p>
   )}
 
@@ -45,7 +45,7 @@ const {
 
   {showExplanation && visualization.explanation && (
     <p class="academic-figure-group__caption">
-      <RichText content={present(visualization.explanation)} />
+      <RichText content={present(visualization.explanation, locale)} />
     </p>
   )}
 </div>

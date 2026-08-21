@@ -14,7 +14,7 @@ interface Check {
 interface Props {
   check: Check;
   index: number;
-  present?: (value: string) => RichContent;
+  present?: (value: string, locale?: "es" | "en") => RichContent;
   locale?: "es" | "en";
 }
 
@@ -23,16 +23,16 @@ const { check, index, present = (value) => value, locale = "es" } = Astro.props;
 
 <aside class="concept-check" aria-labelledby={`concept-check-${index}-title`}>
   <p class="academic-label">{t(locale, "academic.check")}</p>
-  <h3 id={`concept-check-${index}-title`}><RichText content={present(check.question)} /></h3>
+  <h3 id={`concept-check-${index}-title`}><RichText content={present(check.question, locale)} /></h3>
 
   {check.options && (
     <ol class="concept-check__options" type="A">
-      {check.options.map((option) => <li><RichText content={present(option)} /></li>)}
+      {check.options.map((option) => <li><RichText content={present(option, locale)} /></li>)}
     </ol>
   )}
 
   <details class="concept-check__answer">
     <summary>{t(locale, "academic.revealAnswer")}</summary>
-    <p><RichText content={present(check.answer)} /></p>
+    <p><RichText content={present(check.answer, locale)} /></p>
   </details>
 </aside>

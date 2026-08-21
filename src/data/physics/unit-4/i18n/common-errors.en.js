@@ -1,0 +1,18 @@
+export default {
+  "work-effort-confusion":["Confusing human effort with mechanical work.","Work on the body depends on force and displacement; holding it still gives W=0 on it."],
+  "work-uses-full-force":["Using W=FΔr without the angle.","In general W=FΔr cosθ; omitting cosine requires parallel force in the same direction."],
+  "work-energy-single-force":["Setting the work of one arbitrary force equal to ΔK.","The theorem uses net work by all forces."],
+  "negative-kinetic-energy":["Accepting K<0 or associating it with motion toward -x.","K=(1/2)mv²≥0; direction belongs to velocity, not K."],
+  "variable-work-average-force-blind":["Choosing an unjustified average force and multiplying by Δx.","Use the integral or an equivalent area sum; a simple average works only in special cases."],
+  "force-area-absolute":["Adding absolute areas under F_x(x).","Work is signed area."],
+  "power-is-energy":["Confusing power with energy.","Power is energy per unit time; watt and joule measure different quantities."],
+  "power-force-times-speed-always":["Using P=Fv while ignoring the angle.","In general P=F·v=Fv cosθ."],
+  "potential-belongs-to-particle":["Saying potential energy is inside an isolated particle.","It is a property of the configuration of the interacting system."],
+  "potential-zero-physical":["Believing that changing the zero of U changes the physics.","Adding a constant to U changes neither ΔU, force, nor predictions."],
+  "mechanical-equals-total-energy":["Treating mechanical and total energy as synonyms with dissipation.","K+U can change while the system's total energy is conserved."],
+  "friction-destroys-energy":["Saying friction destroys energy.","Mechanical energy can become internal energy or another form."],
+  "force-same-sign-as-slope":["Using F_x=dU/dx.","A conservative force obeys F_x=-dU/dx."],
+  "every-flat-point-stable":["Classifying every point with dU/dx=0 as stable.","Inspect the local shape: a minimum is stable, a maximum unstable, and a flat region neutral."],
+  "energy-diagram-speed-from-height":["Reading the height U(x) as speed.","Speed depends on K=E-U, the vertical separation between E and U."],
+  "barrier-crossing-with-negative-k":["Allowing a particle to cross U>E at the same E.","That would require K<0; the region is inaccessible in the classical conservative model."],
+};

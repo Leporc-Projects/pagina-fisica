@@ -15,7 +15,7 @@ interface CommonError {
 
 interface Props {
   errors: CommonError[];
-  present?: (value: string) => RichContent;
+  present?: (value: string, locale?: "es" | "en") => RichContent;
   locale?: "es" | "en";
 }
 
@@ -33,8 +33,8 @@ const { errors, present = (value) => value, locale = "es" } = Astro.props;
     <div class="common-errors__list">
       {errors.map((error) => (
         <details id={error.id} class="common-error">
-          <summary><RichText content={present(error.description)} /></summary>
-          <p><RichText content={present(error.feedback)} /></p>
+          <summary><RichText content={present(error.description, locale)} /></summary>
+          <p><RichText content={present(error.feedback, locale)} /></p>
         </details>
       ))}
     </div>

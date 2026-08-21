@@ -27,7 +27,7 @@ interface Formula {
 
 interface Props {
   formula: Formula;
-  present?: (value: string) => RichContent;
+  present?: (value: string, locale?: "es" | "en") => RichContent;
   locale?: "es" | "en";
 }
 
@@ -44,13 +44,13 @@ const { formula, present = (value) => value, locale = "es" } = Astro.props;
 
   <div class="formula-block__meaning">
     <strong>{t(locale, "academic.represents")}</strong>
-    <p><RichText content={present(formula.represents)} /></p>
+    <p><RichText content={present(formula.represents, locale)} /></p>
   </div>
 
   {formula.interpretation && (
     <div class="formula-block__meaning">
       <strong>{t(locale, "academic.physicalInterpretation")}</strong>
-      <p><RichText content={present(formula.interpretation)} /></p>
+      <p><RichText content={present(formula.interpretation, locale)} /></p>
     </div>
   )}
 
@@ -67,11 +67,11 @@ const { formula, present = (value) => value, locale = "es" } = Astro.props;
           <dl class="formula-variables">
             {formula.variables.map((variable) => (
               <div>
-                <dt><RichText content={present(variable.symbol)} /></dt>
+                <dt><RichText content={present(variable.symbol, locale)} /></dt>
                 <dd>
-                  <RichText content={present(variable.meaning)} />
+                  <RichText content={present(variable.meaning, locale)} />
                   {variable.unit && (
-                    <Fragment>; {t(locale, "academic.usualUnit")}: <RichText content={present(variable.unit)} /></Fragment>
+                    <Fragment>; {t(locale, "academic.usualUnit")}: <RichText content={present(variable.unit, locale)} /></Fragment>
                   )}
                 </dd>
               </div>
@@ -84,7 +84,7 @@ const { formula, present = (value) => value, locale = "es" } = Astro.props;
         <section aria-labelledby={`${formula.id}-conditions-title`}>
           <h4 id={`${formula.id}-conditions-title`}>{t(locale, "academic.conditions")}</h4>
           <ul class="academic-bullet-list">
-            {formula.conditions.map((condition) => <li><RichText content={present(condition)} /></li>)}
+            {formula.conditions.map((condition) => <li><RichText content={present(condition, locale)} /></li>)}
           </ul>
         </section>
       )}
@@ -92,7 +92,7 @@ const { formula, present = (value) => value, locale = "es" } = Astro.props;
       {formula.dimensions && (
         <section aria-labelledby={`${formula.id}-dimensions-title`}>
           <h4 id={`${formula.id}-dimensions-title`}>{t(locale, "academic.dimensionCheck")}</h4>
-          <p><RichText content={present(formula.dimensions)} /></p>
+          <p><RichText content={present(formula.dimensions, locale)} /></p>
         </section>
       )}
 
@@ -100,7 +100,7 @@ const { formula, present = (value) => value, locale = "es" } = Astro.props;
         <section aria-labelledby={`${formula.id}-errors-title`}>
           <h4 id={`${formula.id}-errors-title`}>{t(locale, "academic.preventedErrors")}</h4>
           <ul class="academic-bullet-list">
-            {formula.commonErrors.map((error) => <li><RichText content={present(error)} /></li>)}
+            {formula.commonErrors.map((error) => <li><RichText content={present(error, locale)} /></li>)}
           </ul>
         </section>
       )}

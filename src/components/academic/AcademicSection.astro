@@ -18,7 +18,7 @@ interface SectionContent {
 interface Props {
   section: SectionContent;
   index?: number;
-  present?: (value: string) => RichContent;
+  present?: (value: string, locale?: "es" | "en") => RichContent;
   locale?: "es" | "en";
 }
 
@@ -39,7 +39,7 @@ const { section, index, present = (value) => value, locale = "es" } = Astro.prop
 
   <div class="academic-layer academic-layer--essential">
     <h3><span>{t(locale, "academic.essential")}</span> {t(locale, "academic.essentialDescription")}</h3>
-    {section.essential.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
+    {section.essential.map((paragraph) => <p><RichText content={present(paragraph, locale)} /></p>)}
   </div>
 
   <details class="academic-details academic-details--understand">
@@ -48,7 +48,7 @@ const { section, index, present = (value) => value, locale = "es" } = Astro.prop
       <strong>{t(locale, "academic.understandDescription")}</strong>
     </summary>
     <div class="academic-details__body">
-      {section.understand.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
+      {section.understand.map((paragraph) => <p><RichText content={present(paragraph, locale)} /></p>)}
     </div>
   </details>
 
@@ -58,7 +58,7 @@ const { section, index, present = (value) => value, locale = "es" } = Astro.prop
         <strong>{t(locale, "academic.deepenDescription")}</strong>
     </summary>
     <div class="academic-details__body">
-      {section.deepen.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
+      {section.deepen.map((paragraph) => <p><RichText content={present(paragraph, locale)} /></p>)}
     </div>
   </details>
 
@@ -68,7 +68,7 @@ const { section, index, present = (value) => value, locale = "es" } = Astro.prop
       <strong>{t(locale, "academic.exploreDescription")}</strong>
     </summary>
     <div class="academic-details__body">
-      {section.explore.map((paragraph) => <p><RichText content={present(paragraph)} /></p>)}
+      {section.explore.map((paragraph) => <p><RichText content={present(paragraph, locale)} /></p>)}
     </div>
   </details>
 
