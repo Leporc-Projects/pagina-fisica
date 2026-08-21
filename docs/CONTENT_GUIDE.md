@@ -119,7 +119,7 @@ Una modificación requiere:
 
 Cuando una unidad pase de catálogo a contenido desarrollado, debe tener su
 propio módulo bajo `src/data/physics/` y registrarse en
-`src/data/physics/index.js`. Las Unidades 1, 2 y 3 implementan el mismo contrato;
+`src/data/physics/index.js`. Las Unidades 1, 2, 3 y 4 implementan el mismo contrato;
 una unidad nueva debe reutilizarlo:
 
 ```text
