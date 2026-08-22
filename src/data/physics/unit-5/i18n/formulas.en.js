@@ -1,0 +1,15 @@
+const f=(label,represents,meanings,conditions,interpretation,dimensions)=>({label,represents,meanings,conditions,interpretation,dimensions,commonErrors:[]});
+export default {
+  "linear-momentum":f("Linear momentum","Momentum of a particle.",["linear momentum","mass","velocity"],["Newtonian mechanics; m>0."],"p has the direction and sense of v.","kg·m/s."),
+  "momentum-components":f("Momentum components","Cartesian decomposition of momentum.",["momentum components"],["Axes and signs are declared."],"Each component inherits the velocity sign.","kg·m/s."),
+  "impulse-momentum":f("Impulse and momentum change","Accumulated effect of net force.",["impulse","net force"],["F and p use the same inertial frame."],"Signed area under F(t) gives Δp.","N·s=kg·m/s."),
+  "average-force":f("Average net force","Constant force equivalent in impulse.",["average net force","duration"],["Δt>0."],"For fixed Δp, longer time means lower average force.","(kg·m/s)/s=N."),
+  "system-momentum":f("System momentum balance","Total momentum and its change from external force.",["total momentum","net external force"],["The system boundary is declared."],"Internal forces do not change total P.","N=d(kg·m/s)/dt."),
+  "momentum-conservation":f("Momentum conservation","Condition for conservation of total momentum.",["net external impulse"],["J_ext=0 or negligible in the studied component."],"The constant value need not be zero.","kg·m/s in both states."),
+  "perfect-inelastic":f("Perfectly inelastic collision","Shared velocity after the bodies stick.",["shared final velocity"],["Isolated 1D collision; bodies stick."],"Momentum is conserved, kinetic energy generally is not.","m/s."),
+  "elastic-collision-1d":f("Elastic collision in 1D","The two conservation laws for an elastic collision.",["total momentum","total kinetic energy"],["Isolated elastic one-dimensional collision."],"Both equations determine final velocities.","Each equality preserves its units."),
+  "center-of-mass-position":f("Center-of-mass position","Mass-weighted average of positions.",["center-of-mass position","total mass"],["M>0."],"It may lie where there is no material.","m."),
+  "center-of-mass-motion":f("Center-of-mass motion","Collective motion related to P and external force.",["center-of-mass velocity","center-of-mass acceleration"],["Constant total mass."],"Only external force accelerates the center of mass.","kg·m/s and N."),
+  "steady-momentum-flow":f("Steady momentum flow","Net force on a steady flow.",["positive mass flow rate","velocities in one frame"],["Steady state and a declared boundary."],"Changing transported momentum requires force.","kg/s·m/s=N."),
+  "rocket-equation":f("Thrust and the ideal rocket equation","Instantaneous thrust and ideal velocity change from mass ejection.",["thrust","effective speed relative to rocket","ideal velocity increase","initial and final masses"],["u_e>0; dm/dt<0; constant u_e for integration; m_i>m_f>0; zero external impulse."],"Thrust is positive as a magnitude and gain grows logarithmically with m_i/m_f.","T has N; the logarithm is dimensionless and Δv has m/s."),
+};
