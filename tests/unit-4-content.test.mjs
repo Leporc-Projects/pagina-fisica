@@ -39,7 +39,7 @@ const finite = (value, seen = new WeakSet()) => {
 test("Unidad 4 está registrada explícitamente con ocho temas y rutas bilingües", () => {
   assert.equal(UNIT_4.number, 4);
   assert.equal(UNIT_4.bonusRoute, null);
-  assert.deepEqual(ACADEMIC_UNITS.map(({ number }) => number), [1, 2, 3, 4, 5]);
+  assert.deepEqual(ACADEMIC_UNITS.map(({ number }) => number), [1, 2, 3, 4, 5, 6]);
   assert.deepEqual(UNIT_4.topics.map(({ order }) => order), [1, 2, 3, 4, 5, 6, 7, 8]);
   assert.equal(new Set(UNIT_4.topics.map(({ slug }) => slug)).size, 8);
   assert.equal(new Set(UNIT_4.topics.map(({ routeId }) => routeId)).size, 8);

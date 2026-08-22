@@ -375,11 +375,11 @@ check(
 const participationUnitsEs = getDevelopedAcademicUnitsForCourse(COURSE_IDS.PHYSICS_BASIC_1, "es");
 
 check(
-  participationUnitsEs.map((unit) => unit.number).join(",") === "1,2,3,4,5" &&
+  participationUnitsEs.map((unit) => unit.number).join(",") === "1,2,3,4,5,6" &&
     localizeParticipationData("es").topics.map((topic) => topic.slug).join(",") ===
       participationUnitsEs.flatMap((unit) => unit.topics.map((topic) => topic.slug)).join(",") &&
     UNIT_1.topics.every((topic) => localizeParticipationData("es").topics.some((entry) => entry.slug === topic.slug)),
-  "Participación deriva sus temas de las cinco unidades desarrolladas, no de un import directo de una unidad."
+  "Participación deriva sus temas de las seis unidades desarrolladas, no de un import directo de una unidad."
 );
 
 const VALIDATION_ENVIRONMENT = {
