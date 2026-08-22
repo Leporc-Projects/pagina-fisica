@@ -1,0 +1,127 @@
+---
+import { t } from "../../i18n/index.js";
+import SimulationLinkedChart from "./SimulationLinkedChart.astro";
+
+const { locale = "es" } = Astro.props;
+const scenarios = ["table-hanging", "atwood", "movable-pulley", "double-atwood"];
+const force = (label, direction) => ({ label, direction });
+const bodies = {
+  "table-hanging": [
+    { id: "m1", forces: [force("N", "up"), force("W₁", "down"), force("f", "left"), force("T", "right")] },
+    { id: "m2", forces: [force("T", "up"), force("W₂", "down")] },
+  ],
+  atwood: [
+    { id: "m1", forces: [force("T", "up"), force("W₁", "down")] },
+    { id: "m2", forces: [force("T", "up"), force("W₂", "down")] },
+  ],
+  "movable-pulley": [
+    { id: "mL", forces: [force("2T", "up"), force("W_L", "down")] },
+    { id: "mC", forces: [force("T", "up"), force("W_C", "down")] },
+  ],
+  "double-atwood": [
+    { id: "m1", forces: [force("T_A", "up"), force("W₁", "down")] },
+    { id: "m2", forces: [force("T_A", "up"), force("W₂", "down")] },
+    { id: "m3", forces: [force("T_C", "up"), force("W₃", "down")] },
+  ],
+};
+const arrowGeometry = {
+  up: { x1: 105, y1: 72, x2: 105, y2: 22, tx: 105, ty: 15, anchor: "middle" },
+  down: { x1: 105, y1: 118, x2: 105, y2: 168, tx: 105, ty: 185, anchor: "middle" },
+  left: { x1: 82, y1: 95, x2: 28, y2: 95, tx: 18, ty: 88, anchor: "middle" },
+  right: { x1: 128, y1: 95, x2: 182, y2: 95, tx: 193, ty: 88, anchor: "middle" },
+};
+---
+
+<div class="pulley-analysis-grid">
+  <section class="dynamics-analysis-card pulley-fbd-panel" aria-labelledby="pulley-fbd-title">
+    <div><p class="academic-label">{t(locale, "pulleySystems.forceAnalysis")}</p><h2 id="pulley-fbd-title">{t(locale, "pulleySystems.fbdTitle")}</h2></div>
+    {scenarios.map((scenario) => (
+      <div class="pulley-fbd-grid" data-pulley-analysis={scenario} hidden={scenario !== "table-hanging"}>
+        {bodies[scenario].map((body, index) => (
+          <figure>
+            <svg viewBox="0 0 210 195" role="img" aria-label={t(locale, "pulleySystems.fbdAria", { body: body.id })}>
+              <defs><marker id={`pulley-fbd-arrow-${scenario}-${index}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke" /></marker></defs>
+              <rect class="dynamics-fbd__body" x="82" y="72" width="46" height="46" rx="6" />
+              {body.forces.map(({ label, direction }) => {
+                const arrow = arrowGeometry[direction];
+                return <g data-fbd-force={label}>
+                  <line class={`pulley-fbd__arrow pulley-fbd__arrow--${direction}`} x1={arrow.x1} y1={arrow.y1} x2={arrow.x2} y2={arrow.y2} marker-end={`url(#pulley-fbd-arrow-${scenario}-${index})`} />
+                  <text class="pulley-fbd__label" x={arrow.tx} y={arrow.ty} text-anchor={arrow.anchor}>{label}</text>
+                </g>;
+              })}
+              <text class="pulley-fbd__body-label" x="105" y="101" text-anchor="middle">{body.id}</text>
+            </svg>
+            <figcaption><strong>{body.id}</strong><span>{body.forces.map(({ label }) => label).join(", ")}</span></figcaption>
+          </figure>
+        ))}
+      </div>
+    ))}
+    <p>{t(locale, "pulleySystems.fbdHelp")}</p>
+  </section>
+
+  <section class="dynamics-analysis-card dynamics-live-equations" aria-labelledby="pulley-equations-title">
+    <div><p class="academic-label">{t(locale, "pulleySystems.currentSubstitution")}</p><h2 id="pulley-equations-title">{t(locale, "pulleySystems.equationsTitle")}</h2></div>
+    <div class="dynamics-equation-list" data-pulley-equations="table-hanging">
+      <math display="block" aria-label={t(locale, "pulleySystems.math.table1")}><mrow><mi>T</mi><mo>−</mo><mi>f</mi><mo>=</mo><msub><mi>m</mi><mn>1</mn></msub><mi>a</mi></mrow></math>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.table2")}><mrow><msub><mi>m</mi><mn>2</mn></msub><mi>g</mi><mo>−</mo><mi>T</mi><mo>=</mo><msub><mi>m</mi><mn>2</mn></msub><mi>a</mi></mrow></math>
+      <p>T = <strong data-pulley-value="T">0</strong> N · f = <strong data-pulley-value="friction">0</strong> N · a = <strong data-pulley-value="a1">0</strong> m/s²</p>
+      <p class="pulley-numeric-substitution" data-pulley-substitution="table-hanging"></p>
+    </div>
+    <div class="dynamics-equation-list" data-pulley-equations="atwood" hidden>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.atwood1")}><mrow><mi>T</mi><mo>−</mo><msub><mi>m</mi><mn>1</mn></msub><mi>g</mi><mo>=</mo><msub><mi>m</mi><mn>1</mn></msub><msub><mi>a</mi><mn>1</mn></msub></mrow></math>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.atwood2")}><mrow><msub><mi>m</mi><mn>2</mn></msub><mi>g</mi><mo>−</mo><mi>T</mi><mo>=</mo><msub><mi>m</mi><mn>2</mn></msub><msub><mi>a</mi><mn>2</mn></msub></mrow></math>
+      <p>T = <strong data-pulley-value="T">0</strong> N · a₁ = <strong data-pulley-value="a1">0</strong> · a₂ = <strong data-pulley-value="a2">0</strong> m/s²</p>
+      <p class="pulley-numeric-substitution" data-pulley-substitution="atwood"></p>
+    </div>
+    <div class="dynamics-equation-list" data-pulley-equations="movable-pulley" hidden>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.movable1")}><mrow><msub><mi>m</mi><mi>L</mi></msub><mi>g</mi><mo>−</mo><mn>2</mn><mi>T</mi><mo>=</mo><msub><mi>m</mi><mi>L</mi></msub><msub><mi>a</mi><mi>L</mi></msub></mrow></math>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.movable2")}><mrow><msub><mi>m</mi><mi>C</mi></msub><mi>g</mi><mo>−</mo><mi>T</mi><mo>=</mo><msub><mi>m</mi><mi>C</mi></msub><msub><mi>a</mi><mi>C</mi></msub></mrow></math>
+      <p>T = <strong data-pulley-value="T">0</strong> N · aL = <strong data-pulley-value="aL">0</strong> · aC = <strong data-pulley-value="aC">0</strong> m/s²</p>
+      <p class="pulley-numeric-substitution" data-pulley-substitution="movable-pulley"></p>
+    </div>
+    <div class="dynamics-equation-list" data-pulley-equations="double-atwood" hidden>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.double1")}><mrow><msub><mi>m</mi><mn>1</mn></msub><mi>g</mi><mo>−</mo><msub><mi>T</mi><mi>A</mi></msub><mo>=</mo><msub><mi>m</mi><mn>1</mn></msub><msub><mi>a</mi><mn>1</mn></msub></mrow></math>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.double2")}><mrow><msub><mi>m</mi><mn>2</mn></msub><mi>g</mi><mo>−</mo><msub><mi>T</mi><mi>A</mi></msub><mo>=</mo><msub><mi>m</mi><mn>2</mn></msub><msub><mi>a</mi><mn>2</mn></msub></mrow></math>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.double3")}><mrow><msub><mi>m</mi><mn>3</mn></msub><mi>g</mi><mo>−</mo><msub><mi>T</mi><mi>C</mi></msub><mo>=</mo><msub><mi>m</mi><mn>3</mn></msub><msub><mi>a</mi><mn>3</mn></msub></mrow></math>
+      <math display="block" aria-label={t(locale, "pulleySystems.math.doubleTension")}><mrow><msub><mi>T</mi><mi>C</mi></msub><mo>=</mo><mn>2</mn><msub><mi>T</mi><mi>A</mi></msub></mrow></math>
+      <p>TA = <strong data-pulley-value="TA">0</strong> N · TC = <strong data-pulley-value="TC">0</strong> N</p>
+      <p>a₁ = <strong data-pulley-value="a1">0</strong> · a₂ = <strong data-pulley-value="a2">0</strong> · a₃ = <strong data-pulley-value="a3">0</strong> m/s²</p>
+      <p class="pulley-numeric-substitution" data-pulley-substitution="double-atwood"></p>
+    </div>
+  </section>
+</div>
+
+<section class="dynamics-analysis-card pulley-constraint-card" aria-labelledby="pulley-constraint-title">
+  <div><p class="academic-label">{t(locale, "pulleySystems.geometry")}</p><h2 id="pulley-constraint-title">{t(locale, "pulleySystems.constraintTitle")}</h2></div>
+  <div data-pulley-constraint="table-hanging">
+    <math display="block" aria-label={t(locale, "pulleySystems.math.tableConstraint")}><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>−</mo><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mtext set:text={t(locale, "pulleySystems.constant")} /></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.tableVelocityConstraint")}><mrow><msub><mi>v</mi><mn>1</mn></msub><mo>−</mo><msub><mi>v</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.tableAccelerationConstraint")}><mrow><msub><mi>a</mi><mn>1</mn></msub><mo>−</mo><msub><mi>a</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <p>{t(locale, "pulleySystems.constraint.table")}</p>
+  </div>
+  <div data-pulley-constraint="atwood" hidden>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.atwoodConstraint")}><mrow><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mtext set:text={t(locale, "pulleySystems.constant")} /></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.atwoodVelocityConstraint")}><mrow><msub><mi>v</mi><mn>1</mn></msub><mo>+</mo><msub><mi>v</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.atwoodAccelerationConstraint")}><mrow><msub><mi>a</mi><mn>1</mn></msub><mo>+</mo><msub><mi>a</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <p>{t(locale, "pulleySystems.constraint.atwood")}</p>
+  </div>
+  <div data-pulley-constraint="movable-pulley" hidden>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.movableConstraint")}><mrow><mn>2</mn><msub><mi>y</mi><mi>L</mi></msub><mo>+</mo><msub><mi>y</mi><mi>C</mi></msub><mo>=</mo><mtext set:text={t(locale, "pulleySystems.constant")} /></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.movableVelocityConstraint")}><mrow><mn>2</mn><msub><mi>v</mi><mi>L</mi></msub><mo>+</mo><msub><mi>v</mi><mi>C</mi></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.movableAccelerationConstraint")}><mrow><mn>2</mn><msub><mi>a</mi><mi>L</mi></msub><mo>+</mo><msub><mi>a</mi><mi>C</mi></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <p>{t(locale, "pulleySystems.constraint.movable")}</p>
+  </div>
+  <div data-pulley-constraint="double-atwood" hidden>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.doubleRopeAConstraint")}><mrow><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>y</mi><mn>2</mn></msub><mo>−</mo><mn>2</mn><msub><mi>y</mi><mi>B</mi></msub><mo>=</mo><mtext set:text={t(locale, "pulleySystems.constant")} /></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.doubleRopeCConstraint")}><mrow><msub><mi>y</mi><mi>B</mi></msub><mo>+</mo><msub><mi>y</mi><mn>3</mn></msub><mo>=</mo><mtext set:text={t(locale, "pulleySystems.constant")} /></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.doubleVelocityConstraint")}><mrow><msub><mi>v</mi><mn>1</mn></msub><mo>+</mo><msub><mi>v</mi><mn>2</mn></msub><mo>+</mo><mn>2</mn><msub><mi>v</mi><mn>3</mn></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.doubleConstraint")}><mrow><msub><mi>a</mi><mn>1</mn></msub><mo>+</mo><msub><mi>a</mi><mn>2</mn></msub><mo>+</mo><mn>2</mn><msub><mi>a</mi><mn>3</mn></msub><mo>=</mo><mn>0</mn></mrow></math>
+    <p>{t(locale, "pulleySystems.constraint.double")}</p>
+  </div>
+  <p class="pulley-constraint-card__check">{t(locale, "pulleySystems.constraintCheck")}: <strong data-pulley-constraint-residual>0</strong></p>
+</section>
+
+<section class="dynamics-analysis-card dynamics-history" aria-labelledby="pulley-history-title">
+  <div><p class="academic-label">{t(locale, "pulleySystems.lastTenSeconds")}</p><h2 id="pulley-history-title">{t(locale, "pulleySystems.historyTitle")}</h2></div>
+  <SimulationLinkedChart id="pulley-position-history" chartKey="pulley-position-history" title={t(locale, "pulleySystems.historyChartTitle")} description={t(locale, "pulleySystems.historyDescription")} descriptionKey="pulleySystems.historyDescription" xLabel="t [s]" yLabel="Δq [m]" seriesLabels={["q₁", "q₂", "q₃"]} locale={locale} />
+</section>

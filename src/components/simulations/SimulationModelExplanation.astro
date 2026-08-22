@@ -34,3 +34,11 @@ const { modelId, locale } = Astro.props;
     <p>{t(locale, "circularDynamics.tensionAssumption")}</p>
   </div>
 )}
+{modelId === "pulley-systems" && (
+  <div class="simulation-model-equations" aria-label={t(locale, "simulation.equations")}>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.newton")}><mrow><mo>∑</mo><mi>F</mi><mo>=</mo><mi>m</mi><mi>a</mi></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.idealRope")}><mrow><mi>T</mi><mo>=</mo><mtext set:text={t(locale, "pulleySystems.sameTension")} /></mrow></math>
+    <math display="block" aria-label={t(locale, "pulleySystems.math.constraints")}><mrow><mi>L</mi><mo>=</mo><mtext set:text={t(locale, "pulleySystems.constant")} /><mo>⇒</mo><mtext set:text={t(locale, "pulleySystems.linkedAccelerations")} /></mrow></math>
+    <p>{t(locale, "pulleySystems.idealAssumption")}</p>
+  </div>
+)}

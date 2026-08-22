@@ -3,6 +3,7 @@ import KinematicsSimulation from "./KinematicsSimulation.astro";
 import ProjectileSimulation from "./ProjectileSimulation.astro";
 import ForcesFrictionSimulation from "./ForcesFrictionSimulation.astro";
 import CircularRadialSimulation from "./CircularRadialSimulation.astro";
+import PulleySystemsSimulation from "./PulleySystemsSimulation.astro";
 import {
   getSimulationExperienceByModelId,
 } from "../../data/simulation-experiences.js";
@@ -40,10 +41,14 @@ const forcesExperience = model.id === "forces-friction"
 const circularExperience = model.id === "circular-radial-force"
   ? experience
   : getSimulationExperienceByModelId("circular-radial-force");
+const pulleyExperience = model.id === "pulley-systems"
+  ? experience
+  : getSimulationExperienceByModelId("pulley-systems");
 const renderKinematics = includeAllRenderers || renderer.id === "svg-kinematics-1d";
 const renderProjectile = includeAllRenderers || renderer.id === "p5-projectile-2d";
 const renderForces = includeAllRenderers || renderer.id === "p5-forces-friction";
 const renderCircular = includeAllRenderers || renderer.id === "p5-circular-radial-force";
+const renderPulley = includeAllRenderers || renderer.id === "p5-pulley-systems";
 ---
 
 <div
@@ -69,6 +74,11 @@ const renderCircular = includeAllRenderers || renderer.id === "p5-circular-radia
   {renderCircular && (
     <div data-renderer-slot="p5-circular-radial-force" hidden={renderer.id !== "p5-circular-radial-force"}>
       <CircularRadialSimulation experience={circularExperience} preview={preview} locale={locale} />
+    </div>
+  )}
+  {renderPulley && (
+    <div data-renderer-slot="p5-pulley-systems" hidden={renderer.id !== "p5-pulley-systems"}>
+      <PulleySystemsSimulation experience={pulleyExperience} preview={preview} locale={locale} />
     </div>
   )}
 </div>

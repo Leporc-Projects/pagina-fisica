@@ -23,6 +23,11 @@ export const SIMULATION_RENDERERS = Object.freeze([
     modelId: "circular-radial-force",
     technology: "p5.js Canvas 2D",
   }),
+  Object.freeze({
+    id: "p5-pulley-systems",
+    modelId: "pulley-systems",
+    technology: "p5.js Canvas 2D",
+  }),
 ]);
 
 export const SIMULATION_RENDERER_IDS = Object.freeze(

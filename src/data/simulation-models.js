@@ -6,6 +6,7 @@ import { KINEMATICS_LIMITS } from "../utils/kinematics-1d.js";
 import { PROJECTILE_LIMITS } from "../utils/projectile-2d.js";
 import { FORCES_FRICTION_LIMITS } from "../utils/forces-friction.js";
 import { CIRCULAR_RADIAL_LIMITS } from "../utils/circular-radial-force.js";
+import { PULLEY_LIMITS } from "../utils/pulley-systems.js";
 export { SIMULATION_RENDERER_IDS } from "./simulation-renderers.js";
 
 const parameter = ({ label, symbol, unit, limits, defaultStep }) =>
@@ -171,6 +172,36 @@ export const SIMULATION_MODELS = Object.freeze([
       "Dynamics",
       { F: "Applied force", beta: "Surface angle", muS: "Static-friction coefficient", muK: "Kinetic-friction coefficient", m: "Mass", alpha: "Force angle relative to the surface", g: "Gravity", v0: "Initial velocity along the surface" },
       { scene: "Scene along the surface", readings: "Live readings", vectors: "Physical vectors", freeBodyDiagram: "Free-body diagram", frictionMeter: "Friction-threshold meter", historyGraph: "Velocity and net-force history", frictionRelationGraph: "Friction, threshold, and applied-force relationship" }
+    ),
+  }),
+  Object.freeze({
+    id: "pulley-systems",
+    name: "Laboratorio de poleas y cuerdas",
+    category: "Dinámica",
+    rendererId: "p5-pulley-systems",
+    parameters: Object.freeze({
+      m1: parameter({ label: "Masa 1", symbol: "m₁", unit: "kg", limits: PULLEY_LIMITS.mass, defaultStep: 0.5 }),
+      m2: parameter({ label: "Masa 2", symbol: "m₂", unit: "kg", limits: PULLEY_LIMITS.mass, defaultStep: 0.5 }),
+      m3: parameter({ label: "Masa 3", symbol: "m₃", unit: "kg", limits: PULLEY_LIMITS.mass, defaultStep: 0.5 }),
+      mL: parameter({ label: "Masa de la carga", symbol: "mL", unit: "kg", limits: PULLEY_LIMITS.mass, defaultStep: 0.5 }),
+      mC: parameter({ label: "Masa del contrapeso", symbol: "mC", unit: "kg", limits: PULLEY_LIMITS.mass, defaultStep: 0.5 }),
+      muS: parameter({ label: "Coeficiente de fricción estática", symbol: "μ_s", unit: "", limits: PULLEY_LIMITS.friction, defaultStep: 0.05 }),
+      muK: parameter({ label: "Coeficiente de fricción cinética", symbol: "μ_k", unit: "", limits: PULLEY_LIMITS.friction, defaultStep: 0.05 }),
+      g: parameter({ label: "Gravedad", symbol: "g", unit: "m/s²", limits: PULLEY_LIMITS.g, defaultStep: 0.1 }),
+    }),
+    views: Object.freeze({
+      scene: view("Escena mecánica", true),
+      readings: view("Lecturas en vivo"),
+      freeBodyDiagrams: view("Diagramas de cuerpo libre", true),
+      equations: view("Ecuaciones en vivo"),
+      ropeConstraint: view("Restricción de cuerda", true),
+      historyGraph: view("Historia temporal", true),
+    }),
+    translations: translations(
+      "Pulley and rope laboratory",
+      "Dynamics",
+      { m1: "Mass 1", m2: "Mass 2", m3: "Mass 3", mL: "Load mass", mC: "Counterweight mass", muS: "Static-friction coefficient", muK: "Kinetic-friction coefficient", g: "Gravity" },
+      { scene: "Mechanical scene", readings: "Live readings", freeBodyDiagrams: "Free-body diagrams", equations: "Live equations", ropeConstraint: "Rope constraint", historyGraph: "Time history" }
     ),
   }),
   Object.freeze({

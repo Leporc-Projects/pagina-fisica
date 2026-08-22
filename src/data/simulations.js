@@ -50,9 +50,9 @@ export const SIMULATION_CATALOG = Object.freeze([
     category: "Dinámica",
   }),
   Object.freeze({
-    experienceId: "circular-radial-force",
-    route: "/simulaciones/dinamica-circular",
-    enRoute: "/en/simulations/circular-dynamics",
+    experienceId: "pulley-systems",
+    route: "/simulaciones/poleas",
+    enRoute: "/en/simulations/pulleys",
     category: "Dinámica",
   }),
 ]);

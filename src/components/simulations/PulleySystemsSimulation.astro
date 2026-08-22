@@ -1,0 +1,81 @@
+---
+import { getSimulationExperienceById, localizeSimulationExperience } from "../../data/simulation-experiences.js";
+import { getSimulationModelById, localizeSimulationModel } from "../../data/simulation-models.js";
+import { PULLEY_PRESETS, PULLEY_SCENARIOS } from "../../data/pulley-scenarios.js";
+import { formatNumber, t } from "../../i18n/index.js";
+import { createPulleyState, getPulleyReadings } from "../../utils/pulley-systems.js";
+import { normalizeSimulationExperience, validateSimulationExperience } from "../../utils/simulation-experience.js";
+import PulleySystemsAnalysis from "./PulleySystemsAnalysis.astro";
+import SimulationFloatingPlayback from "./SimulationFloatingPlayback.astro";
+import SimulationParameterFields from "./SimulationParameterFields.astro";
+import "../../styles/dynamics-simulations.css";
+import "../../styles/pulley-systems.css";
+
+const { experience: suppliedExperience = getSimulationExperienceById("pulley-systems"), preview = false, locale = "es" } = Astro.props;
+const canonical = normalizeSimulationExperience(suppliedExperience);
+const validation = validateSimulationExperience(canonical);
+if (!validation.valid) throw new TypeError(`Experiencia de poleas inválida: ${validation.errors.join(" ")}`);
+const experience = localizeSimulationExperience(canonical, locale);
+const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
+if (model?.rendererId !== "p5-pulley-systems") throw new TypeError("PulleySystemsSimulation requiere p5-pulley-systems.");
+const controls = Object.entries(model.parameters).map(([key, definition]) => ({ key, ...definition, ...experience.parameters[key] }));
+const defaults = Object.fromEntries(controls.map(({ key, default: value }) => [key, value]));
+const initialConfig = Object.fromEntries(PULLEY_SCENARIOS[0].parameterKeys.map((key) => [key, defaults[key]]));
+const readings = getPulleyReadings(createPulleyState("table-hanging", initialConfig));
+const serializedExperience = JSON.stringify(experience).replaceAll("<", "\\u003c");
+const display = (value) => formatNumber(locale, Number(value), { maximumFractionDigits: 2 });
+const bodies = ["m1", "m2", "m3", "mL", "mC", "pulley"];
+---
+
+<section class="dynamics-simulation pulley-simulation" data-pulley-systems-simulation data-experience={serializedExperience} data-locale={locale} data-preview={preview ? "true" : undefined}>
+  <fieldset class="pulley-scenario-picker">
+    <legend><span class="academic-label">{t(locale, "pulleySystems.configuration")}</span>{t(locale, "pulleySystems.chooseConfiguration")}</legend>
+    <div>{PULLEY_SCENARIOS.map((scenario, index) => <button type="button" data-pulley-scenario={scenario.id} aria-pressed={index === 0}><span>{String(index + 1).padStart(2, "0")}</span><strong>{t(locale, `pulleySystems.scenario.${scenario.id}`)}</strong><small>{t(locale, `pulleySystems.scenarioHelp.${scenario.id}`)}</small></button>)}</div>
+  </fieldset>
+
+  <div class="dynamics-workspace pulley-workspace">
+    <div class="dynamics-visual-column">
+      <figure class="dynamics-canvas theme-canvas">
+        <figcaption><div><p class="academic-label">{t(locale, "pulleySystems.canvas")}</p><h2>{t(locale, "pulleySystems.canvasTitle")}</h2><p>{t(locale, "pulleySystems.canvasHelp")}</p></div><div class="dynamics-status" data-regime={readings.status}><span>{t(locale, "simulation.state")}</span><strong data-status-text>{t(locale, "pulleySystems.status.kinetic")}</strong></div></figcaption>
+        <div class="dynamics-canvas__surface pulley-canvas" data-pulley-systems-canvas role="img" aria-label={t(locale, "pulleySystems.sceneAria")} aria-describedby="pulley-scene-description"></div>
+        <p id="pulley-scene-description" class="sr-only">{t(locale, "pulleySystems.sceneDescription")}</p>
+        <p class="dynamics-vector-legend">{t(locale, "pulleySystems.sceneLegend")}</p>
+      </figure>
+
+      <section class="pulley-live-readings" aria-labelledby="pulley-readings-title">
+        <div><p class="academic-label">{t(locale, "simulation.liveReadings")}</p><h2 id="pulley-readings-title">{t(locale, "simulation.physicalState")}</h2></div>
+        <dl class="pulley-reading-grid">
+          <div><dt>{t(locale, "simulation.reading.time")} t</dt><dd><span data-pulley-reading="t">0</span> s</dd></div>
+          {bodies.map((body) => <div data-pulley-body-reading={body} hidden={!['m1','m2'].includes(body)}><dt>{t(locale, "pulleySystems.bodyState", { body })}</dt><dd>Δq <span data-pulley-reading={`position-${body}`}>0</span> m · v <span data-pulley-reading={`velocity-${body}`}>0</span> m/s · a <span data-pulley-reading={`acceleration-${body}`}>0</span> m/s²</dd></div>)}
+          <div data-pulley-tension="T"><dt>{t(locale, "pulleySystems.tension")} T</dt><dd><span data-pulley-reading="tension-T">{display(readings.tensions.T)}</span> N</dd></div>
+          <div data-pulley-tension="TA" hidden><dt>{t(locale, "pulleySystems.tension")} TA</dt><dd><span data-pulley-reading="tension-TA">0</span> N</dd></div>
+          <div data-pulley-tension="TC" hidden><dt>{t(locale, "pulleySystems.tension")} TC</dt><dd><span data-pulley-reading="tension-TC">0</span> N</dd></div>
+          <div data-pulley-friction><dt>{t(locale, "pulleySystems.friction")}</dt><dd><span data-pulley-reading="friction">{display(readings.friction)}</span> N</dd></div>
+        </dl>
+      </section>
+
+      <PulleySystemsAnalysis locale={locale} />
+    </div>
+
+    <aside class="dynamics-controls pulley-controls" aria-labelledby="pulley-controls-title">
+      <div><p class="academic-label">{t(locale, "simulation.parameters")}</p><h2 id="pulley-controls-title">{t(locale, "pulleySystems.configure")}</h2><p>{t(locale, "pulleySystems.changeHelp")}</p></div>
+      <fieldset class="dynamics-presets"><legend>{t(locale, "simulation.studyCases")}</legend><div>{PULLEY_PRESETS.map((preset) => <button type="button" data-pulley-preset={preset.id} aria-pressed="false">{t(locale, `pulleySystems.preset.${preset.id}`)}</button>)}</div></fieldset>
+      <form data-parameter-form novalidate><SimulationParameterFields controls={controls} locale={locale} prefix="pulley" /></form>
+    </aside>
+  </div>
+
+  <section class="dynamics-playback pulley-playback" aria-label={t(locale, "simulation.playback")} data-playback-section>
+    <div><button type="button" data-action="toggle" aria-pressed="false"><span data-playback-icon aria-hidden="true">▶</span> <span data-playback-label>{t(locale, "simulation.play")}</span></button><button type="button" data-action="step">▸| {t(locale, "pulleySystems.step")}</button><button type="button" data-action="reset"><span aria-hidden="true">↺</span> {t(locale, "simulation.reset")}</button></div>
+    <label>{t(locale, "pulleySystems.playbackSpeed")}<select data-playback-speed><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+    <p data-playback-state>{t(locale, "simulation.paused")}</p><p class="sr-only" aria-live="polite" data-simulation-live></p>
+  </section>
+  {!preview && <SimulationFloatingPlayback locale={locale} />}
+  <noscript><p class="dynamics-noscript">{t(locale, "simulation.javascriptFallback")}</p></noscript>
+</section>
+
+<script>
+  import { initializePulleySystemsSimulation } from "../../scripts/pulley-systems.js";
+  document.querySelectorAll("[data-pulley-systems-simulation]").forEach((root) => {
+    if (!root.closest("[data-renderer-slot][hidden]")) initializePulleySystemsSimulation(root);
+  });
+</script>

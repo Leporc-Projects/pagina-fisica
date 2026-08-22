@@ -64,7 +64,7 @@ export const ROUTE_IDS = Object.freeze({
   KINEMATICS_1D: "simulation.kinematics-1d",
   PROJECTILE_2D: "simulation.projectile-2d",
   FORCES_FRICTION: "simulation.forces-friction",
-  CIRCULAR_RADIAL_FORCE: "simulation.circular-radial-force",
+  PULLEY_SYSTEMS: "simulation.pulley-systems",
   NOTICES: "notices",
   PARTICIPATE: "participate",
 });
@@ -133,7 +133,7 @@ export const LOCALIZED_ROUTES = Object.freeze({
   [ROUTE_IDS.KINEMATICS_1D]: Object.freeze({ es: "/simulaciones/cinematica-1d", en: "/en/simulations/kinematics-1d" }),
   [ROUTE_IDS.PROJECTILE_2D]: Object.freeze({ es: "/simulaciones/proyectil-2d", en: "/en/simulations/projectile-2d" }),
   [ROUTE_IDS.FORCES_FRICTION]: Object.freeze({ es: "/simulaciones/fuerzas-friccion", en: "/en/simulations/forces-friction" }),
-  [ROUTE_IDS.CIRCULAR_RADIAL_FORCE]: Object.freeze({ es: "/simulaciones/dinamica-circular", en: "/en/simulations/circular-dynamics" }),
+  [ROUTE_IDS.PULLEY_SYSTEMS]: Object.freeze({ es: "/simulaciones/poleas", en: "/en/simulations/pulleys" }),
   [ROUTE_IDS.NOTICES]: Object.freeze({ es: "/avisos", en: "/en/notices" }),
   [ROUTE_IDS.PARTICIPATE]: Object.freeze({ es: "/participa", en: "/en/participate" }),
 });

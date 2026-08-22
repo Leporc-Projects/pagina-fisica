@@ -35,6 +35,13 @@ const rendererClients = Object.freeze({
       destroy: module.destroyCircularRadialSimulation,
     })),
   }),
+  "p5-pulley-systems": Object.freeze({
+    selector: "[data-pulley-systems-simulation]",
+    load: () => import("./pulley-systems.js").then((module) => ({
+      initialize: module.initializePulleySystemsSimulation,
+      destroy: module.destroyPulleySystemsSimulation,
+    })),
+  }),
 });
 
 const mountedRenderers = new WeakMap();
