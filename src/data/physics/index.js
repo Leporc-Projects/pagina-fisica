@@ -51,8 +51,21 @@ import {
 import { getLocalizedUnit4BankItems, getLocalizedUnit4Exercises } from "./unit-4/exercise-localize.js";
 import { UNIT_4_VISUALIZATIONS } from "./unit-4/visualizations.js";
 import { presentUnit4RichText } from "./unit-4/math-content.js";
+import { UNIT_5 } from "./unit-5/unit.js";
+import {
+  getLocalizedUnit5ErrorsByTopics,
+  getLocalizedUnit5Formula,
+  getLocalizedUnit5Visualization,
+  getLocalizedUnit5WorkedExample,
+  getUnit5TopicRouteId,
+  localizeUnit5,
+  localizeUnit5Content,
+} from "./unit-5/localize.js";
+import { getLocalizedUnit5BankItems, getLocalizedUnit5Exercises } from "./unit-5/exercise-localize.js";
+import { UNIT_5_VISUALIZATIONS } from "./unit-5/visualizations.js";
+import { presentUnit5RichText } from "./unit-5/math-content.js";
 
-export const ACADEMIC_UNITS = Object.freeze([UNIT_1, UNIT_2, UNIT_3, UNIT_4]);
+export const ACADEMIC_UNITS = Object.freeze([UNIT_1, UNIT_2, UNIT_3, UNIT_4, UNIT_5]);
 
 const ACADEMIC_UNIT_ADAPTERS = new Map([
   [1, Object.freeze({
@@ -108,6 +121,20 @@ const ACADEMIC_UNIT_ADAPTERS = new Map([
     getBankItems: getLocalizedUnit4BankItems,
     visualizationIds: Object.freeze(Object.keys(UNIT_4_VISUALIZATIONS)),
     presentRichText: presentUnit4RichText,
+  })],
+  [5, Object.freeze({
+    unit: UNIT_5,
+    localizeUnit: localizeUnit5,
+    getContent: localizeUnit5Content,
+    getFormula: getLocalizedUnit5Formula,
+    getVisualization: getLocalizedUnit5Visualization,
+    getExample: getLocalizedUnit5WorkedExample,
+    getErrors: getLocalizedUnit5ErrorsByTopics,
+    getTopicRouteId: getUnit5TopicRouteId,
+    getFixedExercises: getLocalizedUnit5Exercises,
+    getBankItems: getLocalizedUnit5BankItems,
+    visualizationIds: Object.freeze(Object.keys(UNIT_5_VISUALIZATIONS)),
+    presentRichText: presentUnit5RichText,
   })],
 ]);
 

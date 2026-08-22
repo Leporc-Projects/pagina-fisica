@@ -1,0 +1,11 @@
+import { assertSupportedLocale } from "../../../i18n/config.js";
+import { t } from "../../../i18n/index.js";
+import { UNIT_5_EXERCISES } from "./exercises.js";
+import exercisesEn from "./i18n/exercises.en.js";
+import { getLocalizedUnit5ExerciseFamilies } from "./family-localize.js";
+const required=(value,context)=>{if(value==null||value==="")throw new RangeError(`Missing English Unit 5 exercise translation: ${context}`);return value;};
+const stageTexts=["Select the governing momentum relation and a consistent sign convention.","Represent every vector or flow component in the declared frame.","Substitute the data, preserving signs and units.","Check the result against the physical model and limiting cases."];
+export const localizeUnit5Exercise=(exercise,locale)=>{assertSupportedLocale(locale);if(!exercise||locale==="es")return exercise;const translated=required(exercisesEn[exercise.id],exercise.id);let interaction=exercise.interaction;if(interaction.kind==="singleChoice"){const options=required(translated.options,`${exercise.id}.options`);if(options.length!==interaction.options.length)throw new RangeError(`English Unit 5 options changed structure: ${exercise.id}`);interaction={...interaction,options:interaction.options.map((option,index)=>({...option,content:options[index]}))};}const answer=exercise.answer.kind==="text"?{...exercise.answer,presentation:translated.options?.[interaction.options.findIndex(({id})=>id===interaction.correctOptionId)]}:{...exercise.answer};return{...exercise,title:translated.title,prompt:translated.prompt,objectives:[translated.title],prerequisites:[],hints:["Use the declared system, frame, and signs before substituting numbers."],solution:exercise.solution.map((step,index)=>({...step,title:["Principle","Representation","Calculation","Interpretation"][index]??`Step ${index+1}`,text:stageTexts[Math.min(index,3)]})),answer,interaction,feedback:{...exercise.feedback,correct:t(locale,"exercise.feedback.correct"),incorrect:t(locale,"exercise.feedback.incorrect")}};};
+export const getLocalizedUnit5Exercises=(locale)=>UNIT_5_EXERCISES.map((exercise)=>localizeUnit5Exercise(exercise,locale));
+export const getLocalizedUnit5BankItems=(locale)=>[...getLocalizedUnit5Exercises(locale),...getLocalizedUnit5ExerciseFamilies(locale)];
+export { generateLocalizedUnit5FamilyInstance } from "./family-localize.js";

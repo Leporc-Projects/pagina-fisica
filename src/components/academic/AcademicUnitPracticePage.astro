@@ -2,7 +2,9 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import OpenPractice from "./OpenPractice.astro";
 import AcademicUnitNav from "./AcademicUnitNav.astro";
+import TopicCta from "./TopicCta.astro";
 import { getAcademicUnitAdapter } from "../../data/physics/index.js";
+import { COURSE } from "../../data/course.js";
 import { getLocalizedPath, ROUTE_IDS } from "../../i18n/routes.js";
 import { t } from "../../i18n/index.js";
 import { withBase } from "../../utils/paths.js";
@@ -18,6 +20,9 @@ const localizedVisualizations = Object.fromEntries(
 const publicLearningExercises = localizedBankItems.filter(
   (exercise) => exercise.status !== "draft" && exercise.purpose === "learning" && exercise.exposure === "public"
 );
+const participateHref = `${withBase(getLocalizedPath(ROUTE_IDS.PARTICIPATE, locale))}?${
+  new URLSearchParams({ scope: "course", courseId: COURSE.id, unit: unit.slug }).toString()
+}`;
 ---
 
 <BaseLayout
@@ -42,5 +47,12 @@ const publicLearningExercises = localizedBankItems.filter(
     </header>
     <AcademicUnitNav unit={unit} locale={locale} />
     <OpenPractice exercises={publicLearningExercises} topics={unit.topics} visualizations={localizedVisualizations} present={adapter.presentRichText} locale={locale} />
+    <TopicCta
+      eyebrow={t(locale, "unitPage.participation")}
+      title={t(locale, "unitPage.unclear")}
+      description={t(locale, "unitPage.participationDescription")}
+      href={participateHref}
+      linkLabel={t(locale, "unitPage.openParticipation")}
+    />
   </article>
 </BaseLayout>

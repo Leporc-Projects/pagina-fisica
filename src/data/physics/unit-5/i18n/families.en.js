@@ -1,0 +1,16 @@
+export const FAMILY_OBJECTIVES_EN=Object.fromEntries([
+  ["u5-family-momentum-vector","Calculate vector momentum by components."],["u5-family-impulse-piecewise","Add impulse from piecewise-constant force."],["u5-family-recoil","Solve recoil from rest."],["u5-family-external-impulse","Update momentum with external impulse."],["u5-family-perfect-inelastic","Calculate shared velocity in a perfectly inelastic collision."],["u5-family-elastic-target-rest","Solve an elastic collision with a target at rest."],["u5-family-cm-discrete","Calculate a discrete one-dimensional center of mass."],["u5-family-cm-velocity","Calculate center-of-mass velocity."],["u5-family-momentum-flow","Calculate force from steady momentum flow."],["u5-family-rocket-deltav","Calculate Δv with the ideal rocket equation."],
+].map(([id,text])=>[id,[text]]));
+const present=(title,prompt,instance,fields)=>({title,prompt,hints:["Use the declared frame, preserve signs, and verify units."],solution:["Select the governing momentum balance.","Represent all quantities in one coherent frame.","Substitute the generated values and compute the result.","Check the sign, units, and physical limit."],fields,answerDisplay:instance.answer.kind==="number"?`${instance.answer.value} ${instance.expectedUnit}`:null});
+export const FAMILY_PRESENTERS_EN={
+  "u5-family-momentum-vector":(i)=>present("Momentum by components",`A ${i.parameters.m} kg particle has v=(${i.parameters.vx},${i.parameters.vy}) m/s. Calculate p_x and p_y.`,i,["p_x","p_y"]),
+  "u5-family-impulse-piecewise":(i)=>present("Piecewise impulse",`F_x=${i.parameters.F1} N for ${i.parameters.dt1} s, then ${i.parameters.F2} N for ${i.parameters.dt2} s. Calculate J_x.`,i,["J_x"]),
+  "u5-family-recoil":(i)=>present("Two-body recoil",`A resting system separates: m_A=${i.parameters.mA} kg, m_B=${i.parameters.mB} kg, and v_B=${i.parameters.vB} m/s. Calculate v_A.`,i,["v_A"]),
+  "u5-family-external-impulse":(i)=>present("Momentum with external impulse",`P_i=${i.parameters.Pi} kg·m/s and J_ext=${i.parameters.J} N·s. Calculate P_f.`,i,["P_f"]),
+  "u5-family-perfect-inelastic":(i)=>present("Perfectly inelastic collision",`m_1=${i.parameters.m1} kg at ${i.parameters.v1} m/s and m_2=${i.parameters.m2} kg at ${i.parameters.v2} m/s stick. Calculate v_f.`,i,["v_f"]),
+  "u5-family-elastic-target-rest":(i)=>present("Elastic collision with a target at rest",`m_1=${i.parameters.m1} kg at ${i.parameters.v1} m/s hits resting m_2=${i.parameters.m2} kg elastically. Calculate v_1f and v_2f.`,i,["v_1f","v_2f"]),
+  "u5-family-cm-discrete":(i)=>present("Discrete center of mass",`m_1=${i.parameters.m1} kg is at ${i.parameters.x1} m and m_2=${i.parameters.m2} kg at ${i.parameters.x2} m. Calculate x_cm.`,i,["x_cm"]),
+  "u5-family-cm-velocity":(i)=>present("Center-of-mass velocity",`m_1=${i.parameters.m1} kg has v_1=${i.parameters.v1} m/s and m_2=${i.parameters.m2} kg has v_2=${i.parameters.v2} m/s. Calculate v_cm.`,i,["v_cm"]),
+  "u5-family-momentum-flow":(i)=>present("Steady momentum flow",`In one declared frame, ṁ=${i.parameters.mdot} kg/s, v_in=${i.parameters.vin} m/s, and v_out=${i.parameters.vout} m/s. Calculate F.`,i,["F"]),
+  "u5-family-rocket-deltav":(i)=>present("Ideal rocket Δv",`u_e=${i.parameters.ue} m/s, m_i=${i.parameters.mi} kg, and m_f=${i.parameters.mf} kg. Calculate ideal Δv.`,i,["Δv"]),
+};
