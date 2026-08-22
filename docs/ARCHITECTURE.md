@@ -534,9 +534,9 @@ consumen Práctica y Bonos.
 Las Unidades 2, 3 y 4 conservan composiciones separadas en `UNIT_2_BANK_ITEMS`,
 `UNIT_3_BANK_ITEMS` y `UNIT_4_BANK_ITEMS`. El runtime de
 Práctica consulta `physics/family-registry.js`, un registro ligero y explícito
-que materializa familias de las cuatro unidades sin cargar el resto del contenido
+que materializa familias de las cinco unidades sin cargar el resto del contenido
 académico ni acoplar el componente a Unidad 1. Solo el banco de Unidad 1 entra
-en Bonos, porque las Unidades 2, 3 y 4 no publican blueprints de Bono.
+en Bonos, porque las Unidades 2, 3, 4 y 5 no publican blueprints de Bono.
 
 Una instancia parametrizada recibe un ID derivado de su familia y de los
 parámetros, pero la interfaz no presenta el `familyId`. En Práctica se genera al

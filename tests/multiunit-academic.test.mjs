@@ -18,25 +18,26 @@ import { generateLocalizedAcademicFamilyInstance, getAcademicExerciseFamily } fr
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 
-test("el registro académico declara exactamente las Unidades 1, 2, 3 y 4 desarrolladas", () => {
-  assert.deepEqual(ACADEMIC_UNITS.map(({ number }) => number), [1, 2, 3, 4]);
-  assert.equal(new Set(ACADEMIC_UNITS.map(({ number }) => number)).size, 4);
-  assert.equal(new Set(ACADEMIC_UNITS.flatMap(({ topics }) => topics.map(({ route }) => route))).size, 30);
+test("el registro académico declara exactamente las Unidades 1 a 5 desarrolladas", () => {
+  assert.deepEqual(ACADEMIC_UNITS.map(({ number }) => number), [1, 2, 3, 4, 5]);
+  assert.equal(new Set(ACADEMIC_UNITS.map(({ number }) => number)).size, 5);
+  assert.equal(new Set(ACADEMIC_UNITS.flatMap(({ topics }) => topics.map(({ route }) => route))).size, 37);
   assert.equal(getAcademicUnit(1)?.number, 1);
   assert.equal(getAcademicUnit(2)?.number, 2);
   assert.equal(getAcademicUnit(3)?.number, 3);
   assert.equal(getAcademicUnit(4)?.number, 4);
+  assert.equal(getAcademicUnit(5)?.number, 5);
   assert.equal(getAcademicUnitForContext(COURSE_IDS.PHYSICS_BASIC_1, 2)?.slug, "unidad-2");
 });
 
-test("los adapters genéricos resuelven las cuatro unidades en ambos locales", () => {
-  for (const unitNumber of [1, 2, 3, 4]) {
+test("los adapters genéricos resuelven las cinco unidades en ambos locales", () => {
+  for (const unitNumber of [1, 2, 3, 4, 5]) {
     const adapter = getAcademicUnitAdapter(unitNumber);
     assert.ok(adapter);
     for (const locale of ["es", "en"]) {
       const unit = getLocalizedAcademicUnit(unitNumber, locale);
       assert.equal(unit.number, unitNumber);
-      assert.equal(unit.topics.length, unitNumber >= 3 ? 8 : 7);
+      assert.equal(unit.topics.length, [3, 4].includes(unitNumber) ? 8 : 7);
       assert.equal(adapter.getFixedExercises(locale).every((exercise) => exercise.unit === unitNumber), true);
       assert.equal(adapter.visualizationIds.every((id) => adapter.getVisualization(id, locale)), true);
       for (const topic of unit.topics) {
@@ -44,7 +45,7 @@ test("los adapters genéricos resuelven las cuatro unidades en ambos locales", (
       }
     }
   }
-  assert.deepEqual(getDevelopedAcademicUnits("en").map(({ shortTitle }) => shortTitle), ["Unit 1", "Unit 2", "Unit 3", "Unit 4"]);
+  assert.deepEqual(getDevelopedAcademicUnits("en").map(({ shortTitle }) => shortTitle), ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"]);
 });
 
 test("cada ruta académica desarrollada tiene contraparte ES/EN reversible", () => {
@@ -84,8 +85,8 @@ test("renderers y catálogos consumen el registro sin imports directos de unidad
   assert.doesNotMatch(`${unitsCatalog}\n${practiceCatalog}`, /unit\.number\s*===\s*[123]/);
 });
 
-test("el runtime de práctica materializa familias registradas de las cuatro unidades", () => {
-  const ids = ["family-u1-vector-sum", "u2-family-second-law-acceleration", "u3-family-elevator-normal", "u4-family-work-angle"];
+test("el runtime de práctica materializa familias registradas de las cinco unidades", () => {
+  const ids = ["family-u1-vector-sum", "u2-family-second-law-acceleration", "u3-family-elevator-normal", "u4-family-work-angle", "u5-family-rocket-deltav"];
   ids.forEach((id, index) => {
     const family = getAcademicExerciseFamily(id);
     assert.ok(family, id);
