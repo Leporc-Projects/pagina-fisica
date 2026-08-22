@@ -47,7 +47,7 @@ test("la consulta por categoría encuentra Cinemática y Dinámica", () => {
     "kinematics-1d",
     "projectile-2d",
   ]);
-  assert.deepEqual(getSimulationsByCategory("Dinámica").map((item) => item.id), ["forces-friction", "circular-radial-force"]);
+  assert.deepEqual(getSimulationsByCategory("Dinámica").map((item) => item.id), ["forces-friction", "pulley-systems"]);
 });
 
 test("las categorías públicas se derivan de recursos publicados", () => {
@@ -86,13 +86,25 @@ test("la consulta contextual aparece solo en los dos temas declarados", () => {
     ).map((item) => item.id);
     const expected = topic.slug === "movimiento-2d"
       ? ["projectile-2d"]
-      : topic.slug === "circular-relativo"
-        ? ["circular-radial-force"]
       : ["movimiento-1d", "ecuaciones-movimiento"].includes(topic.slug)
         ? ["kinematics-1d"]
         : [];
     assert.deepEqual(ids, expected);
   }
+});
+
+test("poleas ocupa los contextos dinámicos y circular queda fuera de la superficie pública", () => {
+  assert.equal(getSimulationById("circular-radial-force"), undefined);
+  assert.equal(getSimulationById("pulley-systems")?.route, "/simulaciones/poleas");
+  assert.deepEqual(
+    getSimulationsForCourseTopic("fisica-basica-1", 2, "segunda-ley").map((item) => item.id),
+    ["forces-friction", "pulley-systems"]
+  );
+  assert.deepEqual(
+    getSimulationsForCourseTopic("fisica-basica-1", 3, "tension").map((item) => item.id),
+    ["pulley-systems"]
+  );
+  assert.deepEqual(getSimulationsForCourseTopic("fisica-basica-1", 3, "dinamica-circular"), []);
 });
 
 test("un curso o una unidad ajenos no reciben la simulación", () => {

@@ -78,13 +78,13 @@ La cobertura actual está completa en español e inglés, tanto para el recorrid
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
 - `/simulaciones/proyectil-2d`: simulación propia de movimiento parabólico en Canvas 2D.
 - `/simulaciones/fuerzas-friccion`: fuerzas, fricción y movimiento sobre una superficie.
-- `/simulaciones/dinamica-circular`: fuerza radial, tensión y salida tangencial.
+- `/simulaciones/poleas`: laboratorio comparativo de cuatro sistemas ideales de cuerdas y poleas.
 - `/en/`: portada y recorrido público completo en inglés.
 - `/en/simulations`: catálogo completo de simulaciones en inglés.
 - `/en/simulations/kinematics-1d`: Cinemática 1D en inglés.
 - `/en/simulations/projectile-2d`: Proyectil 2D en inglés.
 - `/en/simulations/forces-friction`: Fuerzas y fricción en inglés.
-- `/en/simulations/circular-dynamics`: Dinámica circular en inglés.
+- `/en/simulations/pulleys`: Laboratorio de poleas y cuerdas en inglés.
 - `/en/basic-physics-1/tools`: hub docente y contrapartes inglesas completas de las cinco herramientas.
 - `/herramientas`: acceso de compatibilidad al hub docente del curso.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
@@ -185,8 +185,8 @@ git status
 
 Las experiencias interactivas comparten un contrato declarativo, pero cada
 modelo conserva su renderer. Cinemática 1D usa SVG; proyectil, fuerzas/fricción
-y dinámica circular usan p5.js en modo instancia sobre Canvas 2D. Los cuatro
-modelos físicos puros viven en `src/utils/`; sus parámetros,
+y poleas usan p5.js en modo instancia sobre Canvas 2D. Los cuatro modelos
+públicos tienen física pura en `src/utils/`; sus parámetros,
 límites y vistas se registran en `src/data/simulation-models.js`; la relación
 cerrada modelo/renderer vive en `src/data/simulation-renderers.js`; y la
 configuración pedagógica publicada vive en
@@ -198,8 +198,15 @@ solo contiene datos: defaults y rangos pedagógicos, parámetros editables o
 bloqueados, vistas, hasta cinco casos de estudio, guía en texto plano y
 contextos académicos opcionales. Los renderers reales son
 `svg-kinematics-1d`, `p5-projectile-2d`, `p5-forces-friction` y
-`p5-circular-radial-force`. Todos reciben estado ya calculado por los modelos
+`p5-pulley-systems`. Todos reciben estado ya calculado por los modelos
 puros: el dibujo no incorpora ecuaciones físicas nuevas.
+
+El modelo y renderer de fuerza radial circular se conservan internamente con su
+experiencia en estado `archived`, pero no tienen entrada de catálogo, contexto
+académico público ni wrapper de ruta. El laboratorio de poleas publica cuatro
+configuraciones —mesa y masa colgante, Atwood, polea móvil y Atwood doble— y
+mantiene su selector de escenarios y cinco presets como metadata propia del
+renderer, sin ampliar el esquema declarativo compartido.
 
 Los tres casos publicados son movimiento uniforme (`x₀=-6`, `v₀=2,5`, `a=0`,
 `T=6`), parte del reposo (`x₀=-4`, `v₀=0`, `a=1,5`, `T=6`) y frena y regresa
@@ -209,7 +216,7 @@ iniciales útiles cuando JavaScript está desactivado.
 
 El Laboratorio de simulaciones funciona completamente en memoria, no usa red,
 `localStorage` ni identidad docente. Previsualiza mediante el mismo componente y
-runtime que producción para cualquiera de los cuatro modelos registrados y descarga
+runtime que producción para cualquiera de los cinco modelos internos registrados y descarga
 un `simulation experience pack` en estado `draft`. Al cambiar de modelo reinicia
 parámetros, vistas, presets y contextos incompatibles. Para incorporarlo al
 almacenamiento editorial:
@@ -222,7 +229,7 @@ El importador acepta únicamente JSON, valida modelos, límites, vistas, presets
 texto y contextos, rechaza duplicados y fuerza `review`; nunca publica.
 
 p5.js está fijado en la versión 2.3.1, se distribuye desde el paquete local y se
-carga de forma diferida únicamente al montar el renderer de proyectiles; no hay
+carga de forma diferida únicamente al montar un renderer que lo requiere; no hay
 CDN ni globals `setup`/`draw`. Su atribución y licencia LGPL-2.1 están documentadas
 en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 

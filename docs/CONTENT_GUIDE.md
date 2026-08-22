@@ -627,13 +627,20 @@ No se repiten ID, título, descripción, modelId o contextos entre esas fuentes.
 No se añaden tarjetas, modelos o categorías con recursos ficticios. `published`
 es el único estado que puede aparecer como disponible.
 
-Una experiencia usa esquema `1.0.0`, solo referencia un `modelId` existente y
+Una experiencia usa esquema `2.0.0`, solo referencia un `modelId` existente y
 debe contener los parámetros completos. Sus mínimos y máximos permanecen dentro
 de los límites duros, `minimum < maximum`, el default pertenece al rango y el
 paso es positivo. Un parámetro con `editable: false` conserva su valor en todos
 los presets, pero el estudiante no puede modificarlo. Al menos una vista marcada
 como visual por el modelo debe estar activa. La validación no debe depender de
 nombres de vistas propios de Cinemática 1D.
+
+Cuando un renderer compara variantes del mismo modelo, su selector de escenarios
+y sus presets especializados pueden vivir en metadata propia del renderer. No se
+generaliza el esquema compartido si esos datos no son reutilizables por los demás
+modelos. Una experiencia `archived` puede conservar su implementación para uso
+interno, pero no debe tener entrada en `simulations.js`, CTA académico ni wrapper
+de ruta pública.
 
 Los contextos relacionan un recurso global con `courseId`, número de unidad y
 slugs de temas existentes. No son un ámbito de contenido ni una copia de la

@@ -103,19 +103,22 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
 - `simulations/ProjectileSimulation.astro`: conserva controles, lecturas,
   descripción accesible y estado inicial en HTML; monta el renderer
   `p5-projectile-2d` sobre Canvas 2D solo cuando la experiencia lo necesita.
-- `simulations/ForcesFrictionSimulation.astro` y `CircularRadialSimulation.astro`:
+- `simulations/ForcesFrictionSimulation.astro` y `PulleySystemsSimulation.astro`:
   presentan escenas p5 dominantes y reservan el Canvas para la escena física.
   DCL, ecuaciones, medidores, lecturas y gráficas viven en HTML/MathML/SVG
   accesible fuera del lienzo. Sus runtimes coordinan el reloj, pero la física
   permanece en modelos puros independientes del renderer.
+- `simulations/CircularRadialSimulation.astro` conserva la experiencia circular
+  archivada para previsualización interna; no forma parte del catálogo ni genera
+  una ruta pública.
 - `simulations/SimulationFloatingPlayback.astro`: proyecta el estado del runtime
   canónico en las cuatro simulaciones públicas cuando sus controles completos
   salen del viewport; nunca aparece en previews ni posee estado físico propio.
 - `simulations/SimulationExperienceRenderer.astro`: dispatcher validado que
-  selecciona uno de los cuatro componentes reales a partir de los registros de
+  selecciona uno de los cinco componentes internos a partir de los registros de
   modelo y renderer; los slots ocultos del Laboratorio no inicializan runtime.
 - `simulations/SimulationLab.astro`: constructor visual local de experiencias de
-  cualquiera de los cuatro modelos; usa registros reales, controles nativos y los
+  cualquiera de los cinco modelos internos; usa registros reales, controles nativos y los
   mismos renderers de producción para previsualizar.
 
 Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes y el texto secundario vive en `translations`. Los avisos usan esquema `3.0.0` y exigen locale explícito. Ningún adaptador aplica fallback editorial entre idiomas.
@@ -197,7 +200,7 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/simulaciones/cinematica-1d.astro` | `/simulaciones/cinematica-1d` |
 | `src/pages/simulaciones/proyectil-2d.astro` | `/simulaciones/proyectil-2d` |
 | `src/pages/simulaciones/fuerzas-friccion.astro` | `/simulaciones/fuerzas-friccion` |
-| `src/pages/simulaciones/dinamica-circular.astro` | `/simulaciones/dinamica-circular` |
+| `src/pages/simulaciones/poleas.astro` | `/simulaciones/poleas` |
 | `src/pages/participa.astro` | `/participa` |
 | `src/pages/actividades.astro` | `/actividades` |
 | `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |

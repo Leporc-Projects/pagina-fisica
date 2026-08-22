@@ -44,7 +44,12 @@ const runGit = (args, { encoding = "utf8" } = {}) => {
 };
 
 const currentFiles = () => String(runGit(["ls-files", "--cached", "--others", "--exclude-standard", "-z"]))
-  .split("\0").filter(Boolean).sort();
+  .split("\0")
+  .filter(Boolean)
+  // `git ls-files --cached` conserva rutas eliminadas hasta el próximo commit.
+  // Excluirlas permite medir honestamente el worktree durante una migración.
+  .filter((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))
+  .sort();
 
 const refFiles = (ref) => String(runGit(["ls-tree", "-r", "--name-only", "-z", ref]))
   .split("\0").filter(Boolean).sort();

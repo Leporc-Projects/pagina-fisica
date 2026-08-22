@@ -640,7 +640,7 @@ check(
 
 check(
   getPublishedSimulations().map((simulation) => simulation.id).join(",") ===
-    "kinematics-1d,projectile-2d,forces-friction,circular-radial-force" &&
+    "kinematics-1d,projectile-2d,forces-friction,pulley-systems" &&
     getSimulationsForCourseTopic(
       COURSE.id,
       UNIT_1.number,
@@ -656,8 +656,9 @@ check(
       UNIT_1.number,
       "movimiento-2d"
     )[0]?.id === "projectile-2d" &&
-    getSimulationsForCourseTopic(COURSE.id, 2, "segunda-ley")[0]?.id === "forces-friction" &&
-    getSimulationsForCourseTopic(COURSE.id, 3, "dinamica-circular")[0]?.id === "circular-radial-force" &&
+    getSimulationsForCourseTopic(COURSE.id, 2, "segunda-ley").map(({ id }) => id).join(",") === "forces-friction,pulley-systems" &&
+    getSimulationsForCourseTopic(COURSE.id, 3, "tension")[0]?.id === "pulley-systems" &&
+    getSimulationsForCourseTopic(COURSE.id, 3, "dinamica-circular").length === 0 &&
     SIMULATIONS.every((simulation) =>
       simulation.contexts.every((context) =>
         getCourseById(context.courseId) &&
