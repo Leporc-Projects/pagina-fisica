@@ -110,7 +110,7 @@ const createRuntime = async (root, suppliedExperience) => {
       ]);
     } else if (runtime.scenarioId === "atwood") {
       setSubstitution(runtime.scenarioId, [
-        `${display(tension.T)} − ${display(config.m1)} × ${display(config.g)} = ${display(config.m1)} × ${display(a.m1)}`,
+        `${display(config.m1)} × ${display(config.g)} − ${display(tension.T)} = ${display(config.m1)} × ${display(a.m1)}`,
         `${display(config.m2)} × ${display(config.g)} − ${display(tension.T)} = ${display(config.m2)} × ${display(a.m2)}`,
       ]);
     } else if (runtime.scenarioId === "movable-pulley") {

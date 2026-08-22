@@ -571,7 +571,7 @@ export default Object.freeze({
   "pulleySystems.math.constraints": "constant length implies linked accelerations",
   "pulleySystems.math.table1": "tension minus friction equals mass one times acceleration",
   "pulleySystems.math.table2": "weight of mass two minus tension equals mass two times acceleration",
-  "pulleySystems.math.atwood1": "tension minus weight of mass one equals mass one times acceleration one",
+  "pulleySystems.math.atwood1": "weight of mass one minus tension equals mass one times acceleration one",
   "pulleySystems.math.atwood2": "weight of mass two minus tension equals mass two times acceleration two",
   "pulleySystems.math.movable1": "load weight minus two tensions equals load mass times its acceleration",
   "pulleySystems.math.movable2": "counterweight weight minus tension equals counterweight mass times its acceleration",

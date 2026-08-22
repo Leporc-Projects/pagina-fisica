@@ -61,6 +61,8 @@ test("poleas expone cuatro escenarios, análisis externo y controles completos",
   assert.match(analysis, /m1.*"N", "up".*"W₁", "down".*"f", "left".*"T", "right"/s);
   assert.match(analysis, /m3.*"T_C", "up".*"W₃", "down"/s);
   assert.match(analysis, /data-pulley-equations/);
+  assert.match(analysis, /data-pulley-equations="atwood"[\s\S]*?<msub><mi>m<\/mi><mn>1<\/mn><\/msub><mi>g<\/mi><mo>−<\/mo><mi>T<\/mi>/);
+  assert.match(runtime, /display\(config\.m1\).*display\(config\.g\).*display\(tension\.T\).*display\(config\.m1\).*display\(a\.m1\)/);
   assert.match(analysis, /data-pulley-constraint/);
   assert.match(analysis, /data-pulley-substitution/);
   assert.match(analysis, /2.*v.*L.*v.*C.*0/s);

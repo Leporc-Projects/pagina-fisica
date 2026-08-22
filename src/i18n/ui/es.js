@@ -571,7 +571,7 @@ export default Object.freeze({
   "pulleySystems.math.constraints": "longitud constante implica aceleraciones enlazadas",
   "pulleySystems.math.table1": "tensión menos fricción igual a masa uno por aceleración",
   "pulleySystems.math.table2": "peso de masa dos menos tensión igual a masa dos por aceleración",
-  "pulleySystems.math.atwood1": "tensión menos peso de masa uno igual a masa uno por aceleración uno",
+  "pulleySystems.math.atwood1": "peso de masa uno menos tensión igual a masa uno por aceleración uno",
   "pulleySystems.math.atwood2": "peso de masa dos menos tensión igual a masa dos por aceleración dos",
   "pulleySystems.math.movable1": "peso de la carga menos dos tensiones igual a masa de la carga por su aceleración",
   "pulleySystems.math.movable2": "peso del contrapeso menos tensión igual a masa del contrapeso por su aceleración",
