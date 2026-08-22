@@ -1,0 +1,17 @@
+const f=(label,represents,meanings,conditions,interpretation,dimensions)=>({label,represents,meanings,conditions,interpretation,dimensions,commonErrors:[]});
+export default {
+  "angular-definitions":f("Angular definitions","Instantaneous angular rates.",["angular position","angular velocity","angular acceleration"],["Axis and sign are declared."],"ω changes θ and α changes ω.","rad, rad/s, and rad/s²."),
+  "constant-angular-acceleration":f("Constant angular acceleration","Angular evolution for constant α.",["time","angular displacement"],["α remains constant over the interval."],"Signs follow the axial convention.","Every angular term has radians."),
+  "arc-linear-angular":f("Arc–angle relations","Arc and tangential speed of a point.",["perpendicular distance to axis","arc traveled","tangential speed"],["θ is in radians."],"At larger radius, s and v are larger for the same rotation.","m and m/s."),
+  "angular-linear-accelerations":f("Tangential and radial accelerations","Linear acceleration components.",["tangential acceleration","radial acceleration"],["Rotation about a fixed axis; r>0 for v²/r."],"a_t changes speed and a_r changes direction.","m/s²."),
+  "moment-inertia":f("Moment of inertia","Mass distribution about an axis.",["moment of inertia","perpendicular distance to axis"],["The axis is specified."],"Distant mass is weighted quadratically.","kg·m²."),
+  "common-inertias":f("Common moments of inertia","Standard values for the stated axes.",["total mass","geometric dimensions"],["Uniform bodies and described symmetry axes."],"Geometry and axis determine the coefficient.","kg·m²."),
+  "parallel-axis":f("Parallel-axis theorem","Moment about a displaced parallel axis.",["separation between parallel axes"],["The known axis crosses the CM and both axes are parallel."],"Moving the axis adds Md²; it is never subtracted.","kg·m²."),
+  "rotational-energy":f("Rotational kinetic energy","Rotation energy and translation–rotation composition.",["kinetic energy"],["Rigid body; I matches the axis used."],"The I_cm decomposition avoids double counting.","J."),
+  torque:f("Torque","Rotational effect of a force.",["perpendicular lever arm","angle between r and F"],["Origin or axis is declared."],"Only the perpendicular component creates torque.","N·m, not joules."),
+  "rotational-newton":f("Axial rotational dynamics","Rotational second law about an appropriate axis.",["axial torque component","moment of inertia about z"],["Rigid body about an appropriate fixed or principal axis."],"This is not a universal 3D vector equality.","N·m=kg·m²/s²."),
+  rolling:f("Rolling without slipping","Rolling constraint and slope acceleration.",["radius","slope angle"],["Rolling without slipping; compatible signs."],"Mass distribution changes acceleration.","m/s and m/s²."),
+  "rotational-work-power":f("Rotational work and power","Energy transfer by torque.",["work","power"],["Fixed-axis scalar model."],"Work is signed area under τ(θ).","J and W."),
+  "angular-momentum":f("Angular momentum and torque","Angular momentum and its change from external torque.",["angular momentum"],["Same origin for L and τ; I_zω only for an appropriate axis."],"L depends on origin and is not always parallel to ω.","kg·m²/s."),
+  "angular-conservation-precession":f("Conservation and slow precession","Axial conservation and slow-precession approximation.",["precession angular speed"],["Zero external torque for L conservation; symmetric gyroscope and slow precession for Ω."],"Conserving L does not require conserving ω or K.","rad/s for Ω."),
+};

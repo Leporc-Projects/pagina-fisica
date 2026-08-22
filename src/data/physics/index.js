@@ -64,8 +64,21 @@ import {
 import { getLocalizedUnit5BankItems, getLocalizedUnit5Exercises } from "./unit-5/exercise-localize.js";
 import { UNIT_5_VISUALIZATIONS } from "./unit-5/visualizations.js";
 import { presentUnit5RichText } from "./unit-5/math-content.js";
+import { UNIT_6 } from "./unit-6/unit.js";
+import {
+  getLocalizedUnit6ErrorsByTopics,
+  getLocalizedUnit6Formula,
+  getLocalizedUnit6Visualization,
+  getLocalizedUnit6WorkedExample,
+  getUnit6TopicRouteId,
+  localizeUnit6,
+  localizeUnit6Content,
+} from "./unit-6/localize.js";
+import { getLocalizedUnit6BankItems, getLocalizedUnit6Exercises } from "./unit-6/exercise-localize.js";
+import { UNIT_6_VISUALIZATIONS } from "./unit-6/visualizations.js";
+import { presentUnit6RichText } from "./unit-6/math-content.js";
 
-export const ACADEMIC_UNITS = Object.freeze([UNIT_1, UNIT_2, UNIT_3, UNIT_4, UNIT_5]);
+export const ACADEMIC_UNITS = Object.freeze([UNIT_1, UNIT_2, UNIT_3, UNIT_4, UNIT_5, UNIT_6]);
 
 const ACADEMIC_UNIT_ADAPTERS = new Map([
   [1, Object.freeze({
@@ -135,6 +148,20 @@ const ACADEMIC_UNIT_ADAPTERS = new Map([
     getBankItems: getLocalizedUnit5BankItems,
     visualizationIds: Object.freeze(Object.keys(UNIT_5_VISUALIZATIONS)),
     presentRichText: presentUnit5RichText,
+  })],
+  [6, Object.freeze({
+    unit: UNIT_6,
+    localizeUnit: localizeUnit6,
+    getContent: localizeUnit6Content,
+    getFormula: getLocalizedUnit6Formula,
+    getVisualization: getLocalizedUnit6Visualization,
+    getExample: getLocalizedUnit6WorkedExample,
+    getErrors: getLocalizedUnit6ErrorsByTopics,
+    getTopicRouteId: getUnit6TopicRouteId,
+    getFixedExercises: getLocalizedUnit6Exercises,
+    getBankItems: getLocalizedUnit6BankItems,
+    visualizationIds: Object.freeze(Object.keys(UNIT_6_VISUALIZATIONS)),
+    presentRichText: presentUnit6RichText,
   })],
 ]);
 
