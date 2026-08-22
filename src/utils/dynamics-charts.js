@@ -127,6 +127,25 @@ export const createForcesHistoryGeometry = (history, key) => {
   });
 };
 
+export const createPulleyHistoryGeometry = (history, keys) => {
+  if (!Array.isArray(history) || history.length === 0) throw new RangeError("history requiere al menos una muestra.");
+  if (!Array.isArray(keys) || keys.length === 0 || keys.length > 3) throw new RangeError("keys requiere entre una y tres series.");
+  const lastTime = history.at(-1).t;
+  const xDomain = lastTime <= 10 ? [0, 10] : [lastTime - 10, lastTime];
+  const series = keys.map((key) => ({
+    points: history.map((sample) => ({ x: sample.t, y: sample.positions[key] })),
+  }));
+  return Object.freeze({
+    series,
+    ...createSimulationChartGeometry({
+      series,
+      xDomain,
+      currentPoints: series.map(({ points }) => points.at(-1)),
+      includeZero: true,
+    }),
+  });
+};
+
 export const createCircularRelationshipGeometries = (params, { vDomain, RDomain }) => {
   const speedSeries = [{
     points: sampleFunction({
