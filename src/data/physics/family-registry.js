@@ -12,6 +12,8 @@ import { UNIT_5_EXERCISE_FAMILIES } from "./unit-5/families.js";
 import { generateLocalizedUnit5FamilyInstance } from "./unit-5/family-localize.js";
 import { UNIT_6_EXERCISE_FAMILIES } from "./unit-6/families.js";
 import { generateLocalizedUnit6FamilyInstance } from "./unit-6/family-localize.js";
+import { UNIT_7_EXERCISE_FAMILIES } from "./unit-7/families.js";
+import { generateLocalizedUnit7FamilyInstance } from "./unit-7/family-localize.js";
 
 const FAMILY_REGISTRY = new Map([
   ...UNIT_1_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit1FamilyInstance }]),
@@ -20,6 +22,7 @@ const FAMILY_REGISTRY = new Map([
   ...UNIT_4_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit4FamilyInstance }]),
   ...UNIT_5_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit5FamilyInstance }]),
   ...UNIT_6_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit6FamilyInstance }]),
+  ...UNIT_7_EXERCISE_FAMILIES.map((family) => [family.id, { family, generate: generateLocalizedUnit7FamilyInstance }]),
 ]);
 
 export const getAcademicExerciseFamily = (id) => FAMILY_REGISTRY.get(id)?.family ?? null;

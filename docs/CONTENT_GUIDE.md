@@ -759,3 +759,10 @@ git diff --check
 ```
 
 La estructura técnica del proyecto se explica en [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+La Unidad 7 mantiene el mismo contrato editorial multiunidad: diez temas,
+cuatro capas por tema, fórmulas semánticas, visualizaciones accesibles, ejemplos
+estáticos y práctica ES/EN con invariantes compartidos. El radio de Schwarzschild
+se presenta únicamente como contexto de relatividad general para un agujero
+negro no rotante y sin carga; la analogía `v_esc=c` no se redacta como una
+derivación física newtoniana.

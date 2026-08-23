@@ -18,27 +18,28 @@ import { generateLocalizedAcademicFamilyInstance, getAcademicExerciseFamily } fr
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 
-test("el registro académico declara exactamente las Unidades 1 a 6 desarrolladas", () => {
-  assert.deepEqual(ACADEMIC_UNITS.map(({ number }) => number), [1, 2, 3, 4, 5, 6]);
-  assert.equal(new Set(ACADEMIC_UNITS.map(({ number }) => number)).size, 6);
-  assert.equal(new Set(ACADEMIC_UNITS.flatMap(({ topics }) => topics.map(({ route }) => route))).size, 47);
+test("el registro académico declara exactamente las Unidades 1 a 7 desarrolladas", () => {
+  assert.deepEqual(ACADEMIC_UNITS.map(({ number }) => number), [1, 2, 3, 4, 5, 6, 7]);
+  assert.equal(new Set(ACADEMIC_UNITS.map(({ number }) => number)).size, 7);
+  assert.equal(new Set(ACADEMIC_UNITS.flatMap(({ topics }) => topics.map(({ route }) => route))).size, 57);
   assert.equal(getAcademicUnit(1)?.number, 1);
   assert.equal(getAcademicUnit(2)?.number, 2);
   assert.equal(getAcademicUnit(3)?.number, 3);
   assert.equal(getAcademicUnit(4)?.number, 4);
   assert.equal(getAcademicUnit(5)?.number, 5);
   assert.equal(getAcademicUnit(6)?.number, 6);
+  assert.equal(getAcademicUnit(7)?.number, 7);
   assert.equal(getAcademicUnitForContext(COURSE_IDS.PHYSICS_BASIC_1, 2)?.slug, "unidad-2");
 });
 
-test("los adapters genéricos resuelven las seis unidades en ambos locales", () => {
-  for (const unitNumber of [1, 2, 3, 4, 5, 6]) {
+test("los adapters genéricos resuelven las siete unidades en ambos locales", () => {
+  for (const unitNumber of [1, 2, 3, 4, 5, 6, 7]) {
     const adapter = getAcademicUnitAdapter(unitNumber);
     assert.ok(adapter);
     for (const locale of ["es", "en"]) {
       const unit = getLocalizedAcademicUnit(unitNumber, locale);
       assert.equal(unit.number, unitNumber);
-      assert.equal(unit.topics.length, unitNumber === 6 ? 10 : [3, 4].includes(unitNumber) ? 8 : 7);
+      assert.equal(unit.topics.length, [6, 7].includes(unitNumber) ? 10 : [3, 4].includes(unitNumber) ? 8 : 7);
       assert.equal(adapter.getFixedExercises(locale).every((exercise) => exercise.unit === unitNumber), true);
       assert.equal(adapter.visualizationIds.every((id) => adapter.getVisualization(id, locale)), true);
       for (const topic of unit.topics) {
@@ -46,7 +47,7 @@ test("los adapters genéricos resuelven las seis unidades en ambos locales", () 
       }
     }
   }
-  assert.deepEqual(getDevelopedAcademicUnits("en").map(({ shortTitle }) => shortTitle), ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5", "Unit 6"]);
+  assert.deepEqual(getDevelopedAcademicUnits("en").map(({ shortTitle }) => shortTitle), ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5", "Unit 6", "Unit 7"]);
 });
 
 test("cada ruta académica desarrollada tiene contraparte ES/EN reversible", () => {
@@ -86,8 +87,8 @@ test("renderers y catálogos consumen el registro sin imports directos de unidad
   assert.doesNotMatch(`${unitsCatalog}\n${practiceCatalog}`, /unit\.number\s*===\s*[123]/);
 });
 
-test("el runtime de práctica materializa familias registradas de las seis unidades", () => {
-  const ids = ["family-u1-vector-sum", "u2-family-second-law-acceleration", "u3-family-elevator-normal", "u4-family-work-angle", "u5-family-rocket-deltav", "u6-family-slow-precession"];
+test("el runtime de práctica materializa familias registradas de las siete unidades", () => {
+  const ids = ["family-u1-vector-sum", "u2-family-second-law-acceleration", "u3-family-elevator-normal", "u4-family-work-angle", "u5-family-rocket-deltav", "u6-family-slow-precession", "u7-family-driven-response"];
   ids.forEach((id, index) => {
     const family = getAcademicExerciseFamily(id);
     assert.ok(family, id);

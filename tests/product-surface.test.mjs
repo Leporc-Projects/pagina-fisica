@@ -213,7 +213,7 @@ test("ninguna superficie pública del estudiante proyecta la prioridad editorial
   });
 });
 
-test("regresión: las cuatro simulaciones y las seis unidades siguen registradas", () => {
+test("regresión: las cuatro simulaciones y las siete unidades siguen registradas", () => {
   assert.equal(SIMULATIONS.length, 4);
   assert.ok(getLocalizedAcademicUnit(1, "es"));
   assert.ok(getLocalizedAcademicUnit(2, "es"));
@@ -221,4 +221,5 @@ test("regresión: las cuatro simulaciones y las seis unidades siguen registradas
   assert.ok(getLocalizedAcademicUnit(4, "es"));
   assert.ok(getLocalizedAcademicUnit(5, "es"));
   assert.ok(getLocalizedAcademicUnit(6, "es"));
+  assert.ok(getLocalizedAcademicUnit(7, "es"));
 });

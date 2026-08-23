@@ -1,0 +1,11 @@
+import { assertSupportedLocale } from "../../../i18n/config.js";
+import { t } from "../../../i18n/index.js";
+import { UNIT_7_EXERCISES } from "./exercises.js";
+import exercisesEn from "./i18n/exercises.en.js";
+import { getLocalizedUnit7ExerciseFamilies } from "./family-localize.js";
+const required=(value,context)=>{if(value==null||value==="")throw new RangeError(`Missing English Unit 7 exercise translation: ${context}`);return value;};
+const stageTexts=["Select the governing relationship and state its validity conditions.","Substitute the supplied data while preserving signs and units.","Check the result against the model conditions and a limiting case."];
+export const localizeUnit7Exercise=(exercise,locale)=>{assertSupportedLocale(locale);if(!exercise||locale==="es")return exercise;const translated=required(exercisesEn[exercise.id],exercise.id);let interaction=exercise.interaction;if(interaction.kind==="singleChoice"){const options=required(translated.options,`${exercise.id}.options`);if(options.length!==interaction.options.length)throw new RangeError(`English Unit 7 options changed structure: ${exercise.id}`);interaction={...interaction,options:interaction.options.map((option,index)=>({...option,content:options[index]}))};}const answer=exercise.answer.kind==="text"?{...exercise.answer,presentation:translated.options?.[interaction.options.findIndex(({id})=>id===interaction.correctOptionId)]}:{...exercise.answer};return{...exercise,title:translated.title,prompt:translated.prompt,objectives:[translated.title],prerequisites:[],hints:["State the reference, direction, and model conditions before substituting."],solution:exercise.solution.map((step,index)=>({...step,title:["Principle","Calculation","Interpretation"][index]??`Step ${index+1}`,text:stageTexts[Math.min(index,2)]})),answer,interaction,feedback:{...exercise.feedback,correct:t(locale,"exercise.feedback.correct"),incorrect:t(locale,"exercise.feedback.incorrect")}};};
+export const getLocalizedUnit7Exercises=(locale)=>UNIT_7_EXERCISES.map((exercise)=>localizeUnit7Exercise(exercise,locale));
+export const getLocalizedUnit7BankItems=(locale)=>[...getLocalizedUnit7Exercises(locale),...getLocalizedUnit7ExerciseFamilies(locale)];
+export { generateLocalizedUnit7FamilyInstance } from "./family-localize.js";
