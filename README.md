@@ -58,11 +58,14 @@ La cobertura actual está completa en español e inglés, tanto para el recorrid
 - `/fisica-basica-1`: información general del curso.
 - `/fisica-basica-1/avisos`: avisos publicados específicamente para el curso.
 - `/fisica-basica-1/cronograma`: sesiones del semestre 2026-2.
-- `/fisica-basica-1/unidades`: catálogo de siete unidades; las Unidades 1, 2, 3 y 4 tienen contenido académico completo ES/EN.
-- `/fisica-basica-1/ejercicios`: catálogo de práctica; abre los bancos de las Unidades 1, 2, 3 y 4.
+- `/fisica-basica-1/unidades`: catálogo de siete unidades, todas con contenido académico completo ES/EN.
+- `/fisica-basica-1/ejercicios`: catálogo de práctica; abre los bancos de las siete unidades.
 - `/fisica-basica-1/unidades/unidad-2`: Leyes de Newton, con siete temas y práctica propia.
 - `/fisica-basica-1/unidades/unidad-3`: Fuerzas y ecuaciones de movimiento, con ocho temas y práctica propia.
 - `/fisica-basica-1/unidades/unidad-4`: Trabajo y energía, con ocho temas y práctica propia.
+- `/fisica-basica-1/unidades/unidad-5`: Momento lineal, sistemas y colisiones, con siete temas y práctica propia.
+- `/fisica-basica-1/unidades/unidad-6`: Rotación de cuerpos rígidos, con diez temas y práctica propia.
+- `/fisica-basica-1/unidades/unidad-7`: Gravitación y movimiento periódico, con diez temas y práctica propia.
 - `/fisica-basica-1/videos`: biblioteca audiovisual por unidades.
 - `/fisica-basica-1/evaluacion`: evaluación oficial y política de privacidad.
 - `/fisica-basica-1/recursos`: guías, bibliografía y recursos externos del curso.
