@@ -541,7 +541,7 @@ export default Object.freeze({
   "pulleySystems.playbackSpeed": "Velocidad",
   "pulleySystems.frictionOrderError": "Se requiere μ_k ≤ μ_s. Ajusta primero el otro coeficiente.",
   "pulleySystems.scenarioChanged": "Configuración activa: {scenario}.",
-  "pulleySystems.limitReached": "Un cuerpo alcanzó el límite físico del recorrido; el sistema se detuvo.",
+  "pulleySystems.limitReached": "Un cuerpo alcanzó el límite de la escena. La reproducción se detuvo; el reposo mostrado no representa una fuerza adicional del modelo.",
   "pulleySystems.tableStaticNote": "La fricción estática adopta exactamente el valor requerido, sin superar μ_sN.",
   "pulleySystems.tableKineticNote": "Superado el umbral estático, la fricción cinética tiene magnitud μ_kN.",
   "pulleySystems.twoToOneScene": "La carga recorre la mitad de distancia que el extremo libre y en sentido opuesto.",

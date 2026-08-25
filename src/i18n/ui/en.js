@@ -541,7 +541,7 @@ export default Object.freeze({
   "pulleySystems.playbackSpeed": "Speed",
   "pulleySystems.frictionOrderError": "μ_k ≤ μ_s is required. Adjust the other coefficient first.",
   "pulleySystems.scenarioChanged": "Active configuration: {scenario}.",
-  "pulleySystems.limitReached": "A body reached the physical travel limit; the system stopped.",
+  "pulleySystems.limitReached": "A body reached the scene's travel limit. Playback stopped; the displayed rest does not represent an additional force in the model.",
   "pulleySystems.tableStaticNote": "Static friction takes exactly the required value without exceeding μ_sN.",
   "pulleySystems.tableKineticNote": "After the static threshold is exceeded, kinetic friction has magnitude μ_kN.",
   "pulleySystems.twoToOneScene": "The load travels half the distance of the free end and in the opposite direction.",

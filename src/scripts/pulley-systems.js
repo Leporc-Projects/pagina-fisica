@@ -192,7 +192,11 @@ const createRuntime = async (root, suppliedExperience) => {
 
   const appendHistory = () => {
     const latest = runtime.history.at(-1);
-    if (!latest || runtime.state.t - latest.t >= 1 / 30) runtime.history.push({ t: runtime.state.t, positions: { ...runtime.state.positions } });
+    const sample = { t: runtime.state.t, positions: { ...runtime.state.positions } };
+    if (!latest || runtime.state.t - latest.t >= 1 / 30 || runtime.state.stopped) {
+      if (latest?.t === runtime.state.t) runtime.history[runtime.history.length - 1] = sample;
+      else runtime.history.push(sample);
+    }
     if (runtime.history.length > HISTORY_LIMIT) runtime.history.splice(0, runtime.history.length - HISTORY_LIMIT);
   };
   const advance = (dt) => {
@@ -262,7 +266,11 @@ const createRuntime = async (root, suppliedExperience) => {
     if (!(button instanceof HTMLButtonElement)) return;
     if (button.dataset.action === "toggle") togglePlayback();
     else if (button.dataset.action === "reset") reset();
-    else if (button.dataset.action === "step") { pause(); advance(1 / 30); announce(t(locale, "pulleySystems.stepDone")); }
+    else if (button.dataset.action === "step") {
+      pause();
+      advance(1 / 30);
+      if (!runtime.state.stopped) announce(t(locale, "pulleySystems.stepDone"));
+    }
     else if (button.dataset.pulleyScenario) selectScenario(button.dataset.pulleyScenario);
     else if (button.dataset.pulleyPreset) {
       const preset = PULLEY_PRESETS.find(({ id }) => id === button.dataset.pulleyPreset);

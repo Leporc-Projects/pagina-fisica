@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { t } from "../i18n/index.js";
+import { createPulleySceneGeometry } from "../utils/pulley-geometry.js";
 
 const cssColor = (container, name, fallback) =>
   getComputedStyle(container).getPropertyValue(name).trim() || fallback;
@@ -97,6 +98,14 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       const scale = compact ? 21 : 28;
       const q = frame.readings.positions;
       const rotation = frame.state.t * 1.4 + Object.values(q)[0] * .8;
+      const geometry = createPulleySceneGeometry({
+        scenarioId: frame.scenarioId,
+        width: p.width,
+        height: p.height,
+        positions: q,
+        scale,
+        compact,
+      });
       p.fill(colors.text);
       p.noStroke();
       p.textAlign(p.LEFT, p.TOP);
@@ -105,61 +114,47 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       p.text(t(locale, `pulleySystems.scenario.${frame.scenarioId}`), 16, 14);
 
       if (frame.scenarioId === "table-hanging") {
-        const edgeX = p.width * .72;
-        const tableY = p.height * .48;
-        const pulleyX = edgeX + 24;
-        const pulleyY = tableY - 22;
-        const blockX = Math.min(edgeX - 72, p.width * .34 + q.m1 * scale);
-        const hangingY = p.height * .58 + q.m2 * scale;
-        p.stroke(colors.metal); p.strokeWeight(6); p.line(28, tableY, edgeX, tableY); p.line(edgeX, tableY, edgeX, p.height - 24);
-        rope([{ x: blockX + 36, y: tableY - 27 }, { x: pulleyX, y: pulleyY - 28 }, { x: pulleyX + 28, y: pulleyY }, { x: pulleyX + 28, y: hangingY - 30 }], colors);
-        pulley(pulleyX, pulleyY, 28, rotation, colors);
-        block(blockX, tableY - 25, 72, 48, "m₁", frame.parameters.m1, colors);
-        block(pulleyX + 28, hangingY, 62, 58, "m₂", frame.parameters.m2, colors, colors.second);
+        p.stroke(colors.metal); p.strokeWeight(6); p.line(28, geometry.table.y, geometry.table.edgeX, geometry.table.y); p.line(geometry.table.edgeX, geometry.table.y, geometry.table.edgeX, p.height - 24);
+        rope(geometry.ropes[0], colors);
+        const fixed = geometry.pulleys[0];
+        pulley(fixed.x, fixed.y, fixed.radius, rotation, colors);
+        const m1 = geometry.blocks.m1;
+        const m2 = geometry.blocks.m2;
+        block(m1.x, m1.y, m1.width, m1.height, "m₁", frame.parameters.m1, colors);
+        block(m2.x, m2.y, m2.width, m2.height, "m₂", frame.parameters.m2, colors, colors.second);
         p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text(t(locale, frame.readings.status === "static" ? "pulleySystems.tableStaticNote" : "pulleySystems.tableKineticNote"), 28, p.height - 48, p.width - 56, 36);
       } else if (frame.scenarioId === "atwood") {
-        const cx = p.width * .5;
-        const cy = 105;
-        const leftY = p.height * .58 + q.m1 * scale;
-        const rightY = p.height * .58 + q.m2 * scale;
-        support(cx, 38, colors); p.stroke(colors.metal); p.line(cx, 38, cx, cy - 31);
-        rope([{ x: cx - 30, y: leftY - 30 }, { x: cx - 30, y: cy }, { x: cx, y: cy - 30 }, { x: cx + 30, y: cy }, { x: cx + 30, y: rightY - 30 }], colors);
-        pulley(cx, cy, 30, rotation, colors);
-        block(cx - 30, leftY, 62, 58, "m₁", frame.parameters.m1, colors);
-        block(cx + 30, rightY, 62, 58, "m₂", frame.parameters.m2, colors, colors.second);
+        const fixed = geometry.pulleys[0];
+        support(geometry.supports[0].x, geometry.supports[0].y, colors); p.stroke(colors.metal); p.line(fixed.x, geometry.supports[0].y, fixed.x, geometry.supports[0].pulleyTop);
+        rope(geometry.ropes[0], colors);
+        pulley(fixed.x, fixed.y, fixed.radius, rotation, colors);
+        const m1 = geometry.blocks.m1;
+        const m2 = geometry.blocks.m2;
+        block(m1.x, m1.y, m1.width, m1.height, "m₁", frame.parameters.m1, colors);
+        block(m2.x, m2.y, m2.width, m2.height, "m₂", frame.parameters.m2, colors, colors.second);
       } else if (frame.scenarioId === "movable-pulley") {
-        const top = 52;
-        const anchorX = p.width * .2;
-        const mobileX = p.width * .46;
-        const fixedX = p.width * .76;
-        const mobileY = p.height * .46 + q.mL * scale;
-        const counterY = p.height * .56 + q.mC * scale;
-        support(anchorX, top, colors); support(fixedX, top, colors);
-        rope([{ x: anchorX, y: top }, { x: anchorX, y: mobileY }, { x: mobileX, y: mobileY + 30 }, { x: fixedX, y: top + 30 }, { x: fixedX + 30, y: top + 60 }, { x: fixedX + 30, y: counterY - 31 }], colors);
-        pulley(mobileX, mobileY, 30, -rotation, colors, true);
-        pulley(fixedX, top + 30, 30, rotation * 2, colors);
-        block(mobileX, mobileY + 88, 72, 58, "mL", frame.parameters.mL, colors);
-        block(fixedX + 30, counterY, 62, 58, "mC", frame.parameters.mC, colors, colors.second);
+        geometry.supports.forEach(({ x, y }) => support(x, y, colors));
+        rope(geometry.ropes[0], colors);
+        const [mobile, fixed] = geometry.pulleys;
+        pulley(mobile.x, mobile.y, mobile.radius, -rotation, colors, true);
+        pulley(fixed.x, fixed.y, fixed.radius, rotation * 2, colors);
+        const mL = geometry.blocks.mL;
+        const mC = geometry.blocks.mC;
+        block(mL.x, mL.y, mL.width, mL.height, "mL", frame.parameters.mL, colors);
+        block(mC.x, mC.y, mC.width, mC.height, "mC", frame.parameters.mC, colors, colors.second);
         p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text(t(locale, "pulleySystems.twoToOneScene"), 18, p.height - 45, p.width - 36, 34);
       } else {
-        const fixedX = p.width * .42;
-        const fixedY = 92;
-        const mass3X = fixedX - 34;
-        const mobileX = p.width * .67;
-        const mobileY = p.height * .42 + q.pulley * scale;
-        const m3Y = p.height * .42 + q.m3 * scale;
-        const m1X = mobileX - (compact ? 42 : 68);
-        const m2X = mobileX + (compact ? 42 : 68);
-        const m1Y = p.height * .72 + q.m1 * scale;
-        const m2Y = p.height * .72 + q.m2 * scale;
-        support(fixedX, 34, colors); p.stroke(colors.metal); p.line(fixedX, 34, fixedX, fixedY - 29);
-        rope([{ x: mass3X, y: m3Y - 30 }, { x: mass3X, y: fixedY }, { x: fixedX, y: fixedY - 29 }, { x: fixedX + 30, y: fixedY }, { x: fixedX + 30, y: mobileY - 42 }, { x: mobileX, y: mobileY - 42 }], colors);
-        pulley(fixedX, fixedY, 29, rotation, colors);
-        block(mass3X, m3Y, 58, 55, "m₃", frame.parameters.m3, colors, colors.third);
-        rope([{ x: m1X, y: m1Y - 28 }, { x: m1X, y: mobileY }, { x: mobileX, y: mobileY - 29 }, { x: m2X, y: mobileY }, { x: m2X, y: m2Y - 28 }], colors);
-        pulley(mobileX, mobileY, 29, -rotation, colors, true);
-        block(m1X, m1Y, compact ? 52 : 58, 54, "m₁", frame.parameters.m1, colors);
-        block(m2X, m2Y, compact ? 52 : 58, 54, "m₂", frame.parameters.m2, colors, colors.second);
+        const [fixed, mobile] = geometry.pulleys;
+        support(geometry.supports[0].x, geometry.supports[0].y, colors); p.stroke(colors.metal); p.line(fixed.x, geometry.supports[0].y, fixed.x, geometry.supports[0].pulleyTop);
+        geometry.ropes.forEach((path) => rope(path, colors));
+        pulley(fixed.x, fixed.y, fixed.radius, rotation, colors);
+        pulley(mobile.x, mobile.y, mobile.radius, -rotation, colors, true);
+        const m1 = geometry.blocks.m1;
+        const m2 = geometry.blocks.m2;
+        const m3 = geometry.blocks.m3;
+        block(m3.x, m3.y, m3.width, m3.height, "m₃", frame.parameters.m3, colors, colors.third);
+        block(m1.x, m1.y, m1.width, m1.height, "m₁", frame.parameters.m1, colors);
+        block(m2.x, m2.y, m2.width, m2.height, "m₂", frame.parameters.m2, colors, colors.second);
         p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text("Tᴄ = 2Tᴀ", 18, p.height - 36);
       }
 
