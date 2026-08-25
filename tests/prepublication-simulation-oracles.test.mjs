@@ -7,7 +7,7 @@ import { createKinematicsChartGeometry } from "../src/utils/kinematics-svg.js";
 import { getKinematicsState, getTurningPoint } from "../src/utils/kinematics-1d.js";
 import { createProjectileCanvasTransform } from "../src/utils/projectile-canvas.js";
 import { getProjectileState, getProjectileSummary } from "../src/utils/projectile-2d.js";
-import { createPulleyState, getPulleyReadings, solvePulleySystem, stepPulleyState } from "../src/utils/pulley-systems.js";
+import { PULLEY_LIMITS, createPulleyState, getPulleyReadings, solvePulleySystem, stepPulleyState } from "../src/utils/pulley-systems.js";
 
 const close = (actual, expected, tolerance = 1e-8) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
@@ -99,19 +99,20 @@ test("PT, PA, PM y PD coinciden con valores literales y restricciones", () => {
   }
 });
 
-test("los cuatro casos móviles llegan exactamente a 2.4 m y el marcador usa el estado final", () => {
+test("los cuatro casos móviles aprovechan el recorrido ampliado y el marcador usa el estado final", () => {
   const cases = [
-    ["table-hanging", { m1: 10, m2: 5, muS: .3, muK: .2, g: 10 }, Math.sqrt(2.4)],
-    ["atwood", { m1: 2, m2: 3, g: 10 }, Math.sqrt(2.4)],
-    ["movable-pulley", { mL: 4, mC: 1, g: 10 }, Math.sqrt(.96)],
-    ["double-atwood", { m1: 1, m2: 2, m3: 4, g: 10 }, Math.sqrt(.8)],
+    ["table-hanging", { m1: 10, m2: 5, muS: .3, muK: .2, g: 10 }, Math.sqrt(PULLEY_LIMITS.travel)],
+    ["atwood", { m1: 2, m2: 3, g: 10 }, Math.sqrt(PULLEY_LIMITS.travel)],
+    ["movable-pulley", { mL: 4, mC: 1, g: 10 }, Math.sqrt(2 * PULLEY_LIMITS.travel / 5)],
+    ["double-atwood", { m1: 1, m2: 2, m3: 4, g: 10 }, Math.sqrt(2 * PULLEY_LIMITS.travel / 6)],
   ];
+  assert.equal(PULLEY_LIMITS.travel, 3.2);
   for (const [scenarioId, parameters, expectedTime] of cases) {
     let state = createPulleyState(scenarioId, parameters);
     while (!state.stopped) state = stepPulleyState(state, 1 / 120);
     const readings = getPulleyReadings(state);
     close(state.t, expectedTime, 1e-7);
-    close(Math.max(...Object.values(readings.positions).map(Math.abs)), 2.4, 1e-7);
+    close(Math.max(...Object.values(readings.positions).map(Math.abs)), PULLEY_LIMITS.travel, 1e-7);
     assert.ok(Object.values(readings.velocities).every((value) => value === 0));
     assert.ok(Object.values(readings.accelerations).every((value) => value === 0));
     const history = [

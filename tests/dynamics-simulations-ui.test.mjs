@@ -90,6 +90,9 @@ test("p5 solo presenta estado calculado por modelos puros", () => {
   assert.doesNotMatch(forces, /drawFbd|drawHistory|freeBodyDiagram|historyGraph/);
   assert.doesNotMatch(circular, /fbdShort|freeBodyDiagram|noHorizontalForce/);
   assert.doesNotMatch(pulley, /utils\/pulley-systems/);
+  for (const renderer of [forces, pulley, source("src/scripts/p5-projectile-renderer.js")]) {
+    assert.match(renderer, /listenForSimulationThemeChange/);
+  }
 });
 
 test("las cuatro simulaciones públicas comparten playback flotante y los previews no lo renderizan", () => {

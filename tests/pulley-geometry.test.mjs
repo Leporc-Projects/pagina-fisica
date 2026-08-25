@@ -5,13 +5,14 @@ import {
   createPulleySceneGeometry,
   getPolylineLength,
 } from "../src/utils/pulley-geometry.js";
+import { PULLEY_LIMITS } from "../src/utils/pulley-systems.js";
 
 const close = (actual, expected, tolerance = 1e-9) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 const layout = (scenarioId, positions, width = 800) => createPulleySceneGeometry({
   scenarioId,
   width,
-  height: 500,
+  height: width < 620 ? 390 : 500,
   positions,
   scale: width < 620 ? 21 : 28,
 });
@@ -42,8 +43,9 @@ test("mesa-colgante dibuja tensión horizontal, caída vertical y tangencias", (
 
 test("mesa-colgante conserva longitud cuando q1=q2", () => {
   const initial = layout("table-hanging", { m1: 0, m2: 0 });
-  const moved = layout("table-hanging", { m1: 1.25, m2: 1.25 });
+  const moved = layout("table-hanging", { m1: PULLEY_LIMITS.travel, m2: PULLEY_LIMITS.travel });
   close(getPolylineLength(initial.ropes[0]), getPolylineLength(moved.ropes[0]));
+  assert.ok(moved.blocks.m1.x > initial.blocks.m1.x + 80);
 });
 
 test("Atwood conserva cuerda para q1+q2=0", () => {
@@ -76,12 +78,15 @@ test("Atwood doble conserva independientemente sus dos cuerdas", () => {
 
 test("las cuatro geometrías permanecen finitas en móvil", () => {
   for (const [scenarioId, positions] of [
-    ["table-hanging", { m1: 2.4, m2: 2.4 }],
-    ["atwood", { m1: -2.4, m2: 2.4 }],
-    ["movable-pulley", { mL: 1.2, mC: -2.4 }],
-    ["double-atwood", { m1: -2.4, m2: .8, m3: .8, pulley: -.8 }],
+    ["table-hanging", { m1: 3.2, m2: 3.2 }],
+    ["atwood", { m1: -3.2, m2: 3.2 }],
+    ["movable-pulley", { mL: 1.6, mC: -3.2 }],
+    ["double-atwood", { m1: -3.2, m2: 3.2 / 3, m3: 3.2 / 3, pulley: -3.2 / 3 }],
   ]) {
     const geometry = layout(scenarioId, positions, 390);
     assert.ok(geometry.ropes.flat().every(({ x, y }) => Number.isFinite(x) && Number.isFinite(y)));
+    assert.ok(Object.values(geometry.blocks).every(({ x, y, width, height }) =>
+      x - width / 2 >= 0 && x + width / 2 <= 390 && y - height / 2 >= 0 && y + height / 2 <= 390
+    ));
   }
 });
