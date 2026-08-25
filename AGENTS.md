@@ -70,4 +70,5 @@ Consult these guides before working on related tasks:
 
 - Before pushing any academic-content or simulation change, complete the mandatory local checklist in `docs/PREPUBLICATION_VERIFICATION.md`, including focused and full tests, chart tests, validation, build, audit, and preview QA.
 - Simulation changes additionally require independent analytic oracles, graph-point checks, renderer/model consistency, scenario reset/switching, and ES/EN desktop/mobile QA.
+- Simulation theme QA must exercise both runtime directions without reload and preserve physical state; canvas text QA must inspect internal clipping, not only document overflow.
 - Numerical academic changes additionally require an independent recalculation of the changed result, units/sign/tolerance review, and a focused regression test.

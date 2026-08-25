@@ -14,6 +14,8 @@ This gate is mandatory before pushing any change to academic content or simulati
 - [ ] Run `npm audit`.
 - [ ] Start a local preview and inspect the changed surfaces before any push.
 - [ ] Verify Spanish and English, desktop and 390×844 mobile layouts, keyboard-accessible controls, overflow and browser-console errors.
+- [ ] Check initial light and dark rendering, then light→dark→light and dark→light→dark at runtime without reload; confirm the visual refresh preserves parameters, time, physical state and history.
+- [ ] Inspect text drawn inside Canvas/p5 directly in ES/EN, desktop/mobile and warning/error/limit states. Document-level overflow does not detect text clipped by a canvas boundary.
 
 For a simulation change, also:
 
@@ -21,6 +23,7 @@ For a simulation change, also:
 - [ ] Match analytical key points to plotted series and the current-state marker.
 - [ ] Check model, renderer, free-body diagram, equations and readings against the same physical state.
 - [ ] Check reset and scenario/preset switching for stale state or history.
+- [ ] For a finite scene boundary, verify the full final message, the exact stop point and enough visible travel for the intended classroom interaction.
 
 For a numerical academic change, also:
 
