@@ -65,3 +65,9 @@ Consult these guides before working on related tasks:
 
 - Run `npm run validate`, `npm run verify`, `npm run build`, `npm run stats:loc`, `git diff --check`, and `npm audit` before production integration.
 - Every final production report must include starting and final refs plus LOC for Application, Tooling, Tests, CODE TOTAL, Editorial data, Documentation, RELEVANT TOTAL, and the corresponding deltas.
+
+## Prepublication gate
+
+- Before pushing any academic-content or simulation change, complete the mandatory local checklist in `docs/PREPUBLICATION_VERIFICATION.md`, including focused and full tests, chart tests, validation, build, audit, and preview QA.
+- Simulation changes additionally require independent analytic oracles, graph-point checks, renderer/model consistency, scenario reset/switching, and ES/EN desktop/mobile QA.
+- Numerical academic changes additionally require an independent recalculation of the changed result, units/sign/tolerance review, and a focused regression test.
