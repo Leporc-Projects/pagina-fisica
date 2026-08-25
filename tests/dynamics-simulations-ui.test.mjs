@@ -73,6 +73,7 @@ test("poleas expone cuatro escenarios, análisis externo y controles completos",
   assert.doesNotMatch(source("src/components/simulations/SimulationModelExplanation.astro"), /<mtext>\{t\(/);
   assert.match(runtime, /FIXED_STEP = 1 \/ 120/);
   assert.match(runtime, /initializeSimulationFloatingPlayback/);
+  assert.match(runtime, /if \(!runtime\.state\.stopped\) announce\(t\(locale, "pulleySystems\.stepDone"\)\)/);
 });
 
 test("p5 solo presenta estado calculado por modelos puros", () => {
