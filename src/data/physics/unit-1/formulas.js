@@ -54,10 +54,11 @@ export const UNIT_1_FORMULAS = {
     ),
     represents: "La estructura dimensional de cualquier velocidad.",
     variables: [
-      { symbol: "L", meaning: "dimensión de longitud" },
-      { symbol: "T", meaning: "dimensión de tiempo" },
+      { symbol: "L", meaning: "dimensión de longitud", unit: "m" },
+      { symbol: "T", meaning: "dimensión de tiempo", unit: "s" },
     ],
     conditions: ["La unidad concreta puede cambiar, pero debe ser compatible con L/T."],
+    interpretation: "Una velocidad combina una escala de longitud con una escala temporal inversa.",
     dimensions: "En el SI, L/T se representa mediante m/s.",
     commonErrors: ["Confundir dimensión con unidad específica."],
   }),
@@ -75,7 +76,7 @@ export const UNIT_1_FORMULAS = {
     ),
     represents: "La longitud del vector A en una base cartesiana ortonormal.",
     variables: [
-      { symbol: "Aₓ, Aᵧ, A_z", meaning: "componentes cartesianas de A" },
+      { symbol: "Aₓ, Aᵧ, A_z", meaning: "componentes cartesianas de A", unit: "misma unidad de A" },
     ],
     conditions: ["Los ejes de la base son mutuamente perpendiculares y los unitarios tienen magnitud uno."],
     interpretation: "La magnitud es no negativa aunque alguna componente sea negativa.",
@@ -94,11 +95,12 @@ export const UNIT_1_FORMULAS = {
     ,
     represents: "Las proyecciones cartesianas de A en el plano.",
     variables: [
-      { symbol: "A", meaning: "magnitud del vector" },
-      { symbol: "θ", meaning: "ángulo medido desde +x" },
+      { symbol: "A", meaning: "magnitud del vector", unit: "unidad de A" },
+      { symbol: "θ", meaning: "ángulo medido desde +x", unit: "rad o °" },
     ],
     conditions: ["θ se mide desde el eje +x y los signos se determinan con el cuadrante."],
     interpretation: "Coseno acompaña al cateto adyacente al ángulo definido; seno, al opuesto.",
+    dimensions: "Aₓ y Aᵧ tienen la misma dimensión que A; seno y coseno son adimensionales.",
     commonErrors: ["Intercambiar seno y coseno sin revisar desde qué eje se mide θ."],
     related: ["vector-magnitude"],
   }),
@@ -109,7 +111,7 @@ export const UNIT_1_FORMULAS = {
     tex: "\\vec A\\cdot\\vec B=AB\\cos\\theta",
     body: row(vector("A"), mo("·"), vector("B"), mo("="), mi("A"), mi("B"), mi("cos"), mi("θ")),
     represents: "Una medida escalar de la alineación entre A y B.",
-    variables: [{ symbol: "θ", meaning: "ángulo menor entre A y B" }],
+    variables: [{ symbol: "θ", meaning: "ángulo menor entre A y B", unit: "rad o °" }],
     conditions: ["A y B se miden en un espacio euclidiano con el mismo sistema de unidades por componente."],
     interpretation: "Es positivo para ángulo agudo, cero para vectores perpendiculares y negativo para ángulo obtuso.",
     dimensions: "Tiene la dimensión del producto de las magnitudes A y B.",
@@ -125,9 +127,10 @@ export const UNIT_1_FORMULAS = {
       mo("="), mi("A"), mi("B"), mi("sin"), mi("θ")
     ),
     represents: "La magnitud del vector perpendicular a A y B.",
-    variables: [{ symbol: "θ", meaning: "ángulo menor entre A y B" }],
+    variables: [{ symbol: "θ", meaning: "ángulo menor entre A y B", unit: "rad o °" }],
     conditions: ["La dirección se completa con la regla de la mano derecha."],
     interpretation: "La magnitud coincide con el área del paralelogramo construido con A y B.",
+    dimensions: "Tiene la dimensión del producto de las magnitudes A y B.",
     commonErrors: ["Tratar A×B como conmutativo; B×A tiene sentido opuesto."],
   }),
 
@@ -153,6 +156,11 @@ export const UNIT_1_FORMULAS = {
     tex: "v=\\frac{dx}{dt}",
     body: row(mi("v"), mo("="), frac(row(mi("d"), mi("x")), row(mi("d"), mi("t")))),
     represents: "La razón de cambio instantánea de la posición.",
+    variables: [
+      { symbol: "v", meaning: "velocidad instantánea", unit: "m/s" },
+      { symbol: "x", meaning: "posición", unit: "m" },
+      { symbol: "t", meaning: "tiempo", unit: "s" },
+    ],
     conditions: ["x(t) es diferenciable en el instante considerado."],
     interpretation: "Es la pendiente de la tangente a la gráfica x(t).",
     dimensions: "L/T.",
@@ -168,6 +176,7 @@ export const UNIT_1_FORMULAS = {
     represents: "El cambio de velocidad por unidad de tiempo durante un intervalo.",
     variables: [{ symbol: "Δv", meaning: "v_f − v_i", unit: "m/s" }],
     conditions: ["Las velocidades se expresan respecto al mismo eje y marco."],
+    interpretation: "Su signo indica cómo cambia la componente de velocidad en el eje elegido.",
     dimensions: "L/T²; en SI, m/s².",
     commonErrors: ["Interpretar aceleración negativa como disminución automática de rapidez."],
   }),
@@ -181,6 +190,12 @@ export const UNIT_1_FORMULAS = {
       mo("="), frac(row(sup(mi("d"), mn("2")), mi("x")), row(mi("d"), sup(mi("t"), mn("2"))))
     ),
     represents: "La razón de cambio instantánea de la velocidad.",
+    variables: [
+      { symbol: "a", meaning: "aceleración instantánea", unit: "m/s²" },
+      { symbol: "v", meaning: "velocidad", unit: "m/s" },
+      { symbol: "x", meaning: "posición", unit: "m" },
+      { symbol: "t", meaning: "tiempo", unit: "s" },
+    ],
     conditions: ["v(t) es diferenciable; para la segunda igualdad, x(t) es dos veces diferenciable."],
     interpretation: "Es la pendiente de v(t).",
     dimensions: "L/T².",
@@ -193,6 +208,11 @@ export const UNIT_1_FORMULAS = {
     tex: "v=v_0+at",
     body: row(mi("v"), mo("="), sub(mi("v"), mn("0")), mo("+"), mi("a"), mi("t")),
     represents: "La velocidad después de un intervalo t con aceleración constante.",
+    variables: [
+      { symbol: "v, v₀", meaning: "velocidades final e inicial", unit: "m/s" },
+      { symbol: "a", meaning: "aceleración constante", unit: "m/s²" },
+      { symbol: "t", meaning: "tiempo transcurrido", unit: "s" },
+    ],
     conditions: ["a es constante durante todo el intervalo y t se mide desde la condición inicial."],
     interpretation: "v(t) es una recta cuya pendiente es a.",
     dimensions: "Cada término tiene dimensión L/T.",
@@ -208,6 +228,12 @@ export const UNIT_1_FORMULAS = {
       mo("+"), frac(mn("1"), mn("2")), mi("a"), sup(mi("t"), mn("2"))
     ),
     represents: "La posición después de un intervalo t con aceleración constante.",
+    variables: [
+      { symbol: "x, x₀", meaning: "posiciones final e inicial", unit: "m" },
+      { symbol: "v₀", meaning: "velocidad inicial", unit: "m/s" },
+      { symbol: "a", meaning: "aceleración constante", unit: "m/s²" },
+      { symbol: "t", meaning: "tiempo transcurrido", unit: "s" },
+    ],
     conditions: ["a es constante y x₀, v₀ corresponden al inicio del intervalo."],
     interpretation: "x(t) es cuadrática; su pendiente local coincide con v(t).",
     dimensions: "x₀, v₀t y ½at² tienen dimensión de longitud.",
@@ -223,6 +249,11 @@ export const UNIT_1_FORMULAS = {
       mo("+"), mn("2"), mi("a"), mo("("), mi("x"), mo("−"), sub(mi("x"), mn("0")), mo(")")
     ),
     represents: "La relación entre velocidad y desplazamiento sin usar explícitamente el tiempo.",
+    variables: [
+      { symbol: "v, v₀", meaning: "velocidades final e inicial", unit: "m/s" },
+      { symbol: "a", meaning: "aceleración constante", unit: "m/s²" },
+      { symbol: "x, x₀", meaning: "posiciones final e inicial", unit: "m" },
+    ],
     conditions: ["a es constante durante el desplazamiento considerado."],
     interpretation: "Conserva información sobre v²; el sentido de v debe decidirse con el contexto.",
     dimensions: "Ambos lados tienen dimensión L²/T².",
@@ -237,8 +268,14 @@ export const UNIT_1_FORMULAS = {
       mo("Δ"), mi("x"), mo("="), frac(row(sub(mi("v"), mn("0")), mo("+"), mi("v")), mn("2")), mi("t")
     ),
     represents: "El área algebraica bajo una velocidad que cambia linealmente.",
+    variables: [
+      { symbol: "Δx", meaning: "desplazamiento", unit: "m" },
+      { symbol: "v₀, v", meaning: "velocidades inicial y final", unit: "m/s" },
+      { symbol: "t", meaning: "tiempo transcurrido", unit: "s" },
+    ],
     conditions: ["Solo para aceleración constante durante el intervalo."],
     interpretation: "(v₀+v)/2 es la velocidad media porque v(t) es lineal.",
+    dimensions: "(L/T)·T = L.",
     commonErrors: ["Usar este promedio cuando la aceleración no es constante."],
   }),
 
@@ -251,6 +288,11 @@ export const UNIT_1_FORMULAS = {
       integral(sub(mi("t"), mn("0")), mi("t")), mi("a"), mo("("), mi("τ"), mo(")"), mi("dτ")
     ),
     represents: "La velocidad como condición inicial más el cambio acumulado.",
+    variables: [
+      { symbol: "v(t), v₀", meaning: "velocidades final e inicial", unit: "m/s" },
+      { symbol: "a(τ)", meaning: "aceleración integrada", unit: "m/s²" },
+      { symbol: "t, t₀, τ", meaning: "tiempos y variable de integración", unit: "s" },
+    ],
     conditions: ["a(t) es integrable en el intervalo y v₀ corresponde a t₀."],
     interpretation: "El área algebraica bajo a(t) es Δv, no v por sí sola.",
     dimensions: "(L/T²)·T = L/T.",
@@ -265,6 +307,11 @@ export const UNIT_1_FORMULAS = {
       integral(sub(mi("t"), mn("0")), mi("t")), mi("v"), mo("("), mi("τ"), mo(")"), mi("dτ")
     ),
     represents: "La posición como condición inicial más el desplazamiento acumulado.",
+    variables: [
+      { symbol: "x(t), x₀", meaning: "posiciones final e inicial", unit: "m" },
+      { symbol: "v(τ)", meaning: "velocidad integrada", unit: "m/s" },
+      { symbol: "t, t₀, τ", meaning: "tiempos y variable de integración", unit: "s" },
+    ],
     conditions: ["v(t) es integrable en el intervalo y x₀ corresponde a t₀."],
     interpretation: "El área algebraica bajo v(t) es Δx.",
     dimensions: "(L/T)·T = L.",
@@ -281,7 +328,13 @@ export const UNIT_1_FORMULAS = {
       mi("z"), mo("("), mi("t"), mo(")"), unitVector("k")
     ),
     represents: "La ubicación de la partícula respecto al origen cartesiano.",
+    variables: [
+      { symbol: "r", meaning: "vector posición", unit: "m" },
+      { symbol: "x, y, z", meaning: "coordenadas cartesianas", unit: "m" },
+      { symbol: "t", meaning: "tiempo", unit: "s" },
+    ],
     conditions: ["i, j y k forman una base cartesiana fija."],
+    interpretation: "Las coordenadas son las proyecciones de r sobre la base cartesiana elegida.",
     dimensions: "Cada componente tiene dimensión de longitud.",
   }),
 
@@ -291,6 +344,11 @@ export const UNIT_1_FORMULAS = {
     tex: "\\vec v=\\frac{d\\vec r}{dt}",
     body: row(vector("v"), mo("="), frac(row(mi("d"), vector("r")), row(mi("d"), mi("t")))),
     represents: "La razón de cambio del vector posición.",
+    variables: [
+      { symbol: "v", meaning: "vector velocidad", unit: "m/s" },
+      { symbol: "r", meaning: "vector posición", unit: "m" },
+      { symbol: "t", meaning: "tiempo", unit: "s" },
+    ],
     conditions: ["r(t) es diferenciable en el instante considerado."],
     interpretation: "v es tangente a la trayectoria cuando la rapidez es distinta de cero.",
     dimensions: "L/T.",
@@ -302,6 +360,11 @@ export const UNIT_1_FORMULAS = {
     tex: "\\vec a=\\frac{d\\vec v}{dt}",
     body: row(vector("a"), mo("="), frac(row(mi("d"), vector("v")), row(mi("d"), mi("t")))),
     represents: "La razón de cambio del vector velocidad.",
+    variables: [
+      { symbol: "a", meaning: "vector aceleración", unit: "m/s²" },
+      { symbol: "v", meaning: "vector velocidad", unit: "m/s" },
+      { symbol: "t", meaning: "tiempo", unit: "s" },
+    ],
     conditions: ["v(t) es diferenciable en el instante considerado."],
     interpretation: "Puede cambiar rapidez, dirección o ambas.",
     dimensions: "L/T².",
@@ -313,8 +376,13 @@ export const UNIT_1_FORMULAS = {
     tex: "a_x=0,\\quad a_y=-g",
     body: row(sub(mi("a"), mi("x")), mo("="), mn("0"), mo(","), mspace(), sub(mi("a"), mi("y")), mo("="), mo("−"), mi("g")),
     represents: "La aceleración en el modelo ideal de proyectil.",
+    variables: [
+      { symbol: "aₓ, aᵧ", meaning: "componentes de la aceleración", unit: "m/s²" },
+      { symbol: "g", meaning: "magnitud de la aceleración gravitacional local", unit: "m/s²" },
+    ],
     conditions: ["Resistencia del aire despreciable, g aproximadamente constante y +y hacia arriba."],
     interpretation: "La aceleración horizontal es cero; la vertical apunta hacia abajo durante todo el vuelo.",
+    dimensions: "aₓ, aᵧ y g tienen dimensión L/T².",
     commonErrors: ["Suponer que aᵧ se hace cero en el punto más alto."],
   }),
 
@@ -328,8 +396,15 @@ export const UNIT_1_FORMULAS = {
       sub(mi("v"), row(mn("0"), mi("y"))), mi("t"), mo("−"), frac(mn("1"), mn("2")), mi("g"), sup(mi("t"), mn("2"))
     ),
     represents: "La posición horizontal y vertical en función del mismo tiempo.",
+    variables: [
+      { symbol: "x, y, x₀, y₀", meaning: "posiciones final e inicial", unit: "m" },
+      { symbol: "v₀ₓ, v₀ᵧ", meaning: "componentes de la velocidad inicial", unit: "m/s" },
+      { symbol: "t", meaning: "tiempo transcurrido", unit: "s" },
+      { symbol: "g", meaning: "magnitud de la aceleración gravitacional local", unit: "m/s²" },
+    ],
     conditions: ["Las mismas hipótesis del proyectil ideal y ejes cartesianos fijos."],
     interpretation: "x(t) es lineal y y(t) es cuadrática; al eliminar t se obtiene una parábola.",
+    dimensions: "Cada término de posición tiene dimensión L.",
     commonErrors: ["Usar tiempos distintos para las componentes horizontal y vertical."],
     related: ["projectile-acceleration"],
   }),
@@ -340,6 +415,11 @@ export const UNIT_1_FORMULAS = {
     tex: "v=\\omega R",
     body: row(mi("v"), mo("="), mi("ω"), mi("R")),
     represents: "La rapidez tangencial en una circunferencia de radio R.",
+    variables: [
+      { symbol: "v", meaning: "rapidez tangencial", unit: "m/s" },
+      { symbol: "ω", meaning: "rapidez angular", unit: "rad/s" },
+      { symbol: "R", meaning: "radio de la trayectoria", unit: "m" },
+    ],
     conditions: ["R es constante y ω se expresa en radianes por unidad de tiempo."],
     interpretation: "A igual ω, un punto más alejado del eje recorre más longitud por segundo.",
     dimensions: "(1/T)·L = L/T; el radián es adimensional.",
@@ -355,6 +435,12 @@ export const UNIT_1_FORMULAS = {
       mo("="), sup(mi("ω"), mn("2")), mi("R")
     ),
     represents: "Dirección vectorial radial y magnitud centrípeta.",
+    variables: [
+      { symbol: "aᵣ, a_c", meaning: "aceleración radial y su magnitud", unit: "m/s²" },
+      { symbol: "v", meaning: "rapidez tangencial", unit: "m/s" },
+      { symbol: "ω", meaning: "rapidez angular", unit: "rad/s" },
+      { symbol: "R", meaning: "radio de la trayectoria", unit: "m" },
+    ],
     conditions: ["La trayectoria es circular de radio R en el instante considerado."],
     interpretation: "El signo negativo indica dirección hacia el centro respecto a r̂ saliente.",
     dimensions: "(L/T)²/L = L/T².",
@@ -371,8 +457,14 @@ export const UNIT_1_FORMULAS = {
       sub(vector("v"), row(mi("B"), mo("/"), mi("C")))
     ),
     represents: "La velocidad de A respecto a C mediante un marco intermedio B.",
+    variables: [
+      { symbol: "v_A/C", meaning: "velocidad de A respecto a C", unit: "m/s" },
+      { symbol: "v_A/B", meaning: "velocidad de A respecto a B", unit: "m/s" },
+      { symbol: "v_B/C", meaning: "velocidad de B respecto a C", unit: "m/s" },
+    ],
     conditions: ["Composición galileana en marcos clásicos; todos los vectores usan ejes compatibles."],
     interpretation: "Los subíndices interiores B se encadenan y el resultado conecta A con C.",
+    dimensions: "Todos los términos tienen dimensión L/T.",
     commonErrors: ["Cambiar el orden de los subíndices sin invertir el vector."],
   }),
 
@@ -385,6 +477,11 @@ export const UNIT_1_FORMULAS = {
       mi("r"), mover(mi("θ"), mo("˙")), unitVector("θ")
     ),
     represents: "La suma de las componentes radial y transversal de la velocidad.",
+    variables: [
+      { symbol: "v", meaning: "vector velocidad", unit: "m/s" },
+      { symbol: "r, ṙ", meaning: "radio y su razón de cambio", unit: "m; m/s" },
+      { symbol: "θ̇", meaning: "rapidez angular", unit: "rad/s" },
+    ],
     conditions: ["r y θ describen la posición en una base polar plana orientada positivamente."],
     interpretation: "ṙ cambia la distancia al origen; rθ̇ produce movimiento transversal.",
     dimensions: "ṙ y rθ̇ tienen dimensión L/T.",
@@ -401,6 +498,11 @@ export const UNIT_1_FORMULAS = {
       mover(mi("r"), mo("˙")), mover(mi("θ"), mo("˙")), mo(")"), unitVector("θ")
     ),
     represents: "Las componentes radial y transversal de la aceleración en una base móvil.",
+    variables: [
+      { symbol: "a", meaning: "vector aceleración", unit: "m/s²" },
+      { symbol: "r, ṙ, r̈", meaning: "radio y sus derivadas temporales", unit: "m; m/s; m/s²" },
+      { symbol: "θ̇, θ̈", meaning: "velocidad y aceleración angulares", unit: "rad/s; rad/s²" },
+    ],
     conditions: ["Movimiento plano descrito por funciones r(t) y θ(t) dos veces diferenciables."],
     interpretation: "Para r constante y ω constante queda únicamente −rω² r̂.",
     dimensions: "Cada término tiene dimensión L/T².",
