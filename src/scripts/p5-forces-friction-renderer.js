@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { t } from "../i18n/index.js";
+import { listenForSimulationThemeChange } from "../utils/simulation-theme.js";
 
 const cssColor = (container, name, fallback) =>
   getComputedStyle(container).getPropertyValue(name).trim() || fallback;
@@ -7,6 +8,7 @@ const cssColor = (container, name, fallback) =>
 export const createForcesFrictionP5Renderer = ({ container, getFrame, locale }) => {
   let instance;
   let resizeObserver;
+  let removeThemeListener;
   const sketch = (p) => {
     const arrow = (x, y, dx, dy, color, label, dashed = false) => {
       const magnitude = Math.hypot(dx, dy);
@@ -152,8 +154,9 @@ export const createForcesFrictionP5Renderer = ({ container, getFrame, locale }) 
     };
   };
   instance = new p5(sketch);
+  removeThemeListener = listenForSimulationThemeChange({ target: window, redraw: () => instance.redraw() });
   return Promise.resolve({
     update() { instance.redraw(); },
-    destroy() { resizeObserver?.disconnect(); instance.remove(); },
+    destroy() { removeThemeListener?.(); resizeObserver?.disconnect(); instance.remove(); },
   });
 };

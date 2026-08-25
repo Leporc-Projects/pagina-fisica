@@ -1,6 +1,8 @@
 import p5 from "p5";
 import { t } from "../i18n/index.js";
+import { createCanvasAlertLayout } from "../utils/canvas-text-layout.js";
 import { createPulleySceneGeometry } from "../utils/pulley-geometry.js";
+import { listenForSimulationThemeChange } from "../utils/simulation-theme.js";
 
 const cssColor = (container, name, fallback) =>
   getComputedStyle(container).getPropertyValue(name).trim() || fallback;
@@ -8,6 +10,7 @@ const cssColor = (container, name, fallback) =>
 export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) => {
   let instance;
   let resizeObserver;
+  let removeThemeListener;
   const sketch = (p) => {
     const pulley = (x, y, radius, rotation, colors, mobile = false) => {
       p.push();
@@ -159,14 +162,30 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       }
 
       if (frame.readings.status === "travel-limit") {
-        p.fill(colors.panel); p.stroke(colors.warning); p.strokeWeight(2); p.rect(18, 58, p.width - 36, 58, 10);
-        p.noStroke(); p.fill(colors.text); p.textStyle(p.BOLD); p.text(t(locale, "pulleySystems.limitReached"), 34, 80);
+        const message = t(locale, "pulleySystems.limitReached");
+        p.textStyle(p.BOLD);
+        p.textSize(compact ? 11 : 12);
+        const alert = createCanvasAlertLayout({
+          text: message,
+          canvasWidth: p.width,
+          compact,
+          measureText: (value) => p.textWidth(value),
+        });
+        p.fill(colors.panel); p.stroke(colors.warning); p.strokeWeight(2);
+        p.rect(alert.box.x, alert.box.y, alert.box.width, alert.box.height, 10);
+        p.noStroke(); p.fill(colors.text); p.textAlign(p.LEFT, p.TOP);
+        alert.lines.forEach((line, index) => p.text(
+          line,
+          alert.text.x,
+          alert.text.y + index * alert.lineHeight
+        ));
       }
     };
   };
   instance = new p5(sketch);
+  removeThemeListener = listenForSimulationThemeChange({ target: window, redraw: () => instance.redraw() });
   return Promise.resolve({
     update() { instance.redraw(); },
-    destroy() { resizeObserver?.disconnect(); instance.remove(); },
+    destroy() { removeThemeListener?.(); resizeObserver?.disconnect(); instance.remove(); },
   });
 };

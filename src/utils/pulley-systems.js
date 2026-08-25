@@ -9,7 +9,7 @@ export const PULLEY_LIMITS = Object.freeze({
   mass: Object.freeze({ minimum: 0.5, maximum: 20 }),
   g: Object.freeze({ minimum: 1, maximum: 15 }),
   friction: Object.freeze({ minimum: 0, maximum: 0.8 }),
-  travel: 2.4,
+  travel: 3.2,
 });
 
 const REQUIRED_PARAMETERS = Object.freeze({

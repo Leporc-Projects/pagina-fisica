@@ -39,9 +39,10 @@ export const createPulleySceneGeometry = ({
     const tableY = height * .48;
     const radius = 28;
     const pulley = point(edgeX + 24, tableY - 22);
-    const blockX = Math.min(edgeX - 72, width * .34 + positions.m1 * scale);
+    const blockWidth = compact ? 64 : 72;
+    const blockX = Math.min(pulley.x - (compact ? 44 : 52), width * (compact ? .28 : .34) + positions.m1 * scale);
     const hangingY = height * .58 + positions.m2 * scale;
-    const blockAttachment = point(blockX + 36, pulley.y - radius);
+    const blockAttachment = point(blockX + blockWidth / 2, pulley.y - radius);
     const topTangent = point(pulley.x, pulley.y - radius);
     const rightTangent = point(pulley.x + radius, pulley.y);
     const rope = join(
@@ -53,7 +54,7 @@ export const createPulleySceneGeometry = ({
       ropes: Object.freeze([rope]),
       pulleys: Object.freeze([{ ...pulley, radius }]),
       blocks: Object.freeze({
-        m1: Object.freeze({ x: blockX, y: tableY - 25, width: 72, height: 48 }),
+        m1: Object.freeze({ x: blockX, y: tableY - 25, width: blockWidth, height: 48 }),
         m2: Object.freeze({ x: rightTangent.x, y: hangingY, width: 62, height: 58 }),
       }),
       table: Object.freeze({ edgeX, y: tableY }),

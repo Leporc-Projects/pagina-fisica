@@ -3,6 +3,7 @@ import {
   createProjectileVectorScales,
 } from "../utils/projectile-canvas.js";
 import { formatNumber, t } from "../i18n/index.js";
+import { listenForSimulationThemeChange } from "../utils/simulation-theme.js";
 
 let p5ConstructorPromise;
 
@@ -222,7 +223,7 @@ export const createProjectileP5Renderer = async ({ container, getFrame, locale =
   };
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(container);
-  window.addEventListener("themechange", redraw);
+  const removeThemeListener = listenForSimulationThemeChange({ target: window, redraw });
   redraw();
 
   return {
@@ -232,7 +233,7 @@ export const createProjectileP5Renderer = async ({ container, getFrame, locale =
       if (destroyed) return;
       destroyed = true;
       resizeObserver.disconnect();
-      window.removeEventListener("themechange", redraw);
+      removeThemeListener();
       instance.remove();
     },
   };
