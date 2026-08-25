@@ -2193,7 +2193,8 @@ check(
     projectileRendererSource.includes("new P5") &&
     projectileRendererSource.includes("p.noLoop()") &&
     projectileRendererSource.includes("new ResizeObserver") &&
-    projectileRendererSource.includes('window.addEventListener("themechange"') &&
+    projectileRendererSource.includes("listenForSimulationThemeChange") &&
+    projectileRendererSource.includes("removeThemeListener()") &&
     projectileRendererSource.includes("instance.remove()") &&
     projectileRendererSource.includes("p.describe(") &&
     !projectileRendererSource.includes("WEBGL") &&
