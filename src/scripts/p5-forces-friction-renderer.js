@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { t } from "../i18n/index.js";
+import { createInclinedForceFrame } from "../utils/force-frame-geometry.js";
 import { listenForSimulationThemeChange } from "../utils/simulation-theme.js";
 
 const cssColor = (container, name, fallback) =>
@@ -73,9 +74,10 @@ export const createForcesFrictionP5Renderer = ({ container, getFrame, locale }) 
       const compact = p.width < 620;
       const sceneBottom = p.height;
       const center = { x: p.width * 0.5, y: p.height * (compact ? 0.48 : 0.5) };
-      const beta = frame.parameters.beta * Math.PI / 180;
-      const tangent = { x: Math.cos(-beta), y: Math.sin(-beta) };
-      const outward = { x: Math.sin(beta), y: -Math.cos(beta) };
+      const { beta, tangent, outward, applied } = createInclinedForceFrame(
+        frame.parameters.beta,
+        frame.parameters.alpha
+      );
       p.push();
       p.translate(center.x, center.y + 22);
       p.rotate(-beta);
@@ -109,11 +111,10 @@ export const createForcesFrictionP5Renderer = ({ container, getFrame, locale }) 
       p.text(`${frame.parameters.m} kg`, center.x, center.y - 3);
       p.rectMode(p.CORNER);
       p.textAlign(p.LEFT, p.BASELINE);
-      const alpha = frame.parameters.alpha * Math.PI / 180;
       if (frame.experience.views.vectors && frame.toggles.forces) {
         forceArrow({ x: center.x + tangent.x * 34, y: center.y + tangent.y * 34 }, {
-          x: frame.parameters.F * (tangent.x * Math.cos(alpha) + outward.x * Math.sin(alpha)),
-          y: frame.parameters.F * (tangent.y * Math.cos(alpha) + outward.y * Math.sin(alpha)),
+          x: frame.parameters.F * applied.x,
+          y: frame.parameters.F * applied.y,
         }, colors.applied, "F");
         forceArrow({ x: center.x, y: center.y + 13 }, { x: 0, y: frame.parameters.m * frame.parameters.g }, colors.weight, "W");
         forceArrow({ x: center.x + outward.x * 25, y: center.y + outward.y * 25 }, { x: outward.x * frame.readings.normal, y: outward.y * frame.readings.normal }, colors.normal, "N");

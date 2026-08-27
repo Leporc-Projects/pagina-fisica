@@ -2,6 +2,7 @@ export const PULLEY_SCENARIO_IDS = Object.freeze([
   "table-hanging",
   "atwood",
   "movable-pulley",
+  "three-pulley-tackle",
   "double-atwood",
 ]);
 
@@ -38,6 +39,12 @@ export const PULLEY_TERMINAL_GEOMETRY = Object.freeze({
     surface("mL-lower-stop", { mL: 1 }, { maximum: 5.2 }, "mL", "lower-stop"),
     surface("mobile-upper-clearance", { mL: 1 }, { minimum: -3.2 }, "mobile-assembly", "upper-support"),
   ]),
+  "three-pulley-tackle": Object.freeze([
+    surface("mC-fixed-pulley", { mC: 1 }, { minimum: -27 }, "mC", "fixed-pulley"),
+    surface("mC-lower-stop", { mC: 1 }, { maximum: 9 }, "mC", "lower-stop"),
+    surface("mL-lower-stop", { mL: 1 }, { maximum: 9 }, "mobile-assembly", "lower-stop"),
+    surface("mobile-upper-clearance", { mL: 1 }, { minimum: -3 }, "mobile-assembly", "upper-apparatus"),
+  ]),
   "double-atwood": Object.freeze([
     surface("m3-fixed-pulley", { m3: 1 }, { minimum: -9 }, "m3", "fixed-pulley"),
     surface("m3-lower-stop", { m3: 1 }, { maximum: 9.5 }, "m3", "lower-stop"),
@@ -54,6 +61,7 @@ const REQUIRED_PARAMETERS = Object.freeze({
   "table-hanging": Object.freeze(["m1", "m2", "muS", "muK", "g"]),
   atwood: Object.freeze(["m1", "m2", "g"]),
   "movable-pulley": Object.freeze(["mL", "mC", "g"]),
+  "three-pulley-tackle": Object.freeze(["mL", "mC", "g"]),
   "double-atwood": Object.freeze(["m1", "m2", "m3", "g"]),
 });
 
@@ -149,6 +157,21 @@ export const solvePulleySystem = (scenarioId, suppliedConfig) => {
     const aL = (mL - 2 * mC) * g / (mL + 4 * mC);
     const aC = -2 * aL;
     const tension = 3 * mL * mC * g / (mL + 4 * mC);
+    return {
+      scenarioId,
+      config,
+      regime: Math.abs(aL) <= EPSILON ? "equilibrium" : "moving",
+      accelerations: { mL: aL, mC: aC },
+      tensions: { T: tension },
+      friction: 0,
+    };
+  }
+
+  if (scenarioId === "three-pulley-tackle") {
+    const { mL, mC, g } = config;
+    const aL = (mL - 3 * mC) * g / (mL + 9 * mC);
+    const aC = -3 * aL;
+    const tension = 4 * mL * mC * g / (mL + 9 * mC);
     return {
       scenarioId,
       config,

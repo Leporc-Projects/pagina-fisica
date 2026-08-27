@@ -15,7 +15,7 @@ const FIXED_STEP = 1 / 120;
 const HISTORY_LIMIT = 301;
 
 const readExperience = (root) => { try { return JSON.parse(root.dataset.experience ?? ""); } catch { return null; } };
-const historyKeys = (scenarioId) => scenarioId === "movable-pulley"
+const historyKeys = (scenarioId) => ["movable-pulley", "three-pulley-tackle"].includes(scenarioId)
   ? ["mL", "mC"]
   : scenarioId === "double-atwood"
     ? ["m1", "m2", "m3"]
@@ -118,6 +118,11 @@ const createRuntime = async (root, suppliedExperience) => {
         `${display(config.mL)} × ${display(config.g)} − 2 × ${display(tension.T)} = ${display(config.mL)} × ${display(a.mL)}`,
         `${display(config.mC)} × ${display(config.g)} − ${display(tension.T)} = ${display(config.mC)} × ${display(a.mC)}`,
       ]);
+    } else if (runtime.scenarioId === "three-pulley-tackle") {
+      setSubstitution(runtime.scenarioId, [
+        `${display(config.mL)} × ${display(config.g)} − 3 × ${display(tension.T)} = ${display(config.mL)} × ${display(a.mL)}`,
+        `${display(config.mC)} × ${display(config.g)} − ${display(tension.T)} = ${display(config.mC)} × ${display(a.mC)}`,
+      ]);
     } else {
       setSubstitution(runtime.scenarioId, [
         `${display(config.m1)} × ${display(config.g)} − ${display(tension.TA)} = ${display(config.m1)} × ${display(a.m1)}`,
@@ -131,6 +136,8 @@ const createRuntime = async (root, suppliedExperience) => {
         ? runtime.readings.positions.m1 + runtime.readings.positions.m2
         : runtime.scenarioId === "movable-pulley"
           ? 2 * runtime.readings.positions.mL + runtime.readings.positions.mC
+          : runtime.scenarioId === "three-pulley-tackle"
+            ? 3 * runtime.readings.positions.mL + runtime.readings.positions.mC
           : runtime.readings.positions.m1 + runtime.readings.positions.m2 + 2 * runtime.readings.positions.m3;
     const residualNode = root.querySelector("[data-pulley-constraint-residual]");
     if (residualNode) residualNode.textContent = Math.abs(residual) < 1e-9 ? "0" : display(residual);
@@ -143,7 +150,12 @@ const createRuntime = async (root, suppliedExperience) => {
       historyKeys(runtime.scenarioId),
       { contactTime: runtime.state.stopped ? runtime.state.t : null }
     ), display);
-    root.querySelectorAll('[data-simulation-chart="pulley-position-history"] [data-series-legend]').forEach((item, index) => item.toggleAttribute("hidden", index >= historyKeys(runtime.scenarioId).length));
+    const keys = historyKeys(runtime.scenarioId);
+    root.querySelectorAll('[data-simulation-chart="pulley-position-history"] [data-series-legend]').forEach((item, index) => {
+      item.toggleAttribute("hidden", index >= keys.length);
+      const label = item.querySelector("[data-series-label]");
+      if (label && keys[index]) label.textContent = `q${keys[index].replace("m", "")}`;
+    });
   };
 
   const syncControls = () => {

@@ -141,6 +141,62 @@ export const createPulleySceneGeometry = ({ scenarioId, width, height, positions
     });
   }
 
+  if (scenarioId === "three-pulley-tackle") {
+    const radius = compact ? 22 : 27;
+    const blockHeight = compact ? 48 : 54;
+    const fixedY = compact ? 76 : 90;
+    const mobileX = width * .52;
+    const fixedA = pulley("fixed-a", mobileX - 2 * radius, fixedY, radius);
+    const fixedB = pulley("fixed-b", mobileX + 2 * radius, fixedY, radius);
+    const scale = compact ? 6 : 7.4;
+    const mobileY0 = compact ? 260 : 320;
+    const mobile = pulley("mobile", mobileX, mobileY0 + positions.mL * scale, radius, true);
+    const aLeft = point(fixedA.x - radius, fixedA.y);
+    const aRight = point(fixedA.x + radius, fixedA.y);
+    const bLeft = point(fixedB.x - radius, fixedB.y);
+    const bRight = point(fixedB.x + radius, fixedB.y);
+    const mobileLeft = point(mobile.x - radius, mobile.y);
+    const mobileRight = point(mobile.x + radius, mobile.y);
+    const movingAnchor = point(aLeft.x, mobile.y + radius * .25);
+    const counterHook0 = fixedB.y + radius + (compact ? 32 : 38);
+    const mCHook = point(bRight.x, counterHook0 + positions.mC * scale);
+    const mC = block("mC", mCHook.x, mCHook.y + blockHeight / 2, compact ? 50 : 58, blockHeight);
+    const yokeBottom = point(mobile.x, mobile.y + radius + 12);
+    const loadHook = point(mobile.x, yokeBottom.y + (compact ? 20 : 24));
+    const mL = block("mL", loadHook.x, loadHook.y + blockHeight / 2, compact ? 64 : 74, blockHeight);
+    return freezeScene({
+      scenarioId, scale,
+      ropes: [join(
+        [movingAnchor, aLeft],
+        sampleArc({ ...fixedA, radius, start: Math.PI, end: 2 * Math.PI }),
+        [aRight, mobileLeft],
+        sampleArc({ ...mobile, radius, start: Math.PI, end: 0 }),
+        [mobileRight, bLeft],
+        sampleArc({ ...fixedB, radius, start: Math.PI, end: 2 * Math.PI }),
+        [bRight, mC.hooks.top]
+      )],
+      pulleys: [fixedA, mobile, fixedB],
+      blocks: { mL, mC },
+      supports: [
+        Object.freeze({ id: "ceiling-a", type: "ceiling", x: fixedA.x, y: compact ? 30 : 34, width: compact ? 58 : 70 }),
+        Object.freeze({ id: "ceiling-b", type: "ceiling", x: fixedB.x, y: compact ? 30 : 34, width: compact ? 58 : 70 }),
+      ],
+      anchors: [Object.freeze({ id: "moving-rope-anchor", type: "rope", ...movingAnchor })],
+      connectors: [
+        path("fixed-axle-a", [point(fixedA.x, compact ? 30 : 34), fixedA.axle], "axle"),
+        path("fixed-axle-b", [point(fixedB.x, compact ? 30 : 34), fixedB.axle], "axle"),
+        path("mobile-yoke-left", [point(mobile.x - radius * .58, mobile.y), point(mobile.x - radius * .58, yokeBottom.y), yokeBottom], "yoke"),
+        path("mobile-yoke-right", [point(mobile.x + radius * .58, mobile.y), point(mobile.x + radius * .58, yokeBottom.y), yokeBottom], "yoke"),
+        path("moving-anchor-hanger", [movingAnchor, point(movingAnchor.x, yokeBottom.y), yokeBottom], "hanger"),
+        path("load-hanger", [yokeBottom, mL.hooks.top], "hanger"),
+      ],
+      stops: [
+        Object.freeze({ id: "mC-lower-stop", x: mC.x, y: counterHook0 + 9 * scale + blockHeight }),
+        Object.freeze({ id: "mL-lower-stop", x: mL.x, y: mobileY0 + 9 * scale + radius + 12 + (compact ? 20 : 24) + blockHeight }),
+      ],
+    });
+  }
+
   if (scenarioId === "double-atwood") {
     const fixedRadius = compact ? 26 : 30;
     const mobileRadius = compact ? 34 : 42;

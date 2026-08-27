@@ -165,9 +165,12 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       } else if (frame.scenarioId === "atwood") {
         block(geometry.blocks.m1, "m₁", frame.parameters.m1, colors);
         block(geometry.blocks.m2, "m₂", frame.parameters.m2, colors, colors.second);
-      } else if (frame.scenarioId === "movable-pulley") {
+      } else if (["movable-pulley", "three-pulley-tackle"].includes(frame.scenarioId)) {
         block(geometry.blocks.mL, "mL", frame.parameters.mL, colors);
         block(geometry.blocks.mC, "mC", frame.parameters.mC, colors, colors.second);
+        if (frame.scenarioId === "three-pulley-tackle") {
+          p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text("3T ↑ · T = const.", 18, p.height - 36);
+        }
       } else {
         block(geometry.blocks.m3, "m₃", frame.parameters.m3, colors, colors.third);
         block(geometry.blocks.m1, "m₁", frame.parameters.m1, colors);

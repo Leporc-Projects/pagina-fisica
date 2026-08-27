@@ -21,6 +21,7 @@ const normalRaw = parameters.m * parameters.g * Math.cos(parameters.beta * Math.
       <desc id="forces-fbd-description">{t(locale, "forcesFriction.fbdDescription")}</desc>
       <defs><marker id="forces-fbd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" /></marker></defs>
       <line class="dynamics-fbd__orientation" data-fbd-orientation x1="55" y1="188" x2="305" y2="188" />
+      <polyline class="dynamics-fbd__orientation" data-fbd-right-angle points="193,127 193,114 180,114" />
       <rect class="dynamics-fbd__body" data-fbd-body x="158" y="105" width="44" height="44" rx="5" />
       {[["weight", "W"], ["normal", "N"], ["applied", "F"], ["friction", "f"]].map(([key, label]) => <g class={`dynamics-fbd__arrow dynamics-fbd__arrow--${key}`} data-fbd-arrow={key}><line marker-end="url(#forces-fbd-arrow)"/><text>{label}</text></g>)}
       <g data-fbd-weight-components hidden>

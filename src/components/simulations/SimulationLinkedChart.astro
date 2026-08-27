@@ -54,7 +54,7 @@ const indexes = [0, 1, 2, 3, 4];
     </g>
   </svg>
   {(seriesLabels.length > 1 || referenceLabel) && <ul class="simulation-linked-chart__legend" aria-label={t(locale, "simulation.legend")}>
-    {seriesLabels.map((label, index) => <li><span class={`simulation-linked-chart__swatch simulation-linked-chart__swatch--${index + 1}`} aria-hidden="true"></span><span data-preview-i18n={seriesLabelKeys[index]}>{label}</span></li>)}
+    {seriesLabels.map((label, index) => <li data-series-legend={index}><span class={`simulation-linked-chart__swatch simulation-linked-chart__swatch--${index + 1}`} aria-hidden="true"></span><span data-series-label data-preview-i18n={seriesLabelKeys[index]}>{label}</span></li>)}
     {referenceLabel && <li><span class="simulation-linked-chart__swatch simulation-linked-chart__swatch--reference" aria-hidden="true"></span>{referenceLabel}</li>}
   </ul>}
 </figure>
