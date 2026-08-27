@@ -8,9 +8,18 @@ import ThemeSelector from "./ThemeSelector.astro";
 import LanguageSelector from "./LanguageSelector.astro";
 
 const { locale = "es" } = Astro.props;
+const localizeNavigationEntry = (entry) => ({
+  ...entry,
+  label: entry.labelKey ? t(locale, entry.labelKey) : entry.label,
+});
+
 const NAV = getNavigation(locale).map((item) => ({
-  ...item,
-  label: t(locale, item.labelKey),
+  ...localizeNavigationEntry(item),
+  children: item.children?.map(localizeNavigationEntry),
+  groups: item.groups?.map((group) => ({
+    ...localizeNavigationEntry(group),
+    children: group.children.map(localizeNavigationEntry),
+  })),
 }));
 
 const { pathname } = Astro.url;
@@ -144,7 +153,7 @@ const isExactCurrent = (href: string) =>
           NAV.map((item, index) => {
             const active = item.href ? isCurrent(item.href) : false;
 
-            if (item.children) {
+            if (item.children || item.groups) {
               return (
                 <li class="menu-item menu-item--group">
                   <details open={active}>
@@ -194,6 +203,30 @@ const isExactCurrent = (href: string) =>
                                   </a>
                                 )
                             }
+                          </li>
+                        ))
+                      }
+                      {
+                        item.groups?.map((group) => (
+                          <li class="submenu-group">
+                            <p class="submenu-group__label">{group.label}</p>
+                            <ul class="submenu-group__list">
+                              {group.children.map((child) => (
+                                <li>
+                                  <a
+                                    class="submenu-link"
+                                    href={withBase(child.href)}
+                                    aria-current={
+                                      isExactCurrent(child.href)
+                                        ? "page"
+                                        : undefined
+                                    }
+                                  >
+                                    {child.label}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
                           </li>
                         ))
                       }

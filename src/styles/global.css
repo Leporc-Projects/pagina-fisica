@@ -793,6 +793,26 @@ main {
     0 0 1.15rem 4.3rem;
 }
 
+.submenu-group {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.65rem;
+}
+
+.submenu-group__label {
+  color: var(--brand-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.submenu-group__list {
+  display: grid;
+  gap: 0.15rem;
+}
+
 .submenu-link {
   min-height: 2.65rem;
   display: flex;

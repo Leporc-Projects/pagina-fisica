@@ -3,6 +3,7 @@
 
 import { COURSE, COURSE_NAV } from "./course.js";
 import { ROUTE_IDS, getLocalizedPath } from "../i18n/routes.js";
+import { getPublishedSimulationNavigationGroups } from "./simulations.js";
 
 export const SITE = {
   name: "Aula Física",
@@ -27,6 +28,13 @@ export const getNavigation = (locale) => [
   {
     labelKey: "nav.simulations",
     href: getLocalizedPath(ROUTE_IDS.SIMULATIONS, locale),
+    children: [
+      {
+        labelKey: "nav.simulationsViewAll",
+        href: getLocalizedPath(ROUTE_IDS.SIMULATIONS, locale),
+      },
+    ],
+    groups: getPublishedSimulationNavigationGroups(locale),
   },
   {
     labelKey: "nav.notices",

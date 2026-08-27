@@ -141,6 +141,17 @@ export const getSimulationsByCategory = (category, locale = "es") =>
     )
   );
 
+export const getPublishedSimulationNavigationGroups = (locale = "es") =>
+  getPublishedSimulationCategories().map((category) => ({
+    key: category,
+    labelKey: SIMULATION_CATEGORY_KEYS[category],
+    children: getSimulationsByCategory(category, locale).map((simulation) => ({
+      label: simulation.title,
+      href: simulation.route,
+      simulationId: simulation.id,
+    })),
+  }));
+
 export const getSimulationsForCourseTopic = (
   courseId,
   unit,
