@@ -273,11 +273,12 @@ Se añadió `tests/full-site-independent-audit.test.mjs` con cuatro pruebas de a
 valor: manifiesto académico, manifiesto de producto, mini quices/rutas y oráculos
 algebraicos de las cuatro simulaciones públicas. La ejecución focalizada pasó 4/4.
 
-La validación final de la rama incluye, en orden, `npm test`, `npm run test:charts`,
-`npm run validate`, `npm run verify`, `npm run build`, `npm run stats:loc`,
-`git diff --check` y `npm audit`. El cierre debe registrar 466 tests, 9 tests de
-charts, 204 páginas, diff-check limpio y 0 vulnerabilidades; si cualquiera difiere,
-este documento no autoriza sustituir el valor real ni emitir verdict A.
+La validación final de la rama ejecutó, en orden, `npm test`,
+`npm run test:charts`, `npm run validate`, `npm run verify`, `npm run build`,
+`npm run stats:loc`, `git diff --check` y `npm audit`. Resultado: 466/466 tests,
+9/9 tests de charts, `validate` y `verify` verdes, 204 páginas construidas,
+diff-check limpio y 0 vulnerabilidades. El build conserva el warning conocido de
+chunks mayores de 500 kB registrado como `PERF-01`.
 
 Baseline LOC:
 
@@ -291,7 +292,17 @@ Baseline LOC:
 | Documentation | 3 069 |
 | RELEVANT TOTAL | 64 639 |
 
-Los valores finales y deltas se reportan después de crear los commits locales.
+Final LOC y delta respecto al baseline:
+
+| Category | Final | Delta |
+| --- | ---: | ---: |
+| Application | 51 121 | 0 |
+| Tooling | 2 848 | 0 |
+| Tests | 7 449 | +320 |
+| CODE TOTAL | 61 418 | +320 |
+| Editorial data | 472 | 0 |
+| Documentation | 3 414 | +345 |
+| RELEVANT TOTAL | 65 304 | +665 |
 
 ## 19. Local browser QA
 
