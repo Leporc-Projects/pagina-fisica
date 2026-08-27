@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   PULLEY_SCENARIO_IDS,
+  PULLEY_TERMINAL_GEOMETRY,
   createPulleyState,
+  getPulleyContactCandidates,
   getPulleyReadings,
   resetPulleyState,
   solvePulleySystem,
@@ -125,12 +127,33 @@ test("integración temporal es determinista, rechaza dt negativo y dt=0 no muta"
   assert.deepEqual(run(), run());
 });
 
-test("el límite detiene establemente y reset restaura exactamente", () => {
+test("el contacto geométrico detiene establemente sin inventar reposo y reset restaura", () => {
   const initial = createPulleyState("atwood", { m1: 0.5, m2: 20, g: 15 });
   let state = initial;
   for (let i = 0; i < 1000 && !state.stopped; i += 1) state = stepPulleyState(state, 1 / 120);
   assert.equal(state.stopped, true);
-  assert.equal(state.stopReason, "travel-limit");
+  assert.equal(state.stopReason, "geometry-contact");
+  assert.ok(state.contact?.body);
+  assert.ok(Object.values(state.velocities).some((value) => Math.abs(value) > 0));
+  assert.ok(Object.values(getPulleyReadings(state).accelerations).some((value) => Math.abs(value) > 0));
   assert.deepEqual(stepPulleyState(state, 1), state);
   assert.deepEqual(resetPulleyState(state), initial);
+});
+
+test("los candidatos terminales son superficies físicas identificables", () => {
+  const cases = {
+    "table-hanging": { m1: 6, m2: 4, muS: 0, muK: 0, g: 9.8 },
+    atwood: { m1: 6, m2: 4, g: 9.8 },
+    "movable-pulley": { mL: 8, mC: 3, g: 9.8 },
+    "double-atwood": { m1: 6, m2: 4, m3: 8, g: 9.8 },
+  };
+  for (const [scenarioId, config] of Object.entries(cases)) {
+    const state = createPulleyState(scenarioId, config);
+    const solution = solvePulleySystem(scenarioId, config);
+    const candidates = getPulleyContactCandidates(state, solution.accelerations);
+    assert.ok(candidates.length > 0);
+    assert.ok(candidates.every(({ id, body, target, time }) =>
+      PULLEY_TERMINAL_GEOMETRY[scenarioId].some((entry) => entry.id === id) && body && target && time > 0
+    ));
+  }
 });

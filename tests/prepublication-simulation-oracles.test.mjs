@@ -7,7 +7,7 @@ import { createKinematicsChartGeometry } from "../src/utils/kinematics-svg.js";
 import { getKinematicsState, getTurningPoint } from "../src/utils/kinematics-1d.js";
 import { createProjectileCanvasTransform } from "../src/utils/projectile-canvas.js";
 import { getProjectileState, getProjectileSummary } from "../src/utils/projectile-2d.js";
-import { PULLEY_LIMITS, createPulleyState, getPulleyReadings, solvePulleySystem, stepPulleyState } from "../src/utils/pulley-systems.js";
+import { createPulleyState, getPulleyReadings, solvePulleySystem, stepPulleyState } from "../src/utils/pulley-systems.js";
 
 const close = (actual, expected, tolerance = 1e-8) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
@@ -99,28 +99,31 @@ test("PT, PA, PM y PD coinciden con valores literales y restricciones", () => {
   }
 });
 
-test("los cuatro casos móviles aprovechan el recorrido ampliado y el marcador usa el estado final", () => {
+test("los cuatro contactos usan el primer límite físico, conservan v/a y marcan el gráfico", () => {
   const cases = [
-    ["table-hanging", { m1: 10, m2: 5, muS: .3, muK: .2, g: 10 }, Math.sqrt(PULLEY_LIMITS.travel)],
-    ["atwood", { m1: 2, m2: 3, g: 10 }, Math.sqrt(PULLEY_LIMITS.travel)],
-    ["movable-pulley", { mL: 4, mC: 1, g: 10 }, Math.sqrt(2 * PULLEY_LIMITS.travel / 5)],
-    ["double-atwood", { m1: 1, m2: 2, m3: 4, g: 10 }, Math.sqrt(2 * PULLEY_LIMITS.travel / 6)],
+    ["table-hanging", { m1: 10, m2: 5, muS: .3, muK: .2, g: 10 }, Math.sqrt(10), "m1-bracket", "m1", 10],
+    ["atwood", { m1: 2, m2: 3, g: 10 }, 3, "m1-upper-clearance", "m1", -9],
+    ["movable-pulley", { mL: 4, mC: 1, g: 10 }, Math.sqrt(18 / 5), "mC-fixed-pulley", "mC", -9],
+    ["double-atwood", { m1: 1, m2: 2, m3: 4, g: 10 }, Math.sqrt(3.5), "mobile-fixed-clearance", "pulley", -3.5],
   ];
-  assert.equal(PULLEY_LIMITS.travel, 3.2);
-  for (const [scenarioId, parameters, expectedTime] of cases) {
+  for (const [scenarioId, parameters, expectedTime, surfaceId, coordinate, position] of cases) {
     let state = createPulleyState(scenarioId, parameters);
     while (!state.stopped) state = stepPulleyState(state, 1 / 120);
     const readings = getPulleyReadings(state);
     close(state.t, expectedTime, 1e-7);
-    close(Math.max(...Object.values(readings.positions).map(Math.abs)), PULLEY_LIMITS.travel, 1e-7);
-    assert.ok(Object.values(readings.velocities).every((value) => value === 0));
-    assert.ok(Object.values(readings.accelerations).every((value) => value === 0));
+    assert.equal(state.contact.surfaceId, surfaceId);
+    close(readings.positions[coordinate], position, 1e-7);
+    close(readings.velocities[coordinate], readings.accelerations[coordinate] * expectedTime, 1e-7);
+    assert.notEqual(readings.velocities[coordinate], 0);
+    assert.notEqual(readings.accelerations[coordinate], 0);
     const history = [
       { t: 0, positions: Object.fromEntries(Object.keys(readings.positions).map((key) => [key, 0])) },
       { t: state.t, positions: readings.positions },
     ];
     const keys = Object.keys(readings.positions).slice(0, 3);
-    const chart = createPulleyHistoryGeometry(history, keys);
+    const chart = createPulleyHistoryGeometry(history, keys, { contactTime: state.t });
+    assert.ok(chart.eventX !== null);
+    close(chart.eventValue, readings.t);
     keys.forEach((key, index) => {
       assert.ok(chart.currentPoints[index]);
       assert.ok(chart.paths[index].startsWith("M"));

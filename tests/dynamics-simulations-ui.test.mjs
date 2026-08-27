@@ -56,6 +56,7 @@ test("poleas expone cuatro escenarios, análisis externo y controles completos",
   assert.match(component, /data-pulley-scenario=\{scenario\.id\}/);
   assert.match(component, /SimulationFloatingPlayback/);
   assert.match(component, /data-action="step"/);
+  assert.match(component, /data-pulley-contact-message/);
   assert.match(analysis, /data-pulley-analysis/);
   assert.match(analysis, /data-fbd-force=\{label\}/);
   assert.match(analysis, /m1.*"N", "up".*"W₁", "down".*"f", "left".*"T", "right"/s);
@@ -69,11 +70,13 @@ test("poleas expone cuatro escenarios, análisis externo y controles completos",
   assert.match(analysis, /y.*1.*y.*2.*2.*y.*B/s);
   assert.match(runtime, /readings\.positions\.m1 \+ runtime\.readings\.positions\.m2 \+ 2 \* runtime\.readings\.positions\.m3/);
   assert.match(analysis, /pulley-history/);
+  assert.match(analysis, /contactLabel/);
   assert.doesNotMatch(analysis, /<mtext>\{t\(/);
   assert.doesNotMatch(source("src/components/simulations/SimulationModelExplanation.astro"), /<mtext>\{t\(/);
   assert.match(runtime, /FIXED_STEP = 1 \/ 120/);
   assert.match(runtime, /initializeSimulationFloatingPlayback/);
   assert.match(runtime, /if \(!runtime\.state\.stopped\) announce\(t\(locale, "pulleySystems\.stepDone"\)\)/);
+  assert.match(runtime, /contactTime: runtime\.state\.stopped \? runtime\.state\.t : null/);
 });
 
 test("p5 solo presenta estado calculado por modelos puros", () => {
@@ -90,6 +93,7 @@ test("p5 solo presenta estado calculado por modelos puros", () => {
   assert.doesNotMatch(forces, /drawFbd|drawHistory|freeBodyDiagram|historyGraph/);
   assert.doesNotMatch(circular, /fbdShort|freeBodyDiagram|noHorizontalForce/);
   assert.doesNotMatch(pulley, /utils\/pulley-systems/);
+  assert.doesNotMatch(pulley, /p\.rotate\(/);
   for (const renderer of [forces, pulley, source("src/scripts/p5-projectile-renderer.js")]) {
     assert.match(renderer, /listenForSimulationThemeChange/);
   }
