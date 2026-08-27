@@ -12,17 +12,40 @@ const sampleArc = ({ x, y, radius, start, end, samples = 20 }) => Object.freeze(
 );
 const join = (...parts) => Object.freeze(parts.flatMap((part, index) => index === 0 ? part : part.slice(1)));
 
-const block = (id, x, y, width, height) => Object.freeze({
-  id, x, y, width, height,
-  left: x - width / 2, right: x + width / 2,
-  top: y - height / 2, bottom: y + height / 2,
-  hooks: Object.freeze({
-    top: point(x, y - height / 2),
-    left: point(x - width / 2, y),
-    right: point(x + width / 2, y),
-    upperRight: point(x + width / 2, y - height / 2 + 2),
-  }),
-});
+export const getBlockAttachmentPoint = (body, face) => {
+  if (!body || ![body.left, body.right, body.top, body.bottom].every(Number.isFinite)) {
+    throw new TypeError("El bloque requiere límites finitos para ubicar su anclaje.");
+  }
+  const centerX = (body.left + body.right) / 2;
+  const centerY = (body.top + body.bottom) / 2;
+  const attachments = {
+    top: point(centerX, body.top),
+    right: point(body.right, centerY),
+    bottom: point(centerX, body.bottom),
+    left: point(body.left, centerY),
+  };
+  if (!Object.hasOwn(attachments, face)) {
+    throw new RangeError(`Cara de anclaje desconocida: ${String(face)}.`);
+  }
+  return attachments[face];
+};
+
+const block = (id, x, y, width, height) => {
+  const body = {
+    id, x, y, width, height,
+    left: x - width / 2, right: x + width / 2,
+    top: y - height / 2, bottom: y + height / 2,
+  };
+  return Object.freeze({
+    ...body,
+    hooks: Object.freeze({
+      top: getBlockAttachmentPoint(body, "top"),
+      right: getBlockAttachmentPoint(body, "right"),
+      bottom: getBlockAttachmentPoint(body, "bottom"),
+      left: getBlockAttachmentPoint(body, "left"),
+    }),
+  });
+};
 const pulley = (id, x, y, radius, mobile = false) => Object.freeze({ id, x, y, radius, mobile, axle: point(x, y) });
 
 export const getPolylineLength = (points) => points.slice(1).reduce(
@@ -51,7 +74,7 @@ export const createPulleySceneGeometry = ({ scenarioId, width, height, positions
     const blockWidth = compact ? 54 : 68;
     const blockHeight = compact ? 50 : 56;
     const tableY = height * (compact ? .54 : .52);
-    const ropeY = tableY - blockHeight + 2;
+    const ropeY = tableY - blockHeight / 2;
     const wheel = pulley("fixed", width - (compact ? 60 : 78), ropeY + radius, radius);
     const topTangent = point(wheel.x, wheel.y - radius);
     const rightTangent = point(wheel.x + radius, wheel.y);
@@ -66,7 +89,7 @@ export const createPulleySceneGeometry = ({ scenarioId, width, height, positions
     const m2 = block("m2", m2Hook.x, m2Hook.y + blockHeight / 2, compact ? 54 : 62, blockHeight);
     return freezeScene({
       scenarioId, scale,
-      ropes: [join([m1.hooks.upperRight, topTangent], sampleArc({ ...wheel, radius, start: -Math.PI / 2, end: 0 }), [rightTangent, m2.hooks.top])],
+      ropes: [join([m1.hooks.right, topTangent], sampleArc({ ...wheel, radius, start: -Math.PI / 2, end: 0 }), [rightTangent, m2.hooks.top])],
       pulleys: [wheel], blocks: { m1, m2 },
       table: Object.freeze({ x: compact ? 22 : 34, edgeX, y: tableY, legX: edgeX - 3 }),
       supports: [Object.freeze({ id: "edge-bracket", type: "bracket", points: Object.freeze([

@@ -159,7 +159,7 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       geometry.pulleys.forEach((item) => pulley(item, colors));
 
       if (frame.scenarioId === "table-hanging") {
-        block(geometry.blocks.m1, "m₁", frame.parameters.m1, colors, colors.block, ["upperRight"]);
+        block(geometry.blocks.m1, "m₁", frame.parameters.m1, colors, colors.block, ["right"]);
         block(geometry.blocks.m2, "m₂", frame.parameters.m2, colors, colors.second);
         p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text(t(locale, frame.readings.status === "static" ? "pulleySystems.tableStaticNote" : "pulleySystems.tableKineticNote"), 28, p.height - 48, p.width - 56, 36);
       } else if (frame.scenarioId === "atwood") {

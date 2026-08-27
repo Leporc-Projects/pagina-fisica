@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createPulleySceneGeometry, getPolylineLength } from "../src/utils/pulley-geometry.js";
+import {
+  createPulleySceneGeometry,
+  getBlockAttachmentPoint,
+  getPolylineLength,
+} from "../src/utils/pulley-geometry.js";
 import { PULLEY_TERMINAL_GEOMETRY } from "../src/utils/pulley-systems.js";
 
 const close = (actual, expected, tolerance = 1e-8) =>
@@ -34,6 +38,26 @@ const circleOverlapsBlock = (wheel, body) => {
   return Math.hypot(wheel.x - x, wheel.y - y) < wheel.radius - 1e-7;
 };
 
+const assertCenteredBlockHooks = (body) => {
+  close(body.hooks.top.x, body.x);
+  close(body.hooks.top.y, body.top);
+  close(body.hooks.right.x, body.right);
+  close(body.hooks.right.y, body.y);
+  close(body.hooks.bottom.x, body.x);
+  close(body.hooks.bottom.y, body.bottom);
+  close(body.hooks.left.x, body.left);
+  close(body.hooks.left.y, body.y);
+};
+
+test("la utilidad de anclaje devuelve el centro exacto de cada cara", () => {
+  const body = { left: 20, right: 80, top: 30, bottom: 70 };
+  samePoint(getBlockAttachmentPoint(body, "top"), { x: 50, y: 30 });
+  samePoint(getBlockAttachmentPoint(body, "right"), { x: 80, y: 50 });
+  samePoint(getBlockAttachmentPoint(body, "bottom"), { x: 50, y: 70 });
+  samePoint(getBlockAttachmentPoint(body, "left"), { x: 20, y: 50 });
+  assert.throws(() => getBlockAttachmentPoint(body, "corner"), /Cara de anclaje desconocida/);
+});
+
 test("los cinco aparatos son finitos, deterministas e invariantes de idioma", () => {
   for (const width of [390, 800]) {
     for (const [scenarioId, positions] of Object.entries(initialPositions)) {
@@ -45,6 +69,7 @@ test("los cinco aparatos son finitos, deterministas e invariantes de idioma", ()
       assert.ok(Object.values(geometry.blocks).every(({ left, right, top, bottom }) =>
         left >= 0 && right <= width && top >= 0 && bottom <= (width < 620 ? 480 : 576)
       ));
+      Object.values(geometry.blocks).forEach(assertCenteredBlockHooks);
       for (const wheel of geometry.pulleys) {
         for (const body of Object.values(geometry.blocks)) assert.equal(circleOverlapsBlock(wheel, body), false);
       }
@@ -58,12 +83,16 @@ test("mesa: bloque apoyado, cuerda horizontal, cuarto de arco tangente y bracket
   const wheel = geometry.pulleys[0];
   const m1 = geometry.blocks.m1;
   const m2 = geometry.blocks.m2;
-  samePoint(rope[0], m1.hooks.upperRight);
+  samePoint(rope[0], m1.hooks.right);
   samePoint(rope.at(-1), m2.hooks.top);
   close(rope[0].y, rope[1].y);
+  close(rope[0].y, m1.y);
+  close(rope[0].x, m1.right);
   close(rope.at(-1).x, rope.at(-2).x);
+  close(rope.at(-1).x, m2.x);
+  close(rope.at(-1).y, m2.top);
   close(m1.bottom, geometry.table.y);
-  assert.ok(wheel.y + wheel.radius <= geometry.table.y);
+  close(wheel.y - wheel.radius, m1.y);
   samePoint(geometry.supports[0].points.at(-1), wheel.axle);
   assertTangent(rope, 1, wheel, 0);
   assertTangent(rope, rope.length - 2, wheel, rope.length - 1);
@@ -73,7 +102,7 @@ test("mesa conserva cuerda y se detiene con clearance antes del bracket", () => 
   const initial = layout("table-hanging", { m1: 0, m2: 0 });
   const contact = layout("table-hanging", { m1: 10, m2: 10 });
   close(getPolylineLength(initial.ropes[0]), getPolylineLength(contact.ropes[0]));
-  close(contact.table.edgeX - contact.blocks.m1.hooks.upperRight.x, 6);
+  close(contact.table.edgeX - contact.blocks.m1.hooks.right.x, 6);
   assert.ok(contact.blocks.m1.right < contact.pulleys[0].x - contact.pulleys[0].radius);
 });
 
