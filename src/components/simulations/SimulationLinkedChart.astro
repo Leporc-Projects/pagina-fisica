@@ -17,9 +17,10 @@ interface Props {
   descriptionKey?: string;
   messageKey?: string;
   seriesLabelKeys?: string[];
+  eventLabel?: string;
 }
 
-const { id, chartKey, title, description, xLabel, yLabel, seriesLabels, message, referenceLabel, locale = "es", titleKey, descriptionKey, messageKey, seriesLabelKeys = [] } = Astro.props;
+const { id, chartKey, title, description, xLabel, yLabel, seriesLabels, message, referenceLabel, eventLabel, locale = "es", titleKey, descriptionKey, messageKey, seriesLabelKeys = [] } = Astro.props;
 const { width, height, plot } = DYNAMICS_CHART_VIEW;
 const clipId = `${id}-clip`;
 const descriptionId = `${id}-description`;
@@ -46,6 +47,8 @@ const indexes = [0, 1, 2, 3, 4];
       <line class="simulation-linked-chart__zero" data-chart-zero />
       <line class="simulation-linked-chart__reference" data-chart-reference hidden />
       <line class="simulation-linked-chart__cursor" data-chart-cursor hidden />
+      <line class="simulation-linked-chart__event" data-chart-event hidden />
+      {eventLabel && <text class="simulation-linked-chart__event-label" data-chart-event-label y={plot.top + 16} hidden>{eventLabel}</text>}
       {seriesLabels.map((_, index) => <path class={`simulation-linked-chart__series simulation-linked-chart__series--${index + 1}`} data-series-path={index} hidden />)}
       {seriesLabels.map((_, index) => <circle class={`simulation-linked-chart__current simulation-linked-chart__current--${index + 1}`} data-series-current={index} r="5" hidden />)}
     </g>

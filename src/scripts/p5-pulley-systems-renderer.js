@@ -1,6 +1,5 @@
 import p5 from "p5";
 import { t } from "../i18n/index.js";
-import { createCanvasAlertLayout } from "../utils/canvas-text-layout.js";
 import { createPulleySceneGeometry } from "../utils/pulley-geometry.js";
 import { listenForSimulationThemeChange } from "../utils/simulation-theme.js";
 
@@ -12,41 +11,48 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
   let resizeObserver;
   let removeThemeListener;
   const sketch = (p) => {
-    const pulley = (x, y, radius, rotation, colors, mobile = false) => {
+    const pulley = ({ x, y, radius }, colors) => {
       p.push();
       p.stroke(colors.metal);
-      p.strokeWeight(4);
+      p.strokeWeight(3);
       p.fill(colors.panel);
       p.circle(x, y, radius * 2);
+      p.noFill();
+      p.stroke(colors.rope);
+      p.strokeWeight(2);
+      p.circle(x, y, radius * 1.72);
       p.translate(x, y);
-      p.rotate(rotation);
+      // Los radios son estáticos: no se finge una cinemática de no deslizamiento.
+      p.stroke(colors.metal);
       p.strokeWeight(2);
       p.line(-radius * .68, 0, radius * .68, 0);
       p.line(0, -radius * .68, 0, radius * .68);
       p.fill(colors.metal);
       p.noStroke();
-      p.circle(0, 0, 8);
-      if (mobile) {
-        p.stroke(colors.metal);
-        p.strokeWeight(3);
-        p.line(0, radius, 0, radius + 18);
-      }
+      p.circle(0, 0, 9);
       p.pop();
     };
 
-    const block = (x, y, width, height, label, mass, colors, accent = colors.block) => {
+    const block = (geometry, label, mass, colors, accent = colors.block, hookKeys = ["top"]) => {
       p.push();
       p.rectMode(p.CENTER);
       p.stroke(colors.metal);
       p.strokeWeight(2);
       p.fill(accent);
-      p.rect(x, y, width, height, 8);
+      p.rect(geometry.x, geometry.y, geometry.width, geometry.height, 8);
       p.noStroke();
       p.fill(colors.panel);
       p.textAlign(p.CENTER, p.CENTER);
       p.textStyle(p.BOLD);
       p.textSize(12);
-      p.text(`${label}\n${mass} kg`, x, y);
+      p.text(`${label}\n${mass} kg`, geometry.x, geometry.y);
+      p.stroke(colors.metal);
+      p.strokeWeight(2);
+      p.fill(colors.panel);
+      hookKeys.forEach((key) => {
+        const hook = geometry.hooks[key];
+        if (hook) p.circle(hook.x, hook.y, 5);
+      });
       p.pop();
     };
 
@@ -60,22 +66,48 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       p.endShape();
     };
 
-    const support = (x, y, colors) => {
+    const polyline = (points, colors, weight = 3) => {
+      p.noFill();
+      p.stroke(colors.metal);
+      p.strokeWeight(weight);
+      p.strokeJoin(p.ROUND);
+      p.beginShape();
+      points.forEach(({ x, y }) => p.vertex(x, y));
+      p.endShape();
+    };
+
+    const support = ({ x, y, width = 64 }, colors) => {
       p.stroke(colors.metal);
       p.strokeWeight(4);
-      p.line(x - 28, y, x + 28, y);
+      p.line(x - width / 2, y, x + width / 2, y);
       p.strokeWeight(1);
-      for (let dx = -24; dx <= 24; dx += 12) p.line(x + dx, y, x + dx - 9, y + 9);
+      for (let dx = -width / 2 + 6; dx <= width / 2; dx += 12) p.line(x + dx, y, x + dx - 9, y + 9);
+    };
+
+    const anchor = ({ x, y }, colors) => {
+      p.stroke(colors.metal);
+      p.strokeWeight(3);
+      p.line(x - 10, y, x + 10, y);
+      p.line(x - 8, y, x - 2, y + 7);
+      p.line(x, y, x + 6, y + 7);
+    };
+
+    const stop = ({ x, y }, colors) => {
+      p.stroke(colors.muted);
+      p.strokeWeight(2);
+      p.line(x - 12, y, x + 12, y);
+      p.line(x - 8, y, x - 3, y - 6);
+      p.line(x + 2, y, x + 7, y - 6);
     };
 
     p.setup = () => {
       const width = Math.max(320, container.clientWidth);
-      p.createCanvas(width, Math.max(390, Math.min(560, width * .62))).parent(container);
+      p.createCanvas(width, Math.max(480, Math.min(620, width * .72))).parent(container);
       p.pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
       p.noLoop();
       resizeObserver = new ResizeObserver(() => {
         const nextWidth = Math.max(320, container.clientWidth);
-        p.resizeCanvas(nextWidth, Math.max(390, Math.min(560, nextWidth * .62)));
+        p.resizeCanvas(nextWidth, Math.max(480, Math.min(620, nextWidth * .72)));
         p.redraw();
       });
       resizeObserver.observe(container);
@@ -94,19 +126,15 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
         block: cssColor(container, "--accent", "#1769aa"),
         second: cssColor(container, "--data-series-3", "#047857"),
         third: cssColor(container, "--data-series-4", "#7c3aed"),
-        warning: cssColor(container, "--status-warning-text", "#b91c1c"),
       };
       p.background(colors.background);
       const compact = p.width < 620;
-      const scale = compact ? 21 : 28;
       const q = frame.readings.positions;
-      const rotation = frame.state.t * 1.4 + Object.values(q)[0] * .8;
       const geometry = createPulleySceneGeometry({
         scenarioId: frame.scenarioId,
         width: p.width,
         height: p.height,
         positions: q,
-        scale,
         compact,
       });
       p.fill(colors.text);
@@ -116,70 +144,37 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       p.textSize(compact ? 12 : 14);
       p.text(t(locale, `pulleySystems.scenario.${frame.scenarioId}`), 16, 14);
 
+      // Capas: estructura → límites → cuerda → conectores → ruedas → masas.
+      geometry.supports.filter(({ type }) => type === "ceiling").forEach((item) => support(item, colors));
+      geometry.supports.filter(({ type }) => type === "bracket").forEach((item) => polyline(item.points, colors, 5));
+      geometry.stops.forEach((item) => stop(item, colors));
+      geometry.anchors.forEach((item) => anchor(item, colors));
       if (frame.scenarioId === "table-hanging") {
-        p.stroke(colors.metal); p.strokeWeight(6); p.line(28, geometry.table.y, geometry.table.edgeX, geometry.table.y); p.line(geometry.table.edgeX, geometry.table.y, geometry.table.edgeX, p.height - 24);
-        rope(geometry.ropes[0], colors);
-        const fixed = geometry.pulleys[0];
-        pulley(fixed.x, fixed.y, fixed.radius, rotation, colors);
-        const m1 = geometry.blocks.m1;
-        const m2 = geometry.blocks.m2;
-        block(m1.x, m1.y, m1.width, m1.height, "m₁", frame.parameters.m1, colors);
-        block(m2.x, m2.y, m2.width, m2.height, "m₂", frame.parameters.m2, colors, colors.second);
+        p.stroke(colors.metal); p.strokeWeight(6);
+        p.line(geometry.table.x, geometry.table.y, geometry.table.edgeX, geometry.table.y);
+        p.line(geometry.table.legX, geometry.table.y, geometry.table.legX, p.height - 20);
+      }
+      geometry.ropes.forEach((points) => rope(points, colors));
+      geometry.connectors.forEach(({ points, type }) => polyline(points, colors, type === "axle" ? 4 : 3));
+      geometry.pulleys.forEach((item) => pulley(item, colors));
+
+      if (frame.scenarioId === "table-hanging") {
+        block(geometry.blocks.m1, "m₁", frame.parameters.m1, colors, colors.block, ["upperRight"]);
+        block(geometry.blocks.m2, "m₂", frame.parameters.m2, colors, colors.second);
         p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text(t(locale, frame.readings.status === "static" ? "pulleySystems.tableStaticNote" : "pulleySystems.tableKineticNote"), 28, p.height - 48, p.width - 56, 36);
       } else if (frame.scenarioId === "atwood") {
-        const fixed = geometry.pulleys[0];
-        support(geometry.supports[0].x, geometry.supports[0].y, colors); p.stroke(colors.metal); p.line(fixed.x, geometry.supports[0].y, fixed.x, geometry.supports[0].pulleyTop);
-        rope(geometry.ropes[0], colors);
-        pulley(fixed.x, fixed.y, fixed.radius, rotation, colors);
-        const m1 = geometry.blocks.m1;
-        const m2 = geometry.blocks.m2;
-        block(m1.x, m1.y, m1.width, m1.height, "m₁", frame.parameters.m1, colors);
-        block(m2.x, m2.y, m2.width, m2.height, "m₂", frame.parameters.m2, colors, colors.second);
+        block(geometry.blocks.m1, "m₁", frame.parameters.m1, colors);
+        block(geometry.blocks.m2, "m₂", frame.parameters.m2, colors, colors.second);
       } else if (frame.scenarioId === "movable-pulley") {
-        geometry.supports.forEach(({ x, y }) => support(x, y, colors));
-        rope(geometry.ropes[0], colors);
-        const [mobile, fixed] = geometry.pulleys;
-        pulley(mobile.x, mobile.y, mobile.radius, -rotation, colors, true);
-        pulley(fixed.x, fixed.y, fixed.radius, rotation * 2, colors);
-        const mL = geometry.blocks.mL;
-        const mC = geometry.blocks.mC;
-        block(mL.x, mL.y, mL.width, mL.height, "mL", frame.parameters.mL, colors);
-        block(mC.x, mC.y, mC.width, mC.height, "mC", frame.parameters.mC, colors, colors.second);
-        p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text(t(locale, "pulleySystems.twoToOneScene"), 18, p.height - 45, p.width - 36, 34);
+        block(geometry.blocks.mL, "mL", frame.parameters.mL, colors);
+        block(geometry.blocks.mC, "mC", frame.parameters.mC, colors, colors.second);
       } else {
-        const [fixed, mobile] = geometry.pulleys;
-        support(geometry.supports[0].x, geometry.supports[0].y, colors); p.stroke(colors.metal); p.line(fixed.x, geometry.supports[0].y, fixed.x, geometry.supports[0].pulleyTop);
-        geometry.ropes.forEach((path) => rope(path, colors));
-        pulley(fixed.x, fixed.y, fixed.radius, rotation, colors);
-        pulley(mobile.x, mobile.y, mobile.radius, -rotation, colors, true);
-        const m1 = geometry.blocks.m1;
-        const m2 = geometry.blocks.m2;
-        const m3 = geometry.blocks.m3;
-        block(m3.x, m3.y, m3.width, m3.height, "m₃", frame.parameters.m3, colors, colors.third);
-        block(m1.x, m1.y, m1.width, m1.height, "m₁", frame.parameters.m1, colors);
-        block(m2.x, m2.y, m2.width, m2.height, "m₂", frame.parameters.m2, colors, colors.second);
+        block(geometry.blocks.m3, "m₃", frame.parameters.m3, colors, colors.third);
+        block(geometry.blocks.m1, "m₁", frame.parameters.m1, colors);
+        block(geometry.blocks.m2, "m₂", frame.parameters.m2, colors, colors.second);
         p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text("Tᴄ = 2Tᴀ", 18, p.height - 36);
       }
 
-      if (frame.readings.status === "travel-limit") {
-        const message = t(locale, "pulleySystems.limitReached");
-        p.textStyle(p.BOLD);
-        p.textSize(compact ? 11 : 12);
-        const alert = createCanvasAlertLayout({
-          text: message,
-          canvasWidth: p.width,
-          compact,
-          measureText: (value) => p.textWidth(value),
-        });
-        p.fill(colors.panel); p.stroke(colors.warning); p.strokeWeight(2);
-        p.rect(alert.box.x, alert.box.y, alert.box.width, alert.box.height, 10);
-        p.noStroke(); p.fill(colors.text); p.textAlign(p.LEFT, p.TOP);
-        alert.lines.forEach((line, index) => p.text(
-          line,
-          alert.text.x,
-          alert.text.y + index * alert.lineHeight
-        ));
-      }
     };
   };
   instance = new p5(sketch);

@@ -1,158 +1,193 @@
-// Geometría pura de las cuerdas del laboratorio. Las coordenadas generalizadas
-// llegan ya calculadas por el modelo físico; este módulo solo las proyecta a
-// tramos rectos y arcos tangentes que conservan las restricciones ideales.
+import { PULLEY_TERMINAL_GEOMETRY } from "./pulley-systems.js";
 
+// El aparato se define en coordenadas puras. El modelo aporta q en metros;
+// cada viewport elige una escala, nunca un límite físico.
 const point = (x, y) => Object.freeze({ x, y });
-
-const sampleArc = ({ x, y, radius, start, end, samples = 16 }) =>
-  Object.freeze(Array.from({ length: samples + 1 }, (_, index) => {
+const path = (id, points, type = "connector") => Object.freeze({ id, type, points: Object.freeze(points) });
+const sampleArc = ({ x, y, radius, start, end, samples = 20 }) => Object.freeze(
+  Array.from({ length: samples + 1 }, (_, index) => {
     const angle = start + (end - start) * index / samples;
     return point(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
-  }));
+  })
+);
+const join = (...parts) => Object.freeze(parts.flatMap((part, index) => index === 0 ? part : part.slice(1)));
 
-const join = (...parts) => Object.freeze(parts.flatMap((part, index) =>
-  index === 0 ? part : part.slice(1)
-));
+const block = (id, x, y, width, height) => Object.freeze({
+  id, x, y, width, height,
+  left: x - width / 2, right: x + width / 2,
+  top: y - height / 2, bottom: y + height / 2,
+  hooks: Object.freeze({
+    top: point(x, y - height / 2),
+    left: point(x - width / 2, y),
+    right: point(x + width / 2, y),
+    upperRight: point(x + width / 2, y - height / 2 + 2),
+  }),
+});
+const pulley = (id, x, y, radius, mobile = false) => Object.freeze({ id, x, y, radius, mobile, axle: point(x, y) });
 
 export const getPolylineLength = (points) => points.slice(1).reduce(
-  (length, current, index) => length + Math.hypot(
-    current.x - points[index].x,
-    current.y - points[index].y
-  ),
-  0
+  (length, current, index) => length + Math.hypot(current.x - points[index].x, current.y - points[index].y), 0
 );
 
-export const createPulleySceneGeometry = ({
-  scenarioId,
-  width,
-  height,
-  positions,
-  scale,
-  compact = width < 620,
-}) => {
-  if (![width, height, scale, ...Object.values(positions)].every(Number.isFinite)) {
+const freezeScene = (scene) => Object.freeze({
+  ...scene,
+  ropes: Object.freeze(scene.ropes),
+  pulleys: Object.freeze(scene.pulleys),
+  blocks: Object.freeze(scene.blocks),
+  supports: Object.freeze(scene.supports),
+  anchors: Object.freeze(scene.anchors),
+  connectors: Object.freeze(scene.connectors),
+  stops: Object.freeze(scene.stops),
+  terminalSurfaces: PULLEY_TERMINAL_GEOMETRY[scene.scenarioId],
+});
+
+export const createPulleySceneGeometry = ({ scenarioId, width, height, positions, compact = width < 620 }) => {
+  if (![width, height, ...Object.values(positions)].every(Number.isFinite)) {
     throw new TypeError("La geometría de poleas requiere dimensiones y posiciones finitas.");
   }
 
   if (scenarioId === "table-hanging") {
-    const edgeX = width * .72;
-    const tableY = height * .48;
-    const radius = 28;
-    const pulley = point(edgeX + 24, tableY - 22);
-    const blockWidth = compact ? 64 : 72;
-    const blockX = Math.min(pulley.x - (compact ? 44 : 52), width * (compact ? .28 : .34) + positions.m1 * scale);
-    const hangingY = height * .58 + positions.m2 * scale;
-    const blockAttachment = point(blockX + blockWidth / 2, pulley.y - radius);
-    const topTangent = point(pulley.x, pulley.y - radius);
-    const rightTangent = point(pulley.x + radius, pulley.y);
-    const rope = join(
-      [blockAttachment, topTangent],
-      sampleArc({ ...pulley, radius, start: -Math.PI / 2, end: 0 }),
-      [rightTangent, point(rightTangent.x, hangingY - 30)]
-    );
-    return Object.freeze({
-      ropes: Object.freeze([rope]),
-      pulleys: Object.freeze([{ ...pulley, radius }]),
-      blocks: Object.freeze({
-        m1: Object.freeze({ x: blockX, y: tableY - 25, width: blockWidth, height: 48 }),
-        m2: Object.freeze({ x: rightTangent.x, y: hangingY, width: 62, height: 58 }),
-      }),
-      table: Object.freeze({ edgeX, y: tableY }),
-      supports: Object.freeze([]),
+    const radius = compact ? 22 : 26;
+    const blockWidth = compact ? 54 : 68;
+    const blockHeight = compact ? 50 : 56;
+    const tableY = height * (compact ? .54 : .52);
+    const ropeY = tableY - blockHeight + 2;
+    const wheel = pulley("fixed", width - (compact ? 60 : 78), ropeY + radius, radius);
+    const topTangent = point(wheel.x, wheel.y - radius);
+    const rightTangent = point(wheel.x + radius, wheel.y);
+    const edgeX = wheel.x - radius - 10;
+    const hangingHook0 = wheel.y + radius + (compact ? 20 : 24);
+    const horizontalRoom = edgeX - 6 - blockWidth / 2 - (compact ? 28 : 44);
+    const verticalRoom = height - 18 - blockHeight - hangingHook0;
+    const scale = Math.min(compact ? 18 : 26, horizontalRoom / 10, verticalRoom / 10);
+    const m1HookX = edgeX - 6 - (10 - positions.m1) * scale;
+    const m1 = block("m1", m1HookX - blockWidth / 2, tableY - blockHeight / 2, blockWidth, blockHeight);
+    const m2Hook = point(rightTangent.x, hangingHook0 + positions.m2 * scale);
+    const m2 = block("m2", m2Hook.x, m2Hook.y + blockHeight / 2, compact ? 54 : 62, blockHeight);
+    return freezeScene({
+      scenarioId, scale,
+      ropes: [join([m1.hooks.upperRight, topTangent], sampleArc({ ...wheel, radius, start: -Math.PI / 2, end: 0 }), [rightTangent, m2.hooks.top])],
+      pulleys: [wheel], blocks: { m1, m2 },
+      table: Object.freeze({ x: compact ? 22 : 34, edgeX, y: tableY, legX: edgeX - 3 }),
+      supports: [Object.freeze({ id: "edge-bracket", type: "bracket", points: Object.freeze([
+        point(edgeX - 8, tableY + 5), point(edgeX + 8, tableY + 18), wheel.axle,
+      ]) })],
+      anchors: [], connectors: [],
+      stops: [Object.freeze({ id: "m2-lower-stop", x: m2Hook.x, y: hangingHook0 + 11 * scale + blockHeight })],
     });
   }
 
   if (scenarioId === "atwood") {
-    const radius = 30;
-    const pulley = point(width * .5, 105);
-    const leftY = height * .58 + positions.m1 * scale;
-    const rightY = height * .58 + positions.m2 * scale;
-    const leftTangent = point(pulley.x - radius, pulley.y);
-    const rightTangent = point(pulley.x + radius, pulley.y);
-    const rope = join(
-      [point(leftTangent.x, leftY - 30), leftTangent],
-      sampleArc({ ...pulley, radius, start: Math.PI, end: 2 * Math.PI }),
-      [rightTangent, point(rightTangent.x, rightY - 30)]
-    );
-    return Object.freeze({
-      ropes: Object.freeze([rope]),
-      pulleys: Object.freeze([{ ...pulley, radius }]),
-      blocks: Object.freeze({
-        m1: Object.freeze({ x: leftTangent.x, y: leftY, width: 62, height: 58 }),
-        m2: Object.freeze({ x: rightTangent.x, y: rightY, width: 62, height: 58 }),
-      }),
-      supports: Object.freeze([{ x: pulley.x, y: 38, pulleyTop: pulley.y - radius }]),
+    const radius = compact ? 30 : 34;
+    const blockWidth = compact ? 52 : 62;
+    const blockHeight = compact ? 50 : 56;
+    const wheel = pulley("fixed", width * .5, compact ? 82 : 96, radius);
+    const topContact = wheel.y + radius + 12;
+    const bottomHook = height - 18 - blockHeight;
+    const scale = (bottomHook - topContact) / 19;
+    const hook0 = topContact + 9 * scale;
+    const leftTangent = point(wheel.x - radius, wheel.y);
+    const rightTangent = point(wheel.x + radius, wheel.y);
+    const m1Hook = point(leftTangent.x, hook0 + positions.m1 * scale);
+    const m2Hook = point(rightTangent.x, hook0 + positions.m2 * scale);
+    const m1 = block("m1", m1Hook.x, m1Hook.y + blockHeight / 2, blockWidth, blockHeight);
+    const m2 = block("m2", m2Hook.x, m2Hook.y + blockHeight / 2, blockWidth, blockHeight);
+    return freezeScene({
+      scenarioId, scale,
+      ropes: [join([m1.hooks.top, leftTangent], sampleArc({ ...wheel, radius, start: Math.PI, end: 2 * Math.PI }), [rightTangent, m2.hooks.top])],
+      pulleys: [wheel], blocks: { m1, m2 },
+      supports: [Object.freeze({ id: "ceiling", type: "ceiling", x: wheel.x, y: 34, width: compact ? 66 : 78 })],
+      anchors: [], connectors: [path("fixed-axle", [point(wheel.x, 34), wheel.axle], "axle")],
+      stops: [
+        Object.freeze({ id: "m1-lower-stop", x: m1Hook.x, y: bottomHook + blockHeight }),
+        Object.freeze({ id: "m2-lower-stop", x: m2Hook.x, y: bottomHook + blockHeight }),
+      ],
     });
   }
 
   if (scenarioId === "movable-pulley") {
-    const top = 52;
-    const radius = 30;
-    const mobile = point(width * .42, height * .46 + positions.mL * scale);
-    const fixed = point(mobile.x + 2 * radius, top + radius);
-    const counterY = height * .56 + positions.mC * scale;
-    const mobileLeft = point(mobile.x - radius, mobile.y);
-    const mobileRight = point(mobile.x + radius, mobile.y);
+    const radius = compact ? 28 : 34;
+    const blockHeight = compact ? 50 : 56;
+    const fixed = pulley("fixed", width * (compact ? .62 : .58), compact ? 80 : 94, radius);
+    const mobileX = fixed.x - 2 * radius;
+    const topContact = fixed.y + radius + 12;
+    const bottomHook = height - 18 - blockHeight;
+    const scale = (bottomHook - topContact) / 14.5;
+    const mobileY0 = height - 18 - blockHeight - radius - 26 - 4.5 * scale;
+    const mobile = pulley("mobile", mobileX, mobileY0 + positions.mL * scale, radius, true);
     const fixedLeft = point(fixed.x - radius, fixed.y);
     const fixedRight = point(fixed.x + radius, fixed.y);
-    const rope = join(
-      [point(mobileLeft.x, top), mobileLeft],
-      sampleArc({ ...mobile, radius, start: Math.PI, end: 0 }),
-      [mobileRight, fixedLeft],
-      sampleArc({ ...fixed, radius, start: Math.PI, end: 2 * Math.PI }),
-      [fixedRight, point(fixedRight.x, counterY - 31)]
-    );
-    return Object.freeze({
-      ropes: Object.freeze([rope]),
-      pulleys: Object.freeze([
-        { ...mobile, radius, mobile: true },
-        { ...fixed, radius },
-      ]),
-      blocks: Object.freeze({
-        mL: Object.freeze({ x: mobile.x, y: mobile.y + 88, width: 72, height: 58 }),
-        mC: Object.freeze({ x: fixedRight.x, y: counterY, width: 62, height: 58 }),
-      }),
-      supports: Object.freeze([
-        { x: mobileLeft.x, y: top },
-        { x: fixed.x, y: top },
-      ]),
+    const mobileLeft = point(mobile.x - radius, mobile.y);
+    const mobileRight = point(mobile.x + radius, mobile.y);
+    const anchor = point(mobileLeft.x, compact ? 34 : 38);
+    const mCHook = point(fixedRight.x, topContact + (9 + positions.mC) * scale);
+    const mC = block("mC", mCHook.x, mCHook.y + blockHeight / 2, compact ? 52 : 60, blockHeight);
+    const loadHook = point(mobile.x, mobile.y + radius + 26);
+    const mL = block("mL", loadHook.x, loadHook.y + blockHeight / 2, compact ? 66 : 76, blockHeight);
+    const yokeBottom = point(mobile.x, mobile.y + radius + 12);
+    return freezeScene({
+      scenarioId, scale,
+      ropes: [join([anchor, mobileLeft], sampleArc({ ...mobile, radius, start: Math.PI, end: 0 }), [mobileRight, fixedLeft], sampleArc({ ...fixed, radius, start: Math.PI, end: 2 * Math.PI }), [fixedRight, mC.hooks.top])],
+      pulleys: [mobile, fixed], blocks: { mL, mC },
+      supports: [Object.freeze({ id: "fixed-ceiling", type: "ceiling", x: fixed.x, y: 34, width: compact ? 64 : 76 })],
+      anchors: [Object.freeze({ id: "fixed-rope-anchor", type: "rope", ...anchor })],
+      connectors: [
+        path("fixed-axle", [point(fixed.x, 34), fixed.axle], "axle"),
+        path("mobile-yoke-left", [point(mobile.x - radius * .58, mobile.y), point(mobile.x - radius * .58, yokeBottom.y), yokeBottom], "yoke"),
+        path("mobile-yoke-right", [point(mobile.x + radius * .58, mobile.y), point(mobile.x + radius * .58, yokeBottom.y), yokeBottom], "yoke"),
+        path("load-hanger", [yokeBottom, mL.hooks.top], "hanger"),
+      ],
+      stops: [Object.freeze({ id: "mC-lower-stop", x: mC.x, y: bottomHook + blockHeight })],
     });
   }
 
   if (scenarioId === "double-atwood") {
-    const fixedRadius = 29;
-    const mobileRadius = compact ? 34 : 46;
-    const fixed = point(width * .42, 92);
-    const mobile = point(fixed.x + fixedRadius, height * .42 + positions.pulley * scale);
-    const mass3Y = height * .42 + positions.m3 * scale;
-    const mass1Y = height * .72 + positions.m1 * scale;
-    const mass2Y = height * .72 + positions.m2 * scale;
+    const fixedRadius = compact ? 26 : 30;
+    const mobileRadius = compact ? 34 : 42;
+    const blockHeight = compact ? 48 : 54;
+    const fixed = pulley("fixed", width * (compact ? .30 : .34), compact ? 78 : 92, fixedRadius);
+    const scale = Math.min(
+      compact ? 14 : 20,
+      (height - 18 - blockHeight - 2 * mobileRadius - 26 - (fixed.y + fixedRadius + 28)) / 16.5
+    );
+    const mobileY0 = height - 18 - blockHeight - mobileRadius - 12 - 16.5 * scale;
+    const mobile = pulley("mobile", width * (compact ? .57 : .58), mobileY0 + positions.pulley * scale, mobileRadius, true);
     const fixedLeft = point(fixed.x - fixedRadius, fixed.y);
     const fixedRight = point(fixed.x + fixedRadius, fixed.y);
     const mobileLeft = point(mobile.x - mobileRadius, mobile.y);
     const mobileRight = point(mobile.x + mobileRadius, mobile.y);
-    const upperRope = join(
-      [point(fixedLeft.x, mass3Y - 30), fixedLeft],
-      sampleArc({ ...fixed, radius: fixedRadius, start: Math.PI, end: 2 * Math.PI }),
-      [fixedRight, point(fixedRight.x, mobile.y - mobileRadius - 12)]
-    );
-    const lowerRope = join(
-      [point(mobileLeft.x, mass1Y - 28), mobileLeft],
-      sampleArc({ ...mobile, radius: mobileRadius, start: Math.PI, end: 0 }),
-      [mobileRight, point(mobileRight.x, mass2Y - 28)]
-    );
-    return Object.freeze({
-      ropes: Object.freeze([upperRope, lowerRope]),
-      pulleys: Object.freeze([
-        { ...fixed, radius: fixedRadius },
-        { ...mobile, radius: mobileRadius, mobile: true },
-      ]),
-      blocks: Object.freeze({
-        m1: Object.freeze({ x: mobileLeft.x, y: mass1Y, width: compact ? 52 : 58, height: 54 }),
-        m2: Object.freeze({ x: mobileRight.x, y: mass2Y, width: compact ? 52 : 58, height: 54 }),
-        m3: Object.freeze({ x: fixedLeft.x, y: mass3Y, width: 58, height: 55 }),
-      }),
-      supports: Object.freeze([{ x: fixed.x, y: 34, pulleyTop: fixed.y - fixedRadius }]),
+    const m3TopContact = fixed.y + fixedRadius + 10;
+    const m3Hook = point(fixedLeft.x, m3TopContact + (9 + positions.m3) * scale);
+    const relative1 = positions.m1 - positions.pulley;
+    const relative2 = positions.m2 - positions.pulley;
+    const lowerTopContact = mobile.y + mobileRadius + 12;
+    const m1Hook = point(mobileLeft.x, lowerTopContact + (8 + relative1) * scale);
+    const m2Hook = point(mobileRight.x, lowerTopContact + (8 + relative2) * scale);
+    const m1 = block("m1", m1Hook.x, m1Hook.y + blockHeight / 2, compact ? 48 : 56, blockHeight);
+    const m2 = block("m2", m2Hook.x, m2Hook.y + blockHeight / 2, compact ? 48 : 56, blockHeight);
+    const m3 = block("m3", m3Hook.x, m3Hook.y + blockHeight / 2, compact ? 48 : 56, blockHeight);
+    const upperHook = point(fixedRight.x, mobile.y - mobileRadius - 14);
+    const yokeTop = point(mobile.x, upperHook.y);
+    return freezeScene({
+      scenarioId, scale,
+      ropes: [
+        join([m3.hooks.top, fixedLeft], sampleArc({ ...fixed, radius: fixedRadius, start: Math.PI, end: 2 * Math.PI }), [fixedRight, upperHook]),
+        join([m1.hooks.top, mobileLeft], sampleArc({ ...mobile, radius: mobileRadius, start: Math.PI, end: 2 * Math.PI }), [mobileRight, m2.hooks.top]),
+      ],
+      pulleys: [fixed, mobile], blocks: { m1, m2, m3 },
+      supports: [Object.freeze({ id: "fixed-ceiling", type: "ceiling", x: fixed.x, y: 32, width: compact ? 62 : 74 })],
+      anchors: [],
+      connectors: [
+        path("fixed-axle", [point(fixed.x, 32), fixed.axle], "axle"),
+        path("upper-hanger", [upperHook, point(upperHook.x, yokeTop.y), yokeTop, mobile.axle], "hanger"),
+        path("mobile-yoke-left", [point(mobile.x - mobileRadius * .58, mobile.y), point(mobile.x - mobileRadius * .58, yokeTop.y), yokeTop], "yoke"),
+        path("mobile-yoke-right", [point(mobile.x + mobileRadius * .58, mobile.y), point(mobile.x + mobileRadius * .58, yokeTop.y), yokeTop], "yoke"),
+      ],
+      stops: [
+        Object.freeze({ id: "m3-lower-stop", x: m3.x, y: m3TopContact + 18.5 * scale + blockHeight }),
+        Object.freeze({ id: "m1-lower-stop", x: m1.x, y: lowerTopContact + 16.5 * scale + blockHeight }),
+        Object.freeze({ id: "m2-lower-stop", x: m2.x, y: lowerTopContact + 16.5 * scale + blockHeight }),
+      ],
     });
   }
 

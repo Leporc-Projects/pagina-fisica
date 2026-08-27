@@ -123,5 +123,5 @@ const arrowGeometry = {
 
 <section class="dynamics-analysis-card dynamics-history" aria-labelledby="pulley-history-title">
   <div><p class="academic-label">{t(locale, "pulleySystems.lastTenSeconds")}</p><h2 id="pulley-history-title">{t(locale, "pulleySystems.historyTitle")}</h2></div>
-  <SimulationLinkedChart id="pulley-position-history" chartKey="pulley-position-history" title={t(locale, "pulleySystems.historyChartTitle")} description={t(locale, "pulleySystems.historyDescription")} descriptionKey="pulleySystems.historyDescription" xLabel="t [s]" yLabel="Δq [m]" seriesLabels={["q₁", "q₂", "q₃"]} locale={locale} />
+  <SimulationLinkedChart id="pulley-position-history" chartKey="pulley-position-history" title={t(locale, "pulleySystems.historyChartTitle")} description={t(locale, "pulleySystems.historyDescription")} descriptionKey="pulleySystems.historyDescription" xLabel="t [s]" yLabel="Δq [m]" seriesLabels={["q₁", "q₂", "q₃"]} eventLabel={t(locale, "pulleySystems.contactLabel")} locale={locale} />
 </section>

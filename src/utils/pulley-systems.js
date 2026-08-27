@@ -9,7 +9,45 @@ export const PULLEY_LIMITS = Object.freeze({
   mass: Object.freeze({ minimum: 0.5, maximum: 20 }),
   g: Object.freeze({ minimum: 1, maximum: 15 }),
   friction: Object.freeze({ minimum: 0, maximum: 0.8 }),
-  travel: 3.2,
+});
+
+const surface = (id, coefficients, boundary, body, target) => Object.freeze({
+  id,
+  coefficients: Object.freeze({ ...coefficients }),
+  ...boundary,
+  body,
+  target,
+});
+
+// Distancias del aparato en espacio del modelo. La proyección visual puede usar
+// otra escala en móvil y escritorio, pero el contacto físico es siempre el mismo.
+export const PULLEY_TERMINAL_GEOMETRY = Object.freeze({
+  "table-hanging": Object.freeze([
+    surface("m1-bracket", { m1: 1 }, { maximum: 10 }, "m1", "pulley-bracket"),
+    surface("m2-lower-stop", { m2: 1 }, { maximum: 11 }, "m2", "lower-stop"),
+  ]),
+  atwood: Object.freeze([
+    surface("m1-upper-clearance", { m1: 1 }, { minimum: -9 }, "m1", "fixed-pulley"),
+    surface("m1-lower-stop", { m1: 1 }, { maximum: 10 }, "m1", "lower-stop"),
+    surface("m2-upper-clearance", { m2: 1 }, { minimum: -9 }, "m2", "fixed-pulley"),
+    surface("m2-lower-stop", { m2: 1 }, { maximum: 10 }, "m2", "lower-stop"),
+  ]),
+  "movable-pulley": Object.freeze([
+    surface("mC-fixed-pulley", { mC: 1 }, { minimum: -9 }, "mC", "fixed-pulley"),
+    surface("mC-lower-stop", { mC: 1 }, { maximum: 5.5 }, "mC", "lower-stop"),
+    surface("mL-lower-stop", { mL: 1 }, { maximum: 5.2 }, "mL", "lower-stop"),
+    surface("mobile-upper-clearance", { mL: 1 }, { minimum: -3.2 }, "mobile-assembly", "upper-support"),
+  ]),
+  "double-atwood": Object.freeze([
+    surface("m3-fixed-pulley", { m3: 1 }, { minimum: -9 }, "m3", "fixed-pulley"),
+    surface("m3-lower-stop", { m3: 1 }, { maximum: 9.5 }, "m3", "lower-stop"),
+    surface("mobile-fixed-clearance", { pulley: 1 }, { minimum: -3.5 }, "mobile-assembly", "upper-apparatus"),
+    surface("mobile-lower-stop", { pulley: 1 }, { maximum: 5 }, "mobile-assembly", "lower-stop"),
+    surface("m1-mobile-clearance", { m1: 1, pulley: -1 }, { minimum: -8 }, "m1", "mobile-pulley"),
+    surface("m1-lower-stop", { m1: 1, pulley: -1 }, { maximum: 8.5 }, "m1", "lower-stop"),
+    surface("m2-mobile-clearance", { m2: 1, pulley: -1 }, { minimum: -8 }, "m2", "mobile-pulley"),
+    surface("m2-lower-stop", { m2: 1, pulley: -1 }, { maximum: 8.5 }, "m2", "lower-stop"),
+  ]),
 });
 
 const REQUIRED_PARAMETERS = Object.freeze({
@@ -150,6 +188,7 @@ export const createPulleyState = (scenarioId, config) => {
     velocities: zeroCoordinates(solution),
     stopped: false,
     stopReason: null,
+    contact: null,
   };
 };
 
@@ -166,8 +205,41 @@ const integrate = (state, accelerations, dt) => ({
   ])),
 });
 
-const reachesTravelLimit = (state) =>
-  Object.values(state.positions).some((position) => Math.abs(position) > PULLEY_LIMITS.travel + EPSILON);
+const projectCoordinate = (values, coefficients) => Object.entries(coefficients).reduce(
+  (total, [key, coefficient]) => total + coefficient * values[key],
+  0
+);
+
+const crossingTime = ({ value, velocity, acceleration, minimum, maximum }) => {
+  const limit = minimum ?? maximum;
+  const direction = minimum === undefined ? 1 : -1;
+  const offset = value - limit;
+  const candidates = [];
+  if (Math.abs(acceleration) <= EPSILON) {
+    if (Math.abs(velocity) > EPSILON) candidates.push(-offset / velocity);
+  } else {
+    const discriminant = velocity ** 2 - 2 * acceleration * offset;
+    if (discriminant >= -EPSILON) {
+      const root = Math.sqrt(Math.max(0, discriminant));
+      candidates.push((-velocity - root) / acceleration, (-velocity + root) / acceleration);
+    }
+  }
+  return candidates
+    .filter((time) => time >= -EPSILON)
+    .map((time) => Math.max(0, time))
+    .filter((time) => direction * (velocity + acceleration * time) > EPSILON)
+    .sort((a, b) => a - b)[0] ?? null;
+};
+
+export const getPulleyContactCandidates = (state, accelerations) => PULLEY_TERMINAL_GEOMETRY[
+  state.scenarioId
+].flatMap((terminalSurface) => {
+  const value = projectCoordinate(state.positions, terminalSurface.coefficients);
+  const velocity = projectCoordinate(state.velocities, terminalSurface.coefficients);
+  const acceleration = projectCoordinate(accelerations, terminalSurface.coefficients);
+  const time = crossingTime({ value, velocity, acceleration, ...terminalSurface });
+  return time === null ? [] : [{ ...terminalSurface, time, value, velocity, acceleration }];
+}).sort((a, b) => a.time - b.time || a.id.localeCompare(b.id));
 
 export const stepPulleyState = (state, dt) => {
   if (!Number.isFinite(dt) || dt < 0) throw new RangeError("dt must be finite and non-negative.");
@@ -176,22 +248,19 @@ export const stepPulleyState = (state, dt) => {
   if (solution.regime === "static" || solution.regime === "equilibrium") {
     return { ...structuredClone(state), t: state.t + dt };
   }
-  const candidate = integrate(state, solution.accelerations, dt);
-  if (!reachesTravelLimit(candidate)) return candidate;
-
-  let low = 0;
-  let high = dt;
-  for (let iteration = 0; iteration < 56; iteration += 1) {
-    const middle = (low + high) / 2;
-    if (reachesTravelLimit(integrate(state, solution.accelerations, middle))) high = middle;
-    else low = middle;
-  }
-  const boundary = integrate(state, solution.accelerations, low);
+  const contact = getPulleyContactCandidates(state, solution.accelerations)
+    .find(({ time }) => time <= dt + EPSILON);
+  if (!contact) return integrate(state, solution.accelerations, dt);
+  const boundary = integrate(state, solution.accelerations, Math.min(dt, contact.time));
   return {
     ...boundary,
-    velocities: Object.fromEntries(Object.keys(boundary.velocities).map((key) => [key, 0])),
     stopped: true,
-    stopReason: "travel-limit",
+    stopReason: "geometry-contact",
+    contact: Object.freeze({
+      surfaceId: contact.id,
+      body: contact.body,
+      target: contact.target,
+    }),
   };
 };
 
@@ -199,21 +268,20 @@ export const resetPulleyState = (state) => createPulleyState(state.scenarioId, s
 
 export const getPulleyReadings = (state) => {
   const solution = solvePulleySystem(state.scenarioId, state.config);
-  const status = state.stopped ? "travel-limit" : solution.regime;
+  const status = state.stopped ? "geometry-contact" : solution.regime;
   return {
     scenarioId: state.scenarioId,
     t: state.t,
     status,
     positions: { ...state.positions },
     velocities: { ...state.velocities },
-    accelerations: state.stopped
-      ? Object.fromEntries(Object.keys(solution.accelerations).map((key) => [key, 0]))
-      : { ...solution.accelerations },
+    accelerations: { ...solution.accelerations },
     tensions: { ...solution.tensions },
     friction: solution.friction,
     normal: solution.normal ?? 0,
     maximumStatic: solution.maximumStatic ?? 0,
     stopped: state.stopped,
     stopReason: state.stopReason,
+    contact: state.contact ? { ...state.contact } : null,
   };
 };

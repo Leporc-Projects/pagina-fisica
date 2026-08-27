@@ -138,7 +138,11 @@ const createRuntime = async (root, suppliedExperience) => {
 
   const updateHistory = () => {
     const chart = root.querySelector('[data-simulation-chart="pulley-position-history"]');
-    if (chart instanceof HTMLElement) updateSimulationLinkedChart(chart, createPulleyHistoryGeometry(runtime.history, historyKeys(runtime.scenarioId)), display);
+    if (chart instanceof HTMLElement) updateSimulationLinkedChart(chart, createPulleyHistoryGeometry(
+      runtime.history,
+      historyKeys(runtime.scenarioId),
+      { contactTime: runtime.state.stopped ? runtime.state.t : null }
+    ), display);
     root.querySelectorAll('[data-simulation-chart="pulley-position-history"] [data-series-legend]').forEach((item, index) => item.toggleAttribute("hidden", index >= historyKeys(runtime.scenarioId).length));
   };
 
@@ -184,6 +188,7 @@ const createRuntime = async (root, suppliedExperience) => {
     if (status) status.textContent = t(locale, `pulleySystems.status.${runtime.readings.status}`);
     const badge = root.querySelector(".dynamics-status");
     if (badge) badge.dataset.regime = runtime.readings.status;
+    root.querySelector("[data-pulley-contact-message]")?.toggleAttribute("hidden", !runtime.state.stopped);
     syncAnalysis();
     updateHistory();
     renderer.update();

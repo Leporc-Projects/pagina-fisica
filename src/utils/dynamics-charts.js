@@ -41,6 +41,7 @@ export const createSimulationChartGeometry = ({
   yDomain,
   currentPoints = [],
   cursorX = null,
+  eventX = null,
   referenceY = null,
   includeZero = true,
 }) => {
@@ -74,6 +75,10 @@ export const createSimulationChartGeometry = ({
     cursorValue: cursorX,
     cursorX: Number.isFinite(cursorX) && cursorX >= xDomain[0] && cursorX <= xDomain[1]
       ? transform.x(cursorX)
+      : null,
+    eventValue: eventX,
+    eventX: Number.isFinite(eventX) && eventX >= xDomain[0] && eventX <= xDomain[1]
+      ? transform.x(eventX)
       : null,
     referenceValue: referenceY,
     referenceY: Number.isFinite(referenceY) && referenceY >= resolvedYDomain[0] && referenceY <= resolvedYDomain[1]
@@ -127,7 +132,7 @@ export const createForcesHistoryGeometry = (history, key) => {
   });
 };
 
-export const createPulleyHistoryGeometry = (history, keys) => {
+export const createPulleyHistoryGeometry = (history, keys, { contactTime = null } = {}) => {
   if (!Array.isArray(history) || history.length === 0) throw new RangeError("history requiere al menos una muestra.");
   if (!Array.isArray(keys) || keys.length === 0 || keys.length > 3) throw new RangeError("keys requiere entre una y tres series.");
   const lastTime = history.at(-1).t;
@@ -141,6 +146,7 @@ export const createPulleyHistoryGeometry = (history, keys) => {
       series,
       xDomain,
       currentPoints: series.map(({ points }) => points.at(-1)),
+      eventX: contactTime,
       includeZero: true,
     }),
   });

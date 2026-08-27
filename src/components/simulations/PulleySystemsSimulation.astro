@@ -38,6 +38,7 @@ const bodies = ["m1", "m2", "m3", "mL", "mC", "pulley"];
       <figure class="dynamics-canvas theme-canvas">
         <figcaption><div><p class="academic-label">{t(locale, "pulleySystems.canvas")}</p><h2>{t(locale, "pulleySystems.canvasTitle")}</h2><p>{t(locale, "pulleySystems.canvasHelp")}</p></div><div class="dynamics-status" data-regime={readings.status}><span>{t(locale, "simulation.state")}</span><strong data-status-text>{t(locale, "pulleySystems.status.kinetic")}</strong></div></figcaption>
         <div class="dynamics-canvas__surface pulley-canvas" data-pulley-systems-canvas role="img" aria-label={t(locale, "pulleySystems.sceneAria")} aria-describedby="pulley-scene-description"></div>
+        <p class="dynamics-contact-warning" data-pulley-contact-message hidden>{t(locale, "pulleySystems.limitReached")}</p>
         <p id="pulley-scene-description" class="sr-only">{t(locale, "pulleySystems.sceneDescription")}</p>
         <p class="dynamics-vector-legend">{t(locale, "pulleySystems.sceneLegend")}</p>
       </figure>

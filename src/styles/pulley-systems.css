@@ -61,7 +61,7 @@
 .pulley-scenario-picker button small { color: var(--text-muted); line-height: 1.4; }
 
 .pulley-workspace { grid-template-columns: minmax(0, 1.75fr) minmax(18rem, .62fr); }
-.pulley-canvas { min-height: 440px; }
+.pulley-canvas { min-height: 480px; }
 
 .pulley-live-readings {
   display: grid;
@@ -118,7 +118,7 @@
   .pulley-fbd-grid:has(figure:nth-child(3)),
   .pulley-constraint-card { grid-template-columns: 1fr; }
   .pulley-scenario-picker button { min-height: 0; }
-  .pulley-canvas { min-height: 390px; }
+  .pulley-canvas { min-height: 480px; }
   .pulley-playback { align-items: stretch; }
   .pulley-playback > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
   .pulley-playback button { min-height: 2.9rem; padding-inline: .55rem; }

@@ -50,6 +50,16 @@ export const updateSimulationLinkedChart = (root, geometry, formatNumber) => {
   const cursor = root.querySelector("[data-chart-cursor]");
   cursor?.toggleAttribute("hidden", geometry.cursorX === null);
   if (geometry.cursorX !== null) setLine(cursor, geometry.cursorX, plot.top, geometry.cursorX, plot.top + plot.height);
+  const event = root.querySelector("[data-chart-event]");
+  event?.toggleAttribute("hidden", geometry.eventX === null || geometry.eventX === undefined);
+  if (geometry.eventX !== null && geometry.eventX !== undefined) {
+    setLine(event, geometry.eventX, plot.top, geometry.eventX, plot.top + plot.height);
+    const eventLabel = root.querySelector("[data-chart-event-label]");
+    eventLabel?.toggleAttribute("hidden", false);
+    eventLabel?.setAttribute("x", String(Math.min(geometry.eventX + 6, plot.left + plot.width - 58)));
+  } else {
+    root.querySelector("[data-chart-event-label]")?.toggleAttribute("hidden", true);
+  }
   const reference = root.querySelector("[data-chart-reference]");
   reference?.toggleAttribute("hidden", geometry.referenceY === null);
   if (geometry.referenceY !== null) setLine(reference, plot.left, geometry.referenceY, plot.left + plot.width, geometry.referenceY);
