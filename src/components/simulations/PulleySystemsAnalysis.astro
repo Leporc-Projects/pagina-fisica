@@ -1,6 +1,7 @@
 ---
 import { t } from "../../i18n/index.js";
 import SimulationLinkedChart from "./SimulationLinkedChart.astro";
+import SimulationGraphsDisclosure from "./SimulationGraphsDisclosure.astro";
 
 const { locale = "es" } = Astro.props;
 const scenarios = ["table-hanging", "atwood", "movable-pulley", "three-pulley-tackle", "double-atwood"];
@@ -142,7 +143,9 @@ const arrowGeometry = {
   <p class="pulley-constraint-card__check">{t(locale, "pulleySystems.constraintCheck")}: <strong data-pulley-constraint-residual>0</strong></p>
 </section>
 
-<section class="dynamics-analysis-card dynamics-history" aria-labelledby="pulley-history-title">
-  <div><p class="academic-label">{t(locale, "pulleySystems.lastTenSeconds")}</p><h2 id="pulley-history-title">{t(locale, "pulleySystems.historyTitle")}</h2></div>
-  <SimulationLinkedChart id="pulley-position-history" chartKey="pulley-position-history" title={t(locale, "pulleySystems.historyChartTitle")} description={t(locale, "pulleySystems.historyDescription")} descriptionKey="pulleySystems.historyDescription" xLabel="t [s]" yLabel="Δq [m]" seriesLabels={["q₁", "q₂", "q₃"]} eventLabel={t(locale, "pulleySystems.contactLabel")} locale={locale} />
-</section>
+<SimulationGraphsDisclosure locale={locale}>
+  <section class="dynamics-analysis-card dynamics-history" aria-labelledby="pulley-history-title">
+    <div><p class="academic-label">{t(locale, "pulleySystems.lastTenSeconds")}</p><h2 id="pulley-history-title">{t(locale, "pulleySystems.historyTitle")}</h2></div>
+    <SimulationLinkedChart id="pulley-position-history" chartKey="pulley-position-history" title={t(locale, "pulleySystems.historyChartTitle")} description={t(locale, "pulleySystems.historyDescription")} descriptionKey="pulleySystems.historyDescription" xLabel="t [s]" yLabel="Δq [m]" seriesLabels={["q₁", "q₂", "q₃"]} eventLabel={t(locale, "pulleySystems.contactLabel")} locale={locale} />
+  </section>
+</SimulationGraphsDisclosure>

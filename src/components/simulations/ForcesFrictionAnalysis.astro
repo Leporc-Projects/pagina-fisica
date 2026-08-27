@@ -1,6 +1,7 @@
 ---
 import { formatNumber, t } from "../../i18n/index.js";
 import SimulationLinkedChart from "./SimulationLinkedChart.astro";
+import SimulationGraphsDisclosure from "./SimulationGraphsDisclosure.astro";
 
 interface Props {
   locale?: "es" | "en";
@@ -54,16 +55,18 @@ const normalRaw = parameters.m * parameters.g * Math.cos(parameters.beta * Math.
   </section>
 </div>
 
-{views.historyGraph && <section class="dynamics-analysis-card dynamics-history" aria-labelledby="forces-history-title">
-  <div><p class="academic-label" data-preview-i18n="forcesFriction.evolution">{t(locale, "forcesFriction.evolution")}</p><h2 id="forces-history-title" data-preview-i18n="forcesFriction.historyTitle">{t(locale, "forcesFriction.historyTitle")}</h2></div>
-  <div class="dynamics-chart-grid">
-    <SimulationLinkedChart id="forces-velocity-history" chartKey="forces-velocity-history" title="v(t)" description={t(locale, "forcesFriction.velocityHistoryDescription")} descriptionKey="forcesFriction.velocityHistoryDescription" xLabel="t [s]" yLabel="v [m/s]" seriesLabels={["v(t)"]} locale={locale} />
-    <SimulationLinkedChart id="forces-net-history" chartKey="forces-net-history" title="ΣF∥(t)" description={t(locale, "forcesFriction.netHistoryDescription")} descriptionKey="forcesFriction.netHistoryDescription" xLabel="t [s]" yLabel="ΣF∥ [N]" seriesLabels={["ΣF∥(t)"]} locale={locale} />
-  </div>
-</section>}
+{(views.historyGraph || views.frictionRelationGraph) && <SimulationGraphsDisclosure locale={locale}>
+  {views.historyGraph && <section class="dynamics-analysis-card dynamics-history" aria-labelledby="forces-history-title">
+    <div><p class="academic-label" data-preview-i18n="forcesFriction.evolution">{t(locale, "forcesFriction.evolution")}</p><h2 id="forces-history-title" data-preview-i18n="forcesFriction.historyTitle">{t(locale, "forcesFriction.historyTitle")}</h2></div>
+    <div class="dynamics-chart-grid">
+      <SimulationLinkedChart id="forces-velocity-history" chartKey="forces-velocity-history" title="v(t)" description={t(locale, "forcesFriction.velocityHistoryDescription")} descriptionKey="forcesFriction.velocityHistoryDescription" xLabel="t [s]" yLabel="v [m/s]" seriesLabels={["v(t)"]} locale={locale} />
+      <SimulationLinkedChart id="forces-net-history" chartKey="forces-net-history" title="ΣF∥(t)" description={t(locale, "forcesFriction.netHistoryDescription")} descriptionKey="forcesFriction.netHistoryDescription" xLabel="t [s]" yLabel="ΣF∥ [N]" seriesLabels={["ΣF∥(t)"]} locale={locale} />
+    </div>
+  </section>}
 
-{views.frictionRelationGraph && <section class="dynamics-analysis-card dynamics-relationship" aria-labelledby="friction-relation-title">
-  <div><p class="academic-label" data-preview-i18n="forcesFriction.relationship">{t(locale, "forcesFriction.relationship")}</p><h2 id="friction-relation-title" data-preview-i18n="forcesFriction.relationshipTitle">{t(locale, "forcesFriction.relationshipTitle")}</h2></div>
-  <SimulationLinkedChart id="forces-friction-relation" chartKey="forces-friction-relation" title={t(locale, "forcesFriction.relationshipChartTitle")} titleKey="forcesFriction.relationshipChartTitle" description={t(locale, "forcesFriction.relationshipDescription")} descriptionKey="forcesFriction.relationshipDescription" xLabel="F [N]" yLabel="|f| [N]" seriesLabels={[t(locale, "forcesFriction.seriesRequired"), t(locale, "forcesFriction.seriesStaticMaximum"), t(locale, "forcesFriction.seriesKinetic")]} seriesLabelKeys={["forcesFriction.seriesRequired", "forcesFriction.seriesStaticMaximum", "forcesFriction.seriesKinetic"]} locale={locale} />
-  <p class="dynamics-relationship__state" data-friction-relation-state data-preview-i18n="forcesFriction.relationStatic">{t(locale, "forcesFriction.relationStatic")}</p>
-</section>}
+  {views.frictionRelationGraph && <section class="dynamics-analysis-card dynamics-relationship" aria-labelledby="friction-relation-title">
+    <div><p class="academic-label" data-preview-i18n="forcesFriction.relationship">{t(locale, "forcesFriction.relationship")}</p><h2 id="friction-relation-title" data-preview-i18n="forcesFriction.relationshipTitle">{t(locale, "forcesFriction.relationshipTitle")}</h2></div>
+    <SimulationLinkedChart id="forces-friction-relation" chartKey="forces-friction-relation" title={t(locale, "forcesFriction.relationshipChartTitle")} titleKey="forcesFriction.relationshipChartTitle" description={t(locale, "forcesFriction.relationshipDescription")} descriptionKey="forcesFriction.relationshipDescription" xLabel="F [N]" yLabel="|f| [N]" seriesLabels={[t(locale, "forcesFriction.seriesRequired"), t(locale, "forcesFriction.seriesStaticMaximum"), t(locale, "forcesFriction.seriesKinetic")]} seriesLabelKeys={["forcesFriction.seriesRequired", "forcesFriction.seriesStaticMaximum", "forcesFriction.seriesKinetic"]} locale={locale} />
+    <p class="dynamics-relationship__state" data-friction-relation-state data-preview-i18n="forcesFriction.relationStatic">{t(locale, "forcesFriction.relationStatic")}</p>
+  </section>}
+</SimulationGraphsDisclosure>}

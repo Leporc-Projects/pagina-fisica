@@ -14,6 +14,8 @@ import {
   getTurningPoint,
 } from "../../utils/kinematics-1d.js";
 import "../../styles/kinematics-simulation.css";
+import "../../styles/simulation-disclosures.css";
+import SimulationGraphsDisclosure from "./SimulationGraphsDisclosure.astro";
 
 interface Props {
   experience?: Record<string, unknown>;
@@ -83,19 +85,6 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
         <p>{t(locale, "kinematics.changeHelp")}</p>
       </div>
 
-      <fieldset class="kinematics-presets" data-presets-fieldset hidden={experience.presets.length === 0}>
-        <legend>{t(locale, "simulation.studyCases")}</legend>
-        <div data-presets-list>
-          {experience.presets.map((preset) => (
-            <button
-              type="button"
-              data-preset={preset.id}
-              aria-pressed={preset.id === initialPreset?.id ? "true" : "false"}
-            >{preset.label}</button>
-          ))}
-        </div>
-      </fieldset>
-
       <form class="kinematics-parameters" data-parameter-form novalidate>
         {controls.map((control) => {
           const value = initialParameters[control.key];
@@ -149,6 +138,22 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
           );
         })}
       </form>
+
+      <details class="simulation-study-cases-disclosure" data-study-cases-disclosure hidden={experience.presets.length === 0}>
+        <summary>{t(locale, "simulation.studyCases")}</summary>
+        <fieldset class="kinematics-presets" data-presets-fieldset>
+          <legend class="sr-only">{t(locale, "simulation.studyCases")}</legend>
+          <div data-presets-list>
+            {experience.presets.map((preset) => (
+              <button
+                type="button"
+                data-preset={preset.id}
+                aria-pressed={preset.id === initialPreset?.id ? "true" : "false"}
+              >{preset.label}</button>
+            ))}
+          </div>
+        </fieldset>
+      </details>
     </aside>
 
     {hasStage && (
@@ -242,47 +247,49 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
   {!preview && <SimulationFloatingPlayback locale={locale} />}
 
   {hasCharts && (
-    <section class="kinematics-charts" aria-labelledby="kinematics-charts-title" data-charts-section>
-      <div class="kinematics-charts__header">
-        <div>
-          <p class="academic-label">{t(locale, "kinematics.linkedCharts")}</p>
-          <h2 id="kinematics-charts-title">{t(locale, "kinematics.chartsTitle")}</h2>
+    <SimulationGraphsDisclosure locale={locale}>
+      <section class="kinematics-charts" aria-labelledby="kinematics-charts-title" data-charts-section>
+        <div class="kinematics-charts__header">
+          <div>
+            <p class="academic-label">{t(locale, "kinematics.linkedCharts")}</p>
+            <h2 id="kinematics-charts-title">{t(locale, "kinematics.chartsTitle")}</h2>
+          </div>
+          <p>{t(locale, "kinematics.chartsHelp")}</p>
         </div>
-        <p>{t(locale, "kinematics.chartsHelp")}</p>
-      </div>
-      <div class="kinematics-charts__grid">
-        {shouldRender("positionGraph") && (
-          <KinematicsChart
-            id="kinematics-position-chart"
-            quantity="position"
-            viewKey="positionGraph"
-            parameters={initialParameters}
-            relation={t(locale, "kinematics.positionRelation")}
-            locale={locale}
-          />
-        )}
-        {shouldRender("velocityGraph") && (
-          <KinematicsChart
-            id="kinematics-velocity-chart"
-            quantity="velocity"
-            viewKey="velocityGraph"
-            parameters={initialParameters}
-            relation={t(locale, "kinematics.velocityRelation")}
-            locale={locale}
-          />
-        )}
-        {shouldRender("accelerationGraph") && (
-          <KinematicsChart
-            id="kinematics-acceleration-chart"
-            quantity="acceleration"
-            viewKey="accelerationGraph"
-            parameters={initialParameters}
-            relation={t(locale, "kinematics.accelerationRelation")}
-            locale={locale}
-          />
-        )}
-      </div>
-    </section>
+        <div class="kinematics-charts__grid">
+          {shouldRender("positionGraph") && (
+            <KinematicsChart
+              id="kinematics-position-chart"
+              quantity="position"
+              viewKey="positionGraph"
+              parameters={initialParameters}
+              relation={t(locale, "kinematics.positionRelation")}
+              locale={locale}
+            />
+          )}
+          {shouldRender("velocityGraph") && (
+            <KinematicsChart
+              id="kinematics-velocity-chart"
+              quantity="velocity"
+              viewKey="velocityGraph"
+              parameters={initialParameters}
+              relation={t(locale, "kinematics.velocityRelation")}
+              locale={locale}
+            />
+          )}
+          {shouldRender("accelerationGraph") && (
+            <KinematicsChart
+              id="kinematics-acceleration-chart"
+              quantity="acceleration"
+              viewKey="accelerationGraph"
+              parameters={initialParameters}
+              relation={t(locale, "kinematics.accelerationRelation")}
+              locale={locale}
+            />
+          )}
+        </div>
+      </section>
+    </SimulationGraphsDisclosure>
   )}
 
   <noscript>

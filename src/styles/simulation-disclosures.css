@@ -1,0 +1,79 @@
+.simulation-study-cases-disclosure,
+.simulation-graphs-disclosure {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.simulation-study-cases-disclosure > summary,
+.simulation-graphs-disclosure > summary {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  list-style: none;
+}
+
+.simulation-study-cases-disclosure > summary::-webkit-details-marker,
+.simulation-graphs-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.simulation-study-cases-disclosure > summary::after,
+.simulation-graphs-disclosure > summary::after {
+  content: "+";
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.simulation-study-cases-disclosure[open] > summary::after,
+.simulation-graphs-disclosure[open] > summary::after {
+  content: "−";
+}
+
+.simulation-study-cases-disclosure > summary:hover,
+.simulation-study-cases-disclosure > summary:focus-visible,
+.simulation-graphs-disclosure > summary:hover,
+.simulation-graphs-disclosure > summary:focus-visible {
+  color: var(--accent);
+}
+
+.simulation-study-cases-disclosure > fieldset,
+.simulation-graphs-disclosure__content {
+  border: 0;
+  border-top: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.simulation-study-cases-disclosure > fieldset {
+  margin: 0;
+}
+
+.simulation-graphs-disclosure {
+  display: block;
+}
+
+.simulation-graphs-disclosure__content {
+  display: grid;
+  gap: 1rem;
+}
+
+.simulation-graphs-disclosure__content > :first-child {
+  margin-top: 0;
+}
+
+@media print {
+  .simulation-study-cases-disclosure > fieldset,
+  .simulation-graphs-disclosure__content {
+    display: grid !important;
+  }
+}

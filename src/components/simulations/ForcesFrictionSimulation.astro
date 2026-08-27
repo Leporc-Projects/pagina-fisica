@@ -8,6 +8,7 @@ import ForcesFrictionAnalysis from "./ForcesFrictionAnalysis.astro";
 import SimulationFloatingPlayback from "./SimulationFloatingPlayback.astro";
 import SimulationParameterFields from "./SimulationParameterFields.astro";
 import "../../styles/dynamics-simulations.css";
+import "../../styles/simulation-disclosures.css";
 
 const { experience: suppliedExperience = getSimulationExperienceById("forces-friction"), preview = false, locale = "es" } = Astro.props;
 const canonical = normalizeSimulationExperience(suppliedExperience);
@@ -70,8 +71,8 @@ const readingItems = [
 
     <aside class="dynamics-controls" aria-labelledby="forces-controls-title">
       <div><p class="academic-label">{t(locale, "simulation.parameters")}</p><h2 id="forces-controls-title">{t(locale, "forcesFriction.configure")}</h2><p>{t(locale, "forcesFriction.changeHelp")}</p></div>
-      <fieldset class="dynamics-presets"><legend>{t(locale, "simulation.studyCases")}</legend><div data-presets-list>{experience.presets.map((preset) => <button type="button" data-preset={preset.id} aria-pressed="false">{preset.label}</button>)}</div></fieldset>
       <form data-parameter-form novalidate><SimulationParameterFields controls={primary} locale={locale} prefix="forces" /><details><summary>{t(locale, "simulation.advancedParameters")}</summary><SimulationParameterFields controls={advanced} locale={locale} prefix="forces" /></details></form>
+      <details class="simulation-study-cases-disclosure" data-study-cases-disclosure><summary>{t(locale, "simulation.studyCases")}</summary><fieldset class="dynamics-presets"><legend class="sr-only">{t(locale, "simulation.studyCases")}</legend><div data-presets-list>{experience.presets.map((preset) => <button type="button" data-preset={preset.id} aria-pressed="false">{preset.label}</button>)}</div></fieldset></details>
     </aside>
   </div>
   <section class="dynamics-playback" aria-label={t(locale, "simulation.playback")} data-playback-section>

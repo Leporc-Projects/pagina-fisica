@@ -12,6 +12,7 @@ import {
 } from "../../utils/projectile-2d.js";
 import SimulationFloatingPlayback from "./SimulationFloatingPlayback.astro";
 import "../../styles/projectile-simulation.css";
+import "../../styles/simulation-disclosures.css";
 
 interface Props {
   experience?: Record<string, unknown>;
@@ -77,19 +78,6 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
         <p>{t(locale, "projectile.changeHelp")}</p>
       </div>
 
-      <fieldset class="projectile-presets" data-presets-fieldset hidden={experience.presets.length === 0}>
-        <legend>{t(locale, "simulation.studyCases")}</legend>
-        <div data-presets-list>
-          {experience.presets.map((preset) => (
-            <button
-              type="button"
-              data-preset={preset.id}
-              aria-pressed={preset.id === initialPreset?.id ? "true" : "false"}
-            >{preset.label}</button>
-          ))}
-        </div>
-      </fieldset>
-
       <form class="projectile-parameters" data-parameter-form novalidate>
         {controls.map((control) => {
           const value = initialParameters[control.key];
@@ -139,6 +127,22 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
           );
         })}
       </form>
+
+      <details class="simulation-study-cases-disclosure" data-study-cases-disclosure hidden={experience.presets.length === 0}>
+        <summary>{t(locale, "simulation.studyCases")}</summary>
+        <fieldset class="projectile-presets" data-presets-fieldset>
+          <legend class="sr-only">{t(locale, "simulation.studyCases")}</legend>
+          <div data-presets-list>
+            {experience.presets.map((preset) => (
+              <button
+                type="button"
+                data-preset={preset.id}
+                aria-pressed={preset.id === initialPreset?.id ? "true" : "false"}
+              >{preset.label}</button>
+            ))}
+          </div>
+        </fieldset>
+      </details>
     </aside>
 
     <div class="projectile-stage">

@@ -10,6 +10,7 @@ import SimulationFloatingPlayback from "./SimulationFloatingPlayback.astro";
 import SimulationParameterFields from "./SimulationParameterFields.astro";
 import "../../styles/dynamics-simulations.css";
 import "../../styles/pulley-systems.css";
+import "../../styles/simulation-disclosures.css";
 
 const { experience: suppliedExperience = getSimulationExperienceById("pulley-systems"), preview = false, locale = "es" } = Astro.props;
 const canonical = normalizeSimulationExperience(suppliedExperience);
@@ -60,8 +61,8 @@ const bodies = ["m1", "m2", "m3", "mL", "mC", "pulley"];
 
     <aside class="dynamics-controls pulley-controls" aria-labelledby="pulley-controls-title">
       <div><p class="academic-label">{t(locale, "simulation.parameters")}</p><h2 id="pulley-controls-title">{t(locale, "pulleySystems.configure")}</h2><p>{t(locale, "pulleySystems.changeHelp")}</p></div>
-      <fieldset class="dynamics-presets"><legend>{t(locale, "simulation.studyCases")}</legend><div>{PULLEY_PRESETS.map((preset) => <button type="button" data-pulley-preset={preset.id} aria-pressed="false">{t(locale, `pulleySystems.preset.${preset.id}`)}</button>)}</div></fieldset>
       <form data-parameter-form novalidate><SimulationParameterFields controls={controls} locale={locale} prefix="pulley" /></form>
+      <details class="simulation-study-cases-disclosure" data-study-cases-disclosure><summary>{t(locale, "simulation.studyCases")}</summary><fieldset class="dynamics-presets"><legend class="sr-only">{t(locale, "simulation.studyCases")}</legend><div>{PULLEY_PRESETS.map((preset) => <button type="button" data-pulley-preset={preset.id} aria-pressed="false">{t(locale, `pulleySystems.preset.${preset.id}`)}</button>)}</div></fieldset></details>
     </aside>
   </div>
 

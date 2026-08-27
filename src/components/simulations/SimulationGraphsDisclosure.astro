@@ -1,0 +1,16 @@
+---
+import { t } from "../../i18n/index.js";
+
+interface Props {
+  locale?: "es" | "en";
+}
+
+const { locale = "es" } = Astro.props;
+---
+
+<details class="simulation-graphs-disclosure" data-graphs-disclosure>
+  <summary>{t(locale, "simulation.graphs")}</summary>
+  <div class="simulation-graphs-disclosure__content">
+    <slot />
+  </div>
+</details>
