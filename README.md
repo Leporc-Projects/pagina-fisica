@@ -19,7 +19,7 @@ Sitio publicado: [https://aulafisica.com](https://aulafisica.com)
 
 - Astro 7 con generación estática.
 - HTML semántico, CSS y JavaScript.
-- p5.js 2.3.1, fijado localmente y cargado solo por el renderer de proyectiles.
+- p5.js 2.3.1, fijado localmente y cargado solo por los renderers Canvas que lo requieren.
 - Node.js 22.12 o posterior y npm.
 - Sin framework de interfaz, backend, base de datos o dependencias de estilos.
 
@@ -81,7 +81,7 @@ La cobertura actual está completa en español e inglés, tanto para el recorrid
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
 - `/simulaciones/proyectil-2d`: simulación propia de movimiento parabólico en Canvas 2D.
 - `/simulaciones/fuerzas-friccion`: fuerzas, fricción y movimiento sobre una superficie.
-- `/simulaciones/poleas`: laboratorio comparativo de cuatro sistemas ideales de cuerdas y poleas.
+- `/simulaciones/poleas`: laboratorio comparativo de cinco sistemas ideales de cuerdas y poleas.
 - `/en/`: portada y recorrido público completo en inglés.
 - `/en/simulations`: catálogo completo de simulaciones en inglés.
 - `/en/simulations/kinematics-1d`: Cinemática 1D en inglés.
@@ -206,10 +206,11 @@ puros: el dibujo no incorpora ecuaciones físicas nuevas.
 
 El modelo y renderer de fuerza radial circular se conservan internamente con su
 experiencia en estado `archived`, pero no tienen entrada de catálogo, contexto
-académico público ni wrapper de ruta. El laboratorio de poleas publica cuatro
-configuraciones —mesa y masa colgante, Atwood, polea móvil y Atwood doble— y
-mantiene su selector de escenarios y cinco presets como metadata propia del
-renderer, sin ampliar el esquema declarativo compartido.
+académico público ni wrapper de ruta. El laboratorio de poleas publica cinco
+configuraciones —mesa y masa colgante, Atwood, polea móvil 2:1, Atwood doble y
+polipasto 3:1 de tres poleas— y mantiene su selector de escenarios y cinco
+presets como metadata propia del renderer, sin ampliar el esquema declarativo
+compartido.
 
 Los tres casos publicados son movimiento uniforme (`x₀=-6`, `v₀=2,5`, `a=0`,
 `T=6`), parte del reposo (`x₀=-4`, `v₀=0`, `a=1,5`, `T=6`) y frena y regresa

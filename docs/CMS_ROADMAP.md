@@ -57,7 +57,7 @@ incorporará información estudiantil a un CMS editorial por defecto.
 
 ## Autoría avanzada de simulaciones
 
-El constructor visual local, los packs `1.0.0`, los renderers SVG y p5/Canvas 2D
+El constructor visual local, los packs `2.0.0`, los renderers SVG y p5/Canvas 2D
 registrados y el importador en revisión sí están implementados. No están
 implementados un editor p5/Canvas, un editor de código, una galería de renderers,
 ejecución remota ni publicación

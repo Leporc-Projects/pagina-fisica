@@ -310,10 +310,12 @@ generarlas, evaluarlas o modificarlas durante el uso.
 
 ## Participación y propuestas estudiantiles
 
-`/fisica-basica-1/participa` permite preparar localmente una dificultad, una
-propuesta o una mejora. Los temas visibles deben proceder de `UNIT_1.topics` y
-las opciones de interfaz viven en `src/data/participation.js`; no se copian
-listas temáticas dentro de los formularios.
+`/participa` y `/fisica-basica-1/participa` permiten preparar localmente una
+dificultad, una propuesta o una mejora. Los cursos, unidades y temas visibles
+deben proceder del registro académico genérico mediante
+`getDevelopedAcademicUnitsForCourse()`; las opciones de interfaz viven en
+`src/data/participation.js`. No se copian listas temáticas dentro de los
+formularios.
 
 Reglas editoriales:
 
@@ -326,10 +328,13 @@ Reglas editoriales:
 - conservar los campos opcionales como opcionales también en el contrato;
 - alimentar toda representación desde el mismo objeto validado.
 
-Las respuestas nuevas usan el esquema `1.1.0`. Si `helpfulSupport` es `other`,
+Las respuestas nuevas usan el esquema `1.2.0` y un `scope` compartido de tipo
+`global` o `course`; unidad y tema son contexto opcional bajo un curso y un tema
+nunca puede existir sin unidad. Si `helpfulSupport` es `other`,
 `helpfulSupportOther` contiene obligatoriamente la explicación libre; para
 cualquier otra opción ese campo se omite. El Centro de revisión conserva
-compatibilidad de lectura con respuestas válidas `1.0.0`.
+compatibilidad de lectura con respuestas válidas `1.0.0` y `1.1.0`, cuyos
+contratos históricos permanecen congelados.
 
 Una propuesta estudiantil no es un ejercicio. Su flujo editorial futuro es:
 
@@ -662,7 +667,7 @@ Antes de publicar una experiencia interactiva:
 
 El Laboratorio local de `/fisica-basica-1/herramientas/simulaciones` prepara una
 experiencia sin código. Su sesión existe solo en memoria y la preview usa el
-mismo renderer/runtime de producción. Exporta un paquete `1.0.0` con fuente
+mismo renderer/runtime de producción. Exporta un paquete `2.0.0` con fuente
 `teacher` y estado `draft`. Para incorporarlo:
 
 ```sh
