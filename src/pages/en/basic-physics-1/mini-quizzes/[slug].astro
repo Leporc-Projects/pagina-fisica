@@ -1,0 +1,7 @@
+---
+import MiniQuizPage from "../../../fisica-basica-1/mini-quices/[slug].astro";
+import { getMiniQuizzesByUnit } from "../../../../data/mini-quizzes/index.js";
+export function getStaticPaths() { return getMiniQuizzesByUnit(1).map((miniQuiz) => ({ params: { slug: miniQuiz.slug }, props: { miniQuiz } })); }
+const { miniQuiz } = Astro.props;
+---
+<MiniQuizPage miniQuiz={miniQuiz} locale="en" />

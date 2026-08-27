@@ -81,8 +81,8 @@ export const COURSE_NAV = [
         href: "/fisica-basica-1/ejercicios",
     },
     {
-        label: "Bonos",
-        href: "/fisica-basica-1/bonos",
+        label: "Mini quices",
+        href: "/fisica-basica-1/mini-quices",
     },
     {
         label: "Videos",

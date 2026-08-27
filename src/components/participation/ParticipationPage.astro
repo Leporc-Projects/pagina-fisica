@@ -51,22 +51,10 @@ const pageMeta = scope === "course"
       )
       : (
         <PageHeader
-          eyebrow={t(locale, "participation.localAnonymous")}
           title={t(locale, "participation.title")}
           description={t(locale, "participation.description")}
         />
       )}
-
-    <section class="participation-intro" aria-labelledby="participation-local-title">
-      <div>
-        <p class="participation-kicker">{t(locale, "participation.localAnonymous")}</p>
-        <h2 id="participation-local-title">{t(locale, "participation.staysWithYou")}</h2>
-      </div>
-      <div>
-        <p><strong>{t(locale, "participation.notSentStrong")}</strong></p>
-        <p>{t(locale, "participation.privacy")}</p>
-      </div>
-    </section>
 
     <div class="participation-workspace">
       <ParticipationContext
@@ -81,7 +69,7 @@ const pageMeta = scope === "course"
       <ResponsePreview locale={locale} />
     </div>
 
-    <p class="participation-status" aria-live="polite" aria-atomic="true" data-participation-status></p>
+    <p class="sr-only" aria-live="polite" aria-atomic="true" data-participation-status></p>
   </article>
 </BaseLayout>
 

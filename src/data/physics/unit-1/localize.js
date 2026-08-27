@@ -48,7 +48,8 @@ export const localizeUnit1 = (locale) => {
     ...EN_UNIT,
     route: getLocalizedPath(ROUTE_IDS.COURSE_UNIT_1, locale),
     practiceRoute: getLocalizedPath(ROUTE_IDS.COURSE_UNIT_1_PRACTICE, locale),
-    bonusRoute: getLocalizedPath(ROUTE_IDS.COURSE_BONUSES, locale),
+    miniQuizRoute: getLocalizedPath(ROUTE_IDS.COURSE_MINI_QUIZZES, locale),
+    bonusRoute: null,
     topics: UNIT_1.topics.map((topic) => ({
       ...topic,
       ...EN_UNIT.topics[topic.slug],
@@ -191,17 +192,17 @@ export const getLocalizedUnit1Visualization = (id, locale) =>
   localizeUnit1Visualization(UNIT_1_VISUALIZATIONS[id], locale);
 
 const EN_BONUSES = Object.freeze({
-  "bonus-u1-tools-vectors": Object.freeze({ title: "Measurement tools and vectors bonus", shortTitle: "Measurement tools and vectors", description: "Check units, components, and vector operations in a short set." }),
-  "bonus-u1-kinematics": Object.freeze({ title: "Kinematics bonus", shortTitle: "Kinematics", description: "Review reference frames, signs, graphs, and one-dimensional motion models." }),
-  "bonus-u1-motion-2d-circular-relative": Object.freeze({ title: "2D, circular, and relative motion bonus", shortTitle: "2D, circular, and relative motion", description: "Connect projectile motion, circular motion, and velocity composition." }),
-  "bonus-u1-review": Object.freeze({ title: "Unit 1 review bonus", shortTitle: "Unit 1 review", description: "Review the unit's main ideas with numerical, conceptual, and visual questions." }),
+  "bonus-u1-tools-vectors": Object.freeze({ title: "Measurement tools and vectors mini quiz", shortTitle: "Measurement tools and vectors", description: "Check units, components, and vector operations in a short set." }),
+  "bonus-u1-kinematics": Object.freeze({ title: "Kinematics mini quiz", shortTitle: "Kinematics", description: "Review reference frames, signs, graphs, and one-dimensional motion models." }),
+  "bonus-u1-motion-2d-circular-relative": Object.freeze({ title: "2D, circular, and relative motion mini quiz", shortTitle: "2D, circular, and relative motion", description: "Connect projectile motion, circular motion, and velocity composition." }),
+  "bonus-u1-review": Object.freeze({ title: "Unit 1 review mini quiz", shortTitle: "Unit 1 review", description: "Review the unit's main ideas with numerical, conceptual, and visual questions." }),
 });
 
 const BONUS_ROUTE_IDS = Object.freeze({
-  "bonus-u1-tools-vectors": ROUTE_IDS.COURSE_BONUS_TOOLS_VECTORS,
-  "bonus-u1-kinematics": ROUTE_IDS.COURSE_BONUS_KINEMATICS,
-  "bonus-u1-motion-2d-circular-relative": ROUTE_IDS.COURSE_BONUS_MOTION_2D_CIRCULAR_RELATIVE,
-  "bonus-u1-review": ROUTE_IDS.COURSE_BONUS_UNIT_1_REVIEW,
+  "bonus-u1-tools-vectors": ROUTE_IDS.COURSE_MINI_QUIZ_TOOLS_VECTORS,
+  "bonus-u1-kinematics": ROUTE_IDS.COURSE_MINI_QUIZ_KINEMATICS,
+  "bonus-u1-motion-2d-circular-relative": ROUTE_IDS.COURSE_MINI_QUIZ_MOTION_2D_CIRCULAR_RELATIVE,
+  "bonus-u1-review": ROUTE_IDS.COURSE_MINI_QUIZ_UNIT_1_REVIEW,
 });
 
 export const getUnit1BonusRouteId = (bonusId) => BONUS_ROUTE_IDS[bonusId] ?? null;
@@ -216,3 +217,7 @@ export const localizeUnit1Bonus = (bonus, locale) => {
 
 export const getLocalizedUnit1Bonuses = (locale) =>
   UNIT_1_BONUSES.map((bonus) => localizeUnit1Bonus(bonus, locale));
+
+export const getUnit1MiniQuizRouteId = getUnit1BonusRouteId;
+export const localizeUnit1MiniQuiz = localizeUnit1Bonus;
+export const getLocalizedUnit1MiniQuizzes = getLocalizedUnit1Bonuses;

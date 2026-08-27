@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import CoursePageHeader from "../../../components/course/CoursePageHeader.astro";
+import BonusCatalogCard from "../../../components/bonus/BonusCatalogCard.astro";
+import { localizeCourseData } from "../../../data/course-localize.js";
+import { getLocalizedUnit1MiniQuizzes, localizeUnit1 } from "../../../data/physics/unit-1/localize.js";
+import { ROUTE_IDS } from "../../../i18n/routes.js";
+import { t } from "../../../i18n/index.js";
+import { withBase } from "../../../utils/paths.js";
+import "../../../styles/bonus.css";
+
+const { locale = "es" } = Astro.props;
+const { COURSE } = localizeCourseData(locale);
+const UNIT_1 = localizeUnit1(locale);
+const miniQuizzes = getLocalizedUnit1MiniQuizzes(locale);
+---
+
+<BaseLayout title={t(locale, "bonus.catalogTitle", { course: COURSE.name })} description={t(locale, "bonus.catalogMeta", { course: COURSE.name })} locale={locale} routeId={ROUTE_IDS.COURSE_MINI_QUIZZES}>
+  <article class="course-subpage bonus-catalog-page">
+    <CoursePageHeader title={t(locale, "course.nav.bonuses")} description={t(locale, "bonus.catalogDescription")} locale={locale} />
+    <section class="bonus-purpose" aria-labelledby="mini-quiz-purpose-title"><div><p class="academic-label">{t(locale, "bonus.preparation")}</p><h2 id="mini-quiz-purpose-title">{t(locale, "bonus.purposeTitle")}</h2></div><div><p>{t(locale, "bonus.localAnonymous")}</p><p>{t(locale, "bonus.assessmentPolicy")}</p></div></section>
+    <section class="bonus-catalog" aria-labelledby="unit-1-mini-quizzes-title"><header class="bonus-catalog__header"><div><p class="academic-label">{UNIT_1.shortTitle}</p><h2 id="unit-1-mini-quizzes-title">{UNIT_1.title}</h2></div><p>{t(locale, "bonus.choose")}</p></header><div class="bonus-catalog__grid">{miniQuizzes.map((miniQuiz) => <BonusCatalogCard bonus={miniQuiz} locale={locale} />)}</div></section>
+    <aside class="bonus-catalog__practice-link"><div><p class="academic-label">{t(locale, "bonus.openPractice")}</p><h2>{t(locale, "bonus.preferNoResult")}</h2><p>{t(locale, "bonus.practiceDescription")}</p></div><a class="text-link" href={withBase(UNIT_1.practiceRoute)}>{t(locale, "bonus.openUnitPractice")}</a></aside>
+  </article>
+</BaseLayout>

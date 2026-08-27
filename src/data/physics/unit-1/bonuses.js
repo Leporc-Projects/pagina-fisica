@@ -13,7 +13,7 @@ export const UNIT_1_BONUSES = [
   publicLearningBonus({
     id: "bonus-u1-tools-vectors",
     slug: "herramientas-vectores",
-    title: "Bono de herramientas y vectores",
+    title: "Mini quiz de herramientas y vectores",
     shortTitle: "Herramientas y vectores",
     description:
       "Comprueba unidades, componentes y operaciones vectoriales con una tanda breve.",
@@ -61,7 +61,7 @@ export const UNIT_1_BONUSES = [
   publicLearningBonus({
     id: "bonus-u1-kinematics",
     slug: "cinematica",
-    title: "Bono de cinemática",
+    title: "Mini quiz de cinemática",
     shortTitle: "Cinemática",
     description:
       "Revisa referencias, signos, gráficas y modelos de movimiento en una dimensión.",
@@ -119,7 +119,7 @@ export const UNIT_1_BONUSES = [
   publicLearningBonus({
     id: "bonus-u1-motion-2d-circular-relative",
     slug: "movimiento-2d-circular-relativo",
-    title: "Bono de movimiento en 2D, circular y relativo",
+    title: "Mini quiz de movimiento en 2D, circular y relativo",
     shortTitle: "Movimiento 2D, circular y relativo",
     description:
       "Conecta proyectiles, movimiento circular y composición de velocidades.",
@@ -168,7 +168,7 @@ export const UNIT_1_BONUSES = [
   publicLearningBonus({
     id: "bonus-u1-review",
     slug: "repaso-unidad-1",
-    title: "Bono de repaso de Unidad 1",
+    title: "Mini quiz de repaso de Unidad 1",
     shortTitle: "Repaso de Unidad 1",
     description:
       "Recorre las ideas principales de la unidad con preguntas numéricas, conceptuales y visuales.",

@@ -1,17 +1,6 @@
 ---
-import BonusPage from "../../../fisica-basica-1/bonos/[slug].astro";
 import { getBonusesByUnit } from "../../../../data/bonuses/index.js";
-import { UNIT_1_BANK_ITEMS } from "../../../../data/physics/unit-1/bank.js";
-import { eligiblePoolForBonus } from "../../../../utils/bonus.js";
-
-export function getStaticPaths() {
-  return getBonusesByUnit(1).map((bonus) => ({
-    params: { slug: bonus.slug },
-    props: { bonus, exercises: eligiblePoolForBonus(bonus, UNIT_1_BANK_ITEMS) },
-  }));
-}
-
-const { bonus, exercises } = Astro.props;
+export function getStaticPaths() { return getBonusesByUnit(1).map(({ slug }) => ({ params: { slug }, props: { slug } })); }
+const { slug } = Astro.props;
+return Astro.redirect(`/en/basic-physics-1/mini-quizzes/${slug}`, 301);
 ---
-
-<BonusPage bonus={bonus} exercises={exercises} locale="en" />
