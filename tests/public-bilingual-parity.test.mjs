@@ -44,9 +44,9 @@ test("Bonos ingleses proyectan los mismos contratos de selección", () => {
   });
 });
 
-test("las rutas profundas de Bonos conservan la identidad al cambiar de idioma", () => {
-  const es = "/fisica-basica-1/bonos/cinematica";
-  const en = "/en/basic-physics-1/bonuses/cinematica";
+test("las rutas profundas de mini quices conservan la identidad al cambiar de idioma", () => {
+  const es = "/fisica-basica-1/mini-quices/cinematica";
+  const en = "/en/basic-physics-1/mini-quizzes/cinematica";
   assert.equal(getRouteCounterpart(es, "en"), en);
   assert.equal(getRouteCounterpart(en, "es"), es);
 });

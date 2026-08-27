@@ -12,7 +12,7 @@ memoria de la pestaña. Prepararla no transmite ni guarda nada. Solo una acción
 explícita del estudiante puede copiar el texto, descargar TXT/JSON/CSV o abrir
 el diálogo de impresión para guardar un PDF.
 
-Los Bonos también operan únicamente en memoria. Crean un intento local y
+Los Mini quices también operan únicamente en memoria. Crean un intento local y
 anónimo, calculan el resultado en el navegador y permiten copiar o exportar
 después de finalizar. Solo si el estudiante elige “Preparar entrega” se crea
 una copia separada con el correo institucional escrito en ese momento. El sitio
@@ -27,7 +27,7 @@ y descarta ese estado en memoria.
 
 El Organizador de resultados puede procesar localmente un roster con nombre,
 correo institucional, identificación y grupo, además de archivos CSV/XLSX y
-Bonos JSON. Esos datos permanecen en la memoria de la pestaña: no se escriben
+Mini quices JSON. Esos datos permanecen en la memoria de la pestaña: no se escriben
 en `localStorage` o IndexedDB, no se envían por red y desaparecen al recargar,
 cerrar o confirmar “Limpiar sesión”. Solo una exportación iniciada por el
 docente crea archivos en su equipo.
@@ -74,11 +74,11 @@ Tampoco se mide tiempo de escritura, cambios, clics, scroll o permanencia. Que
 el navegador permita observar una interacción no constituye un propósito para
 recopilarla.
 
-## Datos de un intento de Bono
+## Datos de un intento de Mini quiz
 
 Un intento puede contener:
 
-- versión del esquema, ID aleatorio y versión del Bono;
+- versión del esquema, ID aleatorio y versión del Mini quiz;
 - curso, unidad, fecha de inicio y fecha de finalización;
 - IDs, versiones, orden y snapshot de título/enunciado de las preguntas;
 - orden mostrado de opciones cuando corresponda;
@@ -106,7 +106,7 @@ y una capa local de revisión para propuestas. Esa capa puede incluir estado,
 nota docente opcional y fecha ISO 8601 de la decisión. El original permanece
 separado e inmutable durante la sesión.
 
-El JSON de revisión conserva Participa, Bonos e incidencias. El CSV contiene una
+El JSON de revisión conserva Participa, Mini quices e incidencias. El CSV contiene una
 fila por respuesta de Participa; TXT e impresión resumen los conteos y pueden
 incluir respuestas abiertas cuando el docente lo decide. Todas las salidas son
 archivos locales editables: no prueban autenticidad, identidad ni integridad y
@@ -117,7 +117,7 @@ tanto, no deben interpretarse como identidad. El Centro no extrae metadatos del
 dispositivo, ruta local, IP, user-agent ni huella. Tampoco registra tiempo de
 revisión, clics, navegación o tamaño de pantalla.
 
-El reconocimiento básico de un intento de Bono comprueba su contrato, Bono y
+El reconocimiento básico de un intento de Mini quiz comprueba su contrato, Mini quiz y
 versión, y permite consultar su resultado. Distingue anónimo/identificado,
 muestra el correo solo cuando existe y permite filtrarlo, pero no crea una planilla de notas, no
 vincula intentos entre sí y no estima dominio individual o grupal.
@@ -131,7 +131,7 @@ La sesión puede contener:
 - archivos fuente, hoja y fila de encabezado;
 - valor original y normalizado de correo, score y timestamp;
 - máximo configurado y porcentaje calculado cuando la escala es conocida;
-- intentos de Bono identificados o anónimos y sus resúmenes validados;
+- intentos de Mini quiz identificados o anónimos y sus resúmenes validados;
 - incidencias, políticas de duplicados/faltantes y valores resueltos;
 - consolidado y estadísticas descriptivas por fuente.
 
@@ -145,7 +145,7 @@ El flujo mantiene datos originales, normalizados, resoluciones y consolidado
 como capas separadas. `missing` no significa cero y una escala desconocida no
 se infiere. Los promedios, media, mediana, mínimo y máximo son descripciones de
 porcentajes válidos; no son inferencia estadística, diagnóstico ni nota
-oficial. La herramienta no modifica Examen 1–4 o Taller y no aplica Bonos a una
+oficial. La herramienta no modifica Examen 1–4 o Taller y no aplica Mini quices a una
 calificación.
 
 El XLSX y los CSV pueden contener información identificable. El docente decide
@@ -160,7 +160,7 @@ Las categorías deben permanecer separadas:
 
 | Categoría | Uso actual o previsto | Efecto automático |
 | --- | --- | --- |
-| `learning` | Material académico público, reflexión y Bonos locales | Puede calcular un resultado local; no registra progreso ni modifica calificaciones |
+| `learning` | Material académico público, reflexión y Mini quices locales | Puede calcular un resultado local; no registra progreso ni modifica calificaciones |
 | `feedback` | Sugerencia sobre contenido o experiencia | No se envía en esta versión |
 | `contribution` | Propuesta estudiantil sin revisar | No entra al banco académico |
 | `measurement` | Banco futuro separado para instrumentos definidos | No participa en este flujo público |
@@ -179,14 +179,14 @@ participación.
   tabla separada, aunque el nombre no aparezca. El sitio no lo implementa.
 - Identificado: el registro contiene o puede asociarse directamente con nombre,
   correo, documento u otro identificador personal. La copia opcional de entrega
-  de un Bono y una sesión local del Organizador pueden pertenecer a esta
+  de un Mini quiz y una sesión local del Organizador pueden pertenecer a esta
   categoría.
 
-El correo es un dato personal. En Bonos identifica el archivo que el estudiante
+El correo es un dato personal. En Mini quices identifica el archivo que el estudiante
 decide preparar para entrega; en el Organizador es la llave explícita para
 conciliar roster y resultados. Vive en memoria, puede entrar en exportaciones
 identificadas y no se usa para analítica, medición, investigación, perfiles o
-seguimiento. `acceptedDomains` es configuración editorial opcional de Bonos:
+seguimiento. `acceptedDomains` es configuración editorial opcional de Mini quices:
 vacío significa validar solo sintaxis, no asumir un dominio. Un canal que ya
 autentique al estudiante podrá desactivar el correo incrustado.
 

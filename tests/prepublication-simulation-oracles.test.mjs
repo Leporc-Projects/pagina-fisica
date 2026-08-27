@@ -88,6 +88,8 @@ test("PT, PA, PM y PD coinciden con valores literales y restricciones", () => {
     ["atwood", { m1: 2, m2: 2, g: 10 }, { accelerations: { m1: 0, m2: 0 }, tensions: { T: 20 } }],
     ["movable-pulley", { mL: 4, mC: 1, g: 10 }, { accelerations: { mL: 2.5, mC: -5 }, tensions: { T: 15 } }],
     ["movable-pulley", { mL: 4, mC: 2, g: 10 }, { accelerations: { mL: 0, mC: 0 }, tensions: { T: 20 } }],
+    ["three-pulley-tackle", { mL: 6, mC: 1, g: 10 }, { accelerations: { mL: 2, mC: -6 }, tensions: { T: 16 } }],
+    ["three-pulley-tackle", { mL: 6, mC: 2, g: 10 }, { accelerations: { mL: 0, mC: 0 }, tensions: { T: 20 } }],
     ["double-atwood", { m1: 1, m2: 2, m3: 4, g: 10 }, { accelerations: { m1: -6, m2: 2, m3: 2 }, tensions: { TA: 16, TC: 32 } }],
     ["double-atwood", { m1: 2, m2: 2, m3: 4, g: 10 }, { accelerations: { m1: 0, m2: 0, m3: 0 }, tensions: { TA: 20, TC: 40 } }],
   ];
@@ -99,11 +101,12 @@ test("PT, PA, PM y PD coinciden con valores literales y restricciones", () => {
   }
 });
 
-test("los cuatro contactos usan el primer límite físico, conservan v/a y marcan el gráfico", () => {
+test("los cinco contactos usan el primer límite físico, conservan v/a y marcan el gráfico", () => {
   const cases = [
     ["table-hanging", { m1: 10, m2: 5, muS: .3, muK: .2, g: 10 }, Math.sqrt(10), "m1-bracket", "m1", 10],
     ["atwood", { m1: 2, m2: 3, g: 10 }, 3, "m1-upper-clearance", "m1", -9],
     ["movable-pulley", { mL: 4, mC: 1, g: 10 }, Math.sqrt(18 / 5), "mC-fixed-pulley", "mC", -9],
+    ["three-pulley-tackle", { mL: 6, mC: 1, g: 10 }, 3, "mC-fixed-pulley", "mC", -27],
     ["double-atwood", { m1: 1, m2: 2, m3: 4, g: 10 }, Math.sqrt(3.5), "mobile-fixed-clearance", "pulley", -3.5],
   ];
   for (const [scenarioId, parameters, expectedTime, surfaceId, coordinate, position] of cases) {

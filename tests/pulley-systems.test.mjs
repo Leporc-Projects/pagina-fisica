@@ -84,6 +84,29 @@ test("mL=2mC produce equilibrio en polea móvil", () => {
   close(s.tensions.T, 4 * 9.8);
 });
 
+test("polipasto 3:1 satisface el oráculo, Newton y la restricción exacta", () => {
+  const config = { mL: 6, mC: 1, g: 10 };
+  const s = solvePulleySystem("three-pulley-tackle", config);
+  close(s.accelerations.mL, 2);
+  close(s.accelerations.mC, -6);
+  close(s.tensions.T, 16);
+  close(3 * s.accelerations.mL + s.accelerations.mC, 0);
+  close(config.mL * config.g - 3 * s.tensions.T, config.mL * s.accelerations.mL);
+  close(config.mC * config.g - s.tensions.T, config.mC * s.accelerations.mC);
+  let state = createPulleyState("three-pulley-tackle", config);
+  for (let i = 0; i < 120; i += 1) state = stepPulleyState(state, 1 / 120);
+  close(3 * state.positions.mL + state.positions.mC, 0);
+  close(3 * state.velocities.mL + state.velocities.mC, 0);
+});
+
+test("mL=3mC produce equilibrio exacto en el polipasto 3:1", () => {
+  const s = solvePulleySystem("three-pulley-tackle", { mL: 6, mC: 2, g: 10 });
+  assert.equal(s.regime, "equilibrium");
+  close(s.accelerations.mL, 0);
+  close(s.accelerations.mC, 0);
+  close(s.tensions.T, 20);
+});
+
 test("Atwood doble cumple restricciones, tensiones y tres ecuaciones", () => {
   const config = { m1: 3, m2: 5, m3: 7, g: 9.8 };
   const s = solvePulleySystem("double-atwood", config);
@@ -111,6 +134,7 @@ test("todos los escenarios permanecen finitos en límites permitidos", () => {
     "table-hanging": { m1: 0.5, m2: 20, muS: 0.8, muK: 0.8, g: 15 },
     atwood: { m1: 0.5, m2: 20, g: 15 },
     "movable-pulley": { mL: 0.5, mC: 20, g: 15 },
+    "three-pulley-tackle": { mL: 0.5, mC: 20, g: 15 },
     "double-atwood": { m1: 0.5, m2: 20, m3: 0.5, g: 15 },
   };
   for (const id of PULLEY_SCENARIO_IDS) {
@@ -145,6 +169,7 @@ test("los candidatos terminales son superficies físicas identificables", () => 
     "table-hanging": { m1: 6, m2: 4, muS: 0, muK: 0, g: 9.8 },
     atwood: { m1: 6, m2: 4, g: 9.8 },
     "movable-pulley": { mL: 8, mC: 3, g: 9.8 },
+    "three-pulley-tackle": { mL: 6, mC: 1, g: 10 },
     "double-atwood": { m1: 6, m2: 4, m3: 8, g: 9.8 },
   };
   for (const [scenarioId, config] of Object.entries(cases)) {

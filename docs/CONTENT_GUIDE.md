@@ -229,13 +229,13 @@ comerciales. Cada registro usa un identificador estable y declara:
 - edición: `status`, `version`, `purpose`, `exposure` y si el ejercicio es parametrizable;
 - figura opcional: `visualizationId`, que debe existir en el registro central.
 
-Un ejercicio que pueda entrar a Bonos declara `bonusEligible: true` y una
+Un ejercicio que pueda entrar a Mini quices declara `bonusEligible: true` y una
 `interaction` compatible. `number` corresponde a `answer.kind: "number"`;
 `multiNumber`, a `answer.kind: "values"`; `singleChoice` exige IDs de opción
 únicos y un único `correctOptionId`. Una respuesta editorial de texto no se
 vuelve auto-calificable sin opciones explícitamente revisadas.
 
-Los Bonos se registran en `src/data/physics/<unidad>/bonuses.js`. Cada blueprint
+Los Mini quices se registran en `src/data/physics/<unidad>/bonuses.js`. Cada blueprint
 se compone de ranuras con cantidad y filtros académicos. Al editar un blueprint
 se debe comprobar que el banco público de aprendizaje puede satisfacer todas
 las ranuras sin repetir ejercicios. No se añaden distractores o ejercicios
@@ -245,7 +245,7 @@ Una familia parametrizada es código editorial, no una plantilla de texto con
 `eval`. Debe declarar restricciones, generar parámetros finitos y derivar de
 ellos una instancia determinista. Sus fórmulas, signos, redondeo, unidades y
 tolerancias requieren tests con cientos de generaciones. Práctica puede
-materializarla al seleccionar una tanda; Bono debe guardar la instancia exacta
+materializarla al seleccionar una tanda; Mini quiz debe guardar la instancia exacta
 en su snapshot antes de mostrarla. Ningún exportador vuelve a generar valores.
 
 Los identificadores de tema, subtema y error deben existir en los archivos de
@@ -391,7 +391,7 @@ dificultad editorial oficial.
 
 Los resúmenes muestran conteos observables por actividad, tema u opción. No se
 redactan diagnósticos, índices de satisfacción, perfiles, inferencias causales
-ni conclusiones sobre todo el grupo. Los intentos de Bonos se consultan como
+ni conclusiones sobre todo el grupo. Los intentos de Mini quices se consultan como
 archivos individuales anónimos o identificados; el correo solo se muestra si el
 archivo lo contiene y no se usa para consolidar notas o vincular intentos.
 
@@ -412,7 +412,7 @@ Reglas editoriales y de datos:
 - no convertir un número a porcentaje sin máximo conocido;
 - tratar `missing` como estado; solo una política explícita puede usar cero en
   el promedio descriptivo;
-- no aplicar Bonos a examen o taller sin una regla académica posterior;
+- no aplicar Mini quices a examen o taller sin una regla académica posterior;
 - escribir cualquier texto importado como texto seguro en CSV/XLSX;
 - utilizar únicamente listados y resultados manifiestamente sintéticos en
   pruebas, capturas y documentación del repositorio.
@@ -522,7 +522,7 @@ Para formatos que se incorporarán después:
 - fórmulas y demostraciones usan `--formula-bg`;
 - gráficas usan `--content-canvas` y las series `--data-series-*`;
 - simulaciones usan `--simulation-bg`;
-- Bonos y ejercicios interactivos usan `--bonus-bg` y las familias de estado semánticas;
+- Mini quices y ejercicios interactivos usan `--bonus-bg` y las familias de estado semánticas;
 - SVG propios deben preferir `currentColor` o variables CSS cuando necesiten adaptarse.
 
 Una imagen raster no se invierte de forma global porque puede contener
@@ -532,7 +532,7 @@ un diagrama preparado y verificado para esa transformación puede declarar
 futuro variantes claras y oscuras sin cambiar el contrato de los componentes.
 
 El sistema de tema persiste exclusivamente la configuración visual
-`aula-fisica:theme`. Ningún Bono, diagnóstico, ejercicio, simulación o
+`aula-fisica:theme`. Ningún Mini quiz, diagnóstico, ejercicio, simulación o
 tutoría debe reutilizar `localStorage` para guardar respuestas o datos de
 estudiantes sin una decisión arquitectónica y de privacidad posterior.
 

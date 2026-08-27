@@ -15,7 +15,7 @@ un build y despliegue.
 
 El CMS sustituirá las fuentes detrás de consultas como
 `getPublishedNotices()`, `getGlobalNotices()`, `getCourseNotices(courseId)`,
-`getVideos*()` y `getBonuses*()`. Las páginas públicas no deben conocer si el
+`getVideos*()` y `getMiniQuizzes*()`. Las páginas públicas no deben conocer si el
 origen es JSON, Git, una API o una base de datos. El registro canónico de cursos
 y el contrato de ámbito global/curso seguirán siendo fronteras estables, aunque
 su almacenamiento cambie.

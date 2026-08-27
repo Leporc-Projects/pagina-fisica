@@ -51,7 +51,7 @@ El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fe
 - `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
 - `physics/index.js`: registro explícito de las siete unidades desarrolladas y sus adapters de localización, contenido, fórmulas, figuras, ejemplos resueltos, errores, banco y MathML.
 - `physics/exercise-schema.js` y `exercise-builder.js`: taxonomía y construcción compartidas; cada unidad fija su número y su política de elegibilidad sin duplicar enums.
-- `physics/unit-1/` a `physics/unit-7/`: contratos modulares paralelos. Separan metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`), ejemplos resueltos, ejercicios fijos, familias y localización. Unidad 1 conserva además los Bonos y las preguntas docentes importadas; las Unidades 2 a 7 no declaran Bonos.
+- `physics/unit-1/` a `physics/unit-7/`: contratos modulares paralelos. Separan metadatos y rutas (`unit.js`), explicación conceptual (`content.js`), fórmulas (`formulas.js`), figuras (`visualizations.js`), errores frecuentes (`common-errors.js`), ejemplos resueltos, ejercicios fijos, familias y localización. Unidad 1 conserva además los Mini quices y las preguntas docentes importadas; las Unidades 2 a 7 no declaran Mini quices.
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
@@ -222,8 +222,8 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/unidades/unidad-1/circular-relativo.astro` | `/fisica-basica-1/unidades/unidad-1/circular-relativo` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/coordenadas-polares.astro` | `/fisica-basica-1/unidades/unidad-1/coordenadas-polares` |
 | `src/pages/fisica-basica-1/ejercicios/unidad-1.astro` | `/fisica-basica-1/ejercicios/unidad-1` |
-| `src/pages/fisica-basica-1/bonos/index.astro` | `/fisica-basica-1/bonos` |
-| `src/pages/fisica-basica-1/bonos/[slug].astro` | `/fisica-basica-1/bonos/<slug>` |
+| `src/pages/fisica-basica-1/mini-quices/index.astro` | `/fisica-basica-1/mini-quices` |
+| `src/pages/fisica-basica-1/mini-quices/[slug].astro` | `/fisica-basica-1/mini-quices/<slug>` |
 | `src/pages/fisica-basica-1/herramientas/avisos.astro` | `/fisica-basica-1/herramientas/avisos` |
 | `src/pages/fisica-basica-1/herramientas/notas.astro` | `/fisica-basica-1/herramientas/notas` |
 
@@ -368,7 +368,7 @@ válido / advertencia / inválido
 registros canónicos en memoria
    ├─ conteos descriptivos separados por actividad
    ├─ búsqueda, filtros y paginación
-   ├─ consulta básica de intentos de Bonos
+   ├─ consulta básica de intentos de Mini quices
    └─ propuesta original inmutable + revisión docente local
           ↓
       JSON / CSV / TXT / impresión de la sesión
@@ -383,7 +383,7 @@ requiriendo corrección y aprobación explícitas.
 
 Los duplicados producen una advertencia, registran todos los nombres de archivo
 y aportan una sola instancia a los agregados. Un archivo inválido no bloquea
-los demás. Los intentos de Bonos se reconocen por esquema, ID, Bono y versión.
+los demás. Los intentos de Mini quices se reconocen por esquema, ID, Mini quiz y versión.
 El Centro distingue copias anónimas e identificadas, muestra el correo
 únicamente cuando existe y permite filtrar o buscar ese dato; no consolida por
 estudiante, calificaciones ni infiere dominio.
@@ -398,7 +398,7 @@ salidas son editables, no están firmadas y no autentican su contenido.
 ### Organizador docente de resultados
 
 `/fisica-basica-1/herramientas/notas` concilia un listado con fuentes tabulares
-y resultados identificados de Bonos. Es una herramienta local sin
+y resultados identificados de Mini quices. Es una herramienta local sin
 autenticación, backend, persistencia ni conexión a proveedores. No sustituye
 el sistema institucional ni modifica los cinco componentes oficiales de
 evaluación.
@@ -439,7 +439,7 @@ los faltantes quedan sin resolver por defecto; excluirlos o tratarlos como cero
 requiere una decisión visible. No existen ponderaciones ni conversión a escala
 0–5 en este bloque.
 
-Los JSON de Bonos se validan con su contrato público. El organizador consume el
+Los JSON de Mini quices se validan con su contrato público. El organizador consume el
 `summary` canónico y comprueba su consistencia con la suma de preguntas sin
 recalificar pregunta por pregunta. Un intento anónimo se reconoce, pero no se
 concilia.
@@ -456,23 +456,24 @@ filas de preview. CSV y XLSX son entradas tabulares; `.xls` muestra una
 instrucción para guardar como `.xlsx` o `.csv`. No se incorpora ningún archivo
 real de estudiantes al repositorio.
 
-### Bonos y autodiagnóstico local
+### Mini quices y autodiagnóstico local
 
-Los Bonos son actividades públicas de aprendizaje, no un banco de medición.
+Los mini quices son actividades públicas de aprendizaje, no un banco de medición. Los nombres internos históricos `bonus-*` permanecen congelados por compatibilidad con el esquema 1.x y no definen el futuro producto Bonos.
 El contrato editorial usa `modality: "bonus"`, `purpose: "learning"` y
 `exposure: "public"`. La modalidad anterior `quiz` se retiró antes de existir
 persistencia o integración externa. `measurement` conserva su significado y
 permanece separado.
 
-Las definiciones viven en `physics/unit-1/bonuses.js` y el registro transversal
-en `data/bonuses/index.js`. Cada Bono declara ID, slug, versión, título, temas,
+Las definiciones compatibles con el esquema histórico viven en
+`physics/unit-1/bonuses.js` y la fachada pública transversal en
+`data/mini-quizzes/index.js`. Cada Mini quiz declara ID, slug, versión, título, temas,
 cantidad, tiempo, política de feedback y blueprint. La ruta dinámica
-`bonos/[slug].astro` usa `getStaticPaths()` para generar una página por registro
+`mini-quices/[slug].astro` usa `getStaticPaths()` para generar una página por registro
 y solo incluye el pool elegible de sus temas.
 
 ```text
-definición del Bono + ítems fijos + familias públicas elegibles
-   ↓ selectBonusQuestions() satisface ranuras sin repetir IDs
+definición del Mini quiz + ítems fijos + familias públicas elegibles
+   ↓ selectBonusQuestions() satisface ranuras sin repetir IDs (nombre legacy del esquema 1.x)
 selección + materialización determinista + orden de opciones concretos
    ↓ createBonusAttempt()
 objeto único de intento en memoria
@@ -490,7 +491,7 @@ aleatorio de candidatos: satisface primero el blueprint y registra los IDs
 exactos; no depende de `Math.random()` ni promete reconstrucción por semilla.
 `validate.mjs` comprueba que cada blueprint puede resolverse y que cada ranura
 alcanza su mínimo editorial de candidatos. Las pruebas simulan 100 intentos por
-Bono para observar combinaciones y frecuencias sin convertirlas en analítica de
+Mini quiz para observar combinaciones y frecuencias sin convertirlas en analítica de
 uso.
 
 La auto-corrección requiere `bonusEligible: true` y `interaction`. Los tipos
@@ -507,7 +508,7 @@ recomendaciones limitadas a lo observado en la tanda. No produce categorías de
 aprobación, niveles ni estimaciones globales de dominio.
 
 El contrato de intento `1.1.0` incluye `attemptId` aleatorio de 128 bits,
-versiones del Bono y de los ejercicios, timestamps ISO, orden, orden de
+versiones del Mini quiz y de los ejercicios, timestamps ISO, orden, orden de
 opciones, snapshot de título/enunciado/respuesta esperada, parámetros y versión
 de familia cuando corresponde, respuestas, corrección, puntos, resumen y
 privacidad local. El modo inicial es `identity: { mode: "anonymous" }`. Tras
@@ -529,18 +530,18 @@ prueba de autenticidad, firma ni certificación.
 `UNIT_1_EXERCISE_FAMILIES` son definiciones de código revisadas con
 `generateParameters()` y `build()`; nunca se guardan como copias estáticas ni se
 editan desde el navegador. `UNIT_1_BANK_ITEMS` es la composición explícita que
-consumen Práctica y Bonos.
+consumen Práctica y Mini quices.
 
 Las Unidades 2 a 7 conservan composiciones separadas en sus respectivos
 `UNIT_N_BANK_ITEMS`. El runtime de
 Práctica consulta `physics/family-registry.js`, un registro ligero y explícito
 que materializa familias de las siete unidades sin cargar el resto del contenido
 académico ni acoplar el componente a Unidad 1. Solo el banco de Unidad 1 entra
-en Bonos, porque las Unidades 2, 3, 4, 5, 6 y 7 no publican blueprints de Bono.
+en Mini quices, porque las Unidades 2, 3, 4, 5, 6 y 7 no publican blueprints de Mini quiz.
 
 Una instancia parametrizada recibe un ID derivado de su familia y de los
 parámetros, pero la interfaz no presenta el `familyId`. En Práctica se genera al
-entrar en una tanda. En Bono se materializa antes de crear el intento, y el
+entrar en una tanda. En Mini quiz se materializa antes de crear el intento, y el
 snapshot conserva enunciado, respuesta, parámetros, versión e ID de instancia;
 la corrección y las exportaciones nunca regeneran la pregunta.
 
@@ -550,7 +551,7 @@ conserva su implementación intacta. No es administración ni tiene
 autenticación ficticia: previsualiza `singleChoice`, `number` y `multiNumber`,
 mantiene borradores en memoria y exporta `aula-fisica-question-pack-*.json` con
 Question Pack `2.0.0`, `authorSource: "teacher"` y `status: "draft"`. Cada Question 2.0 conserva una sola identidad, interacción y calificación, junto a `presentations.es` y `presentations.en`; la proyección pública deriva texto localizado sin cambiar IDs, unidades, tolerancias ni respuestas. Contenido
-con `requiresEditorialMath: true` queda fuera de Bonos hasta composición y
+con `requiresEditorialMath: true` queda fuera de Mini quices hasta composición y
 revisión editorial.
 
 El comando `npm run import:questions -- ruta/paquete.json` acepta solo JSON,
@@ -603,7 +604,7 @@ importador no intenta deducirlo; cada aviso debe abrirse en el editor vigente,
 recibir un destino y volver a pasar por revisión.
 
 La revisión de fuentes afines conserva fronteras pequeñas: videos ofrece
-`getVideos*()`, Bonos ofrece `getBonuses*()`, y las preguntas docentes entran al
+`getVideos*()`, mini quices ofrece `getMiniQuizzes*()`, y las preguntas docentes entran al
 banco mediante `UNIT_1_EXERCISES`/`UNIT_1_BANK_ITEMS`. No se introduce un
 repositorio genérico. El reemplazo por un CMS se describe en
 [`CMS_ROADMAP.md`](./CMS_ROADMAP.md).
@@ -660,7 +661,7 @@ filtrar, validar y evolucionar tutorías deterministas. `ExerciseCard.astro`
 decide qué parte es visible; ningún resultado ni progreso estudiantil se
 persiste.
 
-La modalidad `bonus` indica compatibilidad con los Bonos. No cambia el
+La modalidad `bonus` indica compatibilidad con los Mini quices. No cambia el
 propósito del ejercicio ni lo mueve al banco `measurement`. La elegibilidad se
 declara además con `bonusEligible` y una `interaction` auto-calificable; esta
 separación impide asumir que todo ejercicio público puede puntuarse.
@@ -863,7 +864,7 @@ color; los diagramas raster que realmente admitan inversión pueden declarar
 `data-theme-adaptive="invert"`. El logotipo y las imágenes editoriales no se
 invierten automáticamente.
 
-Las fórmulas, gráficas, simulaciones y Bonos deben dibujarse sobre los
+Las fórmulas, gráficas, simulaciones y Mini quices deben dibujarse sobre los
 tokens de lienzo previstos. Si necesitan recalcular colores en JavaScript,
 pueden escuchar `window` para el evento `themechange`; su detalle incluye la
 preferencia y el tema efectivo. Esto evita acoplar cada integración a la

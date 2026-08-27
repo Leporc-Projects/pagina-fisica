@@ -13,6 +13,7 @@ const initialPositions = {
   "table-hanging": { m1: 0, m2: 0 },
   atwood: { m1: 0, m2: 0 },
   "movable-pulley": { mL: 0, mC: 0 },
+  "three-pulley-tackle": { mL: 0, mC: 0 },
   "double-atwood": { m1: 0, m2: 0, m3: 0, pulley: 0 },
 };
 
@@ -33,7 +34,7 @@ const circleOverlapsBlock = (wheel, body) => {
   return Math.hypot(wheel.x - x, wheel.y - y) < wheel.radius - 1e-7;
 };
 
-test("los cuatro aparatos son finitos, deterministas e invariantes de idioma", () => {
+test("los cinco aparatos son finitos, deterministas e invariantes de idioma", () => {
   for (const width of [390, 800]) {
     for (const [scenarioId, positions] of Object.entries(initialPositions)) {
       const geometry = layout(scenarioId, positions, width);
@@ -109,6 +110,19 @@ test("polea móvil alcanza el hardware fijo sin gap ni penetración", () => {
   close(contact.blocks.mC.hooks.top.y, fixed.y + fixed.radius + 12);
   samePoint(contact.connectors.find(({ id }) => id === "load-hanger").points.at(-1), contact.blocks.mL.hooks.top);
   assert.equal(circleOverlapsBlock(fixed, contact.blocks.mC), false);
+});
+
+test("polipasto 3:1 conecta el anclaje móvil, tres poleas y conserva la cuerda", () => {
+  const initial = layout("three-pulley-tackle", { mL: 0, mC: 0 });
+  const moved = layout("three-pulley-tackle", { mL: 2, mC: -6 });
+  assert.equal(initial.pulleys.length, 3);
+  samePoint(initial.ropes[0][0], initial.anchors[0]);
+  samePoint(initial.ropes[0].at(-1), initial.blocks.mC.hooks.top);
+  samePoint(initial.connectors.find(({ id }) => id === "load-hanger").points.at(-1), initial.blocks.mL.hooks.top);
+  samePoint(initial.connectors.find(({ id }) => id === "moving-anchor-hanger").points[0], initial.anchors[0]);
+  close(getPolylineLength(initial.ropes[0]), getPolylineLength(moved.ropes[0]), 1e-6);
+  close(moved.blocks.mL.y - initial.blocks.mL.y, 2 * initial.scale);
+  close(moved.blocks.mC.y - initial.blocks.mC.y, -6 * initial.scale);
 });
 
 test("Atwood doble separa niveles, une la cuerda superior al conjunto móvil y conserva ambas cuerdas", () => {

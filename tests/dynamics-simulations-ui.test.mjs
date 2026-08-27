@@ -45,12 +45,12 @@ test("circular expone corte, tres vectores y auto-pausa del vuelo libre", () => 
   assert.match(runtime, /breakTime >= 3/);
 });
 
-test("poleas expone cuatro escenarios, análisis externo y controles completos", () => {
+test("poleas expone cinco escenarios, análisis externo y controles completos", () => {
   const component = source("src/components/simulations/PulleySystemsSimulation.astro");
   const analysis = source("src/components/simulations/PulleySystemsAnalysis.astro");
   const runtime = source("src/scripts/pulley-systems.js");
   const scenarios = source("src/data/pulley-scenarios.js");
-  for (const scenario of ["table-hanging", "atwood", "movable-pulley", "double-atwood"]) {
+  for (const scenario of ["table-hanging", "atwood", "movable-pulley", "three-pulley-tackle", "double-atwood"]) {
     assert.match(scenarios, new RegExp(`id: "${scenario}"`));
   }
   assert.match(component, /data-pulley-scenario=\{scenario\.id\}/);
@@ -61,12 +61,15 @@ test("poleas expone cuatro escenarios, análisis externo y controles completos",
   assert.match(analysis, /data-fbd-force=\{label\}/);
   assert.match(analysis, /m1.*"N", "up".*"W₁", "down".*"f", "left".*"T", "right"/s);
   assert.match(analysis, /m3.*"T_C", "up".*"W₃", "down"/s);
+  assert.match(analysis, /mobile.*"T_C", "up".*"T_A", "downLeft".*"T_A", "downRight"/s);
+  assert.match(analysis, /three-pulley-tackle[\s\S]*?"T", "upLeft"[\s\S]*?"T", "up"[\s\S]*?"T", "upRight"/);
   assert.match(analysis, /data-pulley-equations/);
   assert.match(analysis, /data-pulley-equations="atwood"[\s\S]*?<msub><mi>m<\/mi><mn>1<\/mn><\/msub><mi>g<\/mi><mo>−<\/mo><mi>T<\/mi>/);
   assert.match(runtime, /display\(config\.m1\).*display\(config\.g\).*display\(tension\.T\).*display\(config\.m1\).*display\(a\.m1\)/);
   assert.match(analysis, /data-pulley-constraint/);
   assert.match(analysis, /data-pulley-substitution/);
   assert.match(analysis, /2.*v.*L.*v.*C.*0/s);
+  assert.match(analysis, /3.*v.*L.*v.*C.*0/s);
   assert.match(analysis, /y.*1.*y.*2.*2.*y.*B/s);
   assert.match(runtime, /readings\.positions\.m1 \+ runtime\.readings\.positions\.m2 \+ 2 \* runtime\.readings\.positions\.m3/);
   assert.match(analysis, /pulley-history/);

@@ -346,7 +346,7 @@ check(
       "Cronograma",
       "Unidades y apuntes",
       "Ejercicios y tutorías",
-      "Bonos",
+      "Mini quices",
       "Videos",
       "Evaluación y notas",
       "Recursos",
@@ -1656,7 +1656,7 @@ const bonusQuestionSource = fs.readFileSync(
   "utf8"
 );
 const bonusRouteSource = fs.readFileSync(
-  path.join(projectRoot, "src/pages/fisica-basica-1/bonos/[slug].astro"),
+  path.join(projectRoot, "src/pages/fisica-basica-1/mini-quices/[slug].astro"),
   "utf8"
 );
 const bonusStyleSource = fs.readFileSync(

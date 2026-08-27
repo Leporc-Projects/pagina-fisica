@@ -17,7 +17,7 @@ so this record does not claim direct inspection of that document.
 Counts were derived from the academic registry and localized adapters, not from
 folder discovery. Routes include landing, topics, and practice in ES and EN.
 
-| Unit | Topics | Sections | Formulas | Visualizations | Checks | Errors | Examples | Fixed | Families | Bonus | Routes |
+| Unit | Topics | Sections | Formulas | Visualizations | Checks | Errors | Examples | Fixed | Families | Mini quiz | Routes |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1 | 7 | 24 | 25 | 26 | 7 | 36 | 0 | 55 | 15 | 4 | 18 |
 | 2 | 7 | 24 | 10 | 12 | 16 | 16 | 0 | 41 | 8 | 0 | 18 |
@@ -28,7 +28,7 @@ folder discovery. Routes include landing, topics, and practice in ES and EN.
 | 7 | 10 | 40 | 14 | 14 | 20 | 20 | 10 | 40 | 12 | 0 | 24 |
 | **Total** | **57** | **215** | **100** | **104** | **113** | **144** | **44** | **292** | **77** | **4** | **142** |
 
-Unit 1 alone exposes Bonuses. There is no Unit 8 and no inferred or discovered
+Unit 1 alone exposes Mini quizzes. Future Bonuses remain unpublished roadmap entries. There is no Unit 8 and no inferred or discovered
 academic unit outside the explicit registry.
 
 ## Plan 2026-2 coverage
@@ -147,7 +147,7 @@ presented as N·s = kg·m/s.
 - Families: 77. The closure suite generates 100 deterministic seeds per family in
   ES and EN (7,700 family/seed pairs per locale), checks finite parameters/answers,
   repeated determinism, invariant instance identity and locale parity.
-- Repaired academic items: 0. Unit 1 remains the sole Bonus source by contract.
+- Repaired academic items: 0. Unit 1 remains the sole Mini quiz source by contract.
 
 ## Visual/i18n QA
 
@@ -172,7 +172,7 @@ warnings/errors: 0. No silent locale fallback was observed.
   is anonymous, local-only, with no submission target, tracking or persistence.
 - Two of five teacher tools are public (notice editor and results organizer). The
   question bank, simulation lab and review center remain implemented but hidden.
-- Unit 1 Bonuses remain public and unchanged. Header/navigation, notices, catalogs,
+- Unit 1 Mini quizzes remain public under their canonical bilingual routes. Header/navigation, notices, catalogs,
   schedule, evaluation and resources passed desktop/mobile non-regression checks.
 - No analytics, telemetry, outbound submissions, secrets, or commercial source
   documents are versioned. The only `localStorage` use is the theme preference.
