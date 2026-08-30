@@ -9,6 +9,7 @@ import {
 } from "../src/data/physics/unit-1/exercise-localize.js";
 import { selectExerciseBatch } from "../src/utils/exercise-batches.js";
 import { gradeExerciseResponse } from "../src/utils/bonus.js";
+import { localizeAcademicUnitLabel } from "../src/data/physics/localize-unit-label.js";
 
 const seededRandom = (seed) => {
   let state = seed >>> 0;
@@ -63,7 +64,13 @@ test("all 55 public fixed exercises have complete English presentation and invar
   const en = getLocalizedUnit1Exercises("en");
   assert.equal(es.length, 55);
   assert.equal(en.length, es.length);
-  assert.deepEqual(en.map(exerciseInvariant), es.map(exerciseInvariant));
+  assert.deepEqual(
+    en.map(exerciseInvariant),
+    es.map((exercise) => ({
+      ...exerciseInvariant(exercise),
+      expectedUnit: localizeAcademicUnitLabel(exercise.expectedUnit, "en"),
+    })),
+  );
   assert.ok(en.every((exercise, index) =>
     exercise.title && exercise.prompt && exercise.title !== es[index].title &&
     exercise.objectives.length === es[index].objectives.length &&

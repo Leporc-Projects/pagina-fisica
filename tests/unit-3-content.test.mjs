@@ -8,6 +8,7 @@ import { UNIT_3_COMMON_ERRORS } from "../src/data/physics/unit-3/common-errors.j
 import { UNIT_3_WORKED_EXAMPLES } from "../src/data/physics/unit-3/examples.js";
 import { getLocalizedUnit3ErrorsByTopics, getLocalizedUnit3Formula, getLocalizedUnit3Visualization, getLocalizedUnit3WorkedExample, getUnit3TopicRouteId, localizeUnit3, localizeUnit3Content } from "../src/data/physics/unit-3/localize.js";
 import { getLocalizedPath } from "../src/i18n/routes.js";
+import { localizeAcademicUnitLabel } from "../src/data/physics/localize-unit-label.js";
 
 const sections=()=>Object.values(UNIT_3_CONTENT).flatMap(({sections})=>sections);
 const withoutAria=(mathml)=>mathml.replace(/ aria-label="[^"]*"/,"");
@@ -38,7 +39,7 @@ test("13 fórmulas y 14 visualizaciones tienen paridad estructural y referencias
   assert.equal(Object.keys(UNIT_3_FORMULAS).length,13);assert.equal(Object.keys(UNIT_3_VISUALIZATIONS).length,14);
   const formulaRefs=sections().flatMap(({formulas=[]})=>formulas);const visualRefs=sections().flatMap(({visualizations=[]})=>visualizations);
   assert.ok(formulaRefs.every((id)=>UNIT_3_FORMULAS[id]));assert.ok(visualRefs.every((id)=>UNIT_3_VISUALIZATIONS[id]));
-  for(const [id,source] of Object.entries(UNIT_3_FORMULAS)){const en=getLocalizedUnit3Formula(id,"en");assert.ok(source.mathml);assert.equal(withoutAria(en.mathml),withoutAria(source.mathml),id);assert.deepEqual(en.variables.map(({symbol,unit})=>({symbol,unit})),source.variables.map(({symbol,unit})=>({symbol,unit})),id);if(["normal-incline-special","static-friction-range","kinetic-friction-model","linear-drag","quadratic-drag","terminal-speed-linear","terminal-speed-quadratic","flat-curve-limit","frictionless-bank"].includes(id))assert.ok(source.conditions.length,id);}
+  for(const [id,source] of Object.entries(UNIT_3_FORMULAS)){const en=getLocalizedUnit3Formula(id,"en");assert.ok(source.mathml);assert.equal(withoutAria(en.mathml),withoutAria(source.mathml),id);assert.deepEqual(en.variables.map(({symbol,unit})=>({symbol,unit})),source.variables.map(({symbol,unit})=>({symbol,unit:localizeAcademicUnitLabel(unit,"en")})),id);if(["normal-incline-special","static-friction-range","kinetic-friction-model","linear-drag","quadratic-drag","terminal-speed-linear","terminal-speed-quadratic","flat-curve-limit","frictionless-bank"].includes(id))assert.ok(source.conditions.length,id);}
   for(const [id,source] of Object.entries(UNIT_3_VISUALIZATIONS)){const en=getLocalizedUnit3Visualization(id,"en");assert.ok(en.props.title&&en.props.description,id);assert.deepEqual(replaceStrings(en),replaceStrings(source),id);assert.equal(finite(source),true,id);}
 });
 

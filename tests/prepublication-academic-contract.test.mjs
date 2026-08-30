@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { ACADEMIC_UNITS, getAcademicUnitAdapter } from "../src/data/physics/index.js";
+import { localizeAcademicUnitLabel } from "../src/data/physics/localize-unit-label.js";
 
 const EXPECTED_TOTALS = Object.freeze({
   topics: 57,
@@ -75,7 +76,7 @@ test("el corpus prepublicación conserva inventario y superficies académicas co
       }
       assert.deepEqual(
         en.variables.map(({ symbol, unit }) => ({ symbol, unit })),
-        es.variables.map(({ symbol, unit }) => ({ symbol, unit })),
+        es.variables.map(({ symbol, unit }) => ({ symbol, unit: localizeAcademicUnitLabel(unit, "en") })),
         `${formulaId}: invariant symbols and units`,
       );
     }
@@ -103,7 +104,7 @@ test("el corpus prepublicación conserva inventario y superficies académicas co
       exerciseIds.add(exercise.id);
       assert.equal(en.id, exercise.id, `${exercise.id}:locale identity`);
       assert.deepEqual(invariantAnswer(en.answer), invariantAnswer(exercise.answer), `${exercise.id}:answer invariant`);
-      assert.equal(en.expectedUnit, exercise.expectedUnit, `${exercise.id}:unit invariant`);
+      assert.equal(en.expectedUnit, localizeAcademicUnitLabel(exercise.expectedUnit, "en"), `${exercise.id}:unit invariant`);
       assert.equal(en.tolerance, exercise.tolerance, `${exercise.id}:tolerance invariant`);
       assert.ok(exercise.prompt?.trim() && en.prompt?.trim(), `${exercise.id}:prompt`);
       assert.ok(exercise.solution?.length && en.solution?.length, `${exercise.id}:solution`);

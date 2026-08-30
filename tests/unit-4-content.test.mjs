@@ -18,6 +18,7 @@ import {
 import { ACADEMIC_UNITS, getAcademicUnitAdapter } from "../src/data/physics/index.js";
 import { getLocalizedPath } from "../src/i18n/routes.js";
 import { presentUnit4RichText } from "../src/data/physics/unit-4/math-content.js";
+import { localizeAcademicUnitLabel } from "../src/data/physics/localize-unit-label.js";
 
 const sections = () => Object.values(UNIT_4_CONTENT).flatMap(({ sections: entries }) => entries);
 const withoutAria = (mathml) => mathml.replace(/ aria-label="[^"]*"/, "");
@@ -80,7 +81,7 @@ test("12 fórmulas, 12 visualizaciones y 8 ejemplos conservan referencias resolu
     const en = getLocalizedUnit4Formula(id, "en");
     assert.match(source.mathml, /<math[\s\S]*<semantics>/, id);
     assert.equal(withoutAria(en.mathml), withoutAria(source.mathml), id);
-    assert.deepEqual(en.variables.map(({ symbol, unit }) => ({ symbol, unit })), source.variables.map(({ symbol, unit }) => ({ symbol, unit })), id);
+    assert.deepEqual(en.variables.map(({ symbol, unit }) => ({ symbol, unit })), source.variables.map(({ symbol, unit }) => ({ symbol, unit: localizeAcademicUnitLabel(unit, "en") })), id);
   }
   for (const [id, source] of Object.entries(UNIT_4_VISUALIZATIONS)) {
     const en = getLocalizedUnit4Visualization(id, "en");

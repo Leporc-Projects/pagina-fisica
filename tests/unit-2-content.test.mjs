@@ -5,6 +5,7 @@ import { UNIT_2_CONTENT } from "../src/data/physics/unit-2/content.js";
 import { UNIT_2_FORMULAS } from "../src/data/physics/unit-2/formulas.js";
 import { UNIT_2_VISUALIZATIONS } from "../src/data/physics/unit-2/visualizations.js";
 import { UNIT_2_COMMON_ERRORS } from "../src/data/physics/unit-2/common-errors.js";
+import { localizeAcademicUnitLabel } from "../src/data/physics/localize-unit-label.js";
 import {
   getLocalizedUnit2ErrorsByTopics,
   getLocalizedUnit2Formula,
@@ -79,7 +80,7 @@ test("fórmulas preservan matemática e implementan los invariantes físicos", (
   for (const [id, source] of Object.entries(UNIT_2_FORMULAS)) {
     const en = getLocalizedUnit2Formula(id, "en");
     assert.equal(withoutAria(en.mathml), withoutAria(source.mathml), id);
-    assert.deepEqual(en.variables.map(({ symbol, unit }) => ({ symbol, unit })), source.variables.map(({ symbol, unit }) => ({ symbol, unit })));
+    assert.deepEqual(en.variables.map(({ symbol, unit }) => ({ symbol, unit })), source.variables.map(({ symbol, unit }) => ({ symbol, unit: localizeAcademicUnitLabel(unit, "en") })));
     assert.deepEqual(en.related, source.related);
     assert.match(source.mathml, /<math[\s\S]*<semantics>[\s\S]*<annotation encoding="application\/x-tex">/);
   }

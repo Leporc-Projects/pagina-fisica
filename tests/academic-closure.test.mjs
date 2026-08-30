@@ -7,6 +7,7 @@ import {
   getLocalizedAcademicUnit,
 } from "../src/data/physics/index.js";
 import { generateLocalizedAcademicFamilyInstance } from "../src/data/physics/family-registry.js";
+import { localizeAcademicUnitLabel } from "../src/data/physics/localize-unit-label.js";
 import { getRouteCounterpart } from "../src/i18n/routes.js";
 
 const EXPECTED = Object.freeze([
@@ -101,7 +102,7 @@ test("los 292 ejercicios y las 142 rutas académicas conservan identidad ES/EN",
       assert.equal(enExercises[index].subtopic, exercise.subtopic);
       assert.deepEqual(answerInvariant(enExercises[index].answer), answerInvariant(exercise.answer));
       assert.equal(enExercises[index].tolerance, exercise.tolerance);
-      assert.equal(enExercises[index].expectedUnit, exercise.expectedUnit);
+      assert.equal(enExercises[index].expectedUnit, localizeAcademicUnitLabel(exercise.expectedUnit, "en"));
     });
   }
 

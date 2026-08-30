@@ -6,6 +6,7 @@ import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
 import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
 import { UNIT_1_FORMULAS } from "../src/data/physics/unit-1/formulas.js";
 import { UNIT_1_VISUALIZATIONS } from "../src/data/physics/unit-1/visualizations.js";
+import { localizeAcademicUnitLabel } from "../src/data/physics/localize-unit-label.js";
 import {
   getLocalizedUnit1ErrorsByTopics,
   getLocalizedUnit1Formula,
@@ -83,7 +84,7 @@ test("Unit 1 formulas share IDs, symbols, equations, units, and relations", () =
     assert.equal(localized.id, source.id);
     assert.notEqual(localized.label, source.label, id);
     assert.equal(withoutMathAriaLabel(localized.mathml), withoutMathAriaLabel(source.mathml), id);
-    assert.deepEqual(localized.variables.map(({ symbol, unit }) => ({ symbol, unit })), source.variables.map(({ symbol, unit }) => ({ symbol, unit })));
+    assert.deepEqual(localized.variables.map(({ symbol, unit }) => ({ symbol, unit })), source.variables.map(({ symbol, unit }) => ({ symbol, unit: localizeAcademicUnitLabel(unit, "en") })));
     assert.deepEqual(localized.related, source.related);
   }
 });
