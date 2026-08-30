@@ -6,8 +6,12 @@ institucional cuando exista recopilación o investigación.
 
 ## Estado actual
 
-El sitio es estático y no tiene backend, base de datos, analítica ni servicio de
-envío. La participación de Física Básica I crea una respuesta únicamente en la
+El sitio es estático y no tiene backend propio, base de datos propia ni servicio
+de envío de respuestas. Usa Umami Cloud para pageviews agregados y cinco eventos
+académicos mínimos; esa instrumentación no recibe respuestas, puntuaciones,
+texto escrito ni identidad académica. Su contrato, límites y metodología se
+documentan en [ANALYTICS_AND_METRICS.md](ANALYTICS_AND_METRICS.md). La
+participación de Física Básica I crea una respuesta únicamente en la
 memoria de la pestaña. Prepararla no transmite ni guarda nada. Solo una acción
 explícita del estudiante puede copiar el texto, descargar TXT/JSON/CSV o abrir
 el diálogo de impresión para guardar un PDF.
@@ -33,9 +37,9 @@ cerrar o confirmar “Limpiar sesión”. Solo una exportación iniciada por el
 docente crea archivos en su equipo.
 
 La configuración visual claro/oscuro/sistema es la única preferencia persistida
-por el sitio. Usa `localStorage` bajo `aula-fisica:theme` y no contiene
+por Aula Física en el navegador. Usa `localStorage` bajo `aula-fisica:theme` y no contiene
 respuestas, contenido escrito, progreso ni identidad. No debe reutilizarse esa
-clave o ese mecanismo para participación.
+clave o ese mecanismo para participación o analítica.
 
 ## Datos de una respuesta preparada
 
