@@ -87,6 +87,15 @@ test("incline weight-component guide is perpendicular to the plane", () => {
 
 const vector = ({ start, end }) => ({ x: end.x - start.x, y: end.y - start.y });
 const dot = (a, b) => a.x * b.x + a.y * b.y;
+const crossZ = (a, b) => a.x * b.y - a.y * b.x;
+const axialSymbol = (z) => {
+  assert.notEqual(z, 0, "axial direction requires a nonzero cross product");
+  return z > 0 ? "⊙" : "⊗";
+};
+const assertAxialAnnotation = (props, label, z) => {
+  assert.equal(props.vectors?.some(({ label: vectorLabel }) => vectorLabel === label) ?? false, false);
+  assert.equal(props.annotations?.some(({ label: annotation }) => annotation === `${label} ${axialSymbol(z)}`) ?? false, true);
+};
 
 test("Unit 6 lever arms are perpendicular to their lines of action", () => {
   const adapter = getAcademicUnitAdapter(6);
@@ -101,10 +110,78 @@ test("Unit 6 lever arms are perpendicular to their lines of action", () => {
   }
 });
 
-test("gyroscope torque is shown normal to the drawing plane", () => {
-  const props = getAcademicUnitAdapter(6).getVisualization("gyroscope-precession", "es").props;
-  assert.equal(props.vectors.some(({ label }) => label === "τ"), false);
-  assert.equal(props.annotations.some(({ label }) => label === "τ ⊗"), true);
+test("focused U1-U7 axial-quantity inventory remains explicit", () => {
+  const axialTerms = /r×p|r×F|torca|torque|momento angular|angular momentum|sentido axial|axial direction|vector axial|axial vector|eje z|z axis|⊙|⊗/i;
+  const candidates = [];
+
+  for (let unit = 1; unit <= 7; unit += 1) {
+    const adapter = getAcademicUnitAdapter(unit);
+    for (const id of adapter.visualizationIds) {
+      const localizedPair = JSON.stringify([
+        adapter.getVisualization(id, "es"),
+        adapter.getVisualization(id, "en"),
+      ]);
+      if (axialTerms.test(localizedPair)) candidates.push(`u${unit}:${id}`);
+    }
+  }
+
+  assert.deepEqual(candidates, [
+    "u6:angular-sign-circle",
+    "u6:torque-lever-arm",
+    "u6:net-torque-angular-acceleration",
+    "u6:rolling-kinematics",
+    "u6:rotational-work-power",
+    "u6:angular-momentum-particle",
+    "u6:gyroscope-precession",
+  ]);
+  assert.equal(getAcademicUnitAdapter(6).getVisualization("rotational-work-power", "es").kind, "cartesian");
+});
+
+test("angular-momentum particle derives L direction from r cross p", () => {
+  const props = getAcademicUnitAdapter(6).getVisualization("angular-momentum-particle", "es").props;
+  const r = vector(props.segments.find(({ label }) => label === "r"));
+  const p = vector(props.vectors.find(({ label }) => label === "p"));
+  const lZ = crossZ(r, p);
+
+  assert.ok(Math.abs(lZ - 1.77) < 1e-9, `expected L_z=+1.77; received ${lZ}`);
+  assertAxialAnnotation(props, "L", lZ);
+});
+
+test("Unit 6 torque directions follow the sign of r cross F", () => {
+  const adapter = getAcademicUnitAdapter(6);
+  const leverProps = adapter.getVisualization("torque-lever-arm", "es").props;
+  const r = vector(leverProps.segments.find(({ label }) => label === "r"));
+  const force = vector(leverProps.vectors.find(({ label }) => label === "F"));
+  assertAxialAnnotation(leverProps, "τ", crossZ(r, force));
+
+  const netProps = adapter.getVisualization("net-torque-angular-acceleration", "es").props;
+  const disk = netProps.rectangles.find(({ label }) => label === "disco");
+  const center = { x: disk.x + disk.width / 2, y: disk.y + disk.height / 2 };
+  const torques = netProps.vectors.map((drawnForce, index) => {
+    const radius = { x: drawnForce.start.x - center.x, y: drawnForce.start.y - center.y };
+    const torque = crossZ(radius, vector(drawnForce));
+    assertAxialAnnotation(netProps, `τ${index === 0 ? "₁" : "₂"}`, torque);
+    return torque;
+  });
+
+  assert.ok(torques[0] * torques[1] < 0, "the two drawn torques must oppose each other");
+  assertAxialAnnotation(netProps, "τ_net, α", torques[0] + torques[1]);
+});
+
+test("angular sign, rolling, and gyroscope use the correct axial symbols", () => {
+  const adapter = getAcademicUnitAdapter(6);
+  const angularSign = adapter.getVisualization("angular-sign-circle", "es").props;
+  assert.equal(angularSign.vectors?.some(({ label }) => label === "+z") ?? false, false);
+  assert.equal(angularSign.annotations.some(({ label }) => label === "+z ⊙"), true);
+
+  const rolling = adapter.getVisualization("rolling-kinematics", "es").props;
+  assert.equal(rolling.curves.some(({ label }) => label === "ω"), false);
+  assert.equal(rolling.annotations.some(({ label }) => label === "ω ⊗"), true);
+
+  const gyroscope = adapter.getVisualization("gyroscope-precession", "es").props;
+  const gyroRadius = vector(gyroscope.segments.find(({ label }) => label === "eje / r_cm"));
+  const weight = vector(gyroscope.vectors.find(({ label }) => label === "Mg"));
+  assertAxialAnnotation(gyroscope, "τ", crossZ(gyroRadius, weight));
 });
 
 test("gravitational-superposition resultant equals the two drawn contributions", () => {
