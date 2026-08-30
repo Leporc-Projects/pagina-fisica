@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -17,14 +18,18 @@ import { getPublishedSimulations } from "../src/data/simulations.js";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const read = (path) => fs.readFileSync(`${root}/${path}`, "utf8");
+const collectFiles = (relativeDirectory) => fs.readdirSync(`${root}/${relativeDirectory}`, { withFileTypes: true })
+  .flatMap((entry) => {
+    const relativePath = path.join(relativeDirectory, entry.name);
+    return entry.isDirectory() ? collectFiles(relativePath) : [relativePath];
+  });
+const sourceEntries = collectFiles("src")
+  .sort()
+  .map((sourcePath) => ({ path: sourcePath, source: read(sourcePath) }));
 
 test("el tracker global aparece exactamente una vez y conserva el contrato privado", () => {
-  const sourceFiles = [
-    ...fs.readdirSync(`${root}/src/layouts`).map((name) => `src/layouts/${name}`),
-    ...fs.readdirSync(`${root}/src/components`).filter((name) => name.endsWith(".astro")).map((name) => `src/components/${name}`),
-  ];
-  const trackerOccurrences = sourceFiles.reduce(
-    (count, path) => count + (read(path).match(/cloud\.umami\.is\/script\.js/g)?.length ?? 0),
+  const trackerOccurrences = sourceEntries.reduce(
+    (count, entry) => count + (entry.source.match(/cloud\.umami\.is\/script\.js/g)?.length ?? 0),
     0
   );
   assert.equal(trackerOccurrences, 1);
@@ -154,22 +159,38 @@ test("práctica, mini quiz e idioma disparan solo desde acciones explícitas", (
   assert.doesNotMatch(language, /location|href|search|hash/);
 });
 
-test("la implementación no identifica, persiste ni introduce credenciales", () => {
-  const analyticsModules = [
-    "src/utils/analytics.js",
-    "src/scripts/language-analytics.js",
-    "src/scripts/open-practice.js",
-    "src/scripts/bonus.js",
-    "src/scripts/kinematics-1d.js",
-    "src/scripts/projectile-2d.js",
-    "src/scripts/forces-friction.js",
-    "src/scripts/pulley-systems.js",
-  ].map(read).join("\n");
-  const implementation = `${read("src/layouts/BaseLayout.astro")}\n${analyticsModules}`;
-  assert.doesNotMatch(implementation, /umami\s*\.\s*identify\s*\(/);
-  assert.doesNotMatch(analyticsModules, /localStorage|sessionStorage|document\.cookie/);
-  assert.doesNotMatch(implementation, /api[_-]?key|authorization\s*:/i);
-  assert.doesNotMatch(implementation, /data-performance|session.?replay|heatmap/i);
+test("el escaneo recursivo de src protege identidad y credenciales de Umami", () => {
+  for (const entry of sourceEntries) {
+    assert.doesNotMatch(entry.source, /umami\s*\.\s*identify\s*\(/, entry.path);
+    if (/umami/i.test(entry.source)) {
+      assert.doesNotMatch(
+        entry.source,
+        /(?:api[_-]?key|access[_-]?token|authorization)[\s\S]{0,160}umami|umami[\s\S]{0,160}(?:api[_-]?key|access[_-]?token|authorization)/i,
+        entry.path
+      );
+    }
+  }
+});
+
+test("los módulos de instrumentación descubiertos en src no persisten analítica", () => {
+  const instrumentationEntries = sourceEntries.filter((entry) =>
+    entry.path.endsWith("/utils/analytics.js") ||
+    /from\s+["'][^"']*utils\/analytics\.js["']/.test(entry.source)
+  );
+  assert.ok(instrumentationEntries.length > 1);
+  for (const entry of instrumentationEntries) {
+    assert.doesNotMatch(
+      entry.source,
+      /\blocalStorage\b|\bsessionStorage\b|document\s*\.\s*cookie|\bcookieStore\b/,
+      entry.path
+    );
+  }
+});
+
+test("el escaneo recursivo conserva fuera replay, heatmaps y performance analítica", () => {
+  const implementation = sourceEntries.map((entry) => entry.source).join("\n");
+  assert.doesNotMatch(implementation, /data-performance/);
+  assert.doesNotMatch(read("src/utils/analytics.js"), /session.?replay|heatmap/i);
 });
 
 test("la transparencia y su enlace de footer existen en ES y EN", () => {

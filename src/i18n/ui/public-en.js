@@ -5,7 +5,7 @@ export default Object.freeze({
   "analytics.title": "Minimal analytics to improve Aula Física",
   "analytics.description": "We use Umami to understand, anonymously and in aggregate, how the site is consulted and which public resources are useful.",
   "analytics.collectsTitle": "What we measure",
-  "analytics.collectsText": "We receive aggregate metrics about visited pages, referrers, device, browser, operating system, approximate region, and five narrowly scoped academic interactions.",
+  "analytics.collectsText": "Umami records technical usage data about visited pages, referrers, device, browser, operating system, approximate region, and five narrowly scoped academic interactions. Aula Física consults and uses these statistics in aggregate.",
   "analytics.notCollectTitle": "What we do not send",
   "analytics.notCollectText": "Our instrumentation does not send names, email addresses, academic identifiers, answers, scores, form values, or written text.",
   "analytics.safeguardsTitle": "Safeguards in this version",
