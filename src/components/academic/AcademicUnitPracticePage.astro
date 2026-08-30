@@ -46,7 +46,7 @@ const participateHref = `${withBase(getLocalizedPath(ROUTE_IDS.PARTICIPATE, loca
       <aside class="practice-policy"><strong>{t(locale, "practice.policyTitle")}</strong><p>{t(locale, "practice.policyText")}</p></aside>
     </header>
     <AcademicUnitNav unit={unit} locale={locale} />
-    <OpenPractice exercises={publicLearningExercises} topics={unit.topics} visualizations={localizedVisualizations} present={adapter.presentRichText} locale={locale} />
+    <OpenPractice exercises={publicLearningExercises} topics={unit.topics} visualizations={localizedVisualizations} present={adapter.presentRichText} locale={locale} unit={unitNumber} />
     <TopicCta
       eyebrow={t(locale, "unitPage.participation")}
       title={t(locale, "unitPage.unclear")}

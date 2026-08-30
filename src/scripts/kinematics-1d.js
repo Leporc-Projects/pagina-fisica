@@ -16,6 +16,7 @@ import {
   createKinematicsMotionGeometry,
 } from "../utils/kinematics-svg.js";
 import { initializeSimulationFloatingPlayback } from "./simulation-floating-playback.js";
+import { createAnalyticsOneShot, trackSimulationStart } from "../utils/analytics.js";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const quantityViews = Object.freeze({
@@ -82,6 +83,9 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
 
   const abortController = new AbortController();
   const listenerOptions = { signal: abortController.signal };
+  const trackFirstStart = createAnalyticsOneShot(() =>
+    trackSimulationStart("kinematics-1d", locale)
+  );
   const defaultsFromExperience = () => Object.fromEntries(
     Object.entries(experience.parameters).map(([key, config]) => [key, config.default])
   );
@@ -520,6 +524,7 @@ export const initializeKinematicsSimulation = (root, suppliedExperience) => {
   const play = () => {
     if (state.time >= state.parameters.T) state.time = 0;
     state.playing = true;
+    trackFirstStart();
     state.frameStart = null;
     state.playStartTime = state.time;
     setPlaybackPresentation();

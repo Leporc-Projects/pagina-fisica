@@ -1,0 +1,31 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "./PageHeader.astro";
+import { t } from "../i18n/index.js";
+import { ROUTE_IDS } from "../i18n/routes.js";
+
+const { locale = "es" } = Astro.props;
+const sections = ["collects", "notCollect", "safeguards", "use"];
+---
+
+<BaseLayout
+  title={t(locale, "analytics.pageTitle")}
+  description={t(locale, "analytics.meta")}
+  locale={locale}
+  routeId={ROUTE_IDS.ANALYTICS_PRIVACY}
+>
+  <PageHeader
+    eyebrow={t(locale, "analytics.eyebrow")}
+    title={t(locale, "analytics.title")}
+    description={t(locale, "analytics.description")}
+  />
+
+  <div class="analytics-privacy page-section">
+    {sections.map((section) => (
+      <section aria-labelledby={`analytics-${section}-title`}>
+        <h2 id={`analytics-${section}-title`}>{t(locale, `analytics.${section}Title`)}</h2>
+        <p>{t(locale, `analytics.${section}Text`)}</p>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

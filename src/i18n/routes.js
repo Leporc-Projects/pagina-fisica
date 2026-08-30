@@ -100,6 +100,7 @@ export const ROUTE_IDS = Object.freeze({
   PULLEY_SYSTEMS: "simulation.pulley-systems",
   NOTICES: "notices",
   PARTICIPATE: "participate",
+  ANALYTICS_PRIVACY: "analytics.privacy",
 });
 
 export const LOCALIZED_ROUTES = Object.freeze({
@@ -202,6 +203,7 @@ export const LOCALIZED_ROUTES = Object.freeze({
   [ROUTE_IDS.PULLEY_SYSTEMS]: Object.freeze({ es: "/simulaciones/poleas", en: "/en/simulations/pulleys" }),
   [ROUTE_IDS.NOTICES]: Object.freeze({ es: "/avisos", en: "/en/notices" }),
   [ROUTE_IDS.PARTICIPATE]: Object.freeze({ es: "/participa", en: "/en/participate" }),
+  [ROUTE_IDS.ANALYTICS_PRIVACY]: Object.freeze({ es: "/privacidad-analitica", en: "/en/analytics-privacy" }),
 });
 
 const normalizePath = (path) => {

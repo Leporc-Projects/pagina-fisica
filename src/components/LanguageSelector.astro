@@ -1,7 +1,7 @@
 ---
 import { LOCALES, SUPPORTED_LOCALES } from "../i18n/config.js";
 import { t } from "../i18n/index.js";
-import { getRouteCounterpart } from "../i18n/routes.js";
+import { getRouteCounterpart, getRouteIdFromPath } from "../i18n/routes.js";
 import { withBase } from "../utils/paths.js";
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
 }
 
 const { locale, pathname } = Astro.props;
+const routeId = getRouteIdFromPath(pathname);
 ---
 
 <nav class="language-selector" aria-label={t(locale, "language.label")}>
@@ -26,10 +27,24 @@ const { locale, pathname } = Astro.props;
       return (
         <li>
           {target && !current
-            ? <a href={withBase(target)} hreflang={language.htmlLang} lang={language.htmlLang} aria-label={label}>{language.short}</a>
+            ? <a
+                href={withBase(target)}
+                hreflang={language.htmlLang}
+                lang={language.htmlLang}
+                aria-label={label}
+                data-language-change
+                data-from-locale={locale}
+                data-to-locale={targetLocale}
+                data-route-id={routeId}
+              >{language.short}</a>
             : <span aria-current={current ? "true" : undefined} aria-disabled={!current ? "true" : undefined} title={label}>{language.short}<span class="sr-only"> · {label}</span></span>}
         </li>
       );
     })}
   </ul>
 </nav>
+
+<script>
+  import { initializeLanguageAnalytics } from "../scripts/language-analytics.js";
+  initializeLanguageAnalytics();
+</script>

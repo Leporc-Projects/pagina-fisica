@@ -14,6 +14,7 @@ import {
 } from "../utils/projectile-2d.js";
 import { createProjectileP5Renderer } from "./p5-projectile-renderer.js";
 import { initializeSimulationFloatingPlayback } from "./simulation-floating-playback.js";
+import { createAnalyticsOneShot, trackSimulationStart } from "../utils/analytics.js";
 
 const runtimes = new WeakMap();
 const pendingRuntimes = new WeakMap();
@@ -60,6 +61,9 @@ const createRuntime = async (root, suppliedExperience) => {
 
   const abortController = new AbortController();
   const listenerOptions = { signal: abortController.signal };
+  const trackFirstStart = createAnalyticsOneShot(() =>
+    trackSimulationStart("projectile-2d", locale)
+  );
   const defaultsFromExperience = () => Object.fromEntries(
     Object.entries(experience.parameters).map(([key, config]) => [key, config.default])
   );
@@ -291,6 +295,7 @@ const createRuntime = async (root, suppliedExperience) => {
     }
     if (state.time >= flightTime - PROJECTILE_EPSILON) state.time = 0;
     state.playing = true;
+    trackFirstStart();
     state.frameStart = null;
     state.playStartTime = state.time;
     setPlaybackPresentation();

@@ -2,6 +2,8 @@
 // Pie compartido y declaración explícita del carácter personal e independiente.
 import { SITE } from "../data/site.js";
 import { t } from "../i18n/index.js";
+import { getLocalizedPath, ROUTE_IDS } from "../i18n/routes.js";
+import { withBase } from "../utils/paths.js";
 
 const { locale = "es" } = Astro.props;
 
@@ -24,6 +26,9 @@ const year = new Date().getFullYear();
       <p>
         {t(locale, "footer.independent")}
       </p>
+      <a href={withBase(getLocalizedPath(ROUTE_IDS.ANALYTICS_PRIVACY, locale))}>
+        {t(locale, "analytics.footerLink")}
+      </a>
       <p>{year}</p>
     </div>
   </div>

@@ -9,6 +9,7 @@ import {
   getAcademicExerciseFamily,
 } from "../data/physics/family-registry.js";
 import { t } from "../i18n/index.js";
+import { trackPracticeNewBatch } from "../utils/analytics.js";
 
 const element = (tag, text, className) => {
   const target = document.createElement(tag);
@@ -76,6 +77,7 @@ export const initializeOpenPractice = () => {
   document.querySelectorAll("[data-open-practice]").forEach((practice) => {
     if (!(practice instanceof HTMLElement) || practice.dataset.enhanced === "true") return;
     const locale = practice.dataset.locale === "en" ? "en" : "es";
+    const unit = Number(practice.dataset.unit);
 
     const slides = [...practice.querySelectorAll("[data-exercise-slide]")]
       .filter((slide) => slide instanceof HTMLElement);
@@ -193,9 +195,10 @@ export const initializeOpenPractice = () => {
 
     previous.addEventListener("click", () => show(activeIndex - 1, { updateHash: true, focus: true }));
     next.addEventListener("click", () => show(activeIndex + 1, { updateHash: true, focus: true }));
-    newBatch.addEventListener("click", () =>
-      renderBatch(null, { updateHash: true, focus: true })
-    );
+    newBatch.addEventListener("click", () => {
+      trackPracticeNewBatch(unit, locale);
+      renderBatch(null, { updateHash: true, focus: true });
+    });
     filterElements.forEach((element) => element.addEventListener("change", () =>
       renderBatch(null, { updateHash: true })
     ));

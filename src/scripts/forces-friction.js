@@ -15,6 +15,7 @@ import {
 import { createForcesFrictionP5Renderer } from "./p5-forces-friction-renderer.js";
 import { initializeSimulationFloatingPlayback } from "./simulation-floating-playback.js";
 import { setSvgArrow, updateSimulationLinkedChart } from "./simulation-linked-chart.js";
+import { createAnalyticsOneShot, trackSimulationStart } from "../utils/analytics.js";
 
 const runtimes = new WeakMap();
 const pending = new WeakMap();
@@ -42,6 +43,9 @@ const createRuntime = async (root, suppliedExperience) => {
   if (!(canvas instanceof HTMLElement) || !(playbackSection instanceof HTMLElement) || !(toggleButton instanceof HTMLButtonElement) || !playbackLabel || !playbackIcon || !playbackState || !live) throw new TypeError("La interfaz de fuerzas está incompleta.");
   const abortController = new AbortController();
   const options = { signal: abortController.signal };
+  const trackFirstStart = createAnalyticsOneShot(() =>
+    trackSimulationStart("forces-friction", locale)
+  );
   const defaults = () => Object.fromEntries(Object.entries(experience.parameters).map(([key, value]) => [key, value.default]));
   const definitions = () => {
     const model = localizeSimulationModel(getSimulationModelById(experience.modelId), locale);
@@ -248,6 +252,7 @@ const createRuntime = async (root, suppliedExperience) => {
   const play = () => {
     if (runtime.readings.regime === "contact-invalid") return;
     runtime.playing = true;
+    trackFirstStart();
     updatePlayback();
     runtime.frameId = requestAnimationFrame(stepFrame);
     announce(t(locale, "simulation.playing"));

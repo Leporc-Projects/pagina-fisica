@@ -12,6 +12,7 @@ interface Props {
   visualizations: Record<string, any>;
   present?: (value: string) => RichContent;
   locale?: "es" | "en";
+  unit: number;
 }
 
 const {
@@ -20,6 +21,7 @@ const {
   visualizations,
   present = (value) => value,
   locale = "es",
+  unit,
 } = Astro.props;
 const fixedExercises = exercises.filter((exercise) =>
   exercise.itemKind !== "parameterizedFamily"
@@ -36,7 +38,7 @@ const availableDifficulties = [...new Set(exercises.map((exercise) => exercise.d
   .sort((a, b) => a - b);
 ---
 
-<section class="open-practice" data-open-practice data-locale={locale} aria-labelledby="open-practice-title">
+<section class="open-practice" data-open-practice data-locale={locale} data-unit={unit} aria-labelledby="open-practice-title">
   <header class="open-practice__header">
     <div>
       <p class="academic-label">{t(locale, "practice.open")}</p>

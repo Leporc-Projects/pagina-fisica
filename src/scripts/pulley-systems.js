@@ -8,6 +8,7 @@ import { normalizeSimulationExperience, validateSimulationExperience } from "../
 import { createPulleySystemsP5Renderer } from "./p5-pulley-systems-renderer.js";
 import { initializeSimulationFloatingPlayback } from "./simulation-floating-playback.js";
 import { updateSimulationLinkedChart } from "./simulation-linked-chart.js";
+import { createAnalyticsOneShot, trackSimulationStart } from "../utils/analytics.js";
 
 const runtimes = new WeakMap();
 const pending = new WeakMap();
@@ -38,6 +39,9 @@ const createRuntime = async (root, suppliedExperience) => {
   if (!(canvas instanceof HTMLElement) || !(playbackSection instanceof HTMLElement) || !(toggleButton instanceof HTMLButtonElement) || !playbackLabel || !playbackIcon || !playbackState || !live) throw new TypeError("La interfaz de poleas está incompleta.");
   const abortController = new AbortController();
   const options = { signal: abortController.signal };
+  const trackFirstStart = createAnalyticsOneShot(() =>
+    trackSimulationStart("pulley-systems", locale)
+  );
   const defaults = () => Object.fromEntries(Object.entries(experience.parameters).map(([key, value]) => [key, value.default]));
   const makeStores = () => Object.fromEntries(PULLEY_SCENARIOS.map((scenario) => [scenario.id, Object.fromEntries(scenario.parameterKeys.map((key) => [key, defaults()[key]]))]));
   const definitions = () => {
@@ -240,6 +244,7 @@ const createRuntime = async (root, suppliedExperience) => {
   const play = () => {
     if (runtime.state.stopped) return;
     runtime.playing = true;
+    trackFirstStart();
     updatePlayback();
     runtime.frameId = requestAnimationFrame(stepFrame);
     announce(t(locale, "simulation.playing"));

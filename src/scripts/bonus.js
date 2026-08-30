@@ -19,6 +19,7 @@ import { BONUS_DELIVERY_CONFIG } from "../data/delivery.js";
 import { getLocaleConfig } from "../i18n/config.js";
 import { t } from "../i18n/index.js";
 import { withBase } from "../utils/paths.js";
+import { trackMiniQuizComplete, trackMiniQuizStart } from "../utils/analytics.js";
 import { copyLocalText, downloadLocalFile } from "./local-export.js";
 
 const createElement = (tag, text, className) => {
@@ -73,6 +74,7 @@ export const initializeBonus = () => {
   let selections = [];
   let responses = {};
   let currentIndex = 0;
+  let analyticsCompletedForAttempt = false;
   const seenItemIds = new Set();
   const recentParameterKeys = new Set();
 
@@ -405,6 +407,7 @@ export const initializeBonus = () => {
     }
 
     responses = {};
+    analyticsCompletedForAttempt = false;
     completedAttempt = null;
     deliveryAttempt = null;
     currentIndex = 0;
@@ -426,6 +429,7 @@ export const initializeBonus = () => {
     if (session instanceof HTMLElement) session.hidden = false;
     if (backToResult instanceof HTMLButtonElement) backToResult.hidden = true;
     showQuestion(0);
+    trackMiniQuizStart(bonus.id, locale);
     announce(t(locale, "bonus.status.started"));
   };
 
@@ -615,6 +619,10 @@ export const initializeBonus = () => {
       responses,
       locale,
     });
+    if (!analyticsCompletedForAttempt) {
+      analyticsCompletedForAttempt = true;
+      trackMiniQuizComplete(bonus.id, locale);
+    }
     completedAttempt.questions.forEach(renderQuestionFeedback);
     app.dataset.completed = "true";
     renderResult();
