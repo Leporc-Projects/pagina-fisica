@@ -112,7 +112,7 @@ export const UNIT_3_VISUALIZATIONS = {
       yDomain: [-0.85, 4.05],
       segments: [
         { start: { x: 0, y: 0 }, end: { x: 6, y: 3 }, style: "reference" },
-        { start: { x: 3.1, y: 2 }, end: { x: 1.9, y: 1.4 }, style: "reference", lineStyle: "dashed" },
+        { start: { x: 3.15, y: 1.95 }, end: { x: 4.1, y: 0.05 }, style: "reference", lineStyle: "dashed" },
       ],
       // La etiqueta sube y ancla a la derecha: abajo cruzaba la línea del plano
       // y centrada caía sobre el origen común de N y mg.
@@ -121,7 +121,7 @@ export const UNIT_3_VISUALIZATIONS = {
         { start: { x: 3.15, y: 1.95 }, end: { x: 2.2, y: 3.85 }, label: "N", style: "primary" },
         { start: { x: 3.15, y: 1.95 }, end: { x: 3.15, y: -0.35 }, label: "mg", style: "secondary" },
       ],
-      annotations: [{ x: 1.5, y: 1.1, label: "guía: mg cosθ", labelPosition: "below" }],
+      annotations: [{ x: 4.35, y: 0.45, label: "guía: mg cosθ", labelPosition: "right" }],
     }
   ),
 

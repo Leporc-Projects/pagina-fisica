@@ -10,6 +10,7 @@ import contentEn from "./i18n/content.en.js";
 import commonErrorsEn from "./i18n/common-errors.en.js";
 import formulasEn from "./i18n/formulas.en.js";
 import visualizationsEn from "./i18n/visualizations.en.js";
+import { localizeAcademicUnitLabel } from "../localize-unit-label.js";
 
 const EN_UNIT = Object.freeze({
   title: "Vectors and kinematics",
@@ -138,7 +139,7 @@ export const localizeUnit1Formula = (formula, locale) => {
     label: translation.label,
     mathml: formula.mathml.replace(/aria-label="[^"]*"/, `aria-label="${escapeAttribute(translation.label)}"`),
     represents: translation.represents,
-    variables: formula.variables.map((variable, index) => ({ ...variable, meaning: meanings[index] })),
+    variables: formula.variables.map((variable, index) => ({ ...variable, meaning: meanings[index], unit: localizeAcademicUnitLabel(variable.unit, locale) })),
     conditions: requireParallelArray(formula.conditions, translation.conditions, `formula.${formula.id}.conditions`),
     interpretation: translation.interpretation,
     dimensions: translation.dimensions,

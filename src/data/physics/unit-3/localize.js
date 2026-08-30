@@ -11,6 +11,7 @@ import formulasEn from "./i18n/formulas.en.js";
 import commonErrorsEn from "./i18n/common-errors.en.js";
 import visualizationTextEn from "./i18n/visualizations.en.js";
 import examplesEn from "./i18n/examples.en.js";
+import { localizeAcademicUnitLabel } from "../localize-unit-label.js";
 
 const EN_UNIT = Object.freeze({
   title: "Forces and equations of motion", shortTitle: "Unit 3", chapters: "Chapter 5",
@@ -52,7 +53,7 @@ const escapeAttribute = (value) => value.replaceAll("&", "&amp;").replaceAll('"'
 export const getLocalizedUnit3Formula = (id, locale) => {
   assertSupportedLocale(locale); const formula = UNIT_3_FORMULAS[id]; if (!formula || locale === "es") return formula;
   const translated = requireValue(formulasEn[id], `formula.${id}`); const meanings = parallel(formula.variables, translated.meanings, `formula.${id}.variables`);
-  return { ...formula, label: translated.label, mathml: formula.mathml.replace(/aria-label="[^"]*"/, `aria-label="${escapeAttribute(translated.label)}"`), represents: translated.represents, variables: formula.variables.map((variable, index) => ({ ...variable, meaning: meanings[index] })), conditions: parallel(formula.conditions, translated.conditions, `formula.${id}.conditions`), interpretation: translated.interpretation, dimensions: translated.dimensions, commonErrors: parallel(formula.commonErrors, translated.commonErrors, `formula.${id}.commonErrors`) };
+  return { ...formula, label: translated.label, mathml: formula.mathml.replace(/aria-label="[^"]*"/, `aria-label="${escapeAttribute(translated.label)}"`), represents: translated.represents, variables: formula.variables.map((variable, index) => ({ ...variable, meaning: meanings[index], unit: localizeAcademicUnitLabel(variable.unit, locale) })), conditions: parallel(formula.conditions, translated.conditions, `formula.${id}.conditions`), interpretation: translated.interpretation, dimensions: translated.dimensions, commonErrors: parallel(formula.commonErrors, translated.commonErrors, `formula.${id}.commonErrors`) };
 };
 export const getLocalizedUnit3ErrorsByTopics = (topics, locale) => { assertSupportedLocale(locale); return UNIT_3_COMMON_ERRORS.filter((error) => topics.includes(error.topic)).map((error) => { if (locale === "es") return error; const [description, feedback] = requireValue(commonErrorsEn[error.id], `commonError.${error.id}`); return { ...error, description, feedback }; }); };
 const replaceVisualizationText = (value, replacements) => Array.isArray(value) ? value.map((entry) => replaceVisualizationText(entry, replacements)) : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, child]) => [key, replaceVisualizationText(child, replacements)])) : typeof value === "string" && Object.hasOwn(replacements, value) ? replacements[value] : value;

@@ -9,6 +9,7 @@ import contentEn from "./i18n/content.en.js";
 import formulasEn from "./i18n/formulas.en.js";
 import commonErrorsEn from "./i18n/common-errors.en.js";
 import visualizationTextEn from "./i18n/visualizations.en.js";
+import { localizeAcademicUnitLabel } from "../localize-unit-label.js";
 
 const EN_UNIT = Object.freeze({
   title: "Newton's laws",
@@ -93,7 +94,7 @@ export const getLocalizedUnit2Formula = (id, locale) => {
     label: translated.label,
     mathml: formula.mathml.replace(/aria-label="[^"]*"/, `aria-label="${escapeAttribute(translated.label)}"`),
     represents: translated.represents,
-    variables: formula.variables.map((variable, index) => ({ ...variable, meaning: meanings[index] })),
+    variables: formula.variables.map((variable, index) => ({ ...variable, meaning: meanings[index], unit: localizeAcademicUnitLabel(variable.unit, locale) })),
     conditions: parallel(formula.conditions, translated.conditions, `formula.${id}.conditions`),
     interpretation: translated.interpretation, dimensions: translated.dimensions,
     commonErrors: parallel(formula.commonErrors, translated.commonErrors, `formula.${id}.commonErrors`),

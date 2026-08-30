@@ -47,6 +47,7 @@ export default Object.freeze({
     "props.title": "Velocity with constant acceleration and a change of direction",
     "props.description": "A velocity line starts positive, crosses zero, and becomes negative. The areas on either side of the axis have opposite signs.",
     "props.xAxis.label": "Time", "props.yAxis.label": "Velocity",
+    "props.functions.0.label": "v(t)=4−1.2t",
   },
   "free-fall-position": {
     relationLabel: "y(t) during a vertical launch",

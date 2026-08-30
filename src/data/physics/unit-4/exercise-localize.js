@@ -3,6 +3,7 @@ import { t } from "../../../i18n/index.js";
 import { UNIT_4_EXERCISES } from "./exercises.js";
 import exercisesEn from "./i18n/exercises.en.js";
 import { getLocalizedUnit4ExerciseFamilies } from "./family-localize.js";
+import { localizeExercisePresentation } from "../localize-exercise-presentation.js";
 
 const required = (value, context) => {
   if (value == null || value === "") throw new RangeError(`Missing English Unit 4 exercise translation: ${context}`);
@@ -42,6 +43,6 @@ export const localizeUnit4Exercise = (exercise, locale) => {
   };
 };
 
-export const getLocalizedUnit4Exercises = (locale) => UNIT_4_EXERCISES.map((exercise) => localizeUnit4Exercise(exercise, locale));
+export const getLocalizedUnit4Exercises = (locale) => UNIT_4_EXERCISES.map((exercise) => localizeExercisePresentation(localizeUnit4Exercise(exercise, locale), locale));
 export const getLocalizedUnit4BankItems = (locale) => [...getLocalizedUnit4Exercises(locale), ...getLocalizedUnit4ExerciseFamilies(locale)];
 export { generateLocalizedUnit4FamilyInstance } from "./family-localize.js";
