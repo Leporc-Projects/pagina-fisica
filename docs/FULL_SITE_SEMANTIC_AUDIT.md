@@ -11,9 +11,12 @@ Fecha de cierre: 2026-08-30. Esta es una auditoría local independiente y no con
 - Local commits de Fase 2:
   - `e06e1b0fc3326875af959720aa9d0e322f484d00` — `fix: resolve semantic academic audit findings`.
   - `7a28c25483793434ad516e52bb75ecf3f72b09e9` — `test: add semantic audit regressions`.
-  - `docs: complete full-site semantic audit` — commit que contiene este informe.
+  - `0da20bc54aea08c1f41f3f86c9e3910359f2770e` — `docs: complete full-site semantic audit`.
+  - `04bbf8d3a2b48282f55810c2596e7783a2fcdacb` — `fix: correct axial vector visualizations`.
+  - `08c512e6ac360f8d394720724160b357b3316144` — `test: protect axial direction conventions`.
+  - `docs: reopen semantic audit for axial findings` — commit que contiene esta reapertura del informe.
 - Final feature HEAD: se reporta con su hash exacto en el handoff final; un commit no puede contener autorreferencialmente su propio hash.
-- Working tree: limpio al cierre.
+- Working tree: cambios de auditoría comprometidos; `semantic-audit-code-diff.txt`, artefacto no versionado preexistente, se preserva sin modificar.
 - NO PUSH / NO PR / NO MERGE / NO DEPLOY.
 
 ## 2. Coverage scoreboard
@@ -28,10 +31,10 @@ Fecha de cierre: 2026-08-30. Esta es una auditoría local independiente y no con
 | Families | 77 | 77 | 0 | 0 | 0 |
 | Concept checks | 113 | 113 | 0 | 0 | 0 |
 | Common errors | 144 | 144 | 0 | 0 | 0 |
-| Visuals | 104 | 98 | 6 | 0 | 0 |
+| Visuals | 104 | 95 | 9 | 0 | 0 |
 | Mini quizzes | 4 | 4 | 0 | 0 | 0 |
 
-Total del ledger: **1093 ítems**, 944 PASS, 149 FIXED, 0 ESCALATE, 0 unreviewed.
+Total del ledger: **1093 ítems**, 941 PASS, 152 FIXED, 0 ESCALATE, 0 unreviewed.
 
 ## 3. Findings
 
@@ -66,7 +69,13 @@ Total del ledger: **1093 ítems**, 944 PASS, 149 FIXED, 0 ESCALATE, 0 unreviewed
 - `torque` y `rolling`: unidad angular descriptiva localizada.
 - Los 31 ejercicios de respuesta numérica simple usan etiqueta y presentación localizadas.
 - `torque-lever-arm` y `angular-momentum-particle`: el brazo etiquetado no era perpendicular a la línea de acción/movimiento. Se proyectó el origen sobre cada línea; los tests verifican `ℓ·line=0`.
-- `gyroscope-precession`: la torca se dibujaba dentro del plano. Para la geometría mostrada, `r×Mg` es normal al plano; quedó como `τ ⊗`, protegida por regresión.
+- Reapertura axial: `angular-momentum-particle` declaraba `L=r×p`, pero dibujaba `L` como flecha coplanar. Con `r=(4,5; 2,4)` y `p=(1,7; 1,3)`, `L_z=r_xp_y-r_yp_x=+1,77`; quedó como `L ⊙`. La regresión calcula el producto vectorial desde las coordenadas dibujadas y deriva `⊙/⊗` de su signo.
+- La segunda pasada focalizada recorrió las 104 visualizaciones U1–U7 y aisló siete candidatas por producto vectorial, torca, momento angular, dirección axial o `⊙/⊗`: `angular-sign-circle`, `torque-lever-arm`, `net-torque-angular-acceleration`, `rolling-kinematics`, `rotational-work-power`, `angular-momentum-particle` y `gyroscope-precession`, todas en U6. `rotational-work-power` es una gráfica escalar de la componente axial y no dibuja un vector resultado; se conserva PASS.
+- `angular-sign-circle`: el eje `+z` ya no se dibuja como flecha coplanar; el giro antihorario visto desde `+z` usa `+z ⊙`.
+- `torque-lever-arm`: para `r×F>0`, se hizo explícita la dirección `τ ⊙` además de conservar el brazo perpendicular ya corregido.
+- `net-torque-angular-acceleration`: las flechas coplanares rotuladas como torcas se sustituyeron por fuerzas tangenciales reales. Sus productos `r×F` dan `τ₁>0`, `τ₂<0` y `τ_net>0`; la figura usa respectivamente `τ₁ ⊙`, `τ₂ ⊗` y `τ_net, α ⊙`.
+- `rolling-kinematics`: una rueda que avanza a la derecha gira en sentido horario; `ω` quedó como `ω ⊗`, no como etiqueta coplanar de una curva.
+- `gyroscope-precession`: la torca se dibujaba dentro del plano. Para la geometría mostrada, `r×Mg` es normal al plano y negativa; quedó como `τ ⊗`, protegida por el mismo oráculo de signo.
 
 ### U7
 
@@ -104,7 +113,7 @@ No se encontró una respuesta física, distractor, tolerancia o solver incorrect
 
 ## 10. Visuals
 
-104/104 visualizaciones vistas manualmente: U1 26 (13 teóricas + 13 del carrusel de práctica), U2 12, U3 14, U4 12, U5 12, U6 14, U7 14. Se revisaron objetos, ejes, signos, vectores, sumas, tangencias, radios y geometría. Resultado: 98 PASS, 6 FIXED. Las 98 definiciones no modificadas se inspeccionaron renderizadas; las seis corregidas se repitieron contra el servidor del árbol actual en desktop/dark y una selección de alto riesgo en móvil/light. Manual viewed: YES 104/104.
+104/104 visualizaciones vistas manualmente: U1 26 (13 teóricas + 13 del carrusel de práctica), U2 12, U3 14, U4 12, U5 12, U6 14, U7 14. Se revisaron objetos, ejes, signos, vectores, sumas, tangencias, radios, geometría y, tras la reapertura, si cada resultado vectorial debe estar dentro o fuera del plano. Resultado: 95 PASS, 9 FIXED. Las cinco figuras modificadas en la reapertura se repitieron contra el servidor del árbol actual en ES/EN, 1440×1000 y 390×844/dark. Manual viewed: YES 104/104.
 
 ## 11. Mini quizzes
 
@@ -112,14 +121,14 @@ No se encontró una respuesta física, distractor, tolerancia o solver incorrect
 
 ## 12. Cross-unit
 
-La segunda pasada transversal no encontró contradicciones entre vectores, fuerza, movimiento circular, gravedad, energía, momento lineal, momento angular, sistemas, resorte, fricción ni aproximaciones. Se verificó en particular: radial/centrípeta como resultante y no fuerza nueva; conservación condicionada a sistema; potencial y fuerza por derivada; impulso/momento; torca/momento angular; gravedad orbital y MAS.
+La pasada transversal inicial no encontró contradicciones entre vectores, fuerza, movimiento circular, gravedad, energía, momento lineal, momento angular, sistemas, resorte, fricción ni aproximaciones, pero omitió comprobar de forma sistemática si algunos resultados axiales debían salir o entrar al plano. La reapertura corrigió esa carencia mediante inventario U1–U7 y oráculos de signo `r_xb_y-r_yb_x`. Se verificó además: radial/centrípeta como resultante y no fuerza nueva; conservación condicionada a sistema; potencial y fuerza por derivada; impulso/momento; torca/momento angular; gravedad orbital y MAS.
 
 ## 13. Tests/validation
 
-- `node --test tests/full-site-semantic-audit.test.mjs tests/full-site-independent-audit.test.mjs`: 12/12 PASS.
+- `node --test tests/full-site-semantic-audit.test.mjs tests/full-site-independent-audit.test.mjs`: 15/15 PASS.
 - Mini quices, authoring, paridad, simulaciones y poleas: 54/54 PASS.
 - Pruebas focalizadas de contenido/práctica U1–U7 e i18n: 88/88 PASS.
-- `npm test`: 474/474 PASS.
+- `npm test`: 477/477 PASS.
 - `npm run test:charts`: 9/9 PASS.
 - `npm run validate`: PASS; incluye 416 comprobaciones de legibilidad de figuras ES/EN y desktop/mobile.
 - `npm run verify`: PASS; validación y build completo.
@@ -133,16 +142,16 @@ LOC contra `7607ffb3531e77c1fdad430142adeee1a3f4602b`:
 | --- | ---: | ---: | ---: |
 | Application | 51121 | 51188 | +67 |
 | Tooling | 2848 | 2848 | 0 |
-| Tests | 7449 | 7579 | +130 |
-| CODE TOTAL | 61418 | 61615 | +197 |
+| Tests | 7449 | 7656 | +207 |
+| CODE TOTAL | 61418 | 61692 | +274 |
 | Editorial data | 472 | 472 | 0 |
-| Documentation | 3414 | 4676 | +1262 |
-| RELEVANT TOTAL | 65304 | 66763 | +1459 |
+| Documentation | 3414 | 4685 | +1271 |
+| RELEVANT TOTAL | 65304 | 66849 | +1545 |
 
 ## 14. QA local
 
 - Browser local contra el árbol actual en `127.0.0.1:4323`; la repetición final de torca usó `127.0.0.1:4324`.
-- Correcciones visuales U1/U3/U6/U7 verificadas en render; U3 y U1 EN también en 390×844/light sin overflow. El ajuste final de `torque-lever-arm` se repitió en ES/EN a 390×844 y conserva separadas `φ`, `ℓ` y la línea de acción.
+- Correcciones visuales U1/U3/U6/U7 verificadas en render; U3 y U1 EN también en 390×844/light sin overflow. En la reapertura, `angular-sign-circle`, `torque-lever-arm`, `net-torque-angular-acceleration`, `rolling-kinematics` y `angular-momentum-particle` se revisaron en ES/EN a 1440×1000 y 390×844/dark: símbolos axiales legibles, traducciones correctas y sin recorte ni solape que cambie el significado.
 - Cuatro mini quices ES/EN: rutas, títulos, 5/6/5/8 preguntas y flujo de resultados.
 - Cuatro simulaciones ES/EN: identidad, locale, controles y superficies visuales.
 - Cinemática 1D y proyectil: play/pause/reset con avance físico.
@@ -1072,20 +1081,20 @@ Los estados se pueden contar directamente. Cada fila registra el método indepen
 | l-always-parallel-omega | U6 | momento-angular | common-error | PASS | Adversarial misconception review: falsity, correction scope, missing conditions, absolutes and ES/EN equivalence. | The named misconception is false in context and the correction does not introduce a new rule error. | None |
 | angular-conservation-means-omega-constant | U6 | conservacion-precesion | common-error | PASS | Adversarial misconception review: falsity, correction scope, missing conditions, absolutes and ES/EN equivalence. | The named misconception is false in context and the correction does not introduce a new rule error. | None |
 | precession-torque-zero | U6 | conservacion-precesion | common-error | PASS | Adversarial misconception review: falsity, correction scope, missing conditions, absolutes and ES/EN equivalence. | The named misconception is false in context and the correction does not introduce a new rule error. | None |
-| angular-sign-circle | U6 | cinematica-angular | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
+| angular-sign-circle | U6 | cinematica-angular | visualization | FIXED | Manual render viewed YES; right-hand-rule sign and axial/coplanar classification; ES/EN desktop/mobile parity. | The +z axial direction was drawn as a coplanar arrow. | Replaced the arrow with `+z ⊙`; regression requires the out-of-plane convention. |
 | angular-constant-acceleration | U6 | cinematica-angular | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
 | points-on-rigid-disk | U6 | relaciones-lineal-angular | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
 | tangential-radial-acceleration | U6 | relaciones-lineal-angular | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
 | inertia-mass-distribution | U6 | momento-inercia | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
 | parallel-axis | U6 | momento-inercia | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
 | rotational-energy-bars | U6 | energia-rotacional | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
-| torque-lever-arm | U6 | torca | visualization | FIXED | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | The labelled lever arm was not perpendicular to the force line of action. | Rebuilt the endpoint from the perpendicular projection; regression checks orthogonality. |
-| net-torque-angular-acceleration | U6 | dinamica-rotacional | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
-| rolling-kinematics | U6 | rodadura | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
+| torque-lever-arm | U6 | torca | visualization | FIXED | Manual render viewed YES; lever orthogonality plus sign of `r×F` and axial/coplanar classification; ES/EN desktop/mobile parity. | The labelled lever arm was not perpendicular to the force line of action, and the positive axial torque was not explicit. | Rebuilt the endpoint from the perpendicular projection and added `τ ⊙`; regressions check orthogonality and cross-product sign. |
+| net-torque-angular-acceleration | U6 | dinamica-rotacional | visualization | FIXED | Manual render viewed YES; both `r×F` signs, signed sum and axial/coplanar classification; ES/EN desktop/mobile parity. | Torques and angular acceleration were drawn as coplanar arrows; the alleged opposing tangential forces did not encode a trustworthy signed construction. | Drew the two forces, derived opposite axial torques and marked `τ₁ ⊙`, `τ₂ ⊗`, `τ_net, α ⊙`; regression recomputes all three signs. |
+| rolling-kinematics | U6 | rodadura | visualization | FIXED | Manual render viewed YES; no-slip direction and axial/coplanar classification; ES/EN desktop/mobile parity. | A right-moving wheel's clockwise ω was labelled on a coplanar curve instead of as an axial vector into the plane. | Replaced the coplanar ω label with `ω ⊗` and made the direction explicit in ES/EN. |
 | rolling-energy | U6 | rodadura | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
 | rotational-work-power | U6 | trabajo-potencia-rotacion | visualization | PASS | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Manual render and geometry agree with the physical relation; no clipping that changes meaning. | None |
-| angular-momentum-particle | U6 | momento-angular | visualization | FIXED | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | The labelled lever arm was not perpendicular to the line of motion. | Rebuilt the endpoint from the perpendicular projection; regression checks orthogonality. |
-| gyroscope-precession | U6 | conservacion-precesion | visualization | FIXED | Manual render viewed YES; physical semantics plus axes/signs/vectors and applicable perpendicular/parallel/tangent/sum geometry; ES/EN parity. | Torque was drawn as an in-plane arrow although Mg×r is normal to the drawing plane. | Replaced the arrow with the out-of-plane τ ⊗ convention and protected the direction contract. |
+| angular-momentum-particle | U6 | momento-angular | visualization | FIXED | Manual render viewed YES; lever orthogonality plus sign of `r×p` and axial/coplanar classification; ES/EN desktop/mobile parity. | The lever arm was not perpendicular; after that fix, `L=r×p` still appeared as a coplanar vertical arrow although `L_z=+1.77`. | Rebuilt the perpendicular projection and replaced the L arrow with `L ⊙`; regression computes `r_xp_y-r_yp_x` from the drawn coordinates. |
+| gyroscope-precession | U6 | conservacion-precesion | visualization | FIXED | Manual render viewed YES; sign of `r×Mg` and axial/coplanar classification; ES/EN parity. | Torque was drawn as an in-plane arrow although `r×Mg` is normal to the drawing plane and negative. | Replaced the arrow with `τ ⊗`; regression derives the symbol from the cross-product sign. |
 | u7/gravitacion-universal/ley-inversa-cuadrado | U7 | gravitacion-universal | theory | PASS | ES/EN claim-by-claim adversarial review: domain, sign, system, frame, limits and counterexamples. | Physical meaning and stated scope agree in both locales. | None |
 | u7/gravitacion-universal/accion-reaccion | U7 | gravitacion-universal | theory | PASS | ES/EN claim-by-claim adversarial review: domain, sign, system, frame, limits and counterexamples. | Physical meaning and stated scope agree in both locales. | None |
 | u7/gravitacion-universal/superposicion-vectorial | U7 | gravitacion-universal | theory | PASS | ES/EN claim-by-claim adversarial review: domain, sign, system, frame, limits and counterexamples. | Physical meaning and stated scope agree in both locales. | None |
