@@ -6,7 +6,12 @@ import {
   createForcesHistoryGeometry,
 } from "../utils/dynamics-charts.js";
 import { normalizeSimulationExperience, validateSimulationExperience } from "../utils/simulation-experience.js";
-import { createForcesFrictionState, getForcesFrictionReadings, stepForcesFriction } from "../utils/forces-friction.js";
+import {
+  createForcesFrictionInitialSnapshot,
+  createForcesFrictionState,
+  getForcesFrictionReadings,
+  stepForcesFriction,
+} from "../utils/forces-friction.js";
 import {
   createInclinedForceFrame,
   createRightAngleMarker,
@@ -66,9 +71,10 @@ const createRuntime = async (root, suppliedExperience) => {
   };
   let floatingPlayback = null;
   const resetDomain = () => {
-    runtime.state = createForcesFrictionState(runtime.parameters);
-    runtime.readings = getForcesFrictionReadings(runtime.state, runtime.parameters);
-    runtime.history = [{ t: runtime.state.t, v: runtime.state.v, net: runtime.readings.netParallel }];
+    const initial = createForcesFrictionInitialSnapshot(runtime.parameters);
+    runtime.state = initial.state;
+    runtime.readings = initial.readings;
+    runtime.history = initial.history;
   };
   resetDomain();
   const renderer = await createForcesFrictionP5Renderer({ container: canvas, locale, getFrame: () => ({ ...runtime, experience }) });
@@ -260,7 +266,6 @@ const createRuntime = async (root, suppliedExperience) => {
   const togglePlayback = () => runtime.playing ? pause(t(locale, "simulation.paused")) : play();
   const reset = (message = t(locale, "simulation.resetDone")) => {
     pause();
-    runtime.parameters = defaults();
     resetDomain();
     syncControls();
     updateDom();

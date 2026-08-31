@@ -7,9 +7,9 @@ import {
 import {
   PROJECTILE_EPSILON,
   createProjectileDomains,
+  getProjectileReveal,
   getProjectileState,
   getProjectileSummary,
-  sampleProjectile,
   validateProjectileParameters,
 } from "../utils/projectile-2d.js";
 import { createProjectileP5Renderer } from "./p5-projectile-renderer.js";
@@ -94,11 +94,13 @@ const createRuntime = async (root, suppliedExperience) => {
   const updateFrameData = () => {
     const flight = summary();
     state.time = Math.max(0, Math.min(flight.flightTime, state.time));
+    const reveal = getProjectileReveal(state.parameters, state.time, 161);
     state.frame = {
       parameters: { ...state.parameters },
       state: getProjectileState(state.parameters, state.time),
       summary: flight,
-      samples: sampleProjectile(state.parameters, 161),
+      samples: reveal.samples,
+      reveal,
       domains: createProjectileDomains(state.parameters),
       views: { ...experience.views },
     };

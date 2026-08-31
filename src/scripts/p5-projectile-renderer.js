@@ -50,7 +50,7 @@ const drawArrow = (p, start, vector, color, label) => {
 };
 
 const drawScene = (p, frame, container, locale) => {
-  const { state, summary, samples, domains, views } = frame;
+  const { state, summary, samples, domains, reveal, views } = frame;
   const colors = readThemeTokens(container);
   const transform = createProjectileCanvasTransform({
     xDomain: domains.x,
@@ -69,8 +69,8 @@ const drawScene = (p, frame, container, locale) => {
   // el estado inicial por defecto: t = 0 sobre el punto de lanzamiento.
   const keyPoints = [
     [launch, t(locale, "projectile.launch")],
-    [vertex, t(locale, "projectile.apex")],
-    [impact, t(locale, "projectile.impact")],
+    ...(reveal.apexVisible ? [[vertex, t(locale, "projectile.apex")]] : []),
+    ...(reveal.impactVisible ? [[impact, t(locale, "projectile.impact")]] : []),
   ];
 
   p.background(colors.background);

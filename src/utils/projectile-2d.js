@@ -225,6 +225,41 @@ export const sampleProjectile = (parameters, samples = 121) => {
   });
 };
 
+export const getProjectileReveal = (parameters, currentTime, samples = 121) => {
+  const checked = assertProjectileParameters(parameters);
+  if (!Number.isInteger(samples) || samples < 2) {
+    throw new RangeError("La cantidad de muestras debe ser un entero mayor que uno.");
+  }
+
+  const time = resolveTime(checked, currentTime);
+  const summary = getProjectileSummary(checked);
+  if (time <= PROJECTILE_EPSILON || summary.flightTime <= PROJECTILE_EPSILON) {
+    return {
+      samples: [getProjectileState(checked, 0)],
+      apexVisible: false,
+      impactVisible: false,
+    };
+  }
+
+  const step = summary.flightTime / (samples - 1);
+  const completedSteps = Math.min(samples - 1, Math.floor(time / step));
+  const visibleSamples = Array.from({ length: completedSteps + 1 }, (_, index) =>
+    getProjectileState(checked, index * step)
+  );
+  const currentState = getProjectileState(checked, time);
+  if (Math.abs(visibleSamples.at(-1).time - time) <= PROJECTILE_EPSILON) {
+    visibleSamples[visibleSamples.length - 1] = currentState;
+  } else {
+    visibleSamples.push(currentState);
+  }
+
+  return {
+    samples: visibleSamples,
+    apexVisible: time + PROJECTILE_EPSILON >= summary.peakTime,
+    impactVisible: time + PROJECTILE_EPSILON >= summary.flightTime,
+  };
+};
+
 const finiteDomain = (values, { minimumSpan = 1, paddingRatio = 0.08 } = {}) => {
   if (!Array.isArray(values) || values.length === 0 || !values.every(Number.isFinite)) {
     throw new RangeError("El dominio requiere valores finitos.");

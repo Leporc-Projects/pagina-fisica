@@ -135,3 +135,13 @@ export const getForcesFrictionReadings = (state, params) => {
     regime: forces.regime,
   });
 };
+
+export const createForcesFrictionInitialSnapshot = (params) => {
+  const state = createForcesFrictionState(params);
+  const readings = getForcesFrictionReadings(state, params);
+  return {
+    state,
+    readings,
+    history: [{ t: state.t, v: state.v, net: readings.netParallel }],
+  };
+};
