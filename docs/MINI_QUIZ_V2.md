@@ -47,7 +47,7 @@ Las rutas se reciben del adaptador académico de la unidad. Las recomendaciones 
 
 La página prepara una configuración serializable con curso, unidad, temas, subtemas, errores comunes y el ID del adaptador de familias. El runtime genérico consume esa configuración; no importa metadatos de una unidad ni carga las siete unidades en el navegador. La compatibilidad U1 V1 vive en un adaptador legado cargado bajo demanda.
 
-El esquema de intento permanece en 1.1 porque el diagnóstico es metadato opcional dentro de una pregunta completada y los lectores 1.0/1.1 existentes siguen siendo válidos. Los nombres históricos `bonus` permanecen en el motor y en exportaciones 1.x para no ampliar el riesgo de migración.
+El esquema de intento permanece en 1.1 porque el diagnóstico es metadato opcional dentro de una pregunta completada y los lectores 1.0/1.1 existentes siguen siendo válidos. Los registros de ítems V2 usan `modality: "miniQuiz"`; el wire format de intentos completados 1.x puede conservar `modality: "bonus"`, `bonusId`, `bonusVersion` y los demás nombres históricos. Esta compatibilidad nominal no cambia la identidad ni la calificación y no justifica por sí sola una nueva versión del esquema.
 
 ## Verificación y migración
 
