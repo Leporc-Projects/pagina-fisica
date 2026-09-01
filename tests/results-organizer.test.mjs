@@ -3,12 +3,15 @@ import test from "node:test";
 
 import { UNIT_1_BONUSES } from "../src/data/physics/unit-1/bonuses.js";
 import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
+import { createAcademicMiniQuizRuntime } from "../src/data/mini-quizzes/academic-adapter.js";
 import {
   completeBonusAttempt,
   createBonusAttempt,
   prepareDeliveryAttempt,
 } from "../src/utils/bonus.js";
 import { parseCsv } from "../src/utils/results-csv.js";
+
+const miniQuizRuntime = createAcademicMiniQuizRuntime(1, "es", { familyAdapterId: "legacy-u1" });
 import {
   calculateResultMean,
   consolidateResults,
@@ -236,6 +239,7 @@ const makeIdentifiedBonus = () => {
     {
       attemptId: "attempt_00112233445566778899aabbccddeeff",
       startedAt: "2026-08-08T10:00:00.000Z",
+      runtime: miniQuizRuntime,
     }
   );
   const completed = completeBonusAttempt({
@@ -243,6 +247,7 @@ const makeIdentifiedBonus = () => {
     exercises: UNIT_1_EXERCISES,
     responses: { [exercise.id]: "20" },
     completedAt: "2026-08-08T10:05:00.000Z",
+    runtime: miniQuizRuntime,
   });
   return prepareDeliveryAttempt(
     completed,

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { UNIT_1_BONUSES } from "../src/data/physics/unit-1/bonuses.js";
 import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
+import { createAcademicMiniQuizRuntime } from "../src/data/mini-quizzes/academic-adapter.js";
 import {
   attemptIdFromBytes,
   BONUS_CSV_COLUMNS,
@@ -26,6 +27,7 @@ const bonus = UNIT_1_BONUSES[0];
 const fixedAttemptId = "attempt_00112233445566778899aabbccddeeff";
 const fixedStartedAt = "2026-08-08T12:00:00.000Z";
 const fixedCompletedAt = "2026-08-08T12:10:00.000Z";
+const runtime = createAcademicMiniQuizRuntime(1, "es", { familyAdapterId: "legacy-u1" });
 const deterministicCrypto = (seed = 1) => ({
   value: seed >>> 0,
   getRandomValues(array) {
@@ -46,7 +48,7 @@ const selectionsFor = (...ids) => ids.map((id, index) => ({
 const createAttemptFor = (...ids) => createBonusAttempt(
   { ...bonus, questionCount: ids.length },
   selectionsFor(...ids),
-  { attemptId: fixedAttemptId, startedAt: fixedStartedAt }
+  { attemptId: fixedAttemptId, startedAt: fixedStartedAt, runtime }
 );
 
 test("genera IDs de intento de 128 bits sin identidad ni dispositivo", () => {
@@ -217,6 +219,7 @@ test("calcula porcentaje y resultado por tema sin extrapolar", () => {
       "u1-vectors-platform-components": ["6,36", "0"],
     },
     completedAt: fixedCompletedAt,
+    runtime,
   });
   assert.equal(completed.summary.pointsEarned, 1.5);
   assert.equal(completed.summary.pointsPossible, 3);
@@ -243,6 +246,7 @@ test("TXT y JSON conservan Unicode y el contrato completo", () => {
     exercises: UNIT_1_EXERCISES,
     responses: { "u1-vectors-platform-components": ["6,36", "3,97"] },
     completedAt: fixedCompletedAt,
+    runtime,
   });
   const text = toBonusText(completed);
   const json = JSON.parse(toBonusJSON(completed));
@@ -265,6 +269,7 @@ test("CSV genera una fila por pregunta y protege fórmulas", () => {
       "u1-units-convert-speed": "20,0",
     },
     completedAt: fixedCompletedAt,
+    runtime,
   });
   completed.questions[1].response.raw = "=HYPERLINK(\"https://example.test\")";
   const csv = toBonusCSV(completed);

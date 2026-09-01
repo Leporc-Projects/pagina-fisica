@@ -5,6 +5,7 @@ import test from "node:test";
 import { UNIT_1_BONUSES } from "../src/data/physics/unit-1/bonuses.js";
 import { UNIT_1_BANK_ITEMS } from "../src/data/physics/unit-1/bank.js";
 import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
+import { createAcademicMiniQuizRuntime } from "../src/data/mini-quizzes/academic-adapter.js";
 import {
   BONUS_ATTEMPT_SCHEMA_VERSION,
   completeBonusAttempt,
@@ -21,6 +22,7 @@ import {
   auditAllBonusBlueprints,
   simulateBonusDiversity,
 } from "../src/utils/bonus-audit.js";
+
 import {
   QUESTION_PACK_SCHEMA_VERSION,
   TEACHER_QUESTION_SCHEMA_VERSION,
@@ -33,6 +35,8 @@ import {
 } from "../src/utils/question-pack.js";
 import { teacherQuestionToExercise } from "../src/data/physics/unit-1/teacher-question-adapter.js";
 import { validateImportedDocument } from "../src/utils/review.js";
+
+const miniQuizRuntime = createAcademicMiniQuizRuntime(1, "es", { familyAdapterId: "legacy-u1" });
 
 const deterministicCrypto = (seed = 1) => ({
   state: seed >>> 0,
@@ -107,6 +111,7 @@ test("el snapshot de Bono conserva la instancia parametrizada exacta", () => {
   const attempt = createBonusAttempt(bonus, selections, {
     attemptId: "attempt_11223344556677889900aabbccddeeff",
     startedAt: "2026-08-08T10:00:00.000Z",
+    runtime: miniQuizRuntime,
   });
   selections.filter((selection) => selection.exercise.itemKind === "parameterizedInstance")
     .forEach((selection) => {
@@ -240,12 +245,14 @@ const completedAnonymousAttempt = () => {
   const attempt = createBonusAttempt(bonus, selections, {
     attemptId: "attempt_ffeeddccbbaa00998877665544332211",
     startedAt: "2026-08-08T12:00:00.000Z",
+    runtime: miniQuizRuntime,
   });
   return completeBonusAttempt({
     attempt,
     exercises: selections.map((selection) => selection.exercise),
     responses: {},
     completedAt: "2026-08-08T12:10:00.000Z",
+    runtime: miniQuizRuntime,
   });
 };
 

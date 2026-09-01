@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { UNIT_1_BONUSES } from "../src/data/physics/unit-1/bonuses.js";
 import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
+import { createAcademicMiniQuizRuntime } from "../src/data/mini-quizzes/academic-adapter.js";
 import { REVIEW_FILE_MAX_BYTES, REVIEW_SESSION_SCHEMA_VERSION } from "../src/data/review.js";
 import {
   completeBonusAttempt,
@@ -28,6 +29,7 @@ import {
 
 const at = "2026-08-09T01:00:00.000Z";
 const reviewedAt = "2026-08-09T02:00:00.000Z";
+const miniQuizRuntime = createAcademicMiniQuizRuntime(1, "es", { familyAdapterId: "legacy-u1" });
 const ids = {
   difficulty: "resp_00000000000000000000000000000001",
   proposal: "resp_00000000000000000000000000000002",
@@ -105,11 +107,13 @@ const bonusAttempt = completeBonusAttempt({
     {
       attemptId: "attempt_00000000000000000000000000000001",
       startedAt: at,
+      runtime: miniQuizRuntime,
     }
   ),
   exercises: [exercise],
   responses: { [exercise.id]: "20,0" },
   completedAt: reviewedAt,
+  runtime: miniQuizRuntime,
 });
 
 test("acepta una respuesta JSON canónica de Participa", () => {

@@ -1659,6 +1659,10 @@ const bonusRouteSource = fs.readFileSync(
   path.join(projectRoot, "src/pages/fisica-basica-1/mini-quices/[slug].astro"),
   "utf8"
 );
+const miniQuizPageAdapterSource = fs.readFileSync(
+  path.join(projectRoot, "src/data/mini-quizzes/page-adapter.js"),
+  "utf8"
+);
 const bonusStyleSource = fs.readFileSync(
   path.join(projectRoot, "src/styles/bonus.css"),
   "utf8"
@@ -1688,7 +1692,8 @@ check(
     bonusQuestionSource.includes('inputmode="decimal"') &&
     bonusQuestionSource.includes("data-field-error") &&
     bonusRouteSource.includes("getStaticPaths") &&
-    bonusRouteSource.includes("eligiblePoolForBonus"),
+    bonusRouteSource.includes("createMiniQuizPageData") &&
+    miniQuizPageAdapterSource.includes("eligiblePoolForBonus"),
   "Las interacciones tienen semántica accesible y cada ruta carga solo su pool elegible."
 );
 
