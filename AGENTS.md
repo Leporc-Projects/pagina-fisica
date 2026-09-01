@@ -26,6 +26,7 @@ Do not hardcode a transient baseline in this file.
 - Architecture and implementation contracts: `docs/ARCHITECTURE.md`
 - Academic and editorial authoring: `docs/CONTENT_GUIDE.md`
 - Internationalization: `docs/I18N.md`
+- Mini Quiz V2 contracts: `docs/MINI_QUIZ_V2.md`
 - Data and privacy: `docs/DATA_AND_PRIVACY.md`
 - Analytics: `docs/ANALYTICS_AND_METRICS.md`
 - Risk-specific and prepublication QA: `docs/PREPUBLICATION_VERIFICATION.md`
