@@ -1,8 +1,6 @@
 ---
 import BonusQuestion from "./BonusQuestion.astro";
-import { localizeUnit1 } from "../../data/physics/unit-1/localize.js";
 import { BONUS_DELIVERY_CONFIG } from "../../data/delivery.js";
-import { localizeCourseData } from "../../data/course-localize.js";
 import { t } from "../../i18n/index.js";
 
 type RichContent = string | Array<{ type: string; value?: string; mathml?: string }>;
@@ -11,6 +9,7 @@ interface Props {
   bonus: any;
   exercises: any[];
   visualizations: Record<string, any>;
+  runtime: any;
   present?: (value: string) => RichContent;
   locale?: "es" | "en";
 }
@@ -19,12 +18,11 @@ const {
   bonus,
   exercises,
   visualizations,
+  runtime,
   present = (value) => value,
   locale = "es",
 } = Astro.props;
-const UNIT_1 = localizeUnit1(locale);
-const COURSE = localizeCourseData(locale).COURSE;
-const topicMap = new Map(UNIT_1.topics.map((topic) => [topic.slug, topic]));
+const topicMap = new Map(Object.values(runtime.topics).map((topic: any) => [topic.id, topic]));
 const fixedExercises = exercises.filter((exercise) =>
   exercise.itemKind !== "parameterizedFamily"
 );
@@ -52,11 +50,12 @@ const clientExercises = exercises.map((exercise) => ({
   constraints: exercise.constraints,
   hints: exercise.hints,
   solution: exercise.solution,
+  ...(exercise.reviewTarget ? { reviewTarget: exercise.reviewTarget } : {}),
 }));
 const topicLabels = Object.fromEntries(
-  UNIT_1.topics.map((topic) => [topic.slug, topic.shortTitle])
+  Object.values(runtime.topics).map((topic: any) => [topic.id, topic.shortTitle])
 );
-const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topicLabels, locale })
+const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topicLabels, runtime, locale })
   .replaceAll("<", "\\u003c")
   .replaceAll(">", "\\u003e")
   .replaceAll("&", "\\u0026");
@@ -117,7 +116,7 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topic
       ))}
     </div>
 
-    <nav class="bonus-session__controls" aria-label={t(locale, "bonus.attemptNav")}>
+    <nav class="bonus-session__controls" aria-label={t(locale, "bonus.attemptNav")} data-bonus-controls>
       <button type="button" data-question-previous>
         <span aria-hidden="true">←</span> {t(locale, "bonus.previous")}
       </button>
@@ -164,7 +163,7 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topic
   <section class="bonus-result" data-bonus-result hidden aria-labelledby="bonus-result-title">
     <div class="bonus-print-brand" aria-hidden="true">
       <strong>Aula Física</strong>
-      <span>{COURSE.name}</span>
+      <span>{runtime.course.title}</span>
     </div>
 
     <header class="bonus-result__header">

@@ -1,7 +1,5 @@
-import { COURSE } from "../data/course.js";
 import { localizeCourseData } from "../data/course-localize.js";
-import { UNIT_1 } from "../data/physics/unit-1/unit.js";
-import { localizeUnit1, localizeUnit1Content } from "../data/physics/unit-1/localize.js";
+import { assertMiniQuizRuntimeConfig } from "../data/mini-quizzes/runtime-config.js";
 import { getLocaleConfig } from "../i18n/config.js";
 import { t } from "../i18n/index.js";
 import {
@@ -104,6 +102,7 @@ const matchesOne = (value, allowed) =>
 export const matchesBlueprintCriteria = (exercise, criteria = {}) =>
   matchesOne(exercise.topic, criteria.topic) &&
   matchesOne(exercise.subtopic, criteria.subtopic) &&
+  matchesOne(exercise.itemKind ?? "fixed", criteria.itemKind) &&
   matchesOne(exercise.type, criteria.type) &&
   matchesOne(exercise.representation, criteria.representation) &&
   matchesOne(exercise.difficulty, criteria.difficulty);
@@ -162,18 +161,23 @@ const solveBlueprint = ({ requirements, pool, cryptoApi, seenItemIds, selected =
   return null;
 };
 
-export const selectBonusQuestions = (
-  bonus,
-  exercises,
+export const selectQuestionsFromBlueprint = (
+  blueprint,
+  items,
   cryptoApi = globalThis.crypto,
-  { seenItemIds = new Set(), recentParameterKeys = new Set(), generateInstance = generateFamilyInstance } = {}
+  {
+    seenItemIds = new Set(),
+    recentParameterKeys = new Set(),
+    generateInstance = generateFamilyInstance,
+    isEligible = () => true,
+  } = {},
 ) => {
-  const pool = eligiblePoolForBonus(bonus, exercises);
-  const requirements = expandBlueprint(bonus.blueprint);
+  const pool = items.filter(isEligible);
+  const requirements = expandBlueprint(blueprint.blueprint);
   const solution = solveBlueprint({ requirements, pool, cryptoApi, seenItemIds });
 
-  if (!solution || solution.length !== bonus.questionCount) {
-    throw new Error(`El blueprint de ${bonus.id} no puede satisfacerse.`);
+  if (!solution || solution.length !== blueprint.questionCount) {
+    throw new Error(`El blueprint de ${blueprint.id} no puede satisfacerse.`);
   }
 
   const random = createCryptoRandom(cryptoApi);
@@ -199,6 +203,16 @@ export const selectBonusQuestions = (
       };
     });
 };
+
+export const selectBonusQuestions = (
+  bonus,
+  exercises,
+  cryptoApi = globalThis.crypto,
+  options = {},
+) => selectQuestionsFromBlueprint(bonus, exercises, cryptoApi, {
+  ...options,
+  isEligible: (exercise) => isBonusExercise(exercise) && bonus.topics.includes(exercise.topic),
+});
 
 export const canSatisfyBonusBlueprint = (bonus, exercises) => {
   const deterministicCrypto = {
@@ -233,9 +247,7 @@ export const createBonusAttempt = (
 ) => {
   const startedAt = environment.startedAt ?? new Date().toISOString();
   const attemptId = environment.attemptId ?? generateAttemptId();
-  const locale = environment.locale ?? "es";
-  const localizedCourse = localizeCourseData(locale).COURSE;
-  const localizedUnit = localizeUnit1(locale);
+  const runtime = assertMiniQuizRuntimeConfig(environment.runtime);
 
   return {
     schemaVersion: BONUS_ATTEMPT_SCHEMA_VERSION,
@@ -248,14 +260,12 @@ export const createBonusAttempt = (
     exposure: bonus.exposure,
     feedbackPolicy: bonus.feedbackPolicy,
     course: {
-      code: COURSE.code,
-      slug: "fisica-basica-1",
-      title: localizedCourse.name,
+      ...runtime.course,
     },
     unit: {
-      number: UNIT_1.number,
-      slug: UNIT_1.slug,
-      title: localizedUnit.title,
+      number: runtime.unit.number,
+      slug: runtime.unit.slug,
+      title: runtime.unit.title,
     },
     startedAt,
     completedAt: null,
@@ -283,6 +293,7 @@ export const createBonusAttempt = (
       },
       topic: exercise.topic,
       subtopic: exercise.subtopic,
+      ...(exercise.reviewTarget ? { reviewTarget: exercise.reviewTarget } : {}),
       response: null,
       answered: false,
       correct: null,
@@ -428,6 +439,10 @@ export const gradeExerciseResponse = (exercise, input) => {
     const answered = response !== null;
     const correct = answered &&
       response.optionId === exercise.interaction.correctOptionId;
+    const selectedOption = answered
+      ? exercise.interaction.options.find((option) => option.id === response.optionId)
+      : null;
+    const diagnostic = !correct && selectedOption?.diagnostic;
     return {
       response,
       answered,
@@ -435,8 +450,11 @@ export const gradeExerciseResponse = (exercise, input) => {
       pointsEarned: correct ? 1 : 0,
       pointsPossible: 1,
       expectedResponse,
-      feedback: correct ? exercise.feedback.correct : exercise.feedback.incorrect,
+      feedback: correct
+        ? exercise.feedback.correct
+        : diagnostic?.feedback ?? exercise.feedback.incorrect,
       fieldResults: null,
+      ...(diagnostic ? { diagnostic: { commonErrorId: diagnostic.commonErrorId } } : {}),
     };
   }
 
@@ -493,32 +511,12 @@ export const gradeExerciseResponse = (exercise, input) => {
   };
 };
 
-const presentationMaps = (locale) => {
-  const unit = localizeUnit1(locale);
-  const content = localizeUnit1Content(locale);
-  const topicMap = new Map(unit.topics.map((topic) => [topic.slug, topic]));
-  const subtopicMap = new Map(
-  Object.entries(content).flatMap(([topicSlug, topicContent]) =>
-    topicContent.sections.map((section) => [
-      `${topicSlug}:${section.id}`,
-      {
-        topic: topicSlug,
-        subtopic: section.id,
-        title: section.title,
-        route: `${topicMap.get(topicSlug)?.route ?? unit.route}#${section.id}`,
-      },
-    ])
-  ));
-  return { topicMap, subtopicMap, unit };
-};
-
-const summarizeByTopic = (questions, locale) => {
-  const { topicMap } = presentationMaps(locale);
+const summarizeByTopic = (questions, runtime) => {
   const summaries = new Map();
   questions.forEach((question) => {
     const current = summaries.get(question.topic) ?? {
       topic: question.topic,
-      title: topicMap.get(question.topic)?.shortTitle ?? question.topic,
+      title: runtime.topics[question.topic]?.shortTitle ?? question.topic,
       pointsEarned: 0,
       pointsPossible: 0,
     };
@@ -529,20 +527,22 @@ const summarizeByTopic = (questions, locale) => {
   return [...summaries.values()];
 };
 
-const reviewRecommendations = (questions, locale) => {
-  const { topicMap, subtopicMap, unit } = presentationMaps(locale);
+const reviewRecommendations = (questions, runtime) => {
   const recommendations = new Map();
   questions
     .filter((question) => question.pointsEarned < question.pointsPossible)
     .forEach((question) => {
-      const key = `${question.topic}:${question.subtopic}`;
-      const reference = subtopicMap.get(key) ?? {
+      const preciseErrorId = question.diagnostic?.commonErrorId ?? question.reviewTarget?.commonErrorId;
+      const subtopicKey = `${question.topic}:${question.subtopic}`;
+      const reference = runtime.commonErrors[preciseErrorId]
+        ?? runtime.subtopics[subtopicKey]
+        ?? runtime.topics[question.topic]
+        ?? {
         topic: question.topic,
-        subtopic: question.subtopic,
-        title: topicMap.get(question.topic)?.title ?? question.topic,
-        route: topicMap.get(question.topic)?.route ?? unit.route,
+        title: runtime.unit.title,
+        route: runtime.unit.route,
       };
-      recommendations.set(key, reference);
+      if (!recommendations.has(reference.route)) recommendations.set(reference.route, reference);
     });
   return [...recommendations.values()];
 };
@@ -552,8 +552,9 @@ export const completeBonusAttempt = ({
   exercises,
   responses,
   completedAt = new Date().toISOString(),
-  locale = "es",
+  runtime,
 }) => {
+  const checkedRuntime = assertMiniQuizRuntimeConfig(runtime);
   const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
   const questions = attempt.questions.map((question) => {
     const exercise = exerciseMap.get(question.exerciseId);
@@ -581,8 +582,8 @@ export const completeBonusAttempt = ({
       pointsEarned,
       pointsPossible,
       percentage: pointsPossible === 0 ? 0 : (pointsEarned / pointsPossible) * 100,
-      byTopic: summarizeByTopic(questions, locale),
-      reviewRecommendations: reviewRecommendations(questions, locale),
+      byTopic: summarizeByTopic(questions, checkedRuntime),
+      reviewRecommendations: reviewRecommendations(questions, checkedRuntime),
     },
   };
 };

@@ -535,6 +535,10 @@
   gap: var(--space-3);
 }
 
+.bonus-session__controls[data-navigation-mode="last"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .bonus-session__controls>button:first-child {
   justify-self: start;
 }
@@ -913,6 +917,11 @@
   .bonus-review-button {
     grid-column: 1 / -1;
     grid-row: 2;
+  }
+
+  .bonus-session__controls[data-navigation-mode="last"] .bonus-review-button {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .bonus-question__feedback dl {

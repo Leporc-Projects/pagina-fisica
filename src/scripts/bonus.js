@@ -13,13 +13,13 @@ import {
   toBonusJSON,
   toBonusText,
 } from "../utils/bonus.js";
-import { generateLocalizedUnit1FamilyInstance } from "../data/physics/unit-1/family-localize.js";
-import { UNIT_1_EXERCISE_FAMILIES } from "../data/physics/unit-1/families.js";
+import { loadMiniQuizFamilyAdapter } from "../data/mini-quizzes/family-adapters.js";
 import { BONUS_DELIVERY_CONFIG } from "../data/delivery.js";
 import { getLocaleConfig } from "../i18n/config.js";
 import { t } from "../i18n/index.js";
 import { withBase } from "../utils/paths.js";
 import { trackMiniQuizComplete, trackMiniQuizStart } from "../utils/analytics.js";
+import { getMiniQuizNavigationState } from "../utils/mini-quiz-navigation.js";
 import { copyLocalText, downloadLocalFile } from "./local-export.js";
 
 const createElement = (tag, text, className) => {
@@ -48,11 +48,9 @@ export const initializeBonus = () => {
   const locale = data.locale === "en" ? "en" : "es";
   const intlLocale = getLocaleConfig(locale).intlLocale;
   const topicLabels = data.topicLabels ?? {};
-  const familyMap = new Map(UNIT_1_EXERCISE_FAMILIES.map((family) => [family.id, family]));
-  const pool = data.exercises.map((item) =>
-    item.itemKind === "parameterizedFamily" ? familyMap.get(item.id) ?? item : item
-  );
-  const exerciseMap = new Map(pool.map((exercise) => [exercise.id, exercise]));
+  const runtime = data.runtime;
+  let pool = data.exercises;
+  const exerciseMap = new Map();
   const questionElements = new Map(
     [...app.querySelectorAll("[data-bonus-question]")]
       .filter((element) => element instanceof HTMLElement)
@@ -67,6 +65,8 @@ export const initializeBonus = () => {
   const progress = app.querySelector("[data-bonus-progress]");
   const previous = app.querySelector("[data-question-previous]");
   const next = app.querySelector("[data-question-next]");
+  const reviewButton = app.querySelector("[data-bonus-review]");
+  const controls = app.querySelector("[data-bonus-controls]");
   const backToResult = app.querySelector("[data-back-to-result]");
   let attempt = null;
   let completedAttempt = null;
@@ -339,8 +339,18 @@ export const initializeBonus = () => {
       if (element) element.hidden = questionIndex !== currentIndex;
     });
     if (previous instanceof HTMLButtonElement) previous.disabled = currentIndex === 0;
-    if (next instanceof HTMLButtonElement) {
-      next.disabled = currentIndex === attempt.questions.length - 1;
+    const navigation = getMiniQuizNavigationState({
+      currentIndex,
+      questionCount: attempt.questions.length,
+      completed: Boolean(completedAttempt),
+    });
+    if (reviewButton instanceof HTMLButtonElement) {
+      reviewButton.textContent = t(locale, navigation.reviewLabelKey);
+    }
+    if (controls instanceof HTMLElement) controls.dataset.navigationMode = navigation.mode;
+    if (next instanceof HTMLButtonElement && controls instanceof HTMLElement) {
+      if (navigation.showNext) controls.append(next);
+      else next.remove();
     }
     renderNav();
     updateProgress();
@@ -386,12 +396,16 @@ export const initializeBonus = () => {
     });
   };
 
-  const startAttempt = () => {
+  const startAttempt = async () => {
     try {
+      const familyAdapter = await loadMiniQuizFamilyAdapter(runtime.familyAdapterId);
+      pool = familyAdapter.hydrateMiniQuizPool(data.exercises);
+      exerciseMap.clear();
+      pool.forEach((exercise) => exerciseMap.set(exercise.id, exercise));
       selections = selectBonusQuestions(bonus, pool, globalThis.crypto, {
         seenItemIds,
         recentParameterKeys,
-        generateInstance: (family, options) => generateLocalizedUnit1FamilyInstance(family, locale, options),
+        generateInstance: (family, options) => familyAdapter.generateMiniQuizFamilyInstance(family, locale, options),
       });
       selections.forEach((selection) => {
         seenItemIds.add(selection.sourceItemId);
@@ -400,7 +414,7 @@ export const initializeBonus = () => {
         }
       });
       registerGeneratedSelections();
-      attempt = createBonusAttempt(bonus, selections, { locale });
+      attempt = createBonusAttempt(bonus, selections, { runtime });
     } catch (error) {
       announce(locale === "es" && error instanceof Error ? error.message : t(locale, "bonus.status.startFailed"));
       return;
@@ -617,7 +631,7 @@ export const initializeBonus = () => {
       attempt,
       exercises: [...exerciseMap.values()],
       responses,
-      locale,
+      runtime,
     });
     if (!analyticsCompletedForAttempt) {
       analyticsCompletedForAttempt = true;

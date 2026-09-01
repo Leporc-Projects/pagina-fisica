@@ -64,7 +64,9 @@ const allFinite = (value, visited = new WeakSet()) => {
 export const validateFamilyDefinition = (family) => {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
-  require(family?.schemaVersion === PARAMETERIZED_FAMILY_SCHEMA_VERSION, "schemaVersion inválida.");
+  const miniQuizV2Family = family?.schemaVersion === "2.0.0" &&
+    family?.source?.kind === "miniQuizV2" && family?.modality === "miniQuiz";
+  require(family?.schemaVersion === PARAMETERIZED_FAMILY_SCHEMA_VERSION || miniQuizV2Family, "schemaVersion inválida.");
   require(family?.itemKind === "parameterizedFamily", "itemKind inválido.");
   require(typeof family?.id === "string" && /^[a-z0-9-]+$/.test(family.id), "id inválido.");
   require(Number.isInteger(family?.version) && family.version > 0, "version inválida.");
