@@ -10,3 +10,22 @@ export const getMiniQuizNavigationState = ({ currentIndex, questionCount, comple
     mode: lastQuestion ? "last" : "intermediate",
   });
 };
+
+export const createMiniQuizStartGuard = (setPending = () => {}) => {
+  if (typeof setPending !== "function") throw new TypeError("El indicador de inicio debe ser una función.");
+  let pending = false;
+
+  return async (start) => {
+    if (pending) return false;
+    if (typeof start !== "function") throw new TypeError("El inicio de Mini Quiz debe ser una función.");
+    pending = true;
+    try {
+      setPending(true);
+      await start();
+      return true;
+    } finally {
+      pending = false;
+      setPending(false);
+    }
+  };
+};

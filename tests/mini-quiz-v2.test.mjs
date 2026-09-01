@@ -20,8 +20,14 @@ import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "../src/data/physics/unit-1/families.js";
 import { generateLocalizedUnit1FamilyInstance, getLocalizedUnit1Exercises } from "../src/data/physics/unit-1/exercise-localize.js";
 import { getLocalizedUnit1Bonuses } from "../src/data/physics/unit-1/localize.js";
-import { getMiniQuizNavigationState } from "../src/utils/mini-quiz-navigation.js";
-import { completeBonusAttempt, createBonusAttempt, gradeExerciseResponse } from "../src/utils/bonus.js";
+import { createMiniQuizStartGuard, getMiniQuizNavigationState } from "../src/utils/mini-quiz-navigation.js";
+import {
+  BONUS_ATTEMPT_SCHEMA_VERSION,
+  completeBonusAttempt,
+  createBonusAttempt,
+  gradeExerciseResponse,
+  validateCompletedBonusAttempt,
+} from "../src/utils/bonus.js";
 import { t } from "../src/i18n/index.js";
 
 const localized = (es, en) => ({ es, en });
@@ -126,6 +132,42 @@ test("el selector V2 satisface blueprints con ítems y familias V2 independiente
   assert.equal(selections[1].exercise.title, "Family");
 });
 
+test("la selección V2 localiza el ítem fijo completo en ES y EN sin cambiar grading", () => {
+  const source = baseV2Item();
+  const bank = createMiniQuizV2Bank({ unit: 2, items: [source] });
+  const blueprint = {
+    id: "mq-v2-u2-fixed-localization",
+    questionCount: 1,
+    blueprint: [{ id: "fixed", count: 1, criteria: { itemKind: ["fixed"] } }],
+  };
+
+  for (const locale of ["es", "en"]) {
+    const cryptoApi = { ...deterministicCrypto, value: 0 };
+    const selected = selectMiniQuizV2Questions(blueprint, bank, cryptoApi, { locale })[0].exercise;
+    const options = Object.fromEntries(selected.interaction.options.map((option) => [option.id, option]));
+    assert.equal(selected.title, locale === "es" ? "Fuerza neta" : "Net force");
+    assert.equal(selected.prompt, locale === "es" ? "Selecciona." : "Choose.");
+    assert.deepEqual(
+      selected.interaction.options.map(({ id, content }) => [id, content]),
+      locale === "es"
+        ? [["a", "La velocidad"], ["b", "La fuerza neta"], ["c", "La masa"]]
+        : [["a", "Velocity"], ["b", "Net force"], ["c", "Mass"]],
+    );
+    assert.equal(
+      options.a.diagnostic.feedback,
+      locale === "es"
+        ? "Esta opción hace coincidir aceleración y velocidad; compara la aceleración con la fuerza neta."
+        : "This option aligns acceleration with velocity; compare acceleration with net force.",
+    );
+    assert.equal(selected.interaction.correctOptionId, "b");
+    assert.equal(options.a.diagnostic.commonErrorId, "acceleration-follows-velocity");
+    assert.deepEqual(selected.answer, source.answer);
+  }
+
+  assert.deepEqual(source.title, localized("Fuerza neta", "Net force"));
+  assert.deepEqual(source.interaction.options[0].content, localized("La velocidad", "Velocity"));
+});
+
 test("diagnóstico localizado conserva identidad y la calificación usa fallback seguro", () => {
   const source = baseV2Item();
   const es = localizeMiniQuizV2Record(source, "es");
@@ -144,6 +186,37 @@ test("el validador rechaza diagnósticos sin identidad o sin par ES/EN", () => {
   const incomplete = baseV2Item();
   incomplete.interaction.options[0].diagnostic.feedback = { es: "Solo ES" };
   assert.throws(() => createMiniQuizV2Bank({ unit: 2, items: [incomplete] }), /ES\/EN/);
+});
+
+test("el validador V2 cubre la estructura mínima segura de autoría", () => {
+  for (const version of [undefined, 0, -1, 1.5]) {
+    assert.equal(validateMiniQuizV2Record(baseV2Item({ version })).valid, false);
+  }
+
+  const familyBase = baseV2Item({
+    id: "mq-v2-u2-family-validation",
+    itemKind: "parameterizedFamily",
+    interaction: undefined,
+    generateParameters: () => ({ value: 1 }),
+    build: ({ value }) => ({ value }),
+    localizeInstance: (instance) => instance,
+  });
+  assert.equal(validateMiniQuizV2Record(familyBase).valid, false);
+  assert.equal(validateMiniQuizV2Record({ ...familyBase, constraints: [] }).valid, false);
+  assert.equal(validateMiniQuizV2Record({ ...familyBase, constraints: { finite: true } }).valid, true);
+
+  const missingId = baseV2Item();
+  delete missingId.interaction.options[0].id;
+  assert.equal(validateMiniQuizV2Record(missingId).valid, false);
+  const duplicateId = baseV2Item();
+  duplicateId.interaction.options[1].id = "a";
+  assert.equal(validateMiniQuizV2Record(duplicateId).valid, false);
+  const unknownCorrect = baseV2Item();
+  unknownCorrect.interaction.correctOptionId = "missing";
+  assert.equal(validateMiniQuizV2Record(unknownCorrect).valid, false);
+  const incompleteOption = baseV2Item();
+  incompleteOption.interaction.options[2].content = { es: "Solo ES" };
+  assert.equal(validateMiniQuizV2Record(incompleteOption).valid, false);
 });
 
 const syntheticRuntime = (unitNumber) => createMiniQuizRuntimeConfig({
@@ -199,6 +272,35 @@ test("dos unidades usan las mismas utilidades sin metadata U1 implícita", () =>
   assert.match(browserRuntime, /loadMiniQuizFamilyAdapter/);
 });
 
+test("el runtime académico resuelve errores U1 mediante errorTopics en ES y EN", () => {
+  const expectedRoutes = {
+    es: "/fisica-basica-1/unidades/unidad-1/herramientas#conversion-y-cifras",
+    en: "/en/basic-physics-1/units/unit-1/measurement-tools#conversion-y-cifras",
+  };
+  for (const locale of ["es", "en"]) {
+    const runtime = createAcademicMiniQuizRuntime(1, locale, { familyAdapterId: "legacy-u1" });
+    const error = runtime.commonErrors["units-drop-during-work"];
+    assert.deepEqual(
+      { topicId: error.topicId, subtopicId: error.subtopicId, route: error.route },
+      { topicId: "herramientas", subtopicId: "conversion-y-cifras", route: expectedRoutes[locale] },
+    );
+    assert.equal(error.title, runtime.subtopics["herramientas:conversion-y-cifras"].title);
+  }
+});
+
+test("el routing común conserva destinos canónicos para Unidades 2 a 7", () => {
+  for (const locale of ["es", "en"]) {
+    for (let unit = 2; unit <= 7; unit += 1) {
+      const runtime = createAcademicMiniQuizRuntime(unit, locale);
+      Object.values(runtime.commonErrors).forEach((error) => {
+        const subtopic = runtime.subtopics[`${error.topicId}:${error.subtopicId}`];
+        assert.ok(subtopic, `${locale} U${unit} ${error.id}`);
+        assert.equal(error.route, subtopic.route, `${locale} U${unit} ${error.id}`);
+      });
+    }
+  }
+});
+
 test("las recomendaciones priorizan diagnóstico, luego subtema y deduplican por ruta", () => {
   const runtime = syntheticRuntime(2);
   const diagnostic = syntheticExercise("diagnostic", { diagnostic: "misconception" });
@@ -239,6 +341,58 @@ test("la navegación final reemplaza Review, elimina Next y conserva review tras
   assert.match(source, /else next\.remove\(\)/);
   assert.match(source, /\[data-bonus-review\]"\)\?\.addEventListener\("click", renderReview\)/);
   assert.equal((source.match(/trackMiniQuizComplete\(/g) ?? []).length, 1);
+});
+
+test("el guard de inicio colapsa activaciones concurrentes y permite reintentar", async () => {
+  const pendingStates = [];
+  const runStart = createMiniQuizStartGuard((pending) => pendingStates.push(pending));
+  let release;
+  const loading = new Promise((resolve) => { release = resolve; });
+  let starts = 0;
+  const first = runStart(async () => {
+    starts += 1;
+    await loading;
+  });
+  const duplicate = await runStart(async () => { starts += 1; });
+  assert.equal(duplicate, false);
+  assert.equal(starts, 1);
+  release();
+  assert.equal(await first, true);
+
+  await assert.rejects(runStart(async () => { throw new Error("adapter failed"); }), /adapter failed/);
+  assert.equal(await runStart(async () => { starts += 1; }), true);
+  assert.equal(starts, 2);
+  assert.deepEqual(pendingStates, [true, false, true, false, true, false]);
+
+  const source = fs.readFileSync(new URL("../src/scripts/bonus.js", import.meta.url), "utf8");
+  assert.match(source, /createMiniQuizStartGuard/);
+  assert.match(source, /\[data-bonus-start\], \[data-another-attempt\]/);
+  assert.match(source, /aria-busy/);
+});
+
+test("un intento completado 1.x conserva wire bonus aunque los ítems V2 usen miniQuiz", () => {
+  const v2Source = baseV2Item();
+  const runtime = syntheticRuntime(2);
+  const exercise = syntheticExercise("legacy-wire-item");
+  const attempt = createBonusAttempt(attemptDefinition, [{ exercise, slotId: "one" }], {
+    runtime,
+    attemptId: "attempt_abcdefabcdefabcdefabcdefabcdefab",
+    startedAt: "2026-08-08T12:00:00.000Z",
+  });
+  const completed = completeBonusAttempt({
+    attempt,
+    exercises: [exercise],
+    responses: { "legacy-wire-item": "ok" },
+    completedAt: "2026-08-08T12:01:00.000Z",
+    runtime,
+  });
+
+  assert.equal(v2Source.modality, "miniQuiz");
+  assert.equal(completed.schemaVersion, BONUS_ATTEMPT_SCHEMA_VERSION);
+  assert.equal(completed.modality, "bonus");
+  assert.equal(completed.bonusId, attemptDefinition.id);
+  assert.equal(Object.hasOwn(completed, "miniQuizId"), false);
+  assert.equal(validateCompletedBonusAttempt(completed).valid, true);
 });
 
 const stable = (value) => {

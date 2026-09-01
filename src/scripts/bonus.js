@@ -19,7 +19,7 @@ import { getLocaleConfig } from "../i18n/config.js";
 import { t } from "../i18n/index.js";
 import { withBase } from "../utils/paths.js";
 import { trackMiniQuizComplete, trackMiniQuizStart } from "../utils/analytics.js";
-import { getMiniQuizNavigationState } from "../utils/mini-quiz-navigation.js";
+import { createMiniQuizStartGuard, getMiniQuizNavigationState } from "../utils/mini-quiz-navigation.js";
 import { copyLocalText, downloadLocalFile } from "./local-export.js";
 
 const createElement = (tag, text, className) => {
@@ -77,6 +77,13 @@ export const initializeBonus = () => {
   let analyticsCompletedForAttempt = false;
   const seenItemIds = new Set();
   const recentParameterKeys = new Set();
+  const startControls = [...app.querySelectorAll("[data-bonus-start], [data-another-attempt]")]
+    .filter((control) => control instanceof HTMLButtonElement);
+  const runStartAttempt = createMiniQuizStartGuard((pending) => {
+    if (pending) app.setAttribute("aria-busy", "true");
+    else app.removeAttribute("aria-busy");
+    startControls.forEach((control) => { control.disabled = pending; });
+  });
 
   const appendNumberField = (container, exercise, field) => {
     const wrapper = createElement("div", undefined, "bonus-number-field");
@@ -396,29 +403,24 @@ export const initializeBonus = () => {
     });
   };
 
-  const startAttempt = async () => {
-    try {
-      const familyAdapter = await loadMiniQuizFamilyAdapter(runtime.familyAdapterId);
-      pool = familyAdapter.hydrateMiniQuizPool(data.exercises);
-      exerciseMap.clear();
-      pool.forEach((exercise) => exerciseMap.set(exercise.id, exercise));
-      selections = selectBonusQuestions(bonus, pool, globalThis.crypto, {
-        seenItemIds,
-        recentParameterKeys,
-        generateInstance: (family, options) => familyAdapter.generateMiniQuizFamilyInstance(family, locale, options),
-      });
-      selections.forEach((selection) => {
-        seenItemIds.add(selection.sourceItemId);
-        if (selection.parameterKey) {
-          recentParameterKeys.add(`${selection.sourceItemId}:${selection.parameterKey}`);
-        }
-      });
-      registerGeneratedSelections();
-      attempt = createBonusAttempt(bonus, selections, { runtime });
-    } catch (error) {
-      announce(locale === "es" && error instanceof Error ? error.message : t(locale, "bonus.status.startFailed"));
-      return;
-    }
+  const startAttempt = () => runStartAttempt(async () => {
+    const familyAdapter = await loadMiniQuizFamilyAdapter(runtime.familyAdapterId);
+    pool = familyAdapter.hydrateMiniQuizPool(data.exercises);
+    exerciseMap.clear();
+    pool.forEach((exercise) => exerciseMap.set(exercise.id, exercise));
+    selections = selectBonusQuestions(bonus, pool, globalThis.crypto, {
+      seenItemIds,
+      recentParameterKeys,
+      generateInstance: (family, options) => familyAdapter.generateMiniQuizFamilyInstance(family, locale, options),
+    });
+    selections.forEach((selection) => {
+      seenItemIds.add(selection.sourceItemId);
+      if (selection.parameterKey) {
+        recentParameterKeys.add(`${selection.sourceItemId}:${selection.parameterKey}`);
+      }
+    });
+    registerGeneratedSelections();
+    attempt = createBonusAttempt(bonus, selections, { runtime });
 
     responses = {};
     analyticsCompletedForAttempt = false;
@@ -445,7 +447,9 @@ export const initializeBonus = () => {
     showQuestion(0);
     trackMiniQuizStart(bonus.id, locale);
     announce(t(locale, "bonus.status.started"));
-  };
+  }).catch((error) => {
+    announce(locale === "es" && error instanceof Error ? error.message : t(locale, "bonus.status.startFailed"));
+  });
 
   const renderReview = () => {
     if (!attempt) return;

@@ -24,15 +24,23 @@ export const validateMiniQuizV2Record = (record) => {
   require(!record?.modalities?.includes?.("practice") && record?.practiceEligible !== true, "Un registro V2 no puede pertenecer a Practice.");
   require(["fixed", "parameterizedFamily"].includes(record?.itemKind), "itemKind V2 inválido.");
   require(stableId(record?.id), "id V2 inválido.");
+  require(Number.isInteger(record?.version) && record.version > 0, "version V2 inválida.");
   require(Number.isInteger(record?.unit) && record.unit >= 1 && record.unit <= 7, "Unidad V2 inválida.");
   if (record?.itemKind === "parameterizedFamily") {
     require(typeof record.generateParameters === "function" && typeof record.build === "function", "La familia V2 requiere generadores propios.");
     require(typeof record.localizeInstance === "function", "La familia V2 requiere un localizador de instancia propio.");
+    require(record.constraints && typeof record.constraints === "object" && !Array.isArray(record.constraints), "La familia V2 requiere constraints válidas.");
   } else {
     require(localizedText(record?.title) && localizedText(record?.prompt), "El ítem fijo V2 requiere título y enunciado completos en ES/EN.");
   }
   if (record?.interaction?.kind === "singleChoice") {
-    record.interaction.options?.forEach((option, index) => errors.push(...diagnosticErrors(option, `${record.id}.options.${index}`)));
+    const options = Array.isArray(record.interaction.options) ? record.interaction.options : [];
+    const optionIds = options.map((option) => option?.id);
+    require(options.length > 0, "singleChoice requiere opciones declaradas.");
+    require(optionIds.every(stableId) && new Set(optionIds).size === optionIds.length, "singleChoice requiere IDs de opción estables y únicos.");
+    require(options.every((option) => localizedText(option?.content)), "Las opciones singleChoice deben estar completas en ES/EN.");
+    require(optionIds.filter((id) => id === record.interaction.correctOptionId).length === 1, "correctOptionId debe identificar exactamente una opción declarada.");
+    options.forEach((option, index) => errors.push(...diagnosticErrors(option, `${record.id}.options.${index}`)));
   }
   return { valid: errors.length === 0, errors };
 };
@@ -95,7 +103,7 @@ export const localizeMiniQuizV2Record = (record, locale) => {
 
 export const selectMiniQuizV2Questions = (blueprint, bank, cryptoApi, options = {}) => {
   const { locale = "es", generateInstance, ...selectionOptions } = options;
-  return selectQuestionsFromBlueprint(blueprint, [...bank.items, ...bank.families], cryptoApi, {
+  const selections = selectQuestionsFromBlueprint(blueprint, [...bank.items, ...bank.families], cryptoApi, {
     ...selectionOptions,
     generateInstance: generateInstance ?? ((family, generationOptions) => {
       const instance = generateFamilyInstance(family, generationOptions);
@@ -103,6 +111,9 @@ export const selectMiniQuizV2Questions = (blueprint, bank, cryptoApi, options = 
     }),
     isEligible: (record) => validateMiniQuizV2Record(record).valid,
   });
+  return selections.map((selection) => selection.exercise.itemKind === "fixed"
+    ? { ...selection, exercise: localizeMiniQuizV2Record(selection.exercise, locale) }
+    : selection);
 };
 
 export const getMiniQuizV2BankByUnit = (unit) =>
