@@ -40,6 +40,7 @@ const baseV2Item = (overrides = {}) => ({
   id: "mq-v2-u2-force-choice",
   version: 1,
   unit: 2,
+  assessmentSlot: "synthetic-slot",
   topic: "segunda-ley",
   subtopic: "fuerza-neta-y-aceleracion",
   title: localized("Fuerza neta", "Net force"),
@@ -148,9 +149,13 @@ const selectOnlyFixedV2Item = (source, locale) => {
   }, bank, { ...deterministicCrypto, value: 0 }, { locale })[0].exercise;
 };
 
-test("los bancos V2 son propios, vacíos por unidad y U1 V1 queda marcado como legado", () => {
+test("los bancos V2 son propios, U1 contiene sus anclas y V1 sigue marcado como legado", () => {
   assert.deepEqual(MINI_QUIZ_V2_BANKS_BY_UNIT.map((bank) => bank.unit), [1, 2, 3, 4, 5, 6, 7]);
-  assert.equal(MINI_QUIZ_V2_BANKS_BY_UNIT.every((bank) => bank.sourceKind === "miniQuizV2" && bank.items.length === 0 && bank.families.length === 0), true);
+  assert.equal(MINI_QUIZ_V2_BANKS_BY_UNIT.every((bank) => bank.sourceKind === "miniQuizV2"), true);
+  assert.deepEqual(
+    MINI_QUIZ_V2_BANKS_BY_UNIT.map(({ items, families, blueprints }) => [items.length, families.length, blueprints.length]),
+    [[35, 0, 5], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+  );
   assert.equal(MINI_QUIZZES_BY_UNIT[0].generation, "legacy-v1");
   assert.equal(MINI_QUIZZES_BY_UNIT[0].familyAdapterId, "legacy-u1");
 });
@@ -319,6 +324,7 @@ test("el validador V2 cubre la estructura mínima segura de autoría", () => {
   for (const version of [undefined, 0, -1, 1.5]) {
     assert.equal(validateMiniQuizV2Record(baseV2Item({ version })).valid, false);
   }
+  assert.equal(validateMiniQuizV2Record(baseV2Item({ assessmentSlot: "INVALID SLOT" })).valid, false);
 
   const familyBase = baseV2Item({
     id: "mq-v2-u2-family-validation",
