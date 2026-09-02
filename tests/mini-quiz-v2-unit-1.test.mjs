@@ -15,6 +15,7 @@ import { UNIT_1_CONTENT } from "../src/data/physics/unit-1/content.js";
 import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
 import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "../src/data/physics/unit-1/families.js";
+import { localizeUnit1Exercise } from "../src/data/physics/unit-1/exercise-localize.js";
 import {
   EXERCISE_COGNITIVE_LEVELS,
   EXERCISE_REPRESENTATIONS,
@@ -41,7 +42,7 @@ const deterministicCrypto = () => ({
   },
 });
 
-const expectedAnchors = [
+const expectedPrePolarAnchors = [
   ["hv-1", "mq-v2-u1-hv-dimensional-coefficient-01", "b"],
   ["hv-2", "mq-v2-u1-hv-dimensional-limit-01", "c"],
   ["hv-3", "mq-v2-u1-hv-vector-magnitude-component-01", "b"],
@@ -78,6 +79,17 @@ const expectedAnchors = [
   ["r-8", "mq-v2-u1-r-vector-derivatives-01", "a"],
   ["r-9", "mq-v2-u1-r-variable-acceleration-01", "a"],
 ];
+
+const expectedPolarAnchors = [
+  ["cp-1", "mq-v2-u1-cp-moving-basis-01", "a"],
+  ["cp-2", "mq-v2-u1-cp-cartesian-to-polar-01", "b"],
+  ["cp-3", "mq-v2-u1-cp-velocity-components-01", "a"],
+  ["cp-4", "mq-v2-u1-cp-velocity-cartesian-01", "a"],
+  ["cp-5", "mq-v2-u1-cp-transverse-acceleration-01", "b"],
+  ["cp-6", "mq-v2-u1-cp-spiral-kinematics-01", "a"],
+];
+
+const expectedAnchors = [...expectedPrePolarAnchors, ...expectedPolarAnchors];
 
 const expectedDiagnostics = [
   "hv-2:a:units-dimensional-proof",
@@ -121,19 +133,23 @@ const expectedDiagnostics = [
   "r-5:d:projectile-top-zero-acceleration",
   "r-6:c:circular-tangent-acceleration",
   "r-9:b:constant-use-variable-acceleration",
+  "cp-1:c:polar-fixed-unit-vectors",
+  "cp-3:b:polar-fixed-unit-vectors",
+  "cp-6:b:polar-fixed-unit-vectors",
 ];
 
-test("U1 registra exactamente 35 anclas, cero familias y cinco blueprints", () => {
+test("U1 registra exactamente 41 anclas, cero familias y seis blueprints", () => {
   assert.ok(bank);
-  assert.equal(bank.items.length, 35);
+  assert.equal(bank.items.length, 41);
   assert.equal(bank.families.length, 0);
-  assert.equal(bank.blueprints.length, 5);
+  assert.equal(bank.blueprints.length, 6);
   assert.deepEqual(bank.blueprints.map(({ id, questionCount }) => [id, questionCount]), [
     ["mq-v2-u1-tools-vectors", 6],
     ["mq-v2-u1-kinematics-1d", 7],
     ["mq-v2-u1-models-projectiles", 7],
     ["mq-v2-u1-motion-2d-circular-relative", 6],
     ["mq-v2-u1-review", 9],
+    ["mq-v2-u1-polar-coordinates", 6],
   ]);
   assert.deepEqual(
     MINI_QUIZ_V2_BANKS_BY_UNIT.slice(1).map(({ items, families, blueprints }) => [items.length, families.length, blueprints.length]),
@@ -146,10 +162,9 @@ test("las identidades, slots y respuestas ancla coinciden con el dossier", () =>
     bank.items.map(({ assessmentSlot, id, interaction }) => [assessmentSlot, id, interaction.correctOptionId]),
     expectedAnchors,
   );
-  assert.equal(new Set(bank.items.map(({ id }) => id)).size, 35);
-  assert.equal(new Set(bank.items.map(({ assessmentSlot }) => assessmentSlot)).size, 35);
+  assert.equal(new Set(bank.items.map(({ id }) => id)).size, 41);
+  assert.equal(new Set(bank.items.map(({ assessmentSlot }) => assessmentSlot)).size, 41);
   assert.equal(bank.items.every((item) => validateMiniQuizV2Record(item).valid), true);
-  assert.equal(bank.items.every((item) => item.topic !== "coordenadas-polares" && item.subtopic !== "base-polar"), true);
 
   bank.items.forEach((item) => {
     const topic = UNIT_1_CONTENT[item.topic];
@@ -182,7 +197,7 @@ test("los blueprints seleccionan por slot, conservan orden y tienen un ancla por
   }
 });
 
-test("los 35 ítems localizan ES/EN sin mutar identidad, orden ni grading", () => {
+test("los 41 ítems localizan ES/EN sin mutar identidad, orden ni grading", () => {
   const sourceSnapshot = JSON.stringify(bank.items);
   bank.items.forEach((source) => {
     const localizedRecords = [localizeMiniQuizV2Record(source, "es"), localizeMiniQuizV2Record(source, "en")];
@@ -235,6 +250,8 @@ test("la tabla diagnóstica es exacta y todo feedback específico tiene par ES/E
   });
 
   assert.deepEqual(actualDiagnostics, expectedDiagnostics);
+  assert.equal(actualDiagnostics.length, 44);
+  assert.equal(bySlot["cp-5"].interaction.options.every(({ diagnostic }) => diagnostic === undefined), true);
   const taggedOptions = new Set(expectedDiagnostics.map((entry) => entry.split(":").slice(0, 2).join(":")));
   bank.items.forEach((item) => item.interaction.options.forEach((entry) => {
     if (entry.id !== item.interaction.correctOptionId && !taggedOptions.has(`${item.assessmentSlot}:${entry.id}`)) {
@@ -256,6 +273,61 @@ test("el banco V2 permanece estructuralmente separado de Practice y de V1 públi
 
   const moduleSource = fs.readFileSync(new URL("../src/data/mini-quizzes/unit-1.js", import.meta.url), "utf8");
   assert.doesNotMatch(moduleSource, /physics\/unit-1\/(?:exercises|additional-exercises|families|bonuses)\.js/);
+});
+
+test("el ítem polar de Practice permanece intacto y separado de los seis anclajes V2", () => {
+  const practicePolar = UNIT_1_EXERCISES.find(({ id }) => id === "u1-polar-fixed-radius");
+  assert.ok(practicePolar);
+  assert.equal(expectedPolarAnchors.some(([, id]) => id === practicePolar.id), false);
+
+  const fingerprint = crypto.createHash("sha256")
+    .update(JSON.stringify(stable({
+      source: practicePolar,
+      es: localizeUnit1Exercise(practicePolar, "es"),
+      en: localizeUnit1Exercise(practicePolar, "en"),
+    })))
+    .digest("hex");
+  assert.equal(fingerprint, "444f93056a3fb91ca1d46c95d562778869ed0f41e42edaf2a7ddff12b6a9ed82");
+});
+
+test("el blueprint polar selecciona CP-1 a CP-6 en orden exacto en ES y EN", () => {
+  const polarBlueprint = bank.blueprints.find(({ id }) => id === "mq-v2-u1-polar-coordinates");
+  assert.ok(polarBlueprint);
+  assert.equal(polarBlueprint.questionCount, 6);
+  assert.deepEqual(polarBlueprint.blueprint.map(({ id }) => id), ["cp-1", "cp-2", "cp-3", "cp-4", "cp-5", "cp-6"]);
+
+  for (const locale of ["es", "en"]) {
+    const selected = selectMiniQuizV2Questions(polarBlueprint, bank, deterministicCrypto(), { locale });
+    assert.deepEqual(selected.map(({ slotId }) => slotId), ["cp-1", "cp-2", "cp-3", "cp-4", "cp-5", "cp-6"]);
+    assert.deepEqual(selected.map(({ exercise }) => exercise.id), expectedPolarAnchors.map(([, id]) => id));
+    assert.equal(selected.every(({ exercise }) => typeof exercise.prompt === "string"), true);
+  }
+});
+
+test("los seis anclajes polares conservan los resultados y signos auditados", () => {
+  assert.equal(bySlot["cp-1"].interaction.correctOptionId, "a");
+  assert.match(bySlot["cp-1"].interaction.options[0].content.es, /r̂=\+ĵ, θ̂=−î.*dr̂\/dt apunta hacia −x/);
+  assert.match(bySlot["cp-1"].prompt.en, /θ=90°.*θ̇>0/);
+
+  assert.equal(bySlot["cp-2"].interaction.correctOptionId, "b");
+  assert.equal(bySlot["cp-2"].interaction.options[1].content.es, "r=6 m, θ=120°");
+  assert.match(bySlot["cp-2"].prompt.es, /x=−3 m, y=3√3 m/);
+
+  assert.equal(bySlot["cp-3"].interaction.correctOptionId, "a");
+  assert.match(bySlot["cp-3"].prompt.en, /r=4 m, ṙ=−1 m\/s, and θ̇=0\.50 rad\/s/);
+  assert.match(bySlot["cp-3"].interaction.options[0].content.en, /v=\(−1 r̂\+2 θ̂\) m\/s/);
+
+  assert.equal(bySlot["cp-4"].interaction.correctOptionId, "a");
+  assert.equal(bySlot["cp-4"].interaction.options[0].content.en, "(−3 î+2 ĵ) m/s");
+
+  assert.equal(bySlot["cp-5"].interaction.correctOptionId, "b");
+  assert.match(bySlot["cp-5"].interaction.options[1].content.es, /a_θ>0.*2ṙθ̇.*θ̈=0/);
+  assert.equal(bySlot["cp-5"].interaction.options[0].content.es, "a_θ=0 necesariamente porque θ̈=0.");
+  assert.doesNotMatch(bySlot["cp-5"].interaction.options[0].content.es, /constante en ese instante/);
+
+  assert.equal(bySlot["cp-6"].interaction.correctOptionId, "a");
+  assert.match(bySlot["cp-6"].prompt.en, /r\(t\)=\(1\.0 m\/s\)t, θ\(t\)=\(1\.0 rad\/s\)t.*t=2\.0 s/);
+  assert.equal(bySlot["cp-6"].interaction.options[0].content.en, "v=(1 r̂+2 θ̂) m/s, a=(−2 r̂+2 θ̂) m/s².");
 });
 
 test("los casos académicos de mayor riesgo conservan respuesta, signos, unidades y lógica", () => {
@@ -291,9 +363,12 @@ test("los casos académicos de mayor riesgo conservan respuesta, signos, unidade
   }
 });
 
-test("la huella del banco ancla U1 V2 conserva los 35 ítems y cinco blueprints auditados", () => {
+test("la huella previa conserva por separado los 35 ítems y cinco blueprints auditados", () => {
   const fingerprint = crypto.createHash("sha256")
-    .update(JSON.stringify(stable({ items: bank.items, blueprints: bank.blueprints })))
+    .update(JSON.stringify(stable({
+      items: bank.items.slice(0, expectedPrePolarAnchors.length),
+      blueprints: bank.blueprints.slice(0, 5),
+    })))
     .digest("hex");
   assert.equal(fingerprint, "ca56d72eaddeeb797c7411f91baf78690b52c110f1cf190e65e381972f690ef6");
 });

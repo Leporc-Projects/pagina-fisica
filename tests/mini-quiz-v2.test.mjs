@@ -154,7 +154,7 @@ test("los bancos V2 son propios, U1 contiene sus anclas y V1 sigue marcado como 
   assert.equal(MINI_QUIZ_V2_BANKS_BY_UNIT.every((bank) => bank.sourceKind === "miniQuizV2"), true);
   assert.deepEqual(
     MINI_QUIZ_V2_BANKS_BY_UNIT.map(({ items, families, blueprints }) => [items.length, families.length, blueprints.length]),
-    [[35, 0, 5], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+    [[41, 0, 6], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
   );
   assert.equal(MINI_QUIZZES_BY_UNIT[0].generation, "legacy-v1");
   assert.equal(MINI_QUIZZES_BY_UNIT[0].familyAdapterId, "legacy-u1");
