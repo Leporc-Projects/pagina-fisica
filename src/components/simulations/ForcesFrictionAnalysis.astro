@@ -41,11 +41,14 @@ const normalRaw = parameters.m * parameters.g * Math.cos(parameters.beta * Math.
       <math display="block"><mrow><msub><mi>F</mi><mtext>drive</mtext></msub><mo>=</mo><mi>F</mi><mi>cos</mi><mi>α</mi><mo>−</mo><mi>m</mi><mi>g</mi><mi>sin</mi><mi>β</mi><mo>=</mo><mn data-equation="drive">{display(-Number(readings.requiredStatic))}</mn><mtext> N</mtext></mrow></math>
       <div data-equation-regime="static">
         <math display="block"><mrow><msub><mi>f</mi><mi>s</mi></msub><mo>=</mo><mo>−</mo><msub><mi>F</mi><mtext>drive</mtext></msub><mo>=</mo><mn data-equation="friction">{display(readings.friction)}</mn><mtext> N</mtext></mrow></math>
-        <math display="block"><mrow><mo>|</mo><msub><mi>f</mi><mi>s</mi></msub><mo>|</mo><mo>≤</mo><msub><mi>μ</mi><mi>s</mi></msub><mi>N</mi><mo>·</mo><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub><mo>=</mo><mn>0</mn><mo>·</mo><mi>a</mi><mo>=</mo><mn>0</mn></mrow></math>
+        <math display="block"><mrow><mo>|</mo><msub><mi>f</mi><mi>s</mi></msub><mo>|</mo><mo>≤</mo><msub><mi>μ</mi><mi>s</mi></msub><mi>N</mi></mrow></math>
+        <math display="block"><mrow><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub><mo>=</mo><mn>0</mn></mrow></math>
+        <math display="block"><mrow><mi>a</mi><mo>=</mo><mn>0</mn></mrow></math>
       </div>
       <div data-equation-regime="kinetic" hidden>
         <math display="block"><mrow><mo>|</mo><msub><mi>f</mi><mi>k</mi></msub><mo>|</mo><mo>=</mo><msub><mi>μ</mi><mi>k</mi></msub><mi>N</mi><mo>=</mo><mn data-equation="friction-absolute">{display(Math.abs(Number(readings.friction)))}</mn><mtext> N</mtext></mrow></math>
-        <math display="block"><mrow><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub><mo>=</mo><mn data-equation="net">{display(readings.netParallel)}</mn><mtext> N</mtext><mo>·</mo><mi>a</mi><mo>=</mo><mfrac><mrow><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub></mrow><mi>m</mi></mfrac><mo>=</mo><mn data-equation="acceleration">{display(readings.a)}</mn><mtext> m/s²</mtext></mrow></math>
+        <math display="block"><mrow><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub><mo>=</mo><mn data-equation="net">{display(readings.netParallel)}</mn><mtext> N</mtext></mrow></math>
+        <math display="block"><mrow><mi>a</mi><mo>=</mo><mfrac><mrow><mo>∑</mo><msub><mi>F</mi><mo>∥</mo></msub></mrow><mi>m</mi></mfrac><mo>=</mo><mn data-equation="acceleration">{display(readings.a)}</mn><mtext> m/s²</mtext></mrow></math>
       </div>
       <div data-equation-regime="contact-invalid" hidden>
         <math display="block"><mrow><msub><mi>N</mi><mtext>raw</mtext></msub><mo>=</mo><mn data-equation="normal-raw">{display(normalRaw)}</mn><mtext> N</mtext><mo>≤</mo><mn>0</mn></mrow></math>
