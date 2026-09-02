@@ -18,7 +18,7 @@ Los cuatro Mini Quizzes actuales de Unidad 1 son la excepción transitoria `lega
 
 Hay un registro V2 explícito por unidad, de 1 a 7. Cada banco separa `items`, `families` y `blueprints`, valida unidad y unicidad de IDs, y rechaza registros de Practice. Los blueprints fijan primero la cobertura; la selección aleatoria solo elige entre candidatos V2 que satisfacen cada slot.
 
-La identidad académica, los parámetros, las respuestas, las tolerancias y los IDs son invariantes entre ES y EN. La localización sustituye presentación y retroalimentación, no los datos de calificación. Una familia V2 posee su propio generador determinista y no reutiliza una familia de Practice.
+La identidad académica, los parámetros, las respuestas, las tolerancias y los IDs son invariantes entre ES y EN. En un ítem fijo, título, enunciado, opciones, feedback, etiquetas de campos, `unitLabel` editorial y pasos de solución declaran presentación completa ES/EN; `unit` conserva el símbolo académico invariante. La localización sustituye solo esa presentación, no los datos de calificación. Una familia V2 posee su propio generador determinista y no reutiliza una familia de Practice.
 
 ## Distractores diagnósticos
 

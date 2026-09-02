@@ -16,6 +16,7 @@ import {
   validateMiniQuizV2Record,
 } from "../src/data/mini-quizzes/v2.js";
 import { UNIT_1_BONUSES } from "../src/data/physics/unit-1/bonuses.js";
+import { UNIT_1_COMMON_ERRORS } from "../src/data/physics/unit-1/common-errors.js";
 import { UNIT_1_EXERCISES } from "../src/data/physics/unit-1/exercises.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "../src/data/physics/unit-1/families.js";
 import { generateLocalizedUnit1FamilyInstance, getLocalizedUnit1Exercises } from "../src/data/physics/unit-1/exercise-localize.js";
@@ -62,10 +63,72 @@ const baseV2Item = (overrides = {}) => ({
       { id: "c", content: localized("La masa", "Mass") },
     ],
   },
-  feedback: { correct: "Correcta", incorrect: "Retroalimentación general" },
+  feedback: {
+    correct: localized("Correcta", "Correct"),
+    incorrect: localized("Retroalimentación general", "General feedback"),
+  },
   answer: { kind: "text", value: "b" },
-  solution: [],
+  solution: [{
+    title: localized("Relaciona la fuerza", "Relate the force"),
+    text: localized("La aceleración sigue la fuerza neta.", "Acceleration follows the net force."),
+  }],
   ...overrides,
+});
+
+const numberV2Item = () => baseV2Item({
+  id: "mq-v2-u2-number",
+  title: localized("Rapidez medida", "Measured speed"),
+  prompt: localized("Escribe la rapidez.", "Enter the speed."),
+  interaction: {
+    kind: "number",
+    field: {
+      id: "speed",
+      label: localized("Rapidez", "Speed"),
+      unit: "m/s",
+      unitLabel: localized("metros por segundo", "metres per second"),
+    },
+  },
+  feedback: {
+    correct: localized("Rapidez correcta", "Correct speed"),
+    incorrect: localized("Revisa la rapidez", "Review the speed"),
+  },
+  answer: { kind: "number", value: 12.5, unit: "m/s" },
+  tolerance: 0.05,
+  expectedUnit: "m/s",
+  solution: [{
+    title: localized("Calcula la magnitud", "Calculate the magnitude"),
+    text: localized("La rapidez es 12,5 m/s.", "The speed is 12.5 m/s."),
+  }],
+});
+
+const multiNumberV2Item = () => baseV2Item({
+  id: "mq-v2-u2-multi-number",
+  title: localized("Estado cinemático", "Kinematic state"),
+  prompt: localized("Completa posición y tiempo.", "Complete position and time."),
+  interaction: {
+    kind: "multiNumber",
+    fields: [
+      { id: "position", label: localized("Posición", "Position"), unit: "m" },
+      { id: "time", label: localized("Tiempo", "Time"), unit: "s", unitLabel: localized("segundos", "seconds") },
+    ],
+  },
+  feedback: {
+    correct: localized("Estado correcto", "Correct state"),
+    incorrect: localized("Revisa el estado", "Review the state"),
+  },
+  answer: {
+    kind: "values",
+    values: [
+      { symbol: "x", value: 3, unit: "m" },
+      { symbol: "t", value: 2, unit: "s", tolerance: 0.02 },
+    ],
+  },
+  tolerance: 0.1,
+  expectedUnit: "mixed",
+  solution: [{
+    title: localized("Lee ambos valores", "Read both values"),
+    text: localized("La posición es 3 m y el tiempo es 2 s.", "Position is 3 m and time is 2 s."),
+  }],
 });
 
 const deterministicCrypto = {
@@ -74,6 +137,15 @@ const deterministicCrypto = {
     for (let index = 0; index < array.length; index += 1) array[index] = this.value++;
     return array;
   },
+};
+
+const selectOnlyFixedV2Item = (source, locale) => {
+  const bank = createMiniQuizV2Bank({ unit: source.unit, items: [source] });
+  return selectMiniQuizV2Questions({
+    id: `${source.id}-selection`,
+    questionCount: 1,
+    blueprint: [{ id: "fixed", count: 1, criteria: { itemKind: ["fixed"] } }],
+  }, bank, { ...deterministicCrypto, value: 0 }, { locale })[0].exercise;
 };
 
 test("los bancos V2 son propios, vacíos por unidad y U1 V1 queda marcado como legado", () => {
@@ -134,16 +206,9 @@ test("el selector V2 satisface blueprints con ítems y familias V2 independiente
 
 test("la selección V2 localiza el ítem fijo completo en ES y EN sin cambiar grading", () => {
   const source = baseV2Item();
-  const bank = createMiniQuizV2Bank({ unit: 2, items: [source] });
-  const blueprint = {
-    id: "mq-v2-u2-fixed-localization",
-    questionCount: 1,
-    blueprint: [{ id: "fixed", count: 1, criteria: { itemKind: ["fixed"] } }],
-  };
 
   for (const locale of ["es", "en"]) {
-    const cryptoApi = { ...deterministicCrypto, value: 0 };
-    const selected = selectMiniQuizV2Questions(blueprint, bank, cryptoApi, { locale })[0].exercise;
+    const selected = selectOnlyFixedV2Item(source, locale);
     const options = Object.fromEntries(selected.interaction.options.map((option) => [option.id, option]));
     assert.equal(selected.title, locale === "es" ? "Fuerza neta" : "Net force");
     assert.equal(selected.prompt, locale === "es" ? "Selecciona." : "Choose.");
@@ -161,11 +226,73 @@ test("la selección V2 localiza el ítem fijo completo en ES y EN sin cambiar gr
     );
     assert.equal(selected.interaction.correctOptionId, "b");
     assert.equal(options.a.diagnostic.commonErrorId, "acceleration-follows-velocity");
-    assert.deepEqual(selected.answer, source.answer);
+    assert.equal(selected.feedback.correct, locale === "es" ? "Correcta" : "Correct");
+    assert.equal(selected.feedback.incorrect, locale === "es" ? "Retroalimentación general" : "General feedback");
+    assert.deepEqual(selected.solution, [{
+      title: locale === "es" ? "Relaciona la fuerza" : "Relate the force",
+      text: locale === "es" ? "La aceleración sigue la fuerza neta." : "Acceleration follows the net force.",
+    }]);
+    assert.equal(selected.answer, source.answer);
   }
 
   assert.deepEqual(source.title, localized("Fuerza neta", "Net force"));
   assert.deepEqual(source.interaction.options[0].content, localized("La velocidad", "Velocity"));
+});
+
+test("number y multiNumber localizan campos, feedback y solución sin tocar invariantes", () => {
+  for (const locale of ["es", "en"]) {
+    const numberSource = numberV2Item();
+    const number = selectOnlyFixedV2Item(numberSource, locale);
+    assert.equal(number.title, locale === "es" ? "Rapidez medida" : "Measured speed");
+    assert.equal(number.prompt, locale === "es" ? "Escribe la rapidez." : "Enter the speed.");
+    assert.equal(number.interaction.field.label, locale === "es" ? "Rapidez" : "Speed");
+    assert.equal(number.interaction.field.unitLabel, locale === "es" ? "metros por segundo" : "metres per second");
+    assert.equal(number.interaction.field.id, "speed");
+    assert.equal(number.interaction.field.unit, "m/s");
+    assert.equal(number.feedback.correct, locale === "es" ? "Rapidez correcta" : "Correct speed");
+    assert.equal(number.feedback.incorrect, locale === "es" ? "Revisa la rapidez" : "Review the speed");
+    assert.deepEqual(number.solution, [{
+      title: locale === "es" ? "Calcula la magnitud" : "Calculate the magnitude",
+      text: locale === "es" ? "La rapidez es 12,5 m/s." : "The speed is 12.5 m/s.",
+    }]);
+    assert.equal(number.answer, numberSource.answer);
+    assert.equal(number.tolerance, numberSource.tolerance);
+    assert.equal(number.expectedUnit, numberSource.expectedUnit);
+    assert.deepEqual(
+      { id: number.id, topic: number.topic, subtopic: number.subtopic },
+      { id: numberSource.id, topic: numberSource.topic, subtopic: numberSource.subtopic },
+    );
+    assert.deepEqual(numberSource.interaction.field.label, localized("Rapidez", "Speed"));
+
+    const multiSource = multiNumberV2Item();
+    const multi = selectOnlyFixedV2Item(multiSource, locale);
+    assert.deepEqual(
+      multi.interaction.fields.map(({ id, label, unit, unitLabel }) => ({ id, label, unit, unitLabel })),
+      locale === "es"
+        ? [
+            { id: "position", label: "Posición", unit: "m", unitLabel: undefined },
+            { id: "time", label: "Tiempo", unit: "s", unitLabel: "segundos" },
+          ]
+        : [
+            { id: "position", label: "Position", unit: "m", unitLabel: undefined },
+            { id: "time", label: "Time", unit: "s", unitLabel: "seconds" },
+          ],
+    );
+    assert.equal(multi.feedback.correct, locale === "es" ? "Estado correcto" : "Correct state");
+    assert.equal(multi.feedback.incorrect, locale === "es" ? "Revisa el estado" : "Review the state");
+    assert.deepEqual(multi.solution, [{
+      title: locale === "es" ? "Lee ambos valores" : "Read both values",
+      text: locale === "es" ? "La posición es 3 m y el tiempo es 2 s." : "Position is 3 m and time is 2 s.",
+    }]);
+    assert.equal(multi.answer, multiSource.answer);
+    assert.equal(multi.tolerance, multiSource.tolerance);
+    assert.equal(multi.expectedUnit, multiSource.expectedUnit);
+    assert.deepEqual(
+      { id: multi.id, topic: multi.topic, subtopic: multi.subtopic },
+      { id: multiSource.id, topic: multiSource.topic, subtopic: multiSource.subtopic },
+    );
+    assert.deepEqual(multiSource.interaction.fields[1].label, localized("Tiempo", "Time"));
+  }
 });
 
 test("diagnóstico localizado conserva identidad y la calificación usa fallback seguro", () => {
@@ -217,6 +344,25 @@ test("el validador V2 cubre la estructura mínima segura de autoría", () => {
   const incompleteOption = baseV2Item();
   incompleteOption.interaction.options[2].content = { es: "Solo ES" };
   assert.equal(validateMiniQuizV2Record(incompleteOption).valid, false);
+
+  const incompleteFeedback = baseV2Item();
+  incompleteFeedback.feedback.incorrect = { es: "Solo ES" };
+  assert.equal(validateMiniQuizV2Record(incompleteFeedback).valid, false);
+  const incompleteSolution = baseV2Item();
+  incompleteSolution.solution[0].text = { es: "Solo ES" };
+  assert.equal(validateMiniQuizV2Record(incompleteSolution).valid, false);
+  const incompleteNumber = numberV2Item();
+  incompleteNumber.interaction.field.label = { es: "Solo ES" };
+  assert.equal(validateMiniQuizV2Record(incompleteNumber).valid, false);
+  const incompleteNumberUnitLabel = numberV2Item();
+  incompleteNumberUnitLabel.interaction.field.unitLabel = "m/s";
+  assert.equal(validateMiniQuizV2Record(incompleteNumberUnitLabel).valid, false);
+  const incompleteMultiNumber = multiNumberV2Item();
+  incompleteMultiNumber.interaction.fields[1].label = { en: "English only" };
+  assert.equal(validateMiniQuizV2Record(incompleteMultiNumber).valid, false);
+  const incompleteMultiUnitLabel = multiNumberV2Item();
+  incompleteMultiUnitLabel.interaction.fields[1].unitLabel = { es: "Solo ES" };
+  assert.equal(validateMiniQuizV2Record(incompleteMultiUnitLabel).valid, false);
 });
 
 const syntheticRuntime = (unitNumber) => createMiniQuizRuntimeConfig({
@@ -279,6 +425,19 @@ test("el runtime académico resuelve errores U1 mediante errorTopics en ES y EN"
   };
   for (const locale of ["es", "en"]) {
     const runtime = createAcademicMiniQuizRuntime(1, locale, { familyAdapterId: "legacy-u1" });
+    assert.deepEqual(
+      Object.keys(runtime.commonErrors).sort(),
+      UNIT_1_COMMON_ERRORS.map(({ id }) => id).sort(),
+    );
+    UNIT_1_COMMON_ERRORS.forEach(({ id }) => {
+      const runtimeError = runtime.commonErrors[id];
+      const topic = runtime.topics[runtimeError.topicId];
+      const subtopic = runtime.subtopics[`${runtimeError.topicId}:${runtimeError.subtopicId}`];
+      assert.ok(topic, `${locale} ${id} no resolvió tema canónico.`);
+      assert.ok(subtopic, `${locale} ${id} no resolvió subtema canónico.`);
+      assert.equal(runtimeError.route, subtopic.route, `${locale} ${id} no usa la ruta canónica.`);
+      assert.equal(runtimeError.title, subtopic.title, `${locale} ${id} no usa el título canónico.`);
+    });
     const error = runtime.commonErrors["units-drop-during-work"];
     assert.deepEqual(
       { topicId: error.topicId, subtopicId: error.subtopicId, route: error.route },

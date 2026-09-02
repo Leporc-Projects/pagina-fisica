@@ -6,6 +6,13 @@ export const MINI_QUIZ_V2_SOURCE_KIND = "miniQuizV2";
 
 const localizedText = (value) => value && typeof value.es === "string" && value.es.length > 0 && typeof value.en === "string" && value.en.length > 0;
 const stableId = (value) => typeof value === "string" && /^[a-z0-9-]+$/.test(value);
+const textForLocale = (value, locale) => localizedText(value) ? value[locale] : value;
+
+const localizeNumberField = (field, locale) => ({
+  ...field,
+  label: textForLocale(field.label, locale),
+  ...(field.unitLabel !== undefined ? { unitLabel: textForLocale(field.unitLabel, locale) } : {}),
+});
 
 const diagnosticErrors = (option, path) => {
   if (option.diagnostic === undefined) return [];
@@ -32,6 +39,22 @@ export const validateMiniQuizV2Record = (record) => {
     require(record.constraints && typeof record.constraints === "object" && !Array.isArray(record.constraints), "La familia V2 requiere constraints válidas.");
   } else {
     require(localizedText(record?.title) && localizedText(record?.prompt), "El ítem fijo V2 requiere título y enunciado completos en ES/EN.");
+    require(localizedText(record?.feedback?.correct) && localizedText(record?.feedback?.incorrect), "El feedback fijo V2 debe estar completo en ES/EN.");
+    if (record?.solution !== undefined) {
+      const solution = Array.isArray(record.solution) ? record.solution : [];
+      require(Array.isArray(record.solution), "La solución fija V2 debe ser una lista.");
+      require(solution.every((step) => localizedText(step?.title) && localizedText(step?.text)), "Los pasos de solución fijos V2 deben estar completos en ES/EN.");
+    }
+    if (record?.interaction?.kind === "number") {
+      require(localizedText(record.interaction.field?.label), "La etiqueta del campo number debe estar completa en ES/EN.");
+      require(record.interaction.field?.unitLabel === undefined || localizedText(record.interaction.field.unitLabel), "unitLabel de number debe estar completo en ES/EN.");
+    }
+    if (record?.interaction?.kind === "multiNumber") {
+      const fields = Array.isArray(record.interaction.fields) ? record.interaction.fields : [];
+      require(fields.length > 0, "multiNumber requiere campos declarados.");
+      require(fields.every((field) => localizedText(field?.label)), "Las etiquetas multiNumber deben estar completas en ES/EN.");
+      require(fields.every((field) => field?.unitLabel === undefined || localizedText(field.unitLabel)), "Los unitLabel multiNumber deben estar completos en ES/EN.");
+    }
   }
   if (record?.interaction?.kind === "singleChoice") {
     const options = Array.isArray(record.interaction.options) ? record.interaction.options : [];
@@ -78,25 +101,35 @@ export const MINI_QUIZ_V2_BANKS_BY_UNIT = Object.freeze(
 export const localizeMiniQuizV2Record = (record, locale) => {
   assertRecord(record);
   if (!["es", "en"].includes(locale)) throw new RangeError("Locale V2 inválido.");
-  const interaction = record.interaction?.kind === "singleChoice"
-    ? {
-        ...record.interaction,
-        options: record.interaction.options.map((option) => ({
-          ...option,
-          content: localizedText(option.content) ? option.content[locale] : option.content,
-          ...(option.diagnostic ? { diagnostic: { ...option.diagnostic, feedback: option.diagnostic.feedback[locale] } } : {}),
-        })),
-      }
-    : record.interaction;
+  let interaction = record.interaction;
+  if (record.itemKind === "fixed" && record.interaction?.kind === "singleChoice") {
+    interaction = {
+      ...record.interaction,
+      options: record.interaction.options.map((option) => ({
+        ...option,
+        content: textForLocale(option.content, locale),
+        ...(option.diagnostic ? { diagnostic: { ...option.diagnostic, feedback: option.diagnostic.feedback[locale] } } : {}),
+      })),
+    };
+  } else if (record.itemKind === "fixed" && record.interaction?.kind === "number") {
+    interaction = { ...record.interaction, field: localizeNumberField(record.interaction.field, locale) };
+  } else if (record.itemKind === "fixed" && record.interaction?.kind === "multiNumber") {
+    interaction = { ...record.interaction, fields: record.interaction.fields.map((field) => localizeNumberField(field, locale)) };
+  }
   return {
     ...record,
-    title: localizedText(record.title) ? record.title[locale] : record.title,
-    prompt: localizedText(record.prompt) ? record.prompt[locale] : record.prompt,
+    title: textForLocale(record.title, locale),
+    prompt: textForLocale(record.prompt, locale),
     feedback: record.feedback ? {
       ...record.feedback,
-      correct: localizedText(record.feedback.correct) ? record.feedback.correct[locale] : record.feedback.correct,
-      incorrect: localizedText(record.feedback.incorrect) ? record.feedback.incorrect[locale] : record.feedback.incorrect,
+      correct: textForLocale(record.feedback.correct, locale),
+      incorrect: textForLocale(record.feedback.incorrect, locale),
     } : record.feedback,
+    solution: Array.isArray(record.solution) ? record.solution.map((step) => ({
+      ...step,
+      title: textForLocale(step.title, locale),
+      text: textForLocale(step.text, locale),
+    })) : record.solution,
     interaction,
   };
 };
