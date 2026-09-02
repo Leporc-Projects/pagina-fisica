@@ -100,6 +100,7 @@ const matchesOne = (value, allowed) =>
   !allowed || allowed.length === 0 || allowed.includes(value);
 
 export const matchesBlueprintCriteria = (exercise, criteria = {}) =>
+  matchesOne(exercise.assessmentSlot, criteria.assessmentSlot) &&
   matchesOne(exercise.topic, criteria.topic) &&
   matchesOne(exercise.subtopic, criteria.subtopic) &&
   matchesOne(exercise.itemKind ?? "fixed", criteria.itemKind) &&

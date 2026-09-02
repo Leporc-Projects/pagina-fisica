@@ -1,5 +1,9 @@
 import { selectQuestionsFromBlueprint } from "../../utils/bonus.js";
 import { generateFamilyInstance } from "../../utils/exercise-families.js";
+import {
+  UNIT_1_MINI_QUIZ_V2_BLUEPRINTS,
+  UNIT_1_MINI_QUIZ_V2_ITEMS,
+} from "./unit-1.js";
 
 export const MINI_QUIZ_V2_SCHEMA_VERSION = "2.0.0";
 export const MINI_QUIZ_V2_SOURCE_KIND = "miniQuizV2";
@@ -31,6 +35,7 @@ export const validateMiniQuizV2Record = (record) => {
   require(!record?.modalities?.includes?.("practice") && record?.practiceEligible !== true, "Un registro V2 no puede pertenecer a Practice.");
   require(["fixed", "parameterizedFamily"].includes(record?.itemKind), "itemKind V2 inválido.");
   require(stableId(record?.id), "id V2 inválido.");
+  require(stableId(record?.assessmentSlot), "assessmentSlot V2 inválido.");
   require(Number.isInteger(record?.version) && record.version > 0, "version V2 inválida.");
   require(Number.isInteger(record?.unit) && record.unit >= 1 && record.unit <= 7, "Unidad V2 inválida.");
   if (record?.itemKind === "parameterizedFamily") {
@@ -95,7 +100,13 @@ export const createMiniQuizV2Bank = ({ unit, items = [], families = [], blueprin
 };
 
 export const MINI_QUIZ_V2_BANKS_BY_UNIT = Object.freeze(
-  Array.from({ length: 7 }, (_, index) => createMiniQuizV2Bank({ unit: index + 1 })),
+  Array.from({ length: 7 }, (_, index) => index === 0
+    ? createMiniQuizV2Bank({
+        unit: 1,
+        items: UNIT_1_MINI_QUIZ_V2_ITEMS,
+        blueprints: UNIT_1_MINI_QUIZ_V2_BLUEPRINTS,
+      })
+    : createMiniQuizV2Bank({ unit: index + 1 })),
 );
 
 export const localizeMiniQuizV2Record = (record, locale) => {
