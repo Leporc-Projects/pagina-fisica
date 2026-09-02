@@ -987,7 +987,7 @@ const UNIT_REVIEW = [
     correctOptionId: "a",
     correctFeedback: ["Correcto. v=(2,2) m/s y a=(0,2) m/s²; como v·a>0, la rapidez aumenta.", "Correct. v=(2,2) m/s and a=(0,2) m/s²; since v·a>0, speed increases."],
     incorrectFeedback: ["Deriva r(t) y usa la proyección de a sobre v, por ejemplo mediante v·a, para decidir el cambio de rapidez.", "Differentiate r(t) and use the projection of a along v, for example through v·a, to determine the speed change."],
-    solution: ["v=(2,2t) m/s y a=(0,2) m/s². En t=1 s, v=(2,2) y a=(0,2); v·a=4 m²/s³>0, por lo que la rapidez aumenta.", "v=(2,2t) m/s and a=(0,2) m/s². At t=1 s, v=(2,2) and a=(0,2); v·a=4 m²/s³>0, so speed increases."],
+    solution: ["v(t)=(2 m/s)i+(2 m/s²)t j y a(t)=(0 i+2 j) m/s². En t=1 s, v=(2,2) m/s y a=(0,2) m/s²; v·a=4 m²/s³>0, por lo que la rapidez aumenta.", "v(t)=(2 m/s)i+(2 m/s²)t j and a(t)=(0 i+2 j) m/s². At t=1 s, v=(2,2) m/s and a=(0,2) m/s²; v·a=4 m²/s³>0, so speed increases."],
   }),
   createAnchor({
     id: "mq-v2-u1-r-variable-acceleration-01",
@@ -1001,7 +1001,7 @@ const UNIT_REVIEW = [
     title: ["Aceleración variable: integrar, no usar una a final como constante", "Variable acceleration: integrate rather than using final a as constant"],
     prompt: ["La aceleración es a(t)=(2 m/s³)t, con v(0)=1 m/s. ¿Cuál es v(3 s)?", "A particle has a(t)=(2 m/s³)t with v(0)=1 m/s. What is v(3 s)?"],
     options: [
-      option("a", "10 m/s, porque v(3)=1+∫₀³2t dt.", "10 m/s because v(3)=1+∫₀³2t dt."),
+      option("a", "10 m/s, porque v(3 s)=1 m/s+∫₀^(3 s) (2 m/s³)t dt.", "10 m/s because v(3 s)=1 m/s+∫₀^(3 s) (2 m/s³)t dt."),
       option("b", "19 m/s, usando v=v₀+a(3)t=1+6(3).", "19 m/s using v=v₀+a(3)t=1+6(3).", "constant-use-variable-acceleration"),
       option("c", "7 m/s, porque a(3)=6 m/s².", "7 m/s because a(3)=6 m/s²."),
       option("d", "1 m/s, porque la aceleración no es constante.", "1 m/s because acceleration is not constant."),

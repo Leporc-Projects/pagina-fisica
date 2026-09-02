@@ -268,8 +268,22 @@ test("los casos académicos de mayor riesgo conservan respuesta, signos, unidade
   assert.match(bySlot["r-3"].solution[0].text.es, /v=−2 m\/s y a=\+2 m\/s².*\|v\| disminuye/);
   assert.equal(bySlot["r-5"].interaction.options[0].content.es, "t=0.8 s, vₓ=6 m/s, vᵧ=0, aᵧ=−10 m/s².");
   assert.equal(bySlot["r-7"].interaction.options[1].content.en, "(−3i+4j) m/s");
-  assert.match(bySlot["r-8"].solution[0].text.en, /v·a=4 m²\/s³>0, so speed increases/);
-  assert.match(bySlot["r-9"].interaction.options[0].content.en, /^10 m\/s/);
+  for (const locale of ["es", "en"]) {
+    const r8 = localizeMiniQuizV2Record(bySlot["r-8"], locale);
+    assert.match(r8.solution[0].text, /v\(t\)=\(2 m\/s\)i\+\(2 m\/s²\)t j/);
+    assert.match(r8.solution[0].text, /a\(t\)=\(0 i\+2 j\) m\/s²/);
+    assert.match(r8.solution[0].text, /t=1 s, v=\(2,2\) m\/s.*a=\(0,2\) m\/s²/);
+    assert.match(r8.solution[0].text, /v·a=4 m²\/s³>0/);
+
+    const r9 = localizeMiniQuizV2Record(bySlot["r-9"], locale);
+    const correctOption = r9.interaction.options.find(({ id }) => id === "a");
+    assert.match(correctOption.content, /^10 m\/s/);
+    assert.match(correctOption.content, /v\(3 s\)=1 m\/s/);
+    assert.match(correctOption.content, /∫₀\^\(3 s\) \(2 m\/s³\)t dt/);
+    assert.equal(r9.interaction.correctOptionId, "a");
+    assert.equal(gradeExerciseResponse(r9, "a").pointsEarned, 1);
+    assert.equal(gradeExerciseResponse(r9, "b").pointsEarned, 0);
+  }
 
   for (const slot of ["c1-7", "mp-3", "mc-1", "r-3", "r-4", "r-8", "r-9"]) {
     assert.match(bySlot[slot].prompt.es, /m\/s²|m\/s³/);
@@ -281,5 +295,5 @@ test("la huella del banco ancla U1 V2 conserva los 35 ítems y cinco blueprints 
   const fingerprint = crypto.createHash("sha256")
     .update(JSON.stringify(stable({ items: bank.items, blueprints: bank.blueprints })))
     .digest("hex");
-  assert.equal(fingerprint, "86bdda5ff01c413861493132edb63e96cd5ab280c230fdfc0297a372b096d455");
+  assert.equal(fingerprint, "ca56d72eaddeeb797c7411f91baf78690b52c110f1cf190e65e381972f690ef6");
 });
