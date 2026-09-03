@@ -123,4 +123,3 @@ export const localizeUnit1MiniQuizV2Activity = (source, locale) => {
     description: source.description[locale],
   };
 };
-

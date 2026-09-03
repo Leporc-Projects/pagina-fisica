@@ -24,4 +24,3 @@ export const selectMiniQuizQuestions = ({
     return { ...selection, exercise: presented };
   });
 };
-
