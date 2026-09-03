@@ -3,7 +3,8 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import CoursePageHeader from "../../../components/course/CoursePageHeader.astro";
 import BonusCatalogCard from "../../../components/bonus/BonusCatalogCard.astro";
 import { localizeCourseData } from "../../../data/course-localize.js";
-import { getLocalizedUnit1MiniQuizzes, localizeUnit1 } from "../../../data/physics/unit-1/localize.js";
+import { getLocalizedMiniQuizzesByUnit } from "../../../data/mini-quizzes/index.js";
+import { localizeUnit1 } from "../../../data/physics/unit-1/localize.js";
 import { ROUTE_IDS } from "../../../i18n/routes.js";
 import { t } from "../../../i18n/index.js";
 import { withBase } from "../../../utils/paths.js";
@@ -12,7 +13,7 @@ import "../../../styles/bonus.css";
 const { locale = "es" } = Astro.props;
 const { COURSE } = localizeCourseData(locale);
 const UNIT_1 = localizeUnit1(locale);
-const miniQuizzes = getLocalizedUnit1MiniQuizzes(locale);
+const miniQuizzes = getLocalizedMiniQuizzesByUnit(1, locale);
 ---
 
 <BaseLayout title={t(locale, "bonus.catalogTitle", { course: COURSE.name })} description={t(locale, "bonus.catalogMeta", { course: COURSE.name })} locale={locale} routeId={ROUTE_IDS.COURSE_MINI_QUIZZES}>

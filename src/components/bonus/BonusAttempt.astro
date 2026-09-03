@@ -50,6 +50,8 @@ const clientExercises = exercises.map((exercise) => ({
   constraints: exercise.constraints,
   hints: exercise.hints,
   solution: exercise.solution,
+  visualizationId: exercise.visualizationId,
+  presentation: exercise.presentation,
   ...(exercise.reviewTarget ? { reviewTarget: exercise.reviewTarget } : {}),
 }));
 const topicLabels = Object.fromEntries(
@@ -260,7 +262,9 @@ const serializedData = JSON.stringify({ bonus, exercises: clientExercises, topic
 
     <div class="bonus-result__actions bonus-result__next-actions">
       <button type="button" data-review-answers>{t(locale, "bonus.reviewAnswers")}</button>
-      <button type="button" class="bonus-primary" data-another-attempt>{t(locale, "bonus.anotherAttempt")}</button>
+      {runtime.capabilities?.retake && (
+        <button type="button" class="bonus-primary" data-another-attempt>{t(locale, "bonus.anotherAttempt")}</button>
+      )}
     </div>
 
     <p class="bonus-result__local-note">

@@ -1,5 +1,6 @@
 const FAMILY_ADAPTER_LOADERS = Object.freeze({
   "legacy-u1": () => import("./runtime/legacy-u1.js"),
+  "v2-u1": () => import("./runtime/v2-u1.js"),
 });
 
 export const loadMiniQuizFamilyAdapter = async (adapterId) => {

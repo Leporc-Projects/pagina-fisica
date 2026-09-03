@@ -10,7 +10,7 @@ const courseRuntime = (locale) => {
 export const createAcademicMiniQuizRuntime = (
   unitNumber,
   locale,
-  { familyAdapterId = `unit-${unitNumber}` } = {},
+  { familyAdapterId = `unit-${unitNumber}`, supportsRetake = true } = {},
 ) => {
   const adapter = getAcademicUnitAdapter(unitNumber);
   if (!adapter) throw new RangeError(`No existe adaptador académico para la Unidad ${unitNumber}.`);
@@ -60,6 +60,7 @@ export const createAcademicMiniQuizRuntime = (
     course: courseRuntime(locale),
     unit: { number: unit.number, slug: unit.slug, title: unit.title, route: unit.route },
     familyAdapterId,
+    capabilities: { retake: supportsRetake },
     topics,
     subtopics,
     commonErrors,

@@ -1,16 +1,20 @@
-// Fachada canónica del producto actual. El registro histórico conserva nombres
-// `bonus-*` dentro del esquema 1.x para no invalidar intentos exportados.
-import { UNIT_1_BONUSES } from "../physics/unit-1/bonuses.js";
-import { getUnit1MiniQuizRouteId, localizeUnit1MiniQuiz } from "../physics/unit-1/localize.js";
+// Fachada canónica del producto actual. El registro histórico V1 permanece en
+// physics/unit-1 para interpretar intentos 1.x, pero ya no alimenta estas rutas.
+import {
+  UNIT_1_MINI_QUIZ_V2_ACTIVITIES,
+  localizeUnit1MiniQuizV2Activity,
+} from "./unit-1-catalog.js";
 
 export const MINI_QUIZZES_BY_UNIT = Object.freeze([
   Object.freeze({
     unit: 1,
-    generation: "legacy-v1",
-    familyAdapterId: "legacy-u1",
-    miniQuizzes: UNIT_1_BONUSES,
-    localizeMiniQuiz: localizeUnit1MiniQuiz,
-    getRouteId: getUnit1MiniQuizRouteId,
+    generation: "v2",
+    familyAdapterId: "v2-u1",
+    supportsRetake: false,
+    miniQuizzes: UNIT_1_MINI_QUIZ_V2_ACTIVITIES,
+    localizeMiniQuiz: localizeUnit1MiniQuizV2Activity,
+    getRouteId: (miniQuizId) => UNIT_1_MINI_QUIZ_V2_ACTIVITIES
+      .find(({ id }) => id === miniQuizId)?.routeId ?? null,
   }),
 ]);
 
@@ -20,6 +24,11 @@ export const MINI_QUIZZES = Object.freeze(
 
 export const getMiniQuizzesByUnit = (unit) =>
   MINI_QUIZZES_BY_UNIT.find((group) => group.unit === unit)?.miniQuizzes ?? [];
+
+export const getLocalizedMiniQuizzesByUnit = (unit, locale) => {
+  const group = getMiniQuizGroupByUnit(unit);
+  return group?.miniQuizzes.map((miniQuiz) => group.localizeMiniQuiz(miniQuiz, locale)) ?? [];
+};
 
 export const getMiniQuizGroupByUnit = (unit) =>
   MINI_QUIZZES_BY_UNIT.find((group) => group.unit === unit) ?? null;

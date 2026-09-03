@@ -10,6 +10,7 @@ export const createMiniQuizRuntimeConfig = ({
   course,
   unit,
   familyAdapterId,
+  capabilities = { retake: true },
   topics = [],
   subtopics = [],
   commonErrors = [],
@@ -24,12 +25,16 @@ export const createMiniQuizRuntimeConfig = ({
   if (typeof familyAdapterId !== "string" || familyAdapterId.length === 0) {
     throw new TypeError("La configuración de Mini Quiz requiere un adaptador de familias.");
   }
+  if (typeof capabilities?.retake !== "boolean") {
+    throw new TypeError("La capacidad de reintento de Mini Quiz debe ser booleana.");
+  }
 
   return Object.freeze({
     locale,
     course: Object.freeze({ ...course }),
     unit: Object.freeze({ ...unit }),
     familyAdapterId,
+    capabilities: Object.freeze({ retake: capabilities.retake }),
     topics: Object.freeze(recordById(topics, "El tema")),
     subtopics: Object.freeze(recordById(subtopics, "El subtema")),
     commonErrors: Object.freeze(recordById(commonErrors, "El error común")),
@@ -42,6 +47,7 @@ export const assertMiniQuizRuntimeConfig = (runtime) =>
     course: runtime?.course,
     unit: runtime?.unit,
     familyAdapterId: runtime?.familyAdapterId,
+    capabilities: runtime?.capabilities,
     topics: Object.values(runtime?.topics ?? {}),
     subtopics: Object.values(runtime?.subtopics ?? {}),
     commonErrors: Object.values(runtime?.commonErrors ?? {}),

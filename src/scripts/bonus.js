@@ -29,6 +29,24 @@ const createElement = (tag, text, className) => {
   return element;
 };
 
+// Los segmentos provienen exclusivamente de la capa editorial estática que el
+// build serializa junto con el ítem. No se interpreta texto del estudiante.
+const renderRichContent = (target, content) => {
+  if (!target) return;
+  if (!Array.isArray(content)) {
+    target.textContent = content ?? "";
+    return;
+  }
+  const nodes = content.map((segment) => {
+    if (segment?.type !== "math") return document.createTextNode(segment?.value ?? "");
+    const wrapper = createElement("span", undefined, "inline-math");
+    const parsed = new DOMParser().parseFromString(segment.mathml, "application/xml");
+    wrapper.append(document.importNode(parsed.documentElement, true));
+    return wrapper;
+  });
+  target.replaceChildren(...nodes);
+};
+
 export const initializeBonus = () => {
   const app = document.querySelector("[data-bonus-app]");
   if (!(app instanceof HTMLElement) || app.dataset.initialized === "true") return;
@@ -408,11 +426,20 @@ export const initializeBonus = () => {
     pool = familyAdapter.hydrateMiniQuizPool(data.exercises);
     exerciseMap.clear();
     pool.forEach((exercise) => exerciseMap.set(exercise.id, exercise));
-    selections = selectBonusQuestions(bonus, pool, globalThis.crypto, {
-      seenItemIds,
-      recentParameterKeys,
-      generateInstance: (family, options) => familyAdapter.generateMiniQuizFamilyInstance(family, locale, options),
-    });
+    selections = typeof familyAdapter.selectMiniQuizQuestions === "function"
+      ? familyAdapter.selectMiniQuizQuestions({
+          miniQuiz: bonus,
+          pool,
+          cryptoApi: globalThis.crypto,
+          locale,
+          seenItemIds,
+          recentParameterKeys,
+        })
+      : selectBonusQuestions(bonus, pool, globalThis.crypto, {
+          seenItemIds,
+          recentParameterKeys,
+          generateInstance: (family, options) => familyAdapter.generateMiniQuizFamilyInstance(family, locale, options),
+        });
     selections.forEach((selection) => {
       seenItemIds.add(selection.sourceItemId);
       if (selection.parameterKey) {
@@ -532,6 +559,7 @@ export const initializeBonus = () => {
   const renderQuestionFeedback = (question) => {
     const element = questionElements.get(question.exerciseId);
     if (!element) return;
+    const exercise = exerciseMap.get(question.exerciseId);
     element.querySelectorAll("[data-bonus-response]").forEach((control) => {
       if (control instanceof HTMLInputElement) control.disabled = true;
     });
@@ -556,9 +584,24 @@ export const initializeBonus = () => {
           ? "partial"
           : "incorrect";
     }
-    if (responseTarget) responseTarget.textContent = bonusQuestionResponseText(question, locale);
-    if (expectedTarget) expectedTarget.textContent = question.expectedResponse;
-    if (messageTarget) messageTarget.textContent = question.feedback;
+    const selectedOptionId = question.response?.kind === "singleChoice"
+      ? question.response.optionId
+      : null;
+    const selectedPresentation = selectedOptionId
+      ? exercise?.presentation?.options?.[selectedOptionId]?.content
+      : null;
+    const expectedPresentation = exercise?.interaction?.kind === "singleChoice"
+      ? exercise.presentation?.options?.[exercise.interaction.correctOptionId]?.content
+      : null;
+    const diagnosticPresentation = selectedOptionId
+      ? exercise?.presentation?.options?.[selectedOptionId]?.diagnosticFeedback
+      : null;
+    const feedbackPresentation = question.correct
+      ? exercise?.presentation?.feedback?.correct
+      : diagnosticPresentation ?? exercise?.presentation?.feedback?.incorrect;
+    renderRichContent(responseTarget, selectedPresentation ?? bonusQuestionResponseText(question, locale));
+    renderRichContent(expectedTarget, expectedPresentation ?? question.expectedResponse);
+    renderRichContent(messageTarget, feedbackPresentation ?? question.feedback);
   };
 
   const renderResult = () => {

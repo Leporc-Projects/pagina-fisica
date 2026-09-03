@@ -40,7 +40,7 @@ const interaction = exercise.interaction;
 
   <div class="bonus-question__content">
     <p class="bonus-question__prompt">
-      <RichText content={present(exercise.prompt)} />
+      <RichText content={exercise.presentation?.prompt ?? present(exercise.prompt)} />
     </p>
 
     {visualization && (
@@ -68,7 +68,7 @@ const interaction = exercise.interaction;
               data-bonus-response
             />
             <span class="bonus-choice__marker" aria-hidden="true"></span>
-            <span><RichText content={present(option.content)} /></span>
+            <span><RichText content={exercise.presentation?.options?.[option.id]?.content ?? present(option.content)} /></span>
           </label>
         ))}
       </div>
@@ -146,10 +146,10 @@ const interaction = exercise.interaction;
       <details class="bonus-question__solution" data-feedback-solution>
         <summary>{t(locale, "bonus.reviewSolution")}</summary>
         <ol>
-          {exercise.solution.map((item) => (
+          {exercise.solution.map((item, index) => (
             <li>
-              <strong>{item.title}</strong>
-              <p><RichText content={present(item.text)} /></p>
+              <strong><RichText content={exercise.presentation?.solution?.[index]?.title ?? present(item.title)} /></strong>
+              <p><RichText content={exercise.presentation?.solution?.[index]?.text ?? present(item.text)} /></p>
             </li>
           ))}
         </ol>
