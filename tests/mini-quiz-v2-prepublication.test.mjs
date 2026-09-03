@@ -189,6 +189,37 @@ test("las figuras protegen los datos exactos y no adelantan las respuestas", () 
   }
 });
 
+test("las cinco gráficas cartesianas mantienen todos sus puntos dentro del dominio", () => {
+  for (const locale of ["es", "en"]) {
+    const charts = Object.values(getUnit1MiniQuizV2Visualizations(locale))
+      .filter(({ kind }) => kind === "cartesian");
+    assert.equal(charts.length, 5);
+
+    for (const chart of charts) {
+      const [xStart, xEnd] = chart.props.xAxis.domain;
+      const [yStart, yEnd] = chart.props.yAxis.domain;
+      const xMin = Math.min(xStart, xEnd);
+      const xMax = Math.max(xStart, xEnd);
+      const yMin = Math.min(yStart, yEnd);
+      const yMax = Math.max(yStart, yEnd);
+
+      for (const series of chart.props.series) {
+        assert.ok(series.points.length > 0, `${locale}:${chart.id}:${series.id}`);
+        for (const point of series.points) {
+          assert.ok(
+            point.x >= xMin && point.x <= xMax,
+            `${locale}:${chart.id}:${series.id}: x=${point.x} fuera de [${xMin}, ${xMax}]`,
+          );
+          assert.ok(
+            point.y >= yMin && point.y <= yMax,
+            `${locale}:${chart.id}:${series.id}: y=${point.y} fuera de [${yMin}, ${yMax}]`,
+          );
+        }
+      }
+    }
+  }
+});
+
 test("la presentación V2 convierte el inventario explícito a MathML sin mutar las fuentes", () => {
   const sourceBefore = JSON.stringify(bank.items);
   const corpus = bank.items.flatMap(allPresentationStrings).join("\n");

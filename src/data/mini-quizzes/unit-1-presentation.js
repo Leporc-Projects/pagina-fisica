@@ -35,7 +35,7 @@ const visualizationsFor = (locale) => ({
       title: t(locale, "Posición y tangente en t₀", "Position and tangent at t₀"),
       description: t(locale, "Gráfica de posición contra tiempo. La curva pasa por diez metros en t sub cero y allí tiene una tangente descendente.", "Position-versus-time graph. The curve passes through ten metres at t sub zero and has a descending tangent there."),
       xAxis: { domain: [0, 4], label: t(locale, "Tiempo", "Time"), unit: "s", ticks: [0, 1, 2, 3, 4] },
-      yAxis: { domain: [2, 18], label: t(locale, "Posición", "Position"), unit: "m", ticks: [2, 6, 10, 14, 18] },
+      yAxis: { domain: [2, 19], label: t(locale, "Posición", "Position"), unit: "m", ticks: [2, 6, 10, 14, 18] },
       series: [
         { id: "position-curve", label: "x(t)", points: range(0, 4, 61, (time) => ({ x: time, y: 10 - 3 * (time - 2) + 0.55 * (time - 2) ** 2 })) },
         { id: "local-tangent", label: t(locale, "Tangente en t₀", "Tangent at t₀"), lineStyle: "dashed", points: [{ x: 1, y: 13 }, { x: 3, y: 7 }] },
