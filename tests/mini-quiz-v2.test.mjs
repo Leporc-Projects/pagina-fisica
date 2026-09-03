@@ -149,15 +149,15 @@ const selectOnlyFixedV2Item = (source, locale) => {
   }, bank, { ...deterministicCrypto, value: 0 }, { locale })[0].exercise;
 };
 
-test("los bancos V2 son propios, U1 contiene sus anclas y V1 sigue marcado como legado", () => {
+test("los bancos V2 son propios y U1 activa su adaptador sin borrar el legado V1", () => {
   assert.deepEqual(MINI_QUIZ_V2_BANKS_BY_UNIT.map((bank) => bank.unit), [1, 2, 3, 4, 5, 6, 7]);
   assert.equal(MINI_QUIZ_V2_BANKS_BY_UNIT.every((bank) => bank.sourceKind === "miniQuizV2"), true);
   assert.deepEqual(
     MINI_QUIZ_V2_BANKS_BY_UNIT.map(({ items, families, blueprints }) => [items.length, families.length, blueprints.length]),
     [[41, 0, 6], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
   );
-  assert.equal(MINI_QUIZZES_BY_UNIT[0].generation, "legacy-v1");
-  assert.equal(MINI_QUIZZES_BY_UNIT[0].familyAdapterId, "legacy-u1");
+  assert.equal(MINI_QUIZZES_BY_UNIT[0].generation, "v2");
+  assert.equal(MINI_QUIZZES_BY_UNIT[0].familyAdapterId, "v2-u1");
 });
 
 test("el registro V2 rechaza Practice, unidades inválidas e IDs duplicados", () => {

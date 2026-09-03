@@ -269,7 +269,7 @@ test("el banco V2 permanece estructuralmente separado de Practice y de V1 públi
   assert.equal(bank.items.every((item) => item.modality === "miniQuiz" && item.source.kind === "miniQuizV2"), true);
   assert.equal(bank.items.every((item) => item.practiceEligible === false && item.modalities?.includes?.("practice") !== true), true);
   assert.equal(bank.families.length, 0);
-  assert.equal(MINI_QUIZZES_BY_UNIT[0].generation, "legacy-v1");
+  assert.equal(MINI_QUIZZES_BY_UNIT[0].generation, "v2");
 
   const moduleSource = fs.readFileSync(new URL("../src/data/mini-quizzes/unit-1.js", import.meta.url), "utf8");
   assert.doesNotMatch(moduleSource, /physics\/unit-1\/(?:exercises|additional-exercises|families|bonuses)\.js/);

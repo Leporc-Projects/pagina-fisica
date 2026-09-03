@@ -199,7 +199,14 @@ test("el manifest de producto conserva cuatro simulaciones públicas, cinco esce
 });
 
 test("mini quices y rutas localizadas conservan identidad publicada sin reactivar herramientas ocultas", () => {
-  assert.equal(MINI_QUIZZES.length, 4);
+  assert.deepEqual(MINI_QUIZZES.map(({ id }) => id), [
+    "mq-v2-u1-tools-vectors",
+    "mq-v2-u1-kinematics-1d",
+    "mq-v2-u1-models-projectiles",
+    "mq-v2-u1-motion-2d-circular-relative",
+    "mq-v2-u1-review",
+    "mq-v2-u1-polar-coordinates",
+  ]);
   unique(MINI_QUIZZES.map(({ id }) => id), "mini quizzes");
   unique(MINI_QUIZZES.map(({ slug }) => slug), "mini quiz slugs");
 

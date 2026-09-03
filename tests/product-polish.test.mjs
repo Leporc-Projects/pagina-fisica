@@ -15,7 +15,14 @@ test("mini quices tienen identidad canónica bilingüe y Bonos queda como produc
   assert.equal(localizeUnit1("es").miniQuizRoute, "/fisica-basica-1/mini-quices");
   assert.equal(localizeUnit1("en").miniQuizRoute, "/en/basic-physics-1/mini-quizzes");
   assert.equal(localizeUnit1("es").bonusRoute, null);
-  assert.equal(getMiniQuizzesByUnit(1).length, 4);
+  assert.deepEqual(getMiniQuizzesByUnit(1).map(({ id }) => id), [
+    "mq-v2-u1-tools-vectors",
+    "mq-v2-u1-kinematics-1d",
+    "mq-v2-u1-models-projectiles",
+    "mq-v2-u1-motion-2d-circular-relative",
+    "mq-v2-u1-review",
+    "mq-v2-u1-polar-coordinates",
+  ]);
   assert.match(read("docs/BONUSES_PRODUCT_VISION.md"), /producto futuro distinto/);
 });
 
