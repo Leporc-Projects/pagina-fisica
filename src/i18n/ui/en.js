@@ -519,7 +519,7 @@ export default Object.freeze({
   "pulleySystems.scenarioHelp.table-hanging": "Static or kinetic friction on the table.",
   "pulleySystems.scenarioHelp.atwood": "Two masses and one rope over a fixed pulley.",
   "pulleySystems.scenarioHelp.movable-pulley": "Two rope segments support the moving load.",
-  "pulleySystems.scenarioHelp.three-pulley-tackle": "Three rope segments support the moving assembly.",
+  "pulleySystems.scenarioHelp.three-pulley-tackle": "Three segments of the same rope support the moving assembly.",
   "pulleySystems.scenarioHelp.double-atwood": "Two ropes, three masses, and two tensions.",
   "pulleySystems.canvas": "2D Canvas · laboratory",
   "pulleySystems.canvasTitle": "Ropes, pulleys, and constrained motion",

@@ -60,6 +60,18 @@ test("los controles flotantes conservan labels accesibles bilingües", () => {
   assert.equal(t("es", "simulation.currentTime", { time: "1,25 s" }), "Tiempo actual: 1,25 s");
 });
 
+test("la copia inmediata de poleas explica el sistema 3:1 y los límites del modelo", () => {
+  assert.equal(t("es", "pulleySystems.scenario.three-pulley-tackle"), "Sistema de poleas 3:1");
+  assert.equal(t("en", "pulleySystems.scenario.three-pulley-tackle"), "3:1 pulley system");
+  assert.equal(t("es", "pulleySystems.scenarioHelp.three-pulley-tackle"), "Tres tramos de una misma cuerda sostienen el conjunto móvil.");
+  assert.equal(t("en", "pulleySystems.scenarioHelp.three-pulley-tackle"), "Three segments of the same rope support the moving assembly.");
+  for (const locale of ["es", "en"]) {
+    assert.match(t(locale, "pulleySystems.limitsText"), /cuerdas ideales sin masa|ideal massless inextensible ropes/);
+    assert.match(t(locale, "pulleySystems.limitsText"), /inercia rotacional, torque, impacto ni rebote|rotational inertia, torque, impact, and rebound/);
+    assert.match(t(locale, "pulleySystems.limitReached"), /choque no está modelado|collision is not modeled/);
+  }
+});
+
 test("el formato numérico usa Intl sin alterar los inputs computacionales", () => {
   assert.equal(formatNumber("es", 9.8), "9,8");
   assert.equal(formatNumber("en", 9.8), "9.8");
