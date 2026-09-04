@@ -365,7 +365,7 @@
           "Begin with the table system and compare the actual static friction with its maximum value.",
           "Balance an Atwood machine, then change one mass and track the sign of both accelerations.",
           "In the movable-pulley system, compare the load displacement with the free-end displacement.",
-          "In the 3:1 tackle, verify that the counterweight travels three times the load displacement in the opposite direction.",
+          "In the 3:1 pulley system, verify that the counterweight travels three times the load displacement in the opposite direction.",
           "Use the symmetric double Atwood case before exploring an asymmetric set of three masses.",
           "For every scenario, compare the free-body diagrams, Newton equations, and rope constraint with the animation."
         ]
@@ -387,7 +387,7 @@
       "Empieza con el sistema de mesa y compara la fricción estática real con su valor máximo.",
       "Equilibra una máquina de Atwood, cambia después una masa y sigue el signo de ambas aceleraciones.",
       "En la polea móvil, compara el desplazamiento de la carga con el desplazamiento del extremo libre.",
-      "En el polipasto 3:1, comprueba que el contrapeso recorre tres veces el desplazamiento de la carga y en sentido opuesto.",
+      "En el sistema de poleas 3:1, comprueba que el contrapeso recorre tres veces el desplazamiento de la carga y en sentido opuesto.",
       "Usa primero el caso simétrico de Atwood doble antes de explorar tres masas asimétricas.",
       "En cada escenario, contrasta los DCL, las ecuaciones de Newton y la restricción de cuerda con la animación."
     ],

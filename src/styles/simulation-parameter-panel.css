@@ -1,0 +1,35 @@
+.simulation-parameter-panel {
+  box-sizing: border-box;
+  min-width: 0;
+  max-height: min(68dvh, 42rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  scroll-padding-block: 1rem;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 961px) {
+  .simulation-parameter-panel {
+    position: sticky;
+    top: 5.5rem;
+    max-height: calc(100dvh - 7rem);
+  }
+}
+
+@media (max-width: 620px) {
+  .simulation-parameter-panel {
+    position: static;
+    max-height: min(68dvh, 34rem);
+  }
+}
+
+@media print {
+  .simulation-parameter-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
+}

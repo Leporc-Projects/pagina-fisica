@@ -11,7 +11,9 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
   let resizeObserver;
   let removeThemeListener;
   const sketch = (p) => {
-    const pulley = ({ x, y, radius }, colors) => {
+    const canvasHeight = (width) => Math.max(540, Math.min(700, width * .78));
+
+    const pulley = ({ x, y, radius, rotationPhase }, colors) => {
       p.push();
       p.stroke(colors.metal);
       p.strokeWeight(3);
@@ -22,13 +24,17 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       p.strokeWeight(2);
       p.circle(x, y, radius * 1.72);
       p.translate(x, y);
-      // Los radios son estáticos: no se finge una cinemática de no deslizamiento.
+      p.rotate(rotationPhase);
       p.stroke(colors.metal);
       p.strokeWeight(2);
-      p.line(-radius * .68, 0, radius * .68, 0);
-      p.line(0, -radius * .68, 0, radius * .68);
-      p.fill(colors.metal);
+      for (let index = 0; index < 3; index += 1) {
+        p.rotate(Math.PI / 3);
+        p.line(-radius * .66, 0, radius * .66, 0);
+      }
+      p.fill(colors.marker);
       p.noStroke();
+      p.circle(radius * .66, 0, Math.max(5, radius * .16));
+      p.fill(colors.metal);
       p.circle(0, 0, 9);
       p.pop();
     };
@@ -56,11 +62,12 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       p.pop();
     };
 
-    const rope = (points, colors) => {
+    const drawRope = ({ points, style }, colors) => {
       p.noFill();
-      p.stroke(colors.rope);
-      p.strokeWeight(4);
+      p.stroke(style === "secondary" ? colors.ropeSecondary : colors.rope);
+      p.strokeWeight(style === "secondary" ? 5 : 4);
       p.strokeJoin(p.ROUND);
+      p.strokeCap(p.ROUND);
       p.beginShape();
       points.forEach(({ x, y }) => p.vertex(x, y));
       p.endShape();
@@ -77,37 +84,68 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
     };
 
     const support = ({ x, y, width = 64 }, colors) => {
+      p.push();
+      p.rectMode(p.CENTER);
       p.stroke(colors.metal);
-      p.strokeWeight(4);
-      p.line(x - width / 2, y, x + width / 2, y);
-      p.strokeWeight(1);
-      for (let dx = -width / 2 + 6; dx <= width / 2; dx += 12) p.line(x + dx, y, x + dx - 9, y + 9);
+      p.strokeWeight(2);
+      p.fill(colors.hardwareFill);
+      p.rect(x, y, width, 10, 3);
+      p.fill(colors.metal);
+      p.noStroke();
+      p.circle(x - width * .34, y, 4);
+      p.circle(x + width * .34, y, 4);
+      p.pop();
     };
 
-    const anchor = ({ x, y }, colors) => {
+    const anchor = ({ x, y, type }, colors) => {
+      p.push();
       p.stroke(colors.metal);
       p.strokeWeight(3);
-      p.line(x - 10, y, x + 10, y);
-      p.line(x - 8, y, x - 2, y + 7);
-      p.line(x, y, x + 6, y + 7);
+      p.fill(colors.panel);
+      if (type === "fixed") p.line(x, y - 8, x, y);
+      else p.line(x - 8, y, x + 8, y);
+      p.circle(x, y, 9);
+      p.pop();
     };
 
-    const stop = ({ x, y }, colors) => {
-      p.stroke(colors.muted);
+    const table = ({ x, edgeX, y, thickness, legX }, colors) => {
+      p.push();
+      p.stroke(colors.metal);
       p.strokeWeight(2);
-      p.line(x - 12, y, x + 12, y);
-      p.line(x - 8, y, x - 3, y - 6);
-      p.line(x + 2, y, x + 7, y - 6);
+      p.fill(colors.hardwareFill);
+      p.rectMode(p.CORNERS);
+      p.rect(x, y, edgeX, y + thickness, 2);
+      p.rectMode(p.CENTER);
+      p.rect(legX, y + (p.height - 20 - y) / 2, 12, p.height - 20 - y, 2);
+      p.pop();
+    };
+
+    const ropeLabel = ({ tensionLabel, labelPoint, style }, colors) => {
+      if (!tensionLabel || !labelPoint) return;
+      p.push();
+      p.textAlign(p.CENTER, p.CENTER);
+      p.textStyle(p.BOLD);
+      p.textSize(11);
+      const labelWidth = p.textWidth(tensionLabel) + 12;
+      p.rectMode(p.CENTER);
+      p.stroke(style === "secondary" ? colors.ropeSecondary : colors.rope);
+      p.strokeWeight(1);
+      p.fill(colors.panel);
+      p.rect(labelPoint.x, labelPoint.y, labelWidth, 20, 10);
+      p.noStroke();
+      p.fill(colors.text);
+      p.text(tensionLabel, labelPoint.x, labelPoint.y + .5);
+      p.pop();
     };
 
     p.setup = () => {
       const width = Math.max(320, container.clientWidth);
-      p.createCanvas(width, Math.max(480, Math.min(620, width * .72))).parent(container);
+      p.createCanvas(width, canvasHeight(width)).parent(container);
       p.pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
       p.noLoop();
       resizeObserver = new ResizeObserver(() => {
         const nextWidth = Math.max(320, container.clientWidth);
-        p.resizeCanvas(nextWidth, Math.max(480, Math.min(620, nextWidth * .72)));
+        p.resizeCanvas(nextWidth, canvasHeight(nextWidth));
         p.redraw();
       });
       resizeObserver.observe(container);
@@ -122,7 +160,10 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
         muted: cssColor(container, "--text-muted", "#64748b"),
         grid: cssColor(container, "--border", "#d7deea"),
         metal: cssColor(container, "--border-strong", "#64748b"),
+        hardwareFill: cssColor(container, "--surface-raised", "#eef2f7"),
         rope: cssColor(container, "--text-muted", "#475569"),
+        ropeSecondary: cssColor(container, "--data-series-4", "#7c3aed"),
+        marker: cssColor(container, "--accent-secondary", "#b45309"),
         block: cssColor(container, "--accent", "#1769aa"),
         second: cssColor(container, "--data-series-3", "#047857"),
         third: cssColor(container, "--data-series-4", "#7c3aed"),
@@ -144,18 +185,13 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       p.textSize(compact ? 12 : 14);
       p.text(t(locale, `pulleySystems.scenario.${frame.scenarioId}`), 16, 14);
 
-      // Capas: estructura → límites → cuerda → conectores → ruedas → masas.
-      geometry.supports.filter(({ type }) => type === "ceiling").forEach((item) => support(item, colors));
-      geometry.supports.filter(({ type }) => type === "bracket").forEach((item) => polyline(item.points, colors, 5));
-      geometry.stops.forEach((item) => stop(item, colors));
+      // Capas semánticas: soporte fijo → anclajes → cuerdas → herrajes móviles → ruedas → cargas → etiquetas.
+      if (geometry.table) table(geometry.table, colors);
+      geometry.supports.forEach((item) => support(item, colors));
+      geometry.connectors.filter(({ type }) => ["axle", "mount"].includes(type)).forEach(({ points, type }) => polyline(points, colors, type === "mount" ? 6 : 5));
       geometry.anchors.forEach((item) => anchor(item, colors));
-      if (frame.scenarioId === "table-hanging") {
-        p.stroke(colors.metal); p.strokeWeight(6);
-        p.line(geometry.table.x, geometry.table.y, geometry.table.edgeX, geometry.table.y);
-        p.line(geometry.table.legX, geometry.table.y, geometry.table.legX, p.height - 20);
-      }
-      geometry.ropes.forEach((points) => rope(points, colors));
-      geometry.connectors.forEach(({ points, type }) => polyline(points, colors, type === "axle" ? 4 : 3));
+      geometry.ropes.forEach((item) => drawRope(item, colors));
+      geometry.connectors.filter(({ type }) => !["axle", "mount"].includes(type)).forEach(({ points, type }) => polyline(points, colors, type === "lifting-frame" ? 6 : 4));
       geometry.pulleys.forEach((item) => pulley(item, colors));
 
       if (frame.scenarioId === "table-hanging") {
@@ -177,6 +213,8 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
         block(geometry.blocks.m2, "m₂", frame.parameters.m2, colors, colors.second);
         p.fill(colors.muted); p.noStroke(); p.textStyle(p.NORMAL); p.text("Tᴄ = 2Tᴀ", 18, p.height - 36);
       }
+
+      geometry.ropes.forEach((item) => ropeLabel(item, colors));
 
     };
   };

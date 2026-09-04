@@ -15,6 +15,7 @@ import {
 } from "../../utils/kinematics-1d.js";
 import "../../styles/kinematics-simulation.css";
 import "../../styles/simulation-disclosures.css";
+import "../../styles/simulation-parameter-panel.css";
 import SimulationGraphsDisclosure from "./SimulationGraphsDisclosure.astro";
 
 interface Props {
@@ -78,7 +79,7 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
   data-preview={preview ? "true" : undefined}
 >
   <div class="kinematics-simulation__workspace">
-    <aside class="kinematics-controls" aria-labelledby="kinematics-controls-title">
+    <aside class="kinematics-controls simulation-parameter-panel" data-simulation-parameter-panel aria-labelledby="kinematics-controls-title">
       <div class="kinematics-controls__header">
         <p class="academic-label">{t(locale, "simulation.parameters")}</p>
         <h2 id="kinematics-controls-title">{t(locale, "kinematics.configure")}</h2>

@@ -13,6 +13,7 @@ import {
 import SimulationFloatingPlayback from "./SimulationFloatingPlayback.astro";
 import "../../styles/projectile-simulation.css";
 import "../../styles/simulation-disclosures.css";
+import "../../styles/simulation-parameter-panel.css";
 
 interface Props {
   experience?: Record<string, unknown>;
@@ -71,7 +72,7 @@ const displayNumber = (value, digits = 2) => formatNumber(locale, value ?? 0, { 
   data-preview={preview ? "true" : undefined}
 >
   <div class="projectile-simulation__workspace">
-    <aside class="projectile-controls" aria-labelledby="projectile-controls-title">
+    <aside class="projectile-controls simulation-parameter-panel" data-simulation-parameter-panel aria-labelledby="projectile-controls-title">
       <div class="projectile-controls__header">
         <p class="academic-label">{t(locale, "simulation.parameters")}</p>
         <h2 id="projectile-controls-title">{t(locale, "projectile.configure")}</h2>
