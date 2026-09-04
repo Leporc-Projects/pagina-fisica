@@ -96,9 +96,41 @@ test("p5 solo presenta estado calculado por modelos puros", () => {
   assert.doesNotMatch(forces, /drawFbd|drawHistory|freeBodyDiagram|historyGraph/);
   assert.doesNotMatch(circular, /fbdShort|freeBodyDiagram|noHorizontalForce/);
   assert.doesNotMatch(pulley, /utils\/pulley-systems/);
-  assert.doesNotMatch(pulley, /p\.rotate\(/);
+  assert.match(pulley, /p\.rotate\(rotationPhase\)/);
+  assert.doesNotMatch(pulley, /rotationPhase\s*\+=|angle\s*\+=/);
+  assert.doesNotMatch(pulley, /geometry\.stops|const stop\s*=/);
+  const model = source("src/utils/pulley-systems.js");
+  assert.doesNotMatch(model, /rotationPhase|visualRadiusMetres|ropeTravel/);
   for (const renderer of [forces, pulley, source("src/scripts/p5-projectile-renderer.js")]) {
     assert.match(renderer, /listenForSimulationThemeChange/);
+  }
+});
+
+test("las cuatro simulaciones públicas comparten scroll nativo de parámetros sin interceptar la rueda", () => {
+  const publicComponents = [
+    "KinematicsSimulation.astro",
+    "ProjectileSimulation.astro",
+    "ForcesFrictionSimulation.astro",
+    "PulleySystemsSimulation.astro",
+  ];
+  for (const componentPath of publicComponents) {
+    const component = source(`src/components/simulations/${componentPath}`);
+    assert.match(component, /class="[^"]*simulation-parameter-panel[^"]*"/);
+    assert.match(component, /data-simulation-parameter-panel/);
+    assert.match(component, /simulation-parameter-panel\.css/);
+  }
+  const archived = source("src/components/simulations/CircularRadialSimulation.astro");
+  assert.doesNotMatch(archived, /simulation-parameter-panel|data-simulation-parameter-panel/);
+  const styles = source("src/styles/simulation-parameter-panel.css");
+  assert.match(styles, /overflow-y:\s*auto/);
+  assert.match(styles, /scrollbar-gutter:\s*stable/);
+  assert.match(styles, /position:\s*sticky/);
+  assert.match(styles, /max-height:\s*calc\(100dvh - 7rem\)/);
+  assert.match(styles, /@media \(max-width: 620px\)[\s\S]*position:\s*static/);
+  assert.match(styles, /overscroll-behavior-y:\s*auto/);
+  for (const runtimePath of ["kinematics-1d.js", "projectile-2d.js", "forces-friction.js", "pulley-systems.js"]) {
+    const runtime = source(`src/scripts/${runtimePath}`);
+    assert.doesNotMatch(runtime, /addEventListener\(["']wheel|onwheel|wheel[\s\S]{0,120}preventDefault/);
   }
 });
 

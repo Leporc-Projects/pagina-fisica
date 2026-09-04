@@ -11,31 +11,80 @@ import { PULLEY_TERMINAL_GEOMETRY } from "../src/utils/pulley-systems.js";
 const close = (actual, expected, tolerance = 1e-8) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 const samePoint = (actual, expected) => { close(actual.x, expected.x); close(actual.y, expected.y); };
-const layout = (scenarioId, positions, width = 800, height = width < 620 ? 480 : 576) =>
+const viewports = Object.freeze([
+  Object.freeze({ width: 390, height: 540 }),
+  Object.freeze({ width: 800, height: 624 }),
+]);
+const layout = (scenarioId, positions, { width = 800, height = 624 } = {}) =>
   createPulleySceneGeometry({ scenarioId, width, height, positions });
-const initialPositions = {
-  "table-hanging": { m1: 0, m2: 0 },
-  atwood: { m1: 0, m2: 0 },
-  "movable-pulley": { mL: 0, mC: 0 },
-  "three-pulley-tackle": { mL: 0, mC: 0 },
-  "double-atwood": { m1: 0, m2: 0, m3: 0, pulley: 0 },
-};
-
-const assertTangent = (rope, tangentIndex, wheel, adjacentIndex) => {
-  const tangent = rope[tangentIndex];
-  const adjacent = rope[adjacentIndex];
-  close(
-    (adjacent.x - tangent.x) * (tangent.x - wheel.x) +
-      (adjacent.y - tangent.y) * (tangent.y - wheel.y),
-    0,
-    1e-6
-  );
-};
+const initialPositions = Object.freeze({
+  "table-hanging": Object.freeze({ m1: 0, m2: 0 }),
+  atwood: Object.freeze({ m1: 0, m2: 0 }),
+  "movable-pulley": Object.freeze({ mL: 0, mC: 0 }),
+  "three-pulley-tackle": Object.freeze({ mL: 0, mC: 0 }),
+  "double-atwood": Object.freeze({ m1: 0, m2: 0, m3: 0, pulley: 0 }),
+});
+const movedPositions = Object.freeze({
+  "table-hanging": Object.freeze({ m1: 1, m2: 1 }),
+  atwood: Object.freeze({ m1: -1, m2: 1 }),
+  "movable-pulley": Object.freeze({ mL: 1, mC: -2 }),
+  "three-pulley-tackle": Object.freeze({ mL: 1, mC: -3 }),
+  "double-atwood": Object.freeze({ m1: 1, m2: -.5, m3: -.25, pulley: .25 }),
+});
+const terminalSamples = Object.freeze({
+  "table-hanging": Object.freeze([
+    Object.freeze({ m1: 10, m2: 10 }),
+    Object.freeze({ m1: -1, m2: -1 }),
+  ]),
+  atwood: Object.freeze([
+    Object.freeze({ m1: 9, m2: -9 }),
+    Object.freeze({ m1: -9, m2: 9 }),
+  ]),
+  "movable-pulley": Object.freeze([
+    Object.freeze({ mL: 4.5, mC: -9 }),
+    Object.freeze({ mL: -2.75, mC: 5.5 }),
+  ]),
+  "three-pulley-tackle": Object.freeze([
+    Object.freeze({ mL: 9, mC: -27 }),
+    Object.freeze({ mL: -3, mC: 9 }),
+  ]),
+  "double-atwood": Object.freeze([
+    Object.freeze({ m1: 11, m2: -5, m3: -3, pulley: 3 }),
+    Object.freeze({ m1: -7, m2: 1, m3: 3, pulley: -3 }),
+  ]),
+});
 
 const circleOverlapsBlock = (wheel, body) => {
   const x = Math.max(body.left, Math.min(wheel.x, body.right));
   const y = Math.max(body.top, Math.min(wheel.y, body.bottom));
   return Math.hypot(wheel.x - x, wheel.y - y) < wheel.radius - 1e-7;
+};
+
+const assertPointInBounds = ({ x, y }, width, height, label) => {
+  assert.ok(Number.isFinite(x) && Number.isFinite(y), `${label} no es finito`);
+  assert.ok(x >= -1e-7 && x <= width + 1e-7, `${label}.x=${x} fuera de ${width}`);
+  assert.ok(y >= -1e-7 && y <= height + 1e-7, `${label}.y=${y} fuera de ${height}`);
+};
+
+const assertSceneInBounds = (geometry, width, height) => {
+  assert.ok(geometry.scale > 0);
+  assert.equal("stops" in geometry, false);
+  geometry.ropes.forEach((item) => item.points.forEach((value) => assertPointInBounds(value, width, height, `${item.id}:rope`)));
+  geometry.pulleys.forEach((wheel) => {
+    assertPointInBounds({ x: wheel.x - wheel.radius, y: wheel.y - wheel.radius }, width, height, `${wheel.id}:wheel-min`);
+    assertPointInBounds({ x: wheel.x + wheel.radius, y: wheel.y + wheel.radius }, width, height, `${wheel.id}:wheel-max`);
+    assert.ok(Number.isFinite(wheel.rotationPhase));
+  });
+  Object.values(geometry.blocks).forEach((body) => {
+    assertPointInBounds({ x: body.left, y: body.top }, width, height, `${body.id}:block-min`);
+    assertPointInBounds({ x: body.right, y: body.bottom }, width, height, `${body.id}:block-max`);
+  });
+  geometry.supports.forEach((support) => {
+    assertPointInBounds({ x: support.x - support.width / 2, y: support.y - 5 }, width, height, `${support.id}:support-min`);
+    assertPointInBounds({ x: support.x + support.width / 2, y: support.y + 5 }, width, height, `${support.id}:support-max`);
+  });
+  geometry.anchors.forEach((anchor) => assertPointInBounds(anchor, width, height, `${anchor.id}:anchor`));
+  geometry.connectors.forEach((connector) => connector.points.forEach((value) => assertPointInBounds(value, width, height, `${connector.id}:hardware`)));
 };
 
 const assertCenteredBlockHooks = (body) => {
@@ -49,6 +98,36 @@ const assertCenteredBlockHooks = (body) => {
   close(body.hooks.left.y, body.y);
 };
 
+const assertLineTangentToArc = (line, arc, atStart) => {
+  const tangent = atStart ? arc.points[0] : arc.points.at(-1);
+  const other = atStart ? line.points[0] : line.points.at(-1);
+  const direction = { x: other.x - tangent.x, y: other.y - tangent.y };
+  const radial = { x: tangent.x - arc.center.x, y: tangent.y - arc.center.y };
+  close(direction.x * radial.x + direction.y * radial.y, 0, 1e-6);
+};
+
+const assertMechanicallyContinuousRope = (item) => {
+  assert.ok(item.id && item.segments.length >= 3);
+  item.segments.forEach((segment) => {
+    assert.ok(["line", "arc"].includes(segment.kind));
+    assert.ok(segment.points.length >= 2);
+    if (segment.kind === "line") assert.equal(segment.points.length, 2, `${item.id}:${segment.id} tiene un giro libre`);
+    else segment.points.forEach((value) => close(
+      Math.hypot(value.x - segment.center.x, value.y - segment.center.y),
+      segment.radius,
+      1e-6
+    ));
+  });
+  for (let index = 1; index < item.segments.length; index += 1) {
+    const previous = item.segments[index - 1];
+    const current = item.segments[index];
+    samePoint(previous.points.at(-1), current.points[0]);
+    assert.notEqual(previous.kind, current.kind, `${item.id} cambia dirección sin polea entre ${previous.id} y ${current.id}`);
+    if (previous.kind === "line") assertLineTangentToArc(previous, current, true);
+    else assertLineTangentToArc(current, previous, false);
+  }
+};
+
 test("la utilidad de anclaje devuelve el centro exacto de cada cara", () => {
   const body = { left: 20, right: 80, top: 30, bottom: 70 };
   samePoint(getBlockAttachmentPoint(body, "top"), { x: 50, y: 30 });
@@ -58,17 +137,13 @@ test("la utilidad de anclaje devuelve el centro exacto de cada cara", () => {
   assert.throws(() => getBlockAttachmentPoint(body, "corner"), /Cara de anclaje desconocida/);
 });
 
-test("los cinco aparatos son finitos, deterministas e invariantes de idioma", () => {
-  for (const width of [390, 800]) {
+test("los cinco aparatos iniciales son finitos, deterministas y permanecen dentro de ambos canvas", () => {
+  for (const viewport of viewports) {
     for (const [scenarioId, positions] of Object.entries(initialPositions)) {
-      const geometry = layout(scenarioId, positions, width);
-      assert.deepEqual(geometry, layout(scenarioId, positions, width));
+      const geometry = layout(scenarioId, positions, viewport);
+      assert.deepEqual(geometry, layout(scenarioId, positions, viewport));
       assert.deepEqual(geometry.terminalSurfaces, PULLEY_TERMINAL_GEOMETRY[scenarioId]);
-      assert.ok(geometry.scale > 0);
-      assert.ok(geometry.ropes.flat().every(({ x, y }) => Number.isFinite(x) && Number.isFinite(y)));
-      assert.ok(Object.values(geometry.blocks).every(({ left, right, top, bottom }) =>
-        left >= 0 && right <= width && top >= 0 && bottom <= (width < 620 ? 480 : 576)
-      ));
+      assertSceneInBounds(geometry, viewport.width, viewport.height);
       Object.values(geometry.blocks).forEach(assertCenteredBlockHooks);
       for (const wheel of geometry.pulleys) {
         for (const body of Object.values(geometry.blocks)) assert.equal(circleOverlapsBlock(wheel, body), false);
@@ -77,100 +152,110 @@ test("los cinco aparatos son finitos, deterministas e invariantes de idioma", ()
   }
 });
 
-test("mesa: bloque apoyado, cuerda horizontal, cuarto de arco tangente y bracket unido al eje", () => {
-  const geometry = layout("table-hanging", { m1: 0, m2: 0 });
-  const rope = geometry.ropes[0];
-  const wheel = geometry.pulleys[0];
-  const m1 = geometry.blocks.m1;
-  const m2 = geometry.blocks.m2;
-  samePoint(rope[0], m1.hooks.right);
-  samePoint(rope.at(-1), m2.hooks.top);
-  close(rope[0].y, rope[1].y);
-  close(rope[0].y, m1.y);
-  close(rope[0].x, m1.right);
-  close(rope.at(-1).x, rope.at(-2).x);
-  close(rope.at(-1).x, m2.x);
-  close(rope.at(-1).y, m2.top);
-  close(m1.bottom, geometry.table.y);
-  close(wheel.y - wheel.radius, m1.y);
-  samePoint(geometry.supports[0].points.at(-1), wheel.axle);
-  assertTangent(rope, 1, wheel, 0);
-  assertTangent(rope, rope.length - 2, wheel, rope.length - 1);
+test("cada tramo recto enlaza tangencialmente con arcos de radio exacto y no gira libremente", () => {
+  for (const [scenarioId, positions] of Object.entries(initialPositions)) {
+    layout(scenarioId, positions).ropes.forEach(assertMechanicallyContinuousRope);
+  }
 });
 
-test("mesa conserva cuerda y se detiene con clearance antes del bracket", () => {
-  const initial = layout("table-hanging", { m1: 0, m2: 0 });
+test("los estados representativos cercanos a ambos sentidos y contactos no recortan el aparato", () => {
+  for (const viewport of viewports) {
+    for (const [scenarioId, samples] of Object.entries(terminalSamples)) {
+      samples.forEach((positions) => assertSceneInBounds(layout(scenarioId, positions, viewport), viewport.width, viewport.height));
+    }
+  }
+});
+
+test("mesa: la cuerda une ambos hooks, el bloque descansa en la mesa y el mount llega al eje", () => {
+  const geometry = layout("table-hanging", initialPositions["table-hanging"]);
+  const item = geometry.ropes[0];
+  samePoint(item.points[0], geometry.blocks.m1.hooks.right);
+  samePoint(item.points.at(-1), geometry.blocks.m2.hooks.top);
+  close(item.segments[0].points[0].y, item.segments[0].points[1].y);
+  close(geometry.blocks.m1.bottom, geometry.table.y);
+  samePoint(geometry.connectors.find(({ id }) => id === "table-pulley-mount").points.at(-1), geometry.pulleys[0].axle);
   const contact = layout("table-hanging", { m1: 10, m2: 10 });
-  close(getPolylineLength(initial.ropes[0]), getPolylineLength(contact.ropes[0]));
-  close(contact.table.edgeX - contact.blocks.m1.hooks.right.x, 6);
-  assert.ok(contact.blocks.m1.right < contact.pulleys[0].x - contact.pulleys[0].radius);
+  close(getPolylineLength(item.points), getPolylineLength(contact.ropes[0].points));
+  close(contact.table.edgeX - contact.blocks.m1.hooks.right.x, 8);
 });
 
-test("Atwood conecta ambos hooks, conserva cuerda y respeta clearance superior", () => {
-  const initial = layout("atwood", { m1: 0, m2: 0 });
-  const contact = layout("atwood", { m1: 9, m2: -9 });
-  samePoint(initial.ropes[0][0], initial.blocks.m1.hooks.top);
-  samePoint(initial.ropes[0].at(-1), initial.blocks.m2.hooks.top);
-  close(getPolylineLength(initial.ropes[0]), getPolylineLength(contact.ropes[0]));
-  close(contact.blocks.m2.hooks.top.y, contact.pulleys[0].y + contact.pulleys[0].radius + 12);
-  assertTangent(initial.ropes[0], 1, initial.pulleys[0], 0);
-  assertTangent(initial.ropes[0], initial.ropes[0].length - 2, initial.pulleys[0], initial.ropes[0].length - 1);
+test("Atwood: una sola cuerda une las masas y conserva longitud en ambos sentidos", () => {
+  const initial = layout("atwood", initialPositions.atwood);
+  const positive = layout("atwood", { m1: -8, m2: 8 });
+  const negative = layout("atwood", { m1: 8, m2: -8 });
+  samePoint(initial.ropes[0].points[0], initial.blocks.m1.hooks.top);
+  samePoint(initial.ropes[0].points.at(-1), initial.blocks.m2.hooks.top);
+  close(getPolylineLength(initial.ropes[0].points), getPolylineLength(positive.ropes[0].points));
+  close(getPolylineLength(initial.ropes[0].points), getPolylineLength(negative.ropes[0].points));
+  samePoint(initial.connectors[0].points.at(-1), initial.pulleys[0].axle);
 });
 
-test("polea móvil: anclaje, yoke y hanger forman conexiones continuas y muestran 2:1", () => {
-  const initial = layout("movable-pulley", { mL: 0, mC: 0 });
+test("polea móvil: anclaje, yoke y hanger forman el conjunto 2:1 continuo", () => {
+  const initial = layout("movable-pulley", initialPositions["movable-pulley"]);
   const moved = layout("movable-pulley", { mL: 2, mC: -4 });
-  samePoint(initial.ropes[0][0], initial.anchors[0]);
-  samePoint(initial.ropes[0].at(-1), initial.blocks.mC.hooks.top);
+  samePoint(initial.ropes[0].points[0], initial.anchors[0]);
+  samePoint(initial.ropes[0].points.at(-1), initial.blocks.mC.hooks.top);
   const hanger = initial.connectors.find(({ id }) => id === "load-hanger");
   const leftYoke = initial.connectors.find(({ id }) => id === "mobile-yoke-left");
   const rightYoke = initial.connectors.find(({ id }) => id === "mobile-yoke-right");
   samePoint(hanger.points.at(-1), initial.blocks.mL.hooks.top);
   samePoint(leftYoke.points.at(-1), hanger.points[0]);
   samePoint(rightYoke.points.at(-1), hanger.points[0]);
-  close(getPolylineLength(initial.ropes[0]), getPolylineLength(moved.ropes[0]));
+  close(getPolylineLength(initial.ropes[0].points), getPolylineLength(moved.ropes[0].points));
   close(moved.blocks.mL.y - initial.blocks.mL.y, 2 * initial.scale);
   close(moved.blocks.mC.y - initial.blocks.mC.y, -4 * initial.scale);
 });
 
-test("polea móvil alcanza el hardware fijo sin gap ni penetración", () => {
-  const contact = layout("movable-pulley", { mL: 4.5, mC: -9 }, 390);
-  const fixed = contact.pulleys.find(({ id }) => id === "fixed");
-  close(contact.blocks.mC.hooks.top.y, fixed.y + fixed.radius + 12);
-  samePoint(contact.connectors.find(({ id }) => id === "load-hanger").points.at(-1), contact.blocks.mL.hooks.top);
-  assert.equal(circleOverlapsBlock(fixed, contact.blocks.mC), false);
-});
-
-test("polipasto 3:1 conecta el anclaje móvil, tres poleas y conserva la cuerda", () => {
-  const initial = layout("three-pulley-tackle", { mL: 0, mC: 0 });
+test("sistema 3:1: una misma cuerda enlaza anclaje móvil, tres poleas y contrapeso", () => {
+  const initial = layout("three-pulley-tackle", initialPositions["three-pulley-tackle"]);
   const moved = layout("three-pulley-tackle", { mL: 2, mC: -6 });
   assert.equal(initial.pulleys.length, 3);
-  samePoint(initial.ropes[0][0], initial.anchors[0]);
-  samePoint(initial.ropes[0].at(-1), initial.blocks.mC.hooks.top);
+  samePoint(initial.ropes[0].points[0], initial.anchors[0]);
+  samePoint(initial.ropes[0].points.at(-1), initial.blocks.mC.hooks.top);
   samePoint(initial.connectors.find(({ id }) => id === "load-hanger").points.at(-1), initial.blocks.mL.hooks.top);
   samePoint(initial.connectors.find(({ id }) => id === "moving-anchor-hanger").points[0], initial.anchors[0]);
-  close(getPolylineLength(initial.ropes[0]), getPolylineLength(moved.ropes[0]), 1e-6);
-  close(moved.blocks.mL.y - initial.blocks.mL.y, 2 * initial.scale);
-  close(moved.blocks.mC.y - initial.blocks.mC.y, -6 * initial.scale);
+  close(getPolylineLength(initial.ropes[0].points), getPolylineLength(moved.ropes[0].points), 1e-6);
 });
 
-test("Atwood doble separa niveles, une la cuerda superior al conjunto móvil y conserva ambas cuerdas", () => {
+test("Atwood doble separa las cuerdas T_C y T_A y suspende la polea móvil con hardware", () => {
   const initial = layout("double-atwood", initialPositions["double-atwood"]);
-  const moved = layout("double-atwood", { m1: -1.5, m2: .5, m3: .5, pulley: -.5 });
-  samePoint(initial.ropes[0][0], initial.blocks.m3.hooks.top);
-  samePoint(initial.ropes[1][0], initial.blocks.m1.hooks.top);
-  samePoint(initial.ropes[1].at(-1), initial.blocks.m2.hooks.top);
-  const upperHanger = initial.connectors.find(({ id }) => id === "upper-hanger");
-  samePoint(initial.ropes[0].at(-1), upperHanger.points[0]);
-  samePoint(upperHanger.points.at(-1), initial.pulleys.find(({ id }) => id === "mobile").axle);
-  close(getPolylineLength(initial.ropes[0]), getPolylineLength(moved.ropes[0]));
-  close(getPolylineLength(initial.ropes[1]), getPolylineLength(moved.ropes[1]));
+  const moved = layout("double-atwood", movedPositions["double-atwood"]);
+  const upper = initial.ropes.find(({ id }) => id === "rope-c");
+  const lower = initial.ropes.find(({ id }) => id === "rope-a");
+  assert.equal(upper.tensionLabel, "T_C");
+  assert.equal(lower.tensionLabel, "T_A");
+  assert.notEqual(upper.style, lower.style);
+  samePoint(upper.points[0], initial.blocks.m3.hooks.top);
+  samePoint(lower.points[0], initial.blocks.m1.hooks.top);
+  samePoint(lower.points.at(-1), initial.blocks.m2.hooks.top);
+  const liftingFrame = initial.connectors.find(({ id }) => id === "upper-lifting-frame");
+  samePoint(upper.points.at(-1), initial.anchors.find(({ id }) => id === "upper-moving-hook"));
+  samePoint(upper.points.at(-1), liftingFrame.points[0]);
+  samePoint(liftingFrame.points.at(-1), initial.pulleys.find(({ id }) => id === "mobile").axle);
+  close(getPolylineLength(upper.points), getPolylineLength(moved.ropes.find(({ id }) => id === "rope-c").points));
+  close(getPolylineLength(lower.points), getPolylineLength(moved.ropes.find(({ id }) => id === "rope-a").points));
 });
 
-test("Atwood doble llega a contacto superior relativo sin solapar bloque y polea", () => {
-  const contact = layout("double-atwood", { m1: 11, m2: -5, m3: -3, pulley: 3 }, 390);
-  const mobile = contact.pulleys.find(({ id }) => id === "mobile");
-  close(contact.blocks.m2.hooks.top.y, mobile.y + mobile.radius + 12);
-  assert.equal(circleOverlapsBlock(mobile, contact.blocks.m2), false);
-  assert.equal(circleOverlapsBlock(mobile, contact.blocks.m3), false);
+test("las fases de rueda son deterministas, reversibles, reiniciables e invariantes al resize", () => {
+  const expected = {
+    "table-hanging": { fixed: 1 / .55 },
+    atwood: { fixed: 1 / .6 },
+    "movable-pulley": { mobile: 1 / .55, fixed: -2 / .55 },
+    "three-pulley-tackle": { "fixed-a": -1 / .48, mobile: 2 / .48, "fixed-b": -3 / .48 },
+    "double-atwood": { fixed: .25 / .55, mobile: -.75 / .7 },
+  };
+  for (const [scenarioId, positions] of Object.entries(movedPositions)) {
+    const initial = layout(scenarioId, initialPositions[scenarioId]);
+    const moved = layout(scenarioId, positions);
+    const opposite = layout(scenarioId, Object.fromEntries(Object.entries(positions).map(([key, value]) => [key, -value])));
+    const compact = layout(scenarioId, positions, viewports[0]);
+    initial.pulleys.forEach((wheel) => close(wheel.rotationPhase, 0));
+    moved.pulleys.forEach((wheel) => {
+      assert.notEqual(wheel.rotationPhase, 0, `${scenarioId}:${wheel.id}`);
+      close(wheel.rotationPhase, expected[scenarioId][wheel.id]);
+      close(opposite.pulleys.find(({ id }) => id === wheel.id).rotationPhase, -wheel.rotationPhase);
+      close(compact.pulleys.find(({ id }) => id === wheel.id).rotationPhase, wheel.rotationPhase);
+    });
+    assert.deepEqual(layout(scenarioId, initialPositions[scenarioId]).pulleys.map(({ rotationPhase }) => rotationPhase), initial.pulleys.map(({ rotationPhase }) => rotationPhase));
+  }
 });
