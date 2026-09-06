@@ -61,8 +61,8 @@ test("los controles flotantes conservan labels accesibles bilingües", () => {
 });
 
 test("la copia inmediata de poleas explica el sistema 3:1 y los límites del modelo", () => {
-  assert.equal(t("es", "pulleySystems.scenario.three-pulley-tackle"), "Sistema de poleas 3:1");
-  assert.equal(t("en", "pulleySystems.scenario.three-pulley-tackle"), "3:1 pulley system");
+  assert.equal(t("es", "pulleySystems.scenario.three-pulley-tackle"), "Sistema 3:1 (tres poleas)");
+  assert.equal(t("en", "pulleySystems.scenario.three-pulley-tackle"), "3:1 system (three pulleys)");
   assert.equal(t("es", "pulleySystems.scenarioHelp.three-pulley-tackle"), "Tres tramos de una misma cuerda sostienen el conjunto móvil.");
   assert.equal(t("en", "pulleySystems.scenarioHelp.three-pulley-tackle"), "Three segments of the same rope support the moving assembly.");
   for (const locale of ["es", "en"]) {

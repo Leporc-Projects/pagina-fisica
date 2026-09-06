@@ -83,6 +83,17 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       p.endShape();
     };
 
+    const rigidCarriage = (points, colors) => {
+      polyline(points, colors, 9);
+      p.noFill();
+      p.stroke(colors.hardwareFill);
+      p.strokeWeight(5);
+      p.strokeJoin(p.ROUND);
+      p.beginShape();
+      points.forEach(({ x, y }) => p.vertex(x, y));
+      p.endShape();
+    };
+
     const support = ({ x, y, width = 64 }, colors) => {
       p.push();
       p.rectMode(p.CENTER);
@@ -191,7 +202,10 @@ export const createPulleySystemsP5Renderer = ({ container, getFrame, locale }) =
       geometry.connectors.filter(({ type }) => ["axle", "mount"].includes(type)).forEach(({ points, type }) => polyline(points, colors, type === "mount" ? 6 : 5));
       geometry.anchors.forEach((item) => anchor(item, colors));
       geometry.ropes.forEach((item) => drawRope(item, colors));
-      geometry.connectors.filter(({ type }) => !["axle", "mount"].includes(type)).forEach(({ points, type }) => polyline(points, colors, type === "lifting-frame" ? 6 : 4));
+      geometry.connectors.filter(({ type }) => !["axle", "mount"].includes(type)).forEach(({ points, type }) => {
+        if (type === "carriage") rigidCarriage(points, colors);
+        else polyline(points, colors, type === "lifting-hanger" ? 6 : 4);
+      });
       geometry.pulleys.forEach((item) => pulley(item, colors));
 
       if (frame.scenarioId === "table-hanging") {

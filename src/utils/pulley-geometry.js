@@ -257,11 +257,12 @@ export const createPulleySceneGeometry = ({ scenarioId, width, height, positions
     const bRight = point(fixedB.x + radius, fixedB.y);
     const mobileLeft = point(mobile.x - radius, mobile.y);
     const mobileRight = point(mobile.x + radius, mobile.y);
-    const movingAnchor = point(aLeft.x, mobile.y + radius * .25);
+    const carriageY = mobile.y + radius + 14;
+    const movingAnchor = point(aLeft.x, carriageY);
+    const carriageHub = point(mobile.x, carriageY);
     const mCHook = point(bRight.x, topContact + (27 + positions.mC) * scale);
     const mC = block("mC", mCHook.x, mCHook.y + blockHeight / 2, compact ? 50 : 58, blockHeight);
-    const yokeBottom = point(mobile.x, mobile.y + radius + 14);
-    const loadHook = point(mobile.x, yokeBottom.y + (compact ? 22 : 28));
+    const loadHook = point(mobile.x, carriageHub.y + (compact ? 22 : 28));
     const mL = block("mL", loadHook.x, loadHook.y + blockHeight / 2, compact ? 66 : 78, blockHeight);
     return freezeScene({
       scenarioId,
@@ -277,35 +278,36 @@ export const createPulleySceneGeometry = ({ scenarioId, width, height, positions
       ])],
       pulleys: [fixedA, mobile, fixedB],
       blocks: { mL, mC },
-      supports: [beam("ceiling-beam", mobileX, beamY, 6 * radius + (compact ? 28 : 38))],
+      supports: [
+        beam("fixed-mount-a", fixedA.x, beamY, compact ? 58 : 72),
+        beam("fixed-mount-b", fixedB.x, beamY, compact ? 58 : 72),
+      ],
       anchors: [Object.freeze({ id: "moving-rope-anchor", type: "moving", ...movingAnchor })],
       connectors: [
         path("fixed-axle-a", [point(fixedA.x, beamY + 5), fixedA.axle], "axle"),
         path("fixed-axle-b", [point(fixedB.x, beamY + 5), fixedB.axle], "axle"),
-        path("mobile-yoke-left", [point(mobile.x - radius * .58, mobile.y), point(mobile.x - radius * .58, yokeBottom.y), yokeBottom], "yoke"),
-        path("mobile-yoke-right", [point(mobile.x + radius * .58, mobile.y), point(mobile.x + radius * .58, yokeBottom.y), yokeBottom], "yoke"),
-        path("moving-anchor-hanger", [movingAnchor, point(movingAnchor.x, yokeBottom.y), yokeBottom], "hanger"),
-        path("load-hanger", [yokeBottom, mL.hooks.top], "hanger"),
+        path("moving-carriage", [movingAnchor, carriageHub, mobile.axle], "carriage"),
+        path("load-hanger", [carriageHub, mL.hooks.top], "hanger"),
       ],
     });
   }
 
   if (scenarioId === "double-atwood") {
-    const fixedRadius = compact ? 27 : 32;
-    const mobileRadius = compact ? 35 : 44;
+    const fixedRadius = compact ? 39 : 46;
+    const mobileRadius = compact ? 29 : 34;
     const blockHeight = compact ? 48 : 56;
     const beamY = compact ? 34 : 40;
-    const fixedY = compact ? 94 : 114;
-    const fixedX = width * (compact ? .28 : .31);
-    const mobileX = width * (compact ? .63 : .64);
+    const fixedY = compact ? 100 : 116;
+    const fixedX = width * (compact ? .34 : .38);
+    const mobileX = fixedX + fixedRadius;
     const topContact = fixedY + fixedRadius + (compact ? 12 : 16);
-    const bottomConstant = fixedY + fixedRadius + 2 * mobileRadius + (compact ? 40 : 48) + blockHeight;
-    const scale = Math.min(compact ? 8.5 : 12, (height - 20 - bottomConstant) / 25);
+    const bottomConstant = fixedY + fixedRadius + 2 * mobileRadius + (compact ? 40 : 52) + blockHeight;
+    const scale = Math.min(compact ? 8 : 11.5, (height - 20 - bottomConstant) / 25);
     const fixed = pulley("fixed", fixedX, fixedY, fixedRadius, {
       ropeTravel: -positions.m3,
       visualRadiusMetres: .55,
     });
-    const mobileY0 = topContact + mobileRadius + (compact ? 14 : 18) + 3.5 * scale;
+    const mobileY0 = topContact + mobileRadius + (compact ? 16 : 20) + 3.5 * scale;
     const mobile = pulley("mobile", mobileX, mobileY0 + positions.pulley * scale, mobileRadius, {
       mobile: true,
       ropeTravel: positions.pulley - positions.m1,
@@ -324,8 +326,7 @@ export const createPulleySceneGeometry = ({ scenarioId, width, height, positions
     const m1 = block("m1", m1Hook.x, m1Hook.y + blockHeight / 2, compact ? 48 : 56, blockHeight);
     const m2 = block("m2", m2Hook.x, m2Hook.y + blockHeight / 2, compact ? 48 : 56, blockHeight);
     const m3 = block("m3", m3Hook.x, m3Hook.y + blockHeight / 2, compact ? 48 : 56, blockHeight);
-    const upperHook = point(fixedRight.x, mobile.y - mobileRadius - (compact ? 14 : 18));
-    const yokeTop = point(mobile.x, upperHook.y);
+    const upperHook = point(mobile.x, mobile.y - mobileRadius - (compact ? 10 : 12));
     return freezeScene({
       scenarioId,
       scale,
@@ -351,13 +352,11 @@ export const createPulleySceneGeometry = ({ scenarioId, width, height, positions
       ],
       pulleys: [fixed, mobile],
       blocks: { m1, m2, m3 },
-      supports: [beam("ceiling-beam", fixed.x, beamY, compact ? 108 : 132)],
+      supports: [beam("upper-fixed-mount", fixed.x, beamY, compact ? 104 : 132)],
       anchors: [Object.freeze({ id: "upper-moving-hook", type: "moving", ...upperHook })],
       connectors: [
         path("fixed-axle-hanger", [point(fixed.x, beamY + 5), fixed.axle], "axle"),
-        path("upper-lifting-frame", [upperHook, yokeTop, mobile.axle], "lifting-frame"),
-        path("mobile-yoke-left", [point(mobile.x - mobileRadius * .58, mobile.y), point(mobile.x - mobileRadius * .58, yokeTop.y), yokeTop], "yoke"),
-        path("mobile-yoke-right", [point(mobile.x + mobileRadius * .58, mobile.y), point(mobile.x + mobileRadius * .58, yokeTop.y), yokeTop], "yoke"),
+        path("upper-pulley-hanger", [upperHook, mobile.axle], "lifting-hanger"),
       ],
     });
   }

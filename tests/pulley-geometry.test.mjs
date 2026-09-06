@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -11,6 +13,7 @@ import { PULLEY_TERMINAL_GEOMETRY } from "../src/utils/pulley-systems.js";
 const close = (actual, expected, tolerance = 1e-8) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 const samePoint = (actual, expected) => { close(actual.x, expected.x); close(actual.y, expected.y); };
+const APPROVED_SOLVER_SHA256 = "3e9c76ce64c37e214946355e974986087d1ed1035d2393cbbccca49cebf11d10";
 const viewports = Object.freeze([
   Object.freeze({ width: 390, height: 540 }),
   Object.freeze({ width: 800, height: 624 }),
@@ -137,6 +140,11 @@ test("la utilidad de anclaje devuelve el centro exacto de cada cara", () => {
   assert.throws(() => getBlockAttachmentPoint(body, "corner"), /Cara de anclaje desconocida/);
 });
 
+test("el solver aprobado permanece byte-for-byte sin cambios", () => {
+  const source = readFileSync(new URL("../src/utils/pulley-systems.js", import.meta.url));
+  assert.equal(createHash("sha256").update(source).digest("hex"), APPROVED_SOLVER_SHA256);
+});
+
 test("los cinco aparatos iniciales son finitos, deterministas y permanecen dentro de ambos canvas", () => {
   for (const viewport of viewports) {
     for (const [scenarioId, positions] of Object.entries(initialPositions)) {
@@ -212,8 +220,21 @@ test("sistema 3:1: una misma cuerda enlaza anclaje móvil, tres poleas y contrap
   assert.equal(initial.pulleys.length, 3);
   samePoint(initial.ropes[0].points[0], initial.anchors[0]);
   samePoint(initial.ropes[0].points.at(-1), initial.blocks.mC.hooks.top);
-  samePoint(initial.connectors.find(({ id }) => id === "load-hanger").points.at(-1), initial.blocks.mL.hooks.top);
-  samePoint(initial.connectors.find(({ id }) => id === "moving-anchor-hanger").points[0], initial.anchors[0]);
+  const carriage = initial.connectors.find(({ id }) => id === "moving-carriage");
+  const loadHanger = initial.connectors.find(({ id }) => id === "load-hanger");
+  assert.deepEqual(initial.supports.map(({ id }) => id), ["fixed-mount-a", "fixed-mount-b"]);
+  assert.equal(initial.connectors.some(({ id }) => id.startsWith("mobile-yoke")), false);
+  samePoint(carriage.points[0], initial.anchors[0]);
+  samePoint(carriage.points.at(-1), initial.pulleys.find(({ id }) => id === "mobile").axle);
+  samePoint(loadHanger.points[0], carriage.points[1]);
+  samePoint(loadHanger.points.at(-1), initial.blocks.mL.hooks.top);
+  const supportingSegments = initial.ropes[0].segments.filter(({ id }) => [
+    "moving-anchor-to-fixed-a",
+    "fixed-a-to-mobile",
+    "mobile-to-fixed-b",
+  ].includes(id));
+  assert.equal(supportingSegments.length, 3);
+  supportingSegments.forEach(({ points }) => close(points[0].x, points[1].x));
   close(getPolylineLength(initial.ropes[0].points), getPolylineLength(moved.ropes[0].points), 1e-6);
 });
 
@@ -228,10 +249,16 @@ test("Atwood doble separa las cuerdas T_C y T_A y suspende la polea móvil con h
   samePoint(upper.points[0], initial.blocks.m3.hooks.top);
   samePoint(lower.points[0], initial.blocks.m1.hooks.top);
   samePoint(lower.points.at(-1), initial.blocks.m2.hooks.top);
-  const liftingFrame = initial.connectors.find(({ id }) => id === "upper-lifting-frame");
+  const fixed = initial.pulleys.find(({ id }) => id === "fixed");
+  const mobile = initial.pulleys.find(({ id }) => id === "mobile");
+  const liftingHanger = initial.connectors.find(({ id }) => id === "upper-pulley-hanger");
   samePoint(upper.points.at(-1), initial.anchors.find(({ id }) => id === "upper-moving-hook"));
-  samePoint(upper.points.at(-1), liftingFrame.points[0]);
-  samePoint(liftingFrame.points.at(-1), initial.pulleys.find(({ id }) => id === "mobile").axle);
+  samePoint(upper.points.at(-1), liftingHanger.points[0]);
+  samePoint(liftingHanger.points.at(-1), mobile.axle);
+  close(fixed.x + fixed.radius, mobile.x);
+  liftingHanger.points.forEach(({ x }) => close(x, mobile.x));
+  assert.equal(initial.connectors.some(({ id }) => id === "upper-lifting-frame" || id.startsWith("mobile-yoke")), false);
+  assert.ok(initial.blocks.m3.right < initial.blocks.m1.left, "m3 y m1 deben conservar carriles visuales separados");
   close(getPolylineLength(upper.points), getPolylineLength(moved.ropes.find(({ id }) => id === "rope-c").points));
   close(getPolylineLength(lower.points), getPolylineLength(moved.ropes.find(({ id }) => id === "rope-a").points));
 });
