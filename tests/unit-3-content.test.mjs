@@ -14,6 +14,9 @@ const sections=()=>Object.values(UNIT_3_CONTENT).flatMap(({sections})=>sections)
 const withoutAria=(mathml)=>mathml.replace(/ aria-label="[^"]*"/,"");
 const replaceStrings=(value)=>typeof value==="string"?"<text>":Array.isArray(value)?value.map(replaceStrings):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,child])=>[key,replaceStrings(child)])):value;
 const finite=(value,seen=new WeakSet())=>{if(typeof value==="number")return Number.isFinite(value);if(!value||typeof value!=="object")return true;if(seen.has(value))return true;seen.add(value);return Object.values(value).every((child)=>finite(child,seen));};
+const vector=({start,end})=>({x:end.x-start.x,y:end.y-start.y});
+const magnitude=({x,y})=>Math.hypot(x,y);
+const close=(actual,expected,tolerance=1e-10)=>assert.ok(Math.abs(actual-expected)<=tolerance,`${actual} ≉ ${expected}`);
 
 test("Unidad 3 conserva los ocho temas y las 27 secciones del paquete",()=>{
   assert.equal(UNIT_3.number,3); assert.equal(UNIT_3.bonusRoute,null);
@@ -48,3 +51,5 @@ test("20 errores y todo el contenido inglés conservan estructura sin fallback",
   const localizedErrors=getLocalizedUnit3ErrorsByTopics(UNIT_3.topics.map(({slug})=>slug),"en");assert.ok(localizedErrors.every((error,index)=>error.description!==UNIT_3_COMMON_ERRORS[index].description&&error.feedback));
   const en=localizeUnit3Content("en");for(const [slug,source] of Object.entries(UNIT_3_CONTENT)){assert.notEqual(en[slug].introduction,source.introduction,slug);assert.deepEqual(en[slug].sections.map(({id,formulas,visualizations,examples,checks})=>({id,formulas,visualizations,examples,checks:checks?.length??0})),source.sections.map(({id,formulas,visualizations,examples,checks})=>({id,formulas,visualizations,examples,checks:checks?.length??0})));en[slug].sections.forEach((section,index)=>assert.notEqual(section.title,source.sections[index].title,`${slug}.${section.id}`));}
 });
+
+test("los diagramas de cables y polea ideal respetan sus invariantes vectoriales",()=>{const equilibrium=UNIT_3_VISUALIZATIONS["equilibrium-two-cables"].props,[left,right,weight]=equilibrium.vectors.map(vector),[leftCable,rightCable]=equilibrium.segments.map(({start,end})=>({x:start.x-end.x,y:start.y-end.y}));close(left.x+right.x+weight.x,0);close(left.y+right.y+weight.y,0);close(magnitude(left),magnitude(right));close(left.x*leftCable.y-left.y*leftCable.x,0);close(right.x*rightCable.y-right.y*rightCable.x,0);assert.ok(left.x*leftCable.x+left.y*leftCable.y>0);assert.ok(right.x*rightCable.x+right.y*rightCable.y>0);const pulley=UNIT_3_VISUALIZATIONS["ideal-rope-pulley"],tensions=pulley.props.vectors.filter(({label})=>label==="T").map(vector);assert.equal(tensions.length,2);close(magnitude(tensions[0]),magnitude(tensions[1]));assert.ok(tensions.every(({x,y})=>Math.abs(x)<1e-10&&y>0));assert.match(pulley.explanation,/esquemáticas.*no una escala cuantitativa/i);});

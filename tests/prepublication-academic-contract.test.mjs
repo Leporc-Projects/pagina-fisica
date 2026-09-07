@@ -87,6 +87,7 @@ test("el corpus prepublicación conserva inventario y superficies académicas co
         const en = adapter.getExample(exampleId, "en");
         assert.ok(es.steps?.length, `${exampleId}:steps`);
         assert.equal(en.steps.length, es.steps.length, `${exampleId}:steps ES/EN`);
+        for (const [locale,example] of [["es",es],["en",en]]) example.steps.forEach((step,index)=>{assert.equal(step.step,index+1,`${exampleId}:${locale}:step ${index+1}`);assert.equal(Number.isInteger(step.step),true,`${exampleId}:${locale}:integer step`);assert.ok(step.title?.trim()&&step.text?.trim(),`${exampleId}:${locale}:step content`);});
         assert.ok(es.conclusion?.trim() && en.conclusion?.trim(), `${exampleId}:conclusion`);
         assert.equal("answer" in es || "interaction" in es || "feedback" in es, false, `${exampleId}:static`);
       }

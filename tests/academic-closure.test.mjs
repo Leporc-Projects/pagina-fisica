@@ -139,6 +139,20 @@ test("las 77 familias generan 100 semillas finitas, deterministas y bilingües",
       assert.equal(en.instanceId, es.instanceId, `${familyId}, seed ${seed}`);
       assert.equal(en.tolerance, es.tolerance, `${familyId}, seed ${seed}`);
       assert.equal(en.expectedUnit, es.expectedUnit, `${familyId}, seed ${seed}`);
+      if (es.interaction.kind !== "singleChoice") {
+        const esFields = es.interaction.kind === "number" ? [es.interaction.field] : es.interaction.fields;
+        const enFields = en.interaction.kind === "number" ? [en.interaction.field] : en.interaction.fields;
+        assert.deepEqual(
+          enFields.map(({ unitLabel, unit }) => unitLabel ?? unit),
+          esFields.map(({ unitLabel, unit }) => localizeAcademicUnitLabel(unitLabel ?? unit, "en")),
+          `${familyId}, seed ${seed}: visible units`,
+        );
+        assert.doesNotMatch(
+          JSON.stringify({ answerDisplay: en.answer.display, units: enFields.map(({ unitLabel, unit }) => unitLabel ?? unit) }),
+          /\b(?:adimensional|sin unidad|unidades)\b/i,
+          `${familyId}, seed ${seed}: Spanish unit leakage`,
+        );
+      }
       assert.equal(finiteTree(es.parameters) && finiteTree(es.answer), true, `${familyId}, seed ${seed}`);
     }
   });

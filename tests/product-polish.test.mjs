@@ -23,6 +23,21 @@ test("mini quices tienen identidad canónica bilingüe y Bonos queda como produc
     "mq-v2-u1-review",
     "mq-v2-u1-polar-coordinates",
   ]);
+  assert.deepEqual([
+    ROUTE_IDS.COURSE_MINI_QUIZ_TOOLS_VECTORS,
+    ROUTE_IDS.COURSE_MINI_QUIZ_KINEMATICS,
+    ROUTE_IDS.COURSE_MINI_QUIZ_MODELS_PROJECTILES,
+    ROUTE_IDS.COURSE_MINI_QUIZ_MOTION_2D_CIRCULAR_RELATIVE,
+    ROUTE_IDS.COURSE_MINI_QUIZ_UNIT_1_REVIEW,
+    ROUTE_IDS.COURSE_MINI_QUIZ_POLAR_COORDINATES,
+  ].map((id)=>getLocalizedPath(id,"en")),[
+    "/en/basic-physics-1/mini-quizzes/herramientas-vectores",
+    "/en/basic-physics-1/mini-quizzes/cinematica",
+    "/en/basic-physics-1/mini-quizzes/modelos-proyectiles",
+    "/en/basic-physics-1/mini-quizzes/movimiento-2d-circular-relativo",
+    "/en/basic-physics-1/mini-quizzes/repaso-unidad-1",
+    "/en/basic-physics-1/mini-quizzes/coordenadas-polares",
+  ]);
   assert.match(read("docs/BONUSES_PRODUCT_VISION.md"), /producto futuro distinto/);
 });
 

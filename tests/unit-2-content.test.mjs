@@ -102,3 +102,5 @@ test("visualizaciones y common errors localizan presentación sin cambiar geomet
   assert.deepEqual(localizedErrors.map(({ id, topic, subtopic }) => ({ id, topic, subtopic })), UNIT_2_COMMON_ERRORS.map(({ id, topic, subtopic }) => ({ id, topic, subtopic })));
   assert.ok(localizedErrors.every((error, index) => error.description !== UNIT_2_COMMON_ERRORS[index].description && error.feedback));
 });
+
+test("el DCL horizontal muestra soporte y peso iguales y opuestos",()=>{const vectors=UNIT_2_VISUALIZATIONS["free-body-correct"].props.vectors,force=(label)=>{const {start,end}=vectors.find((vector)=>vector.label===label);return{x:end.x-start.x,y:end.y-start.y};},support=force("soporte"),weight=force("peso"),hand=force("mano sobre caja");assert.ok(Math.abs(Math.hypot(support.x,support.y)-Math.hypot(weight.x,weight.y))<1e-10);assert.ok(Math.abs(support.x+weight.x)<1e-10&&Math.abs(support.y+weight.y)<1e-10);assert.ok(hand.x>0&&Math.abs(hand.y)<1e-10);});
