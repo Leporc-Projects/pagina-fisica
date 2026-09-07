@@ -185,7 +185,7 @@ export const UNIT_2_VISUALIZATIONS = {
       rectangles: [{ x: 2.3, y: 1.8, width: 1.4, height: 1.2, label: "caja", style: "region", labelPosition: "above" }],
       vectors: [
         { start: { x: 3, y: 2.4 }, end: { x: 3, y: 4.3 }, label: "soporte", style: "primary" },
-        { start: { x: 3, y: 2.4 }, end: { x: 3, y: 0.3 }, label: "peso", style: "secondary" },
+        { start: { x: 3, y: 2.4 }, end: { x: 3, y: 0.5 }, label: "peso", style: "secondary" },
         { start: { x: 3, y: 2.4 }, end: { x: 4.6, y: 2.4 }, label: "mano sobre caja", style: "tertiary" },
       ],
     }

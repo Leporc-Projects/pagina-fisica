@@ -33,16 +33,16 @@ export const UNIT_3_VISUALIZATIONS = {
     "Una lámpara central recibe dos tensiones inclinadas simétricas y su peso hacia abajo.",
     {
       xDomain: [-1, 7],
-      yDomain: [-0.85, 4.45],
+      yDomain: [-1.4, 4.45],
       circles: [{ center: { x: 3, y: 1.4 }, radius: 0.45, label: "lámpara", style: "region" }],
       segments: [
         { start: { x: 0.8, y: 4.2 }, end: { x: 3, y: 1.4 }, style: "reference" },
         { start: { x: 5.2, y: 4.2 }, end: { x: 3, y: 1.4 }, style: "reference" },
       ],
       vectors: [
-        { start: { x: 3, y: 1.4 }, end: { x: 1.4, y: 3.45 }, label: "T izquierda", style: "primary" },
-        { start: { x: 3, y: 1.4 }, end: { x: 4.6, y: 3.45 }, label: "T derecha", style: "secondary" },
-        { start: { x: 3, y: 1.4 }, end: { x: 3, y: -0.3 }, label: "peso", style: "tertiary" },
+        { start: { x: 3, y: 1.4 }, end: { x: 2.01, y: 2.66 }, label: "T izquierda", style: "primary" },
+        { start: { x: 3, y: 1.4 }, end: { x: 3.99, y: 2.66 }, label: "T derecha", style: "secondary" },
+        { start: { x: 3, y: 1.4 }, end: { x: 3, y: -1.12 }, label: "peso", style: "tertiary", labelPosition: "right" },
       ],
     }
   ),
@@ -76,9 +76,9 @@ export const UNIT_3_VISUALIZATIONS = {
   "ideal-rope-pulley": diagram(
     "ideal-rope-pulley",
     "free-body",
-    "La cuerda ideal transmite la misma magnitud T a ambos lados y obliga a aceleraciones de igual magnitud; los pesos corresponden a sistemas distintos.",
+    "La cuerda ideal transmite la misma magnitud T a ambos lados y obliga a aceleraciones de igual magnitud. Las flechas de peso son esquemáticas: solo comunican dirección, no una escala cuantitativa respecto a T.",
     "Cuerda y polea ideales",
-    "Dos masas colgantes unidas por una cuerda sobre una polea muestran tensión hacia arriba y peso hacia abajo en cada masa.",
+    "Dos masas colgantes unidas por una cuerda sobre una polea muestran tensiones iguales hacia arriba y pesos esquemáticos hacia abajo.",
     {
       xDomain: [-1.5, 7.45],
       yDomain: [-1.15, 4.75],
@@ -95,7 +95,7 @@ export const UNIT_3_VISUALIZATIONS = {
       vectors: [
         { start: { x: 1.5, y: 1.5 }, end: { x: 1.5, y: 2.7 }, label: "T", style: "primary" },
         { start: { x: 1.5, y: 0.7 }, end: { x: 1.5, y: -0.2 }, label: "m₁g", style: "tertiary" },
-        { start: { x: 4.5, y: 1.2 }, end: { x: 4.5, y: 2.5 }, label: "T", style: "secondary" },
+        { start: { x: 4.5, y: 1.2 }, end: { x: 4.5, y: 2.4 }, label: "T", style: "secondary" },
         { start: { x: 4.5, y: 0.4 }, end: { x: 4.5, y: -0.5 }, label: "m₂g", style: "tertiary" },
       ],
     }

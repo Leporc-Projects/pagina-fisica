@@ -1,6 +1,7 @@
 import { assertSupportedLocale } from "../../../i18n/config.js";
 import { t } from "../../../i18n/index.js";
 import { generateFamilyInstance } from "../../../utils/exercise-families.js";
+import { localizeAcademicExerciseUnitLabels } from "../localize-unit-label.js";
 import { UNIT_2_EXERCISE_FAMILIES } from "./families.js";
 import { FAMILY_OBJECTIVES_EN, FAMILY_PRESENTERS_EN } from "./i18n/families.en.js";
 
@@ -27,6 +28,7 @@ export const getLocalizedUnit2ExerciseFamilies = (locale) => UNIT_2_EXERCISE_FAM
 
 const localizeInstance = (instance, locale) => {
   if (locale === "es") return instance;
+  instance = localizeAcademicExerciseUnitLabels(instance, locale);
   const translated = required(FAMILY_PRESENTERS_EN[instance.familyId], `${instance.familyId}.presenter`)(instance);
   const family = localizeUnit2ExerciseFamily(UNIT_2_EXERCISE_FAMILIES.find((candidate) => candidate.id === instance.familyId), locale);
   const fields = instance.interaction.kind === "number" ? [instance.interaction.field] : instance.interaction.fields;

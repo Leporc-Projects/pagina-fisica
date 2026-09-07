@@ -425,6 +425,7 @@ export default Object.freeze({
   "forcesFriction.analysis": "Análisis de fuerzas",
   "forcesFriction.fbdTitle": "Diagrama de cuerpo libre",
   "forcesFriction.fbdDescription": "Bloque aislado con peso, normal, fuerza aplicada y fricción, orientado respecto a la superficie.",
+  "forcesFriction.fbdScaleNote": "Las flechas comparten una escala lineal dentro del DCL actual; las lecturas numéricas son la referencia.",
   "forcesFriction.resolveWeight": "Descomponer el peso",
   "forcesFriction.componentsNotForces": "Las componentes son proyecciones del peso, no fuerzas adicionales.",
   "forcesFriction.liveModel": "Sustitución actual",

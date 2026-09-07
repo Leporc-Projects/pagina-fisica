@@ -13,9 +13,8 @@ import {
   stepForcesFriction,
 } from "../utils/forces-friction.js";
 import {
-  createInclinedForceFrame,
+  createForcesFrictionFbdGeometry,
   createRightAngleMarker,
-  resolveWeightInInclinedFrame,
 } from "../utils/force-frame-geometry.js";
 import { createForcesFrictionP5Renderer } from "./p5-forces-friction-renderer.js";
 import { initializeSimulationFloatingPlayback } from "./simulation-floating-playback.js";
@@ -102,37 +101,33 @@ const createRuntime = async (root, suppliedExperience) => {
     if (message) announce(message);
   };
 
-  const arrowVector = (origin, vector) => {
-    const magnitude = Math.hypot(vector.x, vector.y);
-    if (magnitude < 1e-9) return { x1: origin.x, y1: origin.y, x2: origin.x, y2: origin.y };
-    const length = Math.min(82, 25 + Math.sqrt(magnitude) * 5);
-    return { x1: origin.x, y1: origin.y, x2: origin.x + vector.x / magnitude * length, y2: origin.y + vector.y / magnitude * length };
-  };
+  const arrowVector = (origin, vector) => ({
+    x1: origin.x,
+    y1: origin.y,
+    x2: origin.x + vector.x,
+    y2: origin.y + vector.y,
+  });
   const updateFbd = () => {
     const panel = root.querySelector(".dynamics-external-fbd");
     if (panel instanceof HTMLElement) panel.hidden = !runtime.toggles.fbd;
     const svg = root.querySelector("[data-forces-fbd]");
     if (!(svg instanceof SVGElement)) return;
-    const { tangent, outward, applied: appliedDirection } = createInclinedForceFrame(
-      runtime.parameters.beta,
-      runtime.parameters.alpha
-    );
-    const weight = resolveWeightInInclinedFrame(
-      runtime.parameters.m,
-      runtime.parameters.g,
-      runtime.parameters.beta
-    );
+    const geometry = createForcesFrictionFbdGeometry({
+      ...runtime.parameters,
+      normal: runtime.readings.normal,
+      friction: runtime.readings.friction,
+    });
     const center = { x: 180, y: 127 };
     const body = svg.querySelector("[data-fbd-body]");
     const orientation = svg.querySelector("[data-fbd-orientation]");
     body?.setAttribute("transform", `rotate(${-runtime.parameters.beta} 180 127)`);
     orientation?.setAttribute("transform", `rotate(${-runtime.parameters.beta} 180 127)`);
-    setSvgArrow(svg, '[data-fbd-arrow="applied"]', arrowVector(center, { x: appliedDirection.x * runtime.parameters.F, y: appliedDirection.y * runtime.parameters.F }), { x: 7, y: -6 });
-    setSvgArrow(svg, '[data-fbd-arrow="normal"]', arrowVector(center, { x: outward.x * runtime.readings.normal, y: outward.y * runtime.readings.normal }), { x: 7, y: -6 });
-    setSvgArrow(svg, '[data-fbd-arrow="friction"]', arrowVector(center, { x: tangent.x * runtime.readings.friction, y: tangent.y * runtime.readings.friction }), { x: 7, y: -6 });
-    setSvgArrow(svg, '[data-fbd-arrow="weight"]', arrowVector(center, { x: 0, y: runtime.parameters.m * runtime.parameters.g }), { x: 7, y: 12 });
-    setSvgArrow(svg, '[data-fbd-arrow="weightParallel"]', arrowVector(center, weight.parallel), { x: 7, y: 12 });
-    setSvgArrow(svg, '[data-fbd-arrow="weightPerpendicular"]', arrowVector(center, weight.perpendicular), { x: 7, y: 12 });
+    setSvgArrow(svg, '[data-fbd-arrow="applied"]', arrowVector(center, geometry.displayVectors.applied), { x: 7, y: -6 });
+    setSvgArrow(svg, '[data-fbd-arrow="normal"]', arrowVector(center, geometry.displayVectors.normal), { x: 7, y: -6 });
+    setSvgArrow(svg, '[data-fbd-arrow="friction"]', arrowVector(center, geometry.displayVectors.friction), { x: 7, y: -6 });
+    setSvgArrow(svg, '[data-fbd-arrow="weight"]', arrowVector(center, geometry.displayVectors.weight), { x: 7, y: 12 });
+    setSvgArrow(svg, '[data-fbd-arrow="weightParallel"]', arrowVector(center, geometry.displayVectors.weightParallel), { x: 7, y: 12 });
+    setSvgArrow(svg, '[data-fbd-arrow="weightPerpendicular"]', arrowVector(center, geometry.displayVectors.weightPerpendicular), { x: 7, y: 12 });
     const marker = createRightAngleMarker(center, runtime.parameters.beta);
     svg.querySelector("[data-fbd-right-angle]")?.setAttribute(
       "points",

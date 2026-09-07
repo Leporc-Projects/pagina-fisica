@@ -45,3 +45,26 @@ export const createRightAngleMarker = (origin, betaDegrees, size = 13) => {
     Object.freeze({ x: origin.x + outward.x * size, y: origin.y + outward.y * size }),
   ]);
 };
+
+export const createForcesFrictionFbdGeometry = ({ m, g, beta, alpha, F, normal, friction }, maximumLength = 82) => {
+  if (![m, g, beta, alpha, F, normal, friction, maximumLength].every(Number.isFinite) || maximumLength <= 0) {
+    throw new TypeError("La geometría del DCL requiere magnitudes finitas y una longitud máxima positiva.");
+  }
+  const { tangent, outward, applied } = createInclinedForceFrame(beta, alpha);
+  const weight = resolveWeightInInclinedFrame(m, g, beta);
+  const vectors = Object.freeze({
+    applied: Object.freeze({ x: applied.x * F, y: applied.y * F }),
+    normal: Object.freeze({ x: outward.x * normal, y: outward.y * normal }),
+    friction: Object.freeze({ x: tangent.x * friction, y: tangent.y * friction }),
+    weight: Object.freeze({ x: 0, y: m * g }),
+    weightParallel: weight.parallel,
+    weightPerpendicular: weight.perpendicular,
+  });
+  const maximumMagnitude = Math.max(...Object.values(vectors).map(({ x, y }) => Math.hypot(x, y)));
+  const pixelsPerNewton = maximumMagnitude > 0 ? maximumLength / maximumMagnitude : 1;
+  const displayVectors = Object.freeze(Object.fromEntries(Object.entries(vectors).map(([key, vector]) => [
+    key,
+    Object.freeze({ x: vector.x * pixelsPerNewton, y: vector.y * pixelsPerNewton }),
+  ])));
+  return Object.freeze({ vectors, displayVectors, maximumMagnitude, maximumLength, pixelsPerNewton });
+};

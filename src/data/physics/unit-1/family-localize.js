@@ -1,6 +1,7 @@
 import { assertSupportedLocale } from "../../../i18n/config.js";
 import { t } from "../../../i18n/index.js";
 import { generateFamilyInstance } from "../../../utils/exercise-families.js";
+import { localizeAcademicExerciseUnitLabels } from "../localize-unit-label.js";
 import { UNIT_1_EXERCISE_FAMILIES } from "./families.js";
 import { FAMILY_OBJECTIVES_EN, FAMILY_PRESENTERS_EN } from "./i18n/families.en.js";
 
@@ -33,32 +34,33 @@ export const getLocalizedUnit1ExerciseFamilies = (locale) =>
 
 const localizeFamilyInstancePresentation = (instance, locale) => {
   if (locale === "es") return instance;
+  const unitLocalized = localizeAcademicExerciseUnitLabels(instance, locale);
   const presenter = requireTranslation(FAMILY_PRESENTERS_EN[instance.familyId], `${instance.familyId}.presenter`);
-  const translation = presenter(instance);
+  const translation = presenter(unitLocalized);
   const translatedFamily = localizeUnit1ExerciseFamily(UNIT_1_EXERCISE_FAMILIES.find((family) => family.id === instance.familyId), locale);
-  const hints = requireParallelArray(instance.hints, translation.hints, `${instance.familyId}.hints`);
-  const solutionTexts = requireParallelArray(instance.solution, translation.solution, `${instance.familyId}.solution`);
-  const interaction = instance.interaction.kind === "singleChoice"
+  const hints = requireParallelArray(unitLocalized.hints, translation.hints, `${instance.familyId}.hints`);
+  const solutionTexts = requireParallelArray(unitLocalized.solution, translation.solution, `${instance.familyId}.solution`);
+  const interaction = unitLocalized.interaction.kind === "singleChoice"
     ? {
-        ...instance.interaction,
-        options: instance.interaction.options.map((option, index) => ({ ...option, content: requireTranslation(translation.options?.[index], `${instance.familyId}.options.${option.id}`) })),
-        correctOptionId: instance.interaction.correctOptionId,
+        ...unitLocalized.interaction,
+        options: unitLocalized.interaction.options.map((option, index) => ({ ...option, content: requireTranslation(translation.options?.[index], `${instance.familyId}.options.${option.id}`) })),
+        correctOptionId: unitLocalized.interaction.correctOptionId,
       }
     : (() => {
-        const fields = instance.interaction.kind === "number" ? [instance.interaction.field] : instance.interaction.fields;
+        const fields = unitLocalized.interaction.kind === "number" ? [unitLocalized.interaction.field] : unitLocalized.interaction.fields;
         const labels = requireParallelArray(fields, translation.fields, `${instance.familyId}.fields`);
-        const localizedFields = fields.map((field, index) => ({ ...field, label: requireTranslation(labels[index], `${instance.familyId}.fields.${field.id}`), unitLabel: field.unit === "unidades" ? "units" : field.unit }));
-        return instance.interaction.kind === "number" ? { ...instance.interaction, field: localizedFields[0] } : { ...instance.interaction, fields: localizedFields };
+        const localizedFields = fields.map((field, index) => ({ ...field, label: requireTranslation(labels[index], `${instance.familyId}.fields.${field.id}`) }));
+        return unitLocalized.interaction.kind === "number" ? { ...unitLocalized.interaction, field: localizedFields[0] } : { ...unitLocalized.interaction, fields: localizedFields };
       })();
 
   return {
-    ...instance,
+    ...unitLocalized,
     objectives: translatedFamily.objectives,
     title: requireTranslation(translation.title, `${instance.familyId}.title`),
     prompt: requireTranslation(translation.prompt, `${instance.familyId}.prompt`),
     hints,
-    solution: instance.solution.map((step, index) => ({ ...step, title: ["Model", "Calculation", "Result", "Check"][index] ?? `Step ${index + 1}`, text: requireTranslation(solutionTexts[index], `${instance.familyId}.solution.${index}`) })),
-    answer: { ...instance.answer, ...(instance.answer.kind === "text" ? { presentation: requireTranslation(translation.answerDisplay, `${instance.familyId}.answerDisplay`) } : translation.answerDisplay ? { display: translation.answerDisplay } : {}) },
+    solution: unitLocalized.solution.map((step, index) => ({ ...step, title: ["Model", "Calculation", "Result", "Check"][index] ?? `Step ${index + 1}`, text: requireTranslation(solutionTexts[index], `${instance.familyId}.solution.${index}`) })),
+    answer: { ...unitLocalized.answer, ...(unitLocalized.answer.kind === "text" ? { presentation: requireTranslation(translation.answerDisplay, `${instance.familyId}.answerDisplay`) } : translation.answerDisplay ? { display: translation.answerDisplay } : {}) },
     interaction,
     feedback: translatedFamily.feedback,
   };

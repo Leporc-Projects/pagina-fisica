@@ -425,6 +425,7 @@ export default Object.freeze({
   "forcesFriction.analysis": "Force analysis",
   "forcesFriction.fbdTitle": "Free-body diagram",
   "forcesFriction.fbdDescription": "Isolated block with weight, normal force, applied force, and friction, oriented relative to the surface.",
+  "forcesFriction.fbdScaleNote": "Arrows share one linear scale within the current FBD; numerical readings are authoritative.",
   "forcesFriction.resolveWeight": "Resolve weight",
   "forcesFriction.componentsNotForces": "The components are projections of weight, not additional forces.",
   "forcesFriction.liveModel": "Current substitution",
