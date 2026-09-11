@@ -140,8 +140,9 @@ Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes 
 - `src/scripts/kinematics-1d.js`: adaptación vanilla de controles y reproducción.
   Mantiene estado efímero, admite actualizar/destruir una experiencia, usa
   `requestAnimationFrame` y no reconstruye curvas durante cada frame.
-- `src/utils/simulation-experience.js`: normalización, validación estricta,
-  serialización, IDs, packs y merge editorial de configuraciones no confiables.
+- `src/utils/simulation-experience.js`: versión y límites del esquema, validación
+  estricta y normalización canónica de experiencias públicas frente a los
+  contratos de modelo, localización y contexto académico.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
 - `src/utils/exercise-families.js`: valida familias, genera parámetros con aleatoriedad criptográfica, evita combinaciones recientes en memoria y materializa una instancia determinista.
 - `src/utils/bonus-audit.js`: audita candidatos por slot y simula diversidad de tandas sin modificar blueprints.

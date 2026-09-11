@@ -38,9 +38,9 @@ Do not hardcode a transient baseline in this file.
 
 The canonical documents own specialized contracts. In particular, use them for
 the academic registry and exercise schema, progressive content layers, MathML,
-worked examples, published simulation catalogs, participation schemas and
-scope, teacher-tool publication, analytics events, and risk-specific QA. Do not
-fork those rules into a second implementation or documentation system.
+worked examples, published simulation catalogs, notice and participation
+schemas and scope, analytics events, and risk-specific QA. Do not fork those
+rules into a second implementation or documentation system.
 
 For Astro-specific work, consult the applicable official guide:
 
