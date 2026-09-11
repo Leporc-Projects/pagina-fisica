@@ -37,6 +37,10 @@ export default Object.freeze({
   "public.resources.externalDescription": "Public reference sites for exploring and reviewing concepts.",
   "public.resources.phetDescription": "Public educational simulations from the University of Colorado Boulder.",
   "public.resources.hyperphysicsDescription": "A public topic map for consulting physics concepts and relations.",
+  "public.resources.vascakTitle": "Physics at School — Animations/Simulations",
+  "public.resources.vascakDescription": "Interactive collection of physics animations and simulations covering mechanics, gravitation, oscillations, electricity, optics, and other topics.",
+  "public.resources.vascakUrl": "https://www.vascak.cz/physicsanimations.php?l=en",
+  "public.resources.phyphoxDescription": "A mobile physics laboratory that uses smartphone sensors to run experiments, record measurements, and analyse data.",
   "public.resources.visit": "Visit site",
 
   "public.videos.pageTitle": "Videos · {course}",

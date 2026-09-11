@@ -37,6 +37,10 @@ export default Object.freeze({
   "public.resources.externalDescription": "Sitios públicos de consulta para explorar y revisar conceptos.",
   "public.resources.phetDescription": "Simulaciones educativas públicas de la Universidad de Colorado Boulder.",
   "public.resources.hyperphysicsDescription": "Mapa temático público para consultar conceptos y relaciones de física.",
+  "public.resources.vascakTitle": "Física en la escuela — Animaciones/Simulaciones",
+  "public.resources.vascakDescription": "Colección interactiva de animaciones y simulaciones de física sobre mecánica, gravitación, oscilaciones, electricidad, óptica y otros temas.",
+  "public.resources.vascakUrl": "https://www.vascak.cz/physicsanimations.php?l=es",
+  "public.resources.phyphoxDescription": "Laboratorio de física para teléfonos móviles que permite realizar experimentos utilizando los sensores del dispositivo, registrar datos y analizarlos.",
   "public.resources.visit": "Visitar sitio",
 
   "public.videos.pageTitle": "Videos · {course}",
