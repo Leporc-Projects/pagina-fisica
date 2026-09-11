@@ -34,7 +34,6 @@ import {
   validateTeacherQuestion,
 } from "../src/utils/question-pack.js";
 import { teacherQuestionToExercise } from "../src/data/physics/unit-1/teacher-question-adapter.js";
-import { validateImportedDocument } from "../src/utils/review.js";
 
 const miniQuizRuntime = createAcademicMiniQuizRuntime(1, "es", { familyAdapterId: "legacy-u1" });
 
@@ -273,7 +272,6 @@ test("el intento anónimo sigue válido y preparar entrega crea una copia identi
   });
   assert.deepEqual(anonymous.privacy.identity, { mode: "anonymous" });
   assert.equal(validateCompletedBonusAttempt(identified).valid, true);
-  assert.equal(validateImportedDocument(identified).status, "valid");
   assert.match(toBonusText(identified), /estudiante@universidad\.edu/);
   assert.match(toBonusCSV(identified, { includeBom: false }), /estudiante@universidad\.edu/);
   assert.equal(JSON.parse(toBonusJSON(identified)).privacy.identity.mode, "institutionalEmail");
@@ -286,11 +284,8 @@ test("valida sintaxis y dominios configurables sin asumir una institución", () 
   assert.equal(validateInstitutionalEmail("A@CAMPUS.EDU", { acceptedDomains: ["campus.edu"] }).valid, true);
 });
 
-test("los clientes del editor y Bono no persisten preguntas ni correos", () => {
-  const sources = [
-    "../src/scripts/question-bank-editor.js",
-    "../src/scripts/bonus.js",
-  ].map((path) => fs.readFileSync(new URL(path, import.meta.url), "utf8")).join("\n");
-  assert.doesNotMatch(sources, /localStorage|sessionStorage|document\.cookie/);
+test("el cliente de Mini Quiz no persiste preguntas ni correos", () => {
+  const source = fs.readFileSync(new URL("../src/scripts/bonus.js", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /localStorage|sessionStorage|document\.cookie/);
   assert.match(fs.readFileSync(new URL("../src/components/bonus/BonusAttempt.astro", import.meta.url), "utf8"), /data-export-mode="identified"[^>]*>\{t\(locale, "bonus\.print"\)\}/);
 });

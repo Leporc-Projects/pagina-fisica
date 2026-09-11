@@ -23,18 +23,9 @@ una copia separada con el correo institucional escrito en ese momento. El sitio
 no la envía ni la persiste. Recargar o cerrar elimina ambos objetos; no existe
 historial local.
 
-El Centro de revisión docente lee los JSON que una persona selecciona desde su
-equipo. La selección no carga archivos a Aula Física ni a un tercero: se
-validan y presentan en la memoria de esa pestaña. Sus filtros, notas y estados
-de revisión tampoco persisten. La acción “Limpiar sesión” requiere confirmación
-y descarta ese estado en memoria.
-
-El Organizador de resultados puede procesar localmente un roster con nombre,
-correo institucional, identificación y grupo, además de archivos CSV/XLSX y
-Mini quices JSON. Esos datos permanecen en la memoria de la pestaña: no se escriben
-en `localStorage` o IndexedDB, no se envían por red y desaparecen al recargar,
-cerrar o confirmar “Limpiar sesión”. Solo una exportación iniciada por el
-docente crea archivos en su equipo.
+El Editor de avisos vive al final del archivo público de avisos y opera solo en
+memoria. No solicita identidad, no envía el borrador y solo crea un archivo
+local cuando la persona activa explícitamente la exportación.
 
 La configuración visual claro/oscuro/sistema es la única preferencia persistida
 por Aula Física en el navegador. Usa `localStorage` bajo `aula-fisica:theme` y no contiene
@@ -102,62 +93,6 @@ no constituye una prueba de autenticidad, firma o certificación. El CSV
 neutraliza prefijos que una hoja de cálculo podría interpretar como fórmulas;
 esa protección no convierte el archivo en inmutable.
 
-## Datos de una sesión de revisión
-
-Una sesión docente puede contener los originales importados, nombres de
-archivos fuente, resultados de validación, IDs duplicados, conteos descriptivos
-y una capa local de revisión para propuestas. Esa capa puede incluir estado,
-nota docente opcional y fecha ISO 8601 de la decisión. El original permanece
-separado e inmutable durante la sesión.
-
-El JSON de revisión conserva Participa, Mini quices e incidencias. El CSV contiene una
-fila por respuesta de Participa; TXT e impresión resumen los conteos y pueden
-incluir respuestas abiertas cuando el docente lo decide. Todas las salidas son
-archivos locales editables: no prueban autenticidad, identidad ni integridad y
-no constituyen un registro institucional.
-
-Los nombres de archivo podrían haber sido elegidos por sus autores y, por
-tanto, no deben interpretarse como identidad. El Centro no extrae metadatos del
-dispositivo, ruta local, IP, user-agent ni huella. Tampoco registra tiempo de
-revisión, clics, navegación o tamaño de pantalla.
-
-El reconocimiento básico de un intento de Mini quiz comprueba su contrato, Mini quiz y
-versión, y permite consultar su resultado. Distingue anónimo/identificado,
-muestra el correo solo cuando existe y permite filtrarlo, pero no crea una planilla de notas, no
-vincula intentos entre sí y no estima dominio individual o grupal.
-
-## Datos de una sesión del Organizador
-
-La sesión puede contener:
-
-- filas originales del roster y sus mappings;
-- nombre, correo institucional, identificación y grupo si el docente los cargó;
-- archivos fuente, hoja y fila de encabezado;
-- valor original y normalizado de correo, score y timestamp;
-- máximo configurado y porcentaje calculado cuando la escala es conocida;
-- intentos de Mini quiz identificados o anónimos y sus resúmenes validados;
-- incidencias, políticas de duplicados/faltantes y valores resueltos;
-- consolidado y estadísticas descriptivas por fuente.
-
-El email normalizado es una llave de conciliación, no un identificador para
-tracking. Se conserva `rawEmail`; no se eliminan puntos o aliases, no se
-autocorrigen errores y no se recopila IP, user-agent, dispositivo, pantalla,
-clics, scroll o tiempo en página. Los desconocidos no se incorporan al roster y
-dos filas del roster con el mismo correo no se fusionan.
-
-El flujo mantiene datos originales, normalizados, resoluciones y consolidado
-como capas separadas. `missing` no significa cero y una escala desconocida no
-se infiere. Los promedios, media, mediana, mínimo y máximo son descripciones de
-porcentajes válidos; no son inferencia estadística, diagnóstico ni nota
-oficial. La herramienta no modifica Examen 1–4 o Taller y no aplica Mini quices a una
-calificación.
-
-El XLSX y los CSV pueden contener información identificable. El docente decide
-descargarlos y es responsable de guardarlos en un lugar adecuado. Los textos
-importados se neutralizan contra formula injection, pero los archivos siguen
-siendo editables y no ofrecen autenticidad, firma, cifrado o control de acceso.
-No se exporta ni reimporta una sesión completa en JSON en este bloque.
-
 ## Categorías y propósitos
 
 Las categorías deben permanecer separadas:
@@ -183,27 +118,21 @@ participación.
   tabla separada, aunque el nombre no aparezca. El sitio no lo implementa.
 - Identificado: el registro contiene o puede asociarse directamente con nombre,
   correo, documento u otro identificador personal. La copia opcional de entrega
-  de un Mini quiz y una sesión local del Organizador pueden pertenecer a esta
-  categoría.
+  de un Mini quiz puede pertenecer a esta categoría.
 
 El correo es un dato personal. En Mini quices identifica el archivo que el estudiante
-decide preparar para entrega; en el Organizador es la llave explícita para
-conciliar roster y resultados. Vive en memoria, puede entrar en exportaciones
-identificadas y no se usa para analítica, medición, investigación, perfiles o
+decide preparar para entrega. Vive en memoria, puede entrar en esa exportación
+identificada y no se usa para analítica, medición, investigación, perfiles o
 seguimiento. `acceptedDomains` es configuración editorial opcional de Mini quices:
 vacío significa validar solo sintaxis, no asumir un dominio. Un canal que ya
 autentique al estudiante podrá desactivar el correo incrustado.
 
-## Paquetes de autoría docente
+## Paquetes editoriales
 
-El Editor de banco conserva en memoria presentaciones ES/EN, una respuesta invariante y metadatos
-académicos escritos por el docente. El paquete exportado no pide ni incluye
-nombre o correo del autor; registra solo `authorSource: teacher`, ID del paquete,
-fecha y preguntas en borrador. El importador del repositorio procesa JSON como
-datos, no código. Esta autoría académica es distinta de datos estudiantiles y no
-convierte el editor en un servicio remoto.
-
-El locale de la interfaz no modifica contenido importado. El Centro de revisión y el Organizador traducen etiquetas derivadas de enums y mensajes de validación, pero conservan literalmente respuestas, nombres, correos, archivos y valores originales. Los cambios de locale tampoco cambian claves, IDs, políticas o exports de máquina.
+Question Pack `2.0.0` permanece como contrato de importación para el almacén de
+preguntas que alimenta la práctica pública. El paquete no incluye identidad del
+autor y el importador procesa JSON como datos, no código. No existe un editor de
+banco en el producto público.
 
 El Editor de avisos tampoco recopila datos de estudiantes ni identidad del
 autor. Conserva en memoria título, resumen, contenido, categoría, fecha,
@@ -211,15 +140,6 @@ destacado y enlace opcional; el paquete declara únicamente `source: teacher`,
 ID, versión y fecha técnica de creación. El importador interpreta JSON como
 datos, rechaza contenido o enlaces no permitidos y deja cada aviso en `review`.
 No existe envío, persistencia en navegador ni publicación automática.
-
-El Laboratorio de simulaciones mantiene en memoria título, resumen, parámetros,
-vistas, casos de estudio, observaciones y contextos académicos. No solicita
-identidad, no lee cookies, no usa `localStorage` o IndexedDB y no envía la
-configuración. Recargar descarta la sesión. Solo la acción explícita “Exportar
-paquete JSON” crea un archivo con `source: teacher`, ID aleatorio, fecha técnica
-y una experiencia `draft`; no incluye datos del navegador ni estudiantiles. El
-importador del repositorio trata ese archivo como entrada no confiable y fuerza
-`review`.
 
 Un ID aleatorio por respuesta no vuelve pseudónima la respuesta porque no se
 reutiliza como identidad ni existe una tabla de correspondencia. Esta condición
@@ -306,7 +226,7 @@ archivo diseñado como anónimo podría dejar de serlo al asociarse con la cuent
 que lo entrega.
 
 Un backend futuro sería una arquitectura distinta y no una extensión silenciosa
-del Centro local. Requeriría autenticación y autorización reales cuando
+del flujo local. Requeriría autenticación y autorización reales cuando
 corresponda, validación en servidor, almacenamiento, auditoría de acceso,
 retención y consentimiento definidos. No debe simularse privacidad mediante una
 ruta poco visible o una etiqueta de interfaz.

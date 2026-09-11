@@ -1,11 +1,9 @@
 import { assertSupportedLocale } from "../i18n/config.js";
 import { ROUTE_IDS, getLocalizedPath } from "../i18n/routes.js";
-import { BIBLIOGRAPHY, COURSE, EVALUATION, SCHEDULE, SCHEDULE_TYPES, UNITS } from "./course.js";
-import scheduleEn from "./course-schedule.en.js";
+import { BIBLIOGRAPHY, COURSE, UNITS } from "./course.js";
 
 const EN_COURSE = Object.freeze({
   name: "Basic Physics I",
-  modality: "In person",
   summary: "An introductory course in Newtonian mechanics focused on the study of motion, forces, and conservation laws.",
   purpose: "Develop a solid understanding of the fundamental laws of Newtonian mechanics and strengthen the ability to analyse and solve physics problems through elementary calculus, vector geometry, and first-principles reasoning.",
   methodology: [
@@ -35,45 +33,16 @@ const EN_UNITS = Object.freeze([
   ["Gravitation and periodic motion", "Chapters 13 and 14", "Applications of Newtonian mechanics to gravitational and oscillatory systems.", ["Universal law of gravitation", "Weight and gravitational field", "Gravitational potential energy", "Satellite motion", "Kepler's laws", "Description of oscillations", "Simple harmonic motion", "Oscillator energy", "Simple and physical pendulums", "Damped oscillations", "Forced oscillations and resonance"]],
 ]);
 
-const EN_EVALUATION = Object.freeze([
-  ["First examination", "Chapters 1, 2 and 3"],
-  ["Second examination", "Chapters 4, 5 and 6"],
-  ["Third examination", "Chapters 7, 8 and 9"],
-  ["Fourth examination", "Chapters 10, 13 and 14"],
-  ["Workshop", "Activities and problem solving"],
-]);
 
 const EN_BIBLIOGRAPHY_ROLES = Object.freeze(["Main textbook", "Supplementary text", "Supplementary text", "Supplementary text"]);
-const EN_SCHEDULE_TYPES = Object.freeze({
-  class: { label: "Class" }, review: { label: "Review" }, exam: { label: "Assessment" }, event: { label: "Event" },
-});
-
-const localizeSchedule = () => SCHEDULE.map((session, index) => {
-  const translation = scheduleEn[index];
-  if (!translation || translation[1].length !== session.topics.length || translation[2].length !== session.objectives.length) {
-    throw new RangeError(`English schedule translation changed structure: session ${session.session}`);
-  }
-  return {
-    ...session,
-    chapterLabel: session.chapter.replace("Capítulo", "Chapter").replace("Capítulos", "Chapters"),
-    title: translation[0],
-    topics: translation[1],
-    objectives: translation[2],
-  };
-});
-
 // Academic invariants remain in course.js. These projections replace only
-// human-facing text, so dates, percentages, identifiers, and course workload
-// have one canonical source regardless of locale.
+// human-facing text while preserving one canonical curriculum source.
 export const localizeCourseData = (locale) => {
   assertSupportedLocale(locale);
-  if (locale === "es") return { COURSE, UNITS, EVALUATION, BIBLIOGRAPHY, SCHEDULE, SCHEDULE_TYPES };
+  if (locale === "es") return { COURSE, UNITS, BIBLIOGRAPHY };
   return {
-    COURSE: { ...COURSE, ...EN_COURSE, href: getLocalizedPath(ROUTE_IDS.COURSE, locale) },
+    COURSE: { ...COURSE, ...EN_COURSE, href: getLocalizedPath(ROUTE_IDS.COURSE_UNITS, locale) },
     UNITS: UNITS.map((unit, index) => ({ ...unit, title: EN_UNITS[index][0], chapters: EN_UNITS[index][1], description: EN_UNITS[index][2], topics: EN_UNITS[index][3] })),
-    EVALUATION: EVALUATION.map((item, index) => ({ ...item, name: EN_EVALUATION[index][0], content: EN_EVALUATION[index][1] })),
     BIBLIOGRAPHY: BIBLIOGRAPHY.map((book, index) => ({ ...book, role: EN_BIBLIOGRAPHY_ROLES[index] })),
-    SCHEDULE: localizeSchedule(),
-    SCHEDULE_TYPES: EN_SCHEDULE_TYPES,
   };
 };

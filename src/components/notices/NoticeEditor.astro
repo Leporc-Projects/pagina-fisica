@@ -1,12 +1,9 @@
 ---
 import { NOTICE_CATEGORIES, NOTICE_PACK_SCHEMA_VERSION } from "../../utils/notices.js";
-import { COURSES } from "../../data/courses.js";
-import { localizeCourseData } from "../../data/course-localize.js";
 import { noticeCategoryLabel } from "../../data/notice-localize.js";
 import { t } from "../../i18n/index.js";
 
 const { locale = "es" } = Astro.props;
-const courseName = localizeCourseData(locale).COURSE.name;
 ---
 
 <section class="notice-editor" data-notice-editor data-locale={locale} aria-labelledby="notice-editor-title">
@@ -25,13 +22,12 @@ const courseName = localizeCourseData(locale).COURSE.name;
     <fieldset>
       <legend>{t(locale, "teacher.notices.editorial")}</legend>
       <div class="notice-editor__grid">
-        <label><span>{t(locale, "teacher.notices.scope")}</span><select name="scope" required>{COURSES.map((course) => <option value={course.id}>{course.id === "fisica-basica-1" ? courseName : course.name}</option>)}<option value="global">{t(locale, "teacher.notices.global")}</option></select><small>{t(locale, "teacher.notices.scopeHelp")}</small></label>
         <label><span>{t(locale, "teacher.notices.category")}</span><select name="category" required>{NOTICE_CATEGORIES.map((category) => <option value={category}>{noticeCategoryLabel(category, locale)}</option>)}</select></label>
         <label><span>{t(locale, "teacher.notices.date")}</span><input name="publishedAt" type="date" required /><small>{t(locale, "teacher.notices.dateHelp")}</small></label>
       </div>
-      <label><span>{t(locale, "teacher.notices.link")}</span><input name="href" type="text" inputmode="url" placeholder="/fisica-basica-1 or https://…" autocomplete="off" /><small>{t(locale, "teacher.notices.linkHelp")}</small></label>
+      <label><span>{t(locale, "teacher.notices.link")}</span><input name="href" type="text" inputmode="url" placeholder="/path or https://…" autocomplete="off" /><small>{t(locale, "teacher.notices.linkHelp")}</small></label>
       <label class="notice-editor__check"><input name="featured" type="checkbox" /><span>{t(locale, "teacher.notices.featured")}</span></label>
-      <div class="notice-editor__generated" aria-label={t(locale, "teacher.notices.generated")}><span>{t(locale, "teacher.notices.initialStatus")}: <strong>draft</strong></span><span>{t(locale, "teacher.notices.schema")}: <strong>{NOTICE_PACK_SCHEMA_VERSION}</strong></span><span>{t(locale, "teacher.notices.ids")}: <strong>{t(locale, "teacher.notices.automatic")}</strong></span></div>
+      <div class="notice-editor__generated" aria-label={t(locale, "teacher.notices.generated")}><span>{t(locale, "teacher.notices.scope")}: <strong>{t(locale, "teacher.notices.global")}</strong></span><span>{t(locale, "teacher.notices.initialStatus")}: <strong>draft</strong></span><span>{t(locale, "teacher.notices.schema")}: <strong>{NOTICE_PACK_SCHEMA_VERSION}</strong></span><span>{t(locale, "teacher.notices.ids")}: <strong>{t(locale, "teacher.notices.automatic")}</strong></span></div>
     </fieldset>
     <div class="notice-editor__actions"><button type="button" data-preview-notice>{t(locale, "teacher.notices.previewAction")}</button><button type="button" class="review-button" data-add-notice>{t(locale, "teacher.notices.add")}</button></div>
     <div class="notice-editor__errors" data-notice-errors aria-live="polite"></div>

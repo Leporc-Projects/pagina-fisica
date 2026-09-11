@@ -9,8 +9,6 @@ import { fileURLToPath } from "node:url";
 import {
   COURSE,
   COURSE_NAV,
-  EVALUATION,
-  SCHEDULE,
   UNITS,
 } from "../src/data/course.js";
 import { localizeCourseData } from "../src/data/course-localize.js";
@@ -45,7 +43,6 @@ import {
   getSimulationExperienceById,
 } from "../src/data/simulation-experiences.js";
 import {
-  SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION,
   SIMULATION_EXPERIENCE_SCHEMA_VERSION,
   validateSimulationExperience,
 } from "../src/utils/simulation-experience.js";
@@ -57,8 +54,6 @@ import { createKinematicsChartGeometry } from "../src/utils/kinematics-svg.js";
 import { getProjectileSummary } from "../src/utils/projectile-2d.js";
 import {
   NOTICES,
-  getCourseNotices,
-  getGlobalNotices,
   getHomepageNotices,
   getPublishedNotices,
 } from "../src/data/notices.js";
@@ -120,19 +115,6 @@ import { UNIT_1_EXERCISE_FAMILIES } from "../src/data/physics/unit-1/families.js
 import { UNIT_1_BANK_ITEMS } from "../src/data/physics/unit-1/bank.js";
 import { ACTIVITY_TYPES } from "../src/data/participation.js";
 import { localizeParticipationData } from "../src/data/participation-localize.js";
-import { TEACHER_TOOLS, getPublishedTeacherTools } from "../src/data/teacher-tools.js";
-import {
-  REVIEW_FILE_MAX_BYTES,
-  REVIEW_SESSION_SCHEMA_VERSION,
-  REVIEW_STATUSES,
-} from "../src/data/review.js";
-import {
-  DUPLICATE_POLICIES,
-  INCIDENT_TYPES,
-  MISSING_POLICIES,
-  RESULTS_LIMITS,
-  SUPPORTED_RESULT_FORMATS,
-} from "../src/data/results-organizer.js";
 import {
   BONUS_FEEDBACK_POLICIES,
   canSatisfyBonusBlueprint,
@@ -147,13 +129,6 @@ import {
   createParticipationResponse,
   validateParticipationResponse,
 } from "../src/utils/participation.js";
-import {
-  addReviewImportEntries,
-  aggregateReviewSession,
-  createReviewExport,
-  createReviewSession,
-  validateImportedDocument,
-} from "../src/utils/review.js";
 import { auditAllBonusBlueprints } from "../src/utils/bonus-audit.js";
 import { validateFamilyDefinition } from "../src/utils/exercise-families.js";
 import {
@@ -281,37 +256,6 @@ const routeExists = (route) => routes.has(route) || [...routes].some((candidate)
   return new RegExp(`^${pattern}$`).test(route);
 });
 
-const evaluationTotal = EVALUATION.reduce(
-  (total, item) => total + item.percentage,
-  0
-);
-
-check(
-  evaluationTotal === 100,
-  "La evaluación suma 100 %."
-);
-
-check(
-  SCHEDULE.every(
-    (entry, index) => entry.session === index + 1
-  ),
-  "Las sesiones tienen numeración consecutiva."
-);
-
-check(
-  SCHEDULE.every(
-    (entry, index) =>
-      index === 0 ||
-      SCHEDULE[index - 1].date <= entry.date
-  ),
-  "Las fechas del cronograma están ordenadas."
-);
-
-check(
-  duplicates(SCHEDULE.map((entry) => entry.session)).length === 0,
-  "No hay identificadores de sesión duplicados."
-);
-
 check(
   duplicates(COURSE_NAV.map((item) => item.href)).length === 0,
   "COURSE_NAV no contiene rutas duplicadas."
@@ -341,20 +285,16 @@ check(
 check(
   COURSE_NAV.map((item) => item.label).join("|") ===
     [
-      "Curso",
-      "Avisos",
-      "Cronograma",
       "Unidades y apuntes",
       "Ejercicios y tutorías",
       "Mini quices",
       "Videos",
-      "Evaluación y notas",
       "Recursos",
       "Participa",
     ].join("|") &&
     COURSE_NAV.at(-1)?.href === "/fisica-basica-1/participa" &&
     COURSE_NAV.at(-1)?.includeInGlobalMenu === false,
-  "La navegación interna incluye Avisos tras la raíz y mantiene Participa fuera del menú global."
+  "La navegación interna contiene exactamente los seis destinos académicos retenidos."
 );
 
 check(
@@ -437,131 +377,11 @@ check(
   "Participación mantiene research y measurement fuera del flujo público."
 );
 
-const reviewRoute = "/fisica-basica-1/herramientas/revision";
-const reviewStatuses = [
-  "pending",
-  "interesting",
-  "needs-adjustments",
-  "discard",
-  "bank-candidate",
-];
-
-check(
-  REVIEW_SESSION_SCHEMA_VERSION === "1.1.0" &&
-    REVIEW_FILE_MAX_BYTES === 5 * 1024 * 1024 &&
-    REVIEW_STATUSES.map(([value]) => value).join(",") === reviewStatuses.join(","),
-  "La sesión de revisión declara versión, límite y estados docentes estables."
-);
-
-// Solo Notices y Results están publicadas; Bank, Simulation Lab y Review
-// conservan su implementación (componentes, scripts, estilos) pero ya no
-// tienen ruta pública. El registro es la única fuente de esa decisión.
-const publishedTools = getPublishedTeacherTools();
-const hiddenTools = TEACHER_TOOLS.filter((tool) => !tool.published);
-
-check(
-  TEACHER_TOOLS.length === 5 &&
-    publishedTools.map((tool) => tool.id).join(",") === "notices,results" &&
-    hiddenTools.map((tool) => tool.id).join(",") === "bank,simulations,review",
-  "Solo Notices y Results están publicadas; Bank, Simulation Lab y Review permanecen ocultas."
-);
-
-check(
-  publishedTools.every((tool) =>
-    ["es", "en"].every((locale) => routes.has(normalizeRoute(getLocalizedPath(tool.routeId, locale))))
-  ) &&
-    routes.has("/fisica-basica-1/herramientas") &&
-    routes.has("/en/basic-physics-1/tools"),
-  "Toda herramienta publicada tiene wrapper ES y EN, igual que el hub."
-);
-
-check(
-  hiddenTools.every((tool) =>
-    ["es", "en"].every((locale) => !routes.has(normalizeRoute(getLocalizedPath(tool.routeId, locale))))
-  ),
-  "Ninguna herramienta oculta genera ruta ES ni EN: no existen en dist/production."
-);
-
-check(
-  hiddenTools.every((tool) =>
-    !COURSE_NAV.some((item) => item.href === getLocalizedPath(tool.routeId, "es")) &&
-      !NAV.flatMap((item) => item.children ?? [])
-        .some((item) => item.href === getLocalizedPath(tool.routeId, "es"))
-  ) &&
-    ["/fisica-basica-1/herramientas", reviewRoute, "/fisica-basica-1/herramientas/notas"].every(
-      (route) => !NAV.flatMap((item) => item.children ?? []).some((item) => item.href === route)
-    ),
-  "El hub y las herramientas docentes existen fuera del menú estudiantil principal."
-);
-
-check(
-  fs.existsSync(path.join(projectRoot, "src/components/teacher/QuestionBankPage.astro")) &&
-    fs.existsSync(path.join(projectRoot, "src/components/teacher/SimulationLabPage.astro")) &&
-    fs.existsSync(path.join(projectRoot, "src/components/teacher/ReviewCenterPage.astro")) &&
-    fs.existsSync(path.join(projectRoot, "src/components/bank/QuestionBankEditor.astro")) &&
-    fs.existsSync(path.join(projectRoot, "src/components/simulations/SimulationLab.astro")) &&
-    fs.existsSync(path.join(projectRoot, "src/components/review/ReviewCenter.astro")),
-  "Las herramientas ocultas conservan su implementación completa para reactivarse más adelante."
-);
-
-check(
-  !fs.existsSync(path.join(projectRoot, "src/pages/herramientas.astro")),
-  "La superficie legacy /herramientas quedó retirada; no se creó un equivalente /en/tools solo por conservarla."
-);
-
-check(
-  SUPPORTED_RESULT_FORMATS.join(",") === "csv,xlsx,json" &&
-    DUPLICATE_POLICIES.map(([value]) => value).join(",") ===
-      "unresolved,first,last,highest,average" &&
-    MISSING_POLICIES.map(([value]) => value).join(",") ===
-      "unresolved,exclude,zero" &&
-    INCIDENT_TYPES.length >= 14 &&
-    RESULTS_LIMITS.maxFileBytes === 15 * 1024 * 1024 &&
-    RESULTS_LIMITS.maxRows === 10_000 &&
-    RESULTS_LIMITS.maxColumns === 250,
-  "El Organizador declara formatos, políticas, incidencias y límites explícitos."
-);
-
-const reviewDocument = JSON.parse(JSON.stringify(unitTopicResponse));
-const reviewImport = addReviewImportEntries(createReviewSession(), [
-  {
-    name: "respuesta.json",
-    size: 1024,
-    text: JSON.stringify(reviewDocument),
-  },
-  {
-    name: "duplicado.json",
-    size: 1024,
-    text: JSON.stringify(reviewDocument),
-  },
-  {
-    name: "invalido.json",
-    size: 12,
-    text: "{no-json}",
-  },
-]);
-const reviewSummary = aggregateReviewSession(reviewImport);
-const reviewExport = createReviewExport(
-  reviewImport,
-  {},
-  "2026-08-08T00:00:00.000Z"
-);
-
-check(
-  validateImportedDocument(reviewDocument).status === "valid" &&
-    reviewSummary.uniqueRecords === 1 &&
-    reviewSummary.duplicates === 1 &&
-    reviewSummary.incidents.invalid === 1 &&
-    reviewExport.items[0].original.responseId === unitTopicResponse.responseId &&
-    reviewExport.authenticity === "local-editable-file",
-  "La revisión valida por archivo, deduplica sin inflar conteos y conserva el original."
-);
-
 check(
   HOME_LINKS.map((item) => `${item.number}|${item.label}|${item.href}`)
     .join("\n") ===
     [
-      `01|${COURSE.name}|/fisica-basica-1`,
+      `01|${COURSE.name}|/fisica-basica-1/unidades`,
       "02|Simulaciones|/simulaciones",
     ].join("\n"),
   "La portada destaca solo el curso y Simulaciones."
@@ -604,7 +424,6 @@ check(
 
 check(
   SIMULATION_EXPERIENCE_SCHEMA_VERSION === "2.0.0" &&
-    SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION === "2.0.0" &&
     duplicates(simulationExperienceIds).length === 0 &&
     SIMULATION_EXPERIENCES.every((experience) =>
       validateSimulationExperience(experience).valid &&
@@ -770,10 +589,6 @@ check(
     course.COURSE.name && course.COURSE.summary && course.COURSE.purpose &&
     course.COURSE.methodology.every(Boolean) && course.COURSE.learningGoals.every(Boolean) &&
     course.UNITS.length === UNITS.length && course.UNITS.every((unit) => unit.title && unit.description) &&
-    course.SCHEDULE.length === SCHEDULE.length && course.SCHEDULE.every((session) =>
-      session.title && session.topics.every(Boolean) && session.objectives.every(Boolean)
-    ) &&
-    course.EVALUATION.length === EVALUATION.length && course.EVALUATION.every((item) => item.name && item.content) &&
     bonuses.length === BONUSES.length && bonuses.every((bonus) => bonus.title && bonus.description) &&
     participation.topics.length === participationUnitsEs.flatMap((unit) => unit.topics).length &&
       participation.topics.every((topic) => topic.title) &&
@@ -783,12 +598,7 @@ check(
   "Todo el contenido público core declara presentación estructural completa en ES y EN."
 );
 
-// Un route ID de herramienta oculta se conserva para simplificar su futura
-// reactivación, pero deliberadamente no genera página: se excluye de la
-// exigencia general de que todo route ID registrado exista en dist.
-const hiddenToolRouteIds = new Set(hiddenTools.map((tool) => tool.routeId));
 const requiredLocalizedRoutes = Object.entries(LOCALIZED_ROUTES)
-  .filter(([routeId]) => !hiddenToolRouteIds.has(routeId))
   .flatMap(([, localized]) => Object.values(localized))
   .filter(Boolean)
   .map(normalizeRoute);
@@ -801,7 +611,7 @@ check(
     ) &&
     !requiredLocalizedRoutes.some((route) => route.startsWith("/es/")) &&
     getRouteCounterpart("/simulaciones/cinematica-1d", "en") === "/en/simulations/kinematics-1d" &&
-    getRouteCounterpart("/fisica-basica-1", "en") === "/en/basic-physics-1" &&
+    getRouteCounterpart("/fisica-basica-1/unidades", "en") === "/en/basic-physics-1/units" &&
     getLanguageMetadata("en", ROUTE_IDS.PROJECTILE_2D).canonicalPath === "/en/simulations/projectile-2d",
   "Las rutas bilingües, contrapartes y metadatos existen sin publicar un prefijo /es."
 );
@@ -847,17 +657,14 @@ const homepageNotices = getHomepageNotices(3);
 const firstHomepageRegular = homepageNotices.findIndex((notice) => !notice.featured);
 
 check(
-  getGlobalNotices().every((notice) => notice.scope.type === "global") &&
-    getCourseNotices(COURSE.id).every(
-      (notice) => notice.scope.type === "course" && notice.scope.courseId === COURSE.id
-    ) &&
+  getPublishedNotices().every((notice) => notice.scope.type === "global") &&
     homepageNotices.length <= 3 &&
     homepageNotices.every((notice) => notice.status === "published") &&
     new Set(homepageNotices.map((notice) => notice.id)).size === homepageNotices.length &&
     (firstHomepageRegular < 0 || homepageNotices
       .slice(firstHomepageRegular)
       .every((notice) => !notice.featured)),
-  "Las consultas separan ámbitos y la portada prioriza destacados sin duplicar ni exceder tres avisos."
+  "La consulta usa ámbito global y la portada prioriza destacados sin duplicar ni exceder tres avisos."
 );
 
 const generalMigratedNotice = NOTICES.find(
@@ -869,8 +676,7 @@ const courseMigratedNotice = NOTICES.find(
 
 check(
   generalMigratedNotice?.scope.type === "global" &&
-    courseMigratedNotice?.scope.type === "course" &&
-    courseMigratedNotice?.scope.courseId === COURSE.id &&
+    courseMigratedNotice?.scope.type === "global" &&
     courseMigratedNotice?.featured === true &&
     courseMigratedNotice?.status === "published",
   "Los dos avisos existentes conservan la migración editorial de ámbito aprobada."
@@ -2121,22 +1927,6 @@ const astroConfigSource = fs.readFileSync(
   path.join(projectRoot, "astro.config.mjs"),
   "utf8"
 );
-const simulationLabComponentSource = fs.readFileSync(
-  path.join(projectRoot, "src/components/simulations/SimulationLab.astro"),
-  "utf8"
-);
-const simulationLabScriptSource = fs.readFileSync(
-  path.join(projectRoot, "src/scripts/simulation-lab.js"),
-  "utf8"
-);
-const simulationLabStyleSource = fs.readFileSync(
-  path.join(projectRoot, "src/styles/simulation-lab.css"),
-  "utf8"
-);
-const simulationImporterSource = fs.readFileSync(
-  path.join(projectRoot, "scripts/import-simulations.mjs"),
-  "utf8"
-);
 const floatingPlaybackComponentSource = fs.readFileSync(
   path.join(projectRoot, "src/components/simulations/SimulationFloatingPlayback.astro"),
   "utf8"
@@ -2253,62 +2043,6 @@ check(
   "El transporte flotante comparte runtime, se oculta en previews y no añade ciclos de animación."
 );
 
-check(
-  simulationLabComponentSource.includes("<fieldset") &&
-    simulationLabComponentSource.includes("<legend") &&
-    simulationLabComponentSource.includes("data-preview-simulation") &&
-    simulationLabComponentSource.includes("data-export-simulation") &&
-    simulationLabComponentSource.includes("<SimulationExperienceRenderer") &&
-    simulationLabComponentSource.includes("SIMULATION_MODELS.map") &&
-    simulationLabComponentSource.includes("Object.entries(model.views)") &&
-    simulationLabComponentSource.includes("UNIT_1.topics.map") &&
-    simulationLabScriptSource.includes("mountSimulationExperienceRenderer") &&
-    simulationLabScriptSource.includes("destroySimulationExperienceRenderer") &&
-    simulationLabScriptSource.includes("textContent") &&
-    simulationLabScriptSource.includes("replaceChildren") &&
-    !/(?:innerHTML|outerHTML\s*=|fetch\(|localStorage|sessionStorage|indexedDB|eval\(|Function\()/.test(
-      simulationLabScriptSource
-    ),
-  "El Laboratorio usa formularios accesibles, preview compartida y texto seguro en memoria."
-);
-
-check(
-  simulationLabStyleSource.includes("@media (max-width: 1280px)") &&
-    simulationLabStyleSource.includes("@media (max-width: 800px)") &&
-    simulationLabStyleSource.includes("@media (max-width: 520px)") &&
-    simulationLabStyleSource.includes("prefers-reduced-motion") &&
-    simulationLabStyleSource.includes("[hidden]") &&
-    !/(?:#[0-9a-f]{3,8}\b|\brgba?\s*\()/i.test(simulationLabStyleSource),
-  "El Laboratorio responde a escritorio y móvil, respeta tema y estados ocultos."
-);
-
-check(
-  packageData.scripts?.["import:simulations"] === "node scripts/import-simulations.mjs" &&
-    simulationImporterSource.includes("mergeSimulationExperiencePack") &&
-    simulationImporterSource.includes("estado review") &&
-    simulationImporterSource.includes("Ninguna experiencia fue publicada automáticamente") &&
-    !simulationImporterSource.includes("eval(") &&
-    !simulationImporterSource.includes("Function("),
-  "El importador acepta paquetes JSON, fuerza revisión y nunca publica automáticamente."
-);
-
-const reviewUtilitySource = fs.readFileSync(
-  path.join(projectRoot, "src/utils/review.js"),
-  "utf8"
-);
-const reviewScriptSource = fs.readFileSync(
-  path.join(projectRoot, "src/scripts/review-center.js"),
-  "utf8"
-);
-const reviewImportSource = fs.readFileSync(
-  path.join(projectRoot, "src/components/review/ReviewImportPanel.astro"),
-  "utf8"
-);
-const reviewStyleSource = fs.readFileSync(
-  path.join(projectRoot, "src/styles/review-center.css"),
-  "utf8"
-);
-
 const noticeEditorSource = fs.readFileSync(
   path.join(projectRoot, "src/scripts/notice-editor.js"),
   "utf8"
@@ -2325,10 +2059,6 @@ const generalNoticesPageSource = fs.readFileSync(
   path.join(projectRoot, "src/pages/avisos.astro"),
   "utf8"
 );
-const courseNoticesPageSource = fs.readFileSync(
-  path.join(projectRoot, "src/pages/fisica-basica-1/avisos.astro"),
-  "utf8"
-);
 const publicPageSource = pageFiles
   .map((file) => fs.readFileSync(file, "utf8"))
   .join("\n");
@@ -2340,21 +2070,23 @@ check(
     noticeEditorSource.includes("textContent") &&
     noticeEditorComponent.includes('name="title"') &&
     noticeEditorComponent.includes('name="publishedAt"') &&
-    noticeEditorComponent.includes('name="scope"') &&
-    noticeEditorComponent.includes("COURSES.map") &&
+    !noticeEditorComponent.includes('name="scope"') &&
+    noticeEditorComponent.includes('teacher.notices.global') &&
+    noticeEditorSource.includes('scope: { type: "global" }') &&
     noticeEditorSource.includes("contentScopeLabel"),
   "El Editor de avisos usa texto seguro, no envía datos y expone campos accesibles."
 );
 
 check(
-  generalNoticesPageSource.includes("getGlobalNotices") &&
-    courseNoticesPageSource.includes("getCourseNotices(COURSE.id") &&
-    courseNoticesPageSource.includes("getLocalizedPath(ROUTE_IDS.NOTICES, locale)") &&
+  generalNoticesPageSource.includes("getPublishedNotices") &&
+    generalNoticesPageSource.includes("<NoticeEditor") &&
+    generalNoticesPageSource.indexOf("notice-list--archive") <
+      generalNoticesPageSource.indexOf("<NoticeEditor") &&
     noticeCardSource.includes("contentScopeLabel(notice.scope, locale)") &&
     noticeCardSource.includes("href &&") &&
     noticeCardSource.includes('rel={external ? "noopener noreferrer"') &&
     !noticeCardSource.includes("!compact && href"),
-  "Las rutas de avisos separan ámbitos y NoticeCard conserva enlaces seguros en modo compacto."
+  "El archivo general integra todos los avisos y el editor local conserva enlaces seguros."
 );
 
 check(
@@ -2362,36 +2094,6 @@ check(
     !publicPageSource.includes("El sitio se encuentra en construcción") &&
     !publicPageSource.includes("Sección en desarrollo"),
   "Las páginas públicas no conservan mensajes obsoletos del proceso de desarrollo."
-);
-
-check(
-  !reviewScriptSource.includes("fetch(") &&
-    !reviewScriptSource.includes("localStorage") &&
-    !reviewScriptSource.includes("sessionStorage") &&
-    !reviewScriptSource.includes("indexedDB") &&
-    !reviewScriptSource.includes("innerHTML") &&
-    !reviewUtilitySource.includes("eval(") &&
-    !reviewUtilitySource.includes("Function("),
-  "El Centro de revisión no envía, persiste ni evalúa contenido importado."
-);
-
-check(
-  reviewImportSource.includes('type="file"') &&
-    reviewImportSource.includes('accept=".json,application/json"') &&
-    reviewImportSource.includes("multiple") &&
-    reviewImportSource.includes('aria-live="polite"') &&
-    reviewScriptSource.includes("file.text()") &&
-    reviewScriptSource.includes("textContent") &&
-    reviewScriptSource.includes("window.print()"),
-  "La importación JSON múltiple y las salidas locales usan APIs nativas accesibles."
-);
-
-check(
-  reviewStyleSource.includes("@media screen") &&
-    reviewStyleSource.includes("[hidden]") &&
-    reviewStyleSource.includes("@media print") &&
-    reviewStyleSource.includes("prefers-reduced-motion"),
-  "El Centro de revisión define estados ocultos, impresión y movimiento reducido."
 );
 
 if (failures.length > 0) {

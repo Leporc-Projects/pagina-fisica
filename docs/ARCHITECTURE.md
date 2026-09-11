@@ -22,7 +22,7 @@ Esta separación evita escribir varias veces el mismo dato académico y permite 
 
 La internacionalización añade una capa pura entre rutas/datos y presentación. `src/i18n/config.js` registra locales, `ui/` conserva diccionarios con paridad, `routes.js` relaciona IDs estables con slugs humanos y `metadata.js` deriva canonical y alternates. Español permanece en la raíz e inglés usa `/en/`; no hay detección automática ni persistencia del idioma. La cobertura completa y el procedimiento editorial viven en [I18N.md](./I18N.md).
 
-El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fechas, porcentajes, scoring, parámetros, reglas y claves de esquema se comparten; los localizadores y diccionarios proyectan únicamente texto visible. La cobertura ES/EN es completa para la superficie pública y para las herramientas docentes.
+El proyecto sigue el contrato `invariant data + localized presentation`: IDs, scoring, parámetros, reglas y claves de esquema se comparten; los localizadores y diccionarios proyectan únicamente texto visible. La cobertura ES/EN es completa para la superficie pública.
 
 ## Capas del proyecto
 
@@ -31,7 +31,7 @@ El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fe
 `src/data/` contiene estructuras JavaScript exportadas:
 
 - `courses.js`: registro mínimo de identidades estables, rutas y estado activo de los cursos reales.
-- `course.js`: contrato académico de Física Básica I; deriva su identidad de `courses.js` y añade navegación interna, siete unidades, evaluación, bibliografía y cronograma.
+- `course.js`: contrato académico de Física Básica I; deriva su identidad de `courses.js` y añade propósito académico, navegación interna, siete unidades y bibliografía. No contiene metadatos de semestre ni administración del curso.
 - `site.js`: identidad editorial, navegación global y accesos de portada.
 - `simulation-models.js`: registro confiable de modelos, parámetros, límites
   duros, capacidades de vista e identidad de renderer. No contiene funciones
@@ -45,7 +45,7 @@ El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fe
 - `simulations.js`: adaptador del catálogo público. Conserva ruta y categoría y
   deriva identidad, texto, estado, modelo y contextos de la experiencia.
 - `notices.json`: almacenamiento editorial actual de avisos; puede contener los cuatro estados.
-- `notices.js`: adaptador de consultas publicadas por ámbito; separa el archivo general, cada curso y la selección combinada de portada.
+- `notices.js`: adaptador de la consulta publicada por locale y de la selección de portada.
 - `videos.js`: contrato de metadatos de la biblioteca audiovisual.
 - `theme.js`: preferencias admitidas, clave de almacenamiento y colores del navegador para cada tema efectivo.
 - `participation.js`: contexto académico, temas reales y opciones públicas de las tres actividades de participación.
@@ -55,11 +55,7 @@ El proyecto sigue el contrato `invariant data + localized presentation`: IDs, fe
 
 Las rutas guardadas en datos son rutas lógicas desde `/`, no URL finales de despliegue. Esto mantiene `NAV`, `HOME_LINKS` y `COURSE_NAV` independientes de GitHub Pages. Los componentes pasan cada destino interno por `withBase()` antes de renderizarlo.
 
-Las fuentes académicas tienen una jerarquía explícita:
-
-- El programa oficial gobierna créditos, modalidad, horas, propósito, resultados, evaluación y bibliografía.
-- El plan clase a clase 2026-2 gobierna fechas, sesiones, orden concreto, repasos y evaluaciones del semestre.
-- Las siete unidades se conservan como organización vigente hasta que el profesor revise cualquier diferencia entre ambas fuentes.
+El programa oficial gobierna el propósito, los resultados, la bibliografía y la organización académica estable en siete unidades. Los datos administrativos de semestre, grupo, carga horaria, porcentajes de evaluación y cronograma no forman parte del producto público ni de `course.js`. El código histórico permanece como compatibilidad de los contratos exportados Mini Quiz 1.x y Participación 1.x, pero no se renderiza en el chrome vigente.
 
 Los datos de navegación no deben contener destinos inexistentes. `npm run validate` compara esas rutas con los archivos reales de `src/pages/`.
 
@@ -116,10 +112,7 @@ La propiedad `fullWidth` permite que la portada controle el ancho de sus propias
   salen del viewport; nunca aparece en previews ni posee estado físico propio.
 - `simulations/SimulationExperienceRenderer.astro`: dispatcher validado que
   selecciona uno de los cinco componentes internos a partir de los registros de
-  modelo y renderer; los slots ocultos del Laboratorio no inicializan runtime.
-- `simulations/SimulationLab.astro`: constructor visual local de experiencias de
-  cualquiera de los cinco modelos internos; usa registros reales, controles nativos y los
-  mismos renderers de producción para previsualizar.
+  modelo y renderer; los slots ocultos no inicializan runtime.
 
 Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes y el texto secundario vive en `translations`. Los avisos usan esquema `3.0.0` y exigen locale explícito. Ningún adaptador aplica fallback editorial entre idiomas.
 - `academic/AcademicUnitLanding.astro`, `AcademicUnitPracticePage.astro` y `UnitTopicPage.astro`: renderers multiunidad que resuelven el adapter registrado y componen landing, práctica y temas sin importar módulos de una unidad concreta.
@@ -129,21 +122,16 @@ Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes 
 - `academic/AcademicUnitNav.astro`: navegación compacta alimentada por `unit.topics`; `UnitOneNav.astro` permanece como wrapper de compatibilidad.
 - `academic/ExerciseCard.astro`: vista pública de un ejercicio; mantiene fuera de la interfaz los metadatos editoriales del banco.
 - `academic/OpenPractice.astro`: conserva el banco público en HTML y mejora la vista con tandas locales, filtros y navegación sin progreso global.
-- `bank/QuestionBankEditor.astro`: formulario docente local para previsualizar preguntas fijas y preparar un paquete JSON de borradores; no modifica el banco público.
-- `notices/NoticeEditor.astro`: formulario local para preparar y previsualizar avisos como texto, sin publicar ni enviar datos.
+- `notices/NoticeEditor.astro`: formulario local plegable al final de Avisos; prepara y previsualiza avisos globales como texto, sin publicar ni enviar datos.
 - `NoticeCard.astro`: presentación pública compartida; conserva enlaces internos y HTTPS seguros también en su variante compacta.
-- `teacher/TeacherToolsNav.astro`: navegación del hub y de las herramientas publicadas; deriva su lista de `src/data/teacher-tools.js`, no de un array local.
 - `academic/TopicCta.astro`: gramática compartida de los CTA de cierre de tema (simulación, práctica, Participa); recibe `eyebrow`/`title`/`description`/`href`/`linkLabel` ya resueltos y no decide rutas.
 - `participation/`: paso de contexto (`ParticipationContext.astro`), selector de actividad, tres formularios independientes, previsualización y acciones de exportación. Los componentes recogen o presentan campos; no definen el contrato de respuesta.
-- `review/`: importación accesible, agregados descriptivos, listado paginado, revisión de propuestas, incidencias y exportación de una sesión docente local. La ruta de la herramienta los compone sin incorporar lógica de contratos.
-- `results/`: importación del listado, configuración de fuentes, resumen, incidencias, consolidado y exportaciones del Organizador de resultados. Cada componente representa una etapa visible; el estado y los cálculos permanecen fuera de Astro y del DOM.
 - `src/utils/paths.js`: contrato único para convertir rutas lógicas en rutas públicas mediante `import.meta.env.BASE_URL`. Conserva anclas y URL externas sin cambios.
 - `src/utils/chart.js`: núcleo matemático puro para validar dominios, crear escalas cartesianas o isotrópicas, muestrear funciones, recortar geometría y producir paths SVG.
 - `src/utils/diagram-layout.js`: geometría pura de colocación de etiquetas —métrica tipográfica, cajas de texto y de punta, separaciones, políticas de colocación y presets por familia—. No conoce el DOM.
 - `src/utils/diagram-geometry.js`: composición completa de un diagrama a partir de sus datos físicos. Única fuente compartida por el componente y por el verificador de colisiones del build.
 - `src/utils/content-scope.js`: contrato de ámbito (`global` o `course`) compartido por Avisos y Participa; valida, normaliza y produce la etiqueta localizada de un `scope`.
 - `src/utils/participation-precontext.js`: traduce query params en un contexto inicial seguro para Participa, validando curso/unidad/tema contra el registro vigente y cayendo a ámbito general ante cualquier valor inválido.
-- `src/data/teacher-tools.js`: registro explícito de herramientas docentes con `published`. El hub y `TeacherToolsNav` derivan su lista de ahí; una herramienta no publicada conserva su implementación pero no genera ruta.
 - `src/utils/kinematics-1d.js`: modelo puro de aceleración constante; valida
   parámetros y tiempo, calcula estado, retorno, distancia por tramos, muestras,
   extremos y dominios físicos finitos.
@@ -154,8 +142,6 @@ Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes 
   `requestAnimationFrame` y no reconstruye curvas durante cada frame.
 - `src/utils/simulation-experience.js`: normalización, validación estricta,
   serialización, IDs, packs y merge editorial de configuraciones no confiables.
-- `src/scripts/simulation-lab.js`: adapta formulario, preview y descarga al
-  contrato puro; no persiste ni interpreta código.
 - `src/utils/exercise-batches.js`: filtra y selecciona tandas procurando variedad de tema, tipo, representación y dificultad; no conoce el DOM ni persiste actividad.
 - `src/utils/exercise-families.js`: valida familias, genera parámetros con aleatoriedad criptográfica, evita combinaciones recientes en memoria y materializa una instancia determinista.
 - `src/utils/bonus-audit.js`: audita candidatos por slot y simula diversidad de tandas sin modificar blueprints.
@@ -165,27 +151,12 @@ Las experiencias usan esquema `2.0.0`: los parámetros y vistas son invariantes 
 - `src/utils/mathml.js`: constructores mínimos para producir MathML estructurado, delimitadores semánticos, etiquetas accesibles y anotaciones de texto TeX solo como metadato semántico.
 - `src/utils/participation.js`: núcleo puro para crear, validar y serializar una respuesta. No conoce formularios ni nodos del DOM y es la única fuente para TXT, JSON y CSV.
 - `src/scripts/participation.js`: adaptación pequeña entre formularios y contrato. Conserva una sola respuesta en memoria, controla la previsualización, descarga archivos, copia texto y abre la impresión nativa.
-- `src/utils/review.js`: valida cada JSON contra los contratos públicos vigentes, deduplica, agrega y serializa sin conocer el DOM. Conserva el objeto importado separado de la revisión docente.
-- `src/scripts/review-center.js`: adaptación cliente para File API, filtros, paginación, notas locales, descargas e impresión; no usa red ni almacenamiento del navegador.
-- `src/utils/results-csv.js`: parser CSV determinista con BOM, comillas, celdas multilínea y CRLF/LF; no separa filas o campos con `split()`.
-- `src/utils/results-organizer.js`: normaliza roster, correo, puntuaciones y timestamps; crea incidencias, aplica políticas explícitas, concilia y consolida sin conocer el DOM.
-- `src/utils/results-export.js`: proyecta un único consolidado hacia XLSX, tres CSV, TXT e impresión. Neutraliza prefijos de fórmulas en texto importado.
-- `src/scripts/results-organizer.js`: mantiene la sesión en memoria, conecta File API y controles, y carga el adaptador XLSX solo al leer o exportar un libro.
 
 Un componente se justifica cuando varias páginas comparten un contrato real. Un fragmento usado una sola vez puede permanecer en la página para evitar abstracciones innecesarias.
 
 ## Flujo de datos hacia una página
 
-Una página importa solamente las fuentes que necesita. Por ejemplo, la página de evaluación:
-
-1. importa `COURSE` y `EVALUATION` desde `course.js`;
-2. calcula el total con `reduce()`;
-3. entrega título y descripción a `BaseLayout`;
-4. usa `CoursePageHeader`, que a su vez incluye `CourseNav`;
-5. renderiza cada componente de evaluación con `map()`;
-6. recibe su apariencia desde las clases compartidas de `global.css`.
-
-La página no mantiene una copia local de los porcentajes. Así, la portada del curso, la página de evaluación y la validación leen el mismo contrato.
+Una página importa solamente las fuentes que necesita. Por ejemplo, Recursos obtiene `COURSE` y `BIBLIOGRAPHY` mediante `localizeCourseData()`, compone `CoursePageHeader` y `CourseNav`, y presenta los libros sin duplicar la fuente académica.
 
 ## Rutas
 
@@ -203,16 +174,11 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/simulaciones/poleas.astro` | `/simulaciones/poleas` |
 | `src/pages/participa.astro` | `/participa` |
 | `src/pages/actividades.astro` | `/actividades` |
-| `src/pages/fisica-basica-1/index.astro` | `/fisica-basica-1` |
-| `src/pages/fisica-basica-1/avisos.astro` | `/fisica-basica-1/avisos` |
-| `src/pages/fisica-basica-1/cronograma.astro` | `/fisica-basica-1/cronograma` |
 | `src/pages/fisica-basica-1/unidades.astro` | `/fisica-basica-1/unidades` |
 | `src/pages/fisica-basica-1/ejercicios.astro` | `/fisica-basica-1/ejercicios` |
 | `src/pages/fisica-basica-1/videos.astro` | `/fisica-basica-1/videos` |
-| `src/pages/fisica-basica-1/evaluacion.astro` | `/fisica-basica-1/evaluacion` |
 | `src/pages/fisica-basica-1/recursos.astro` | `/fisica-basica-1/recursos` |
 | `src/pages/fisica-basica-1/participa.astro` | `/fisica-basica-1/participa` |
-| `src/pages/fisica-basica-1/herramientas/index.astro` | `/fisica-basica-1/herramientas` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/index.astro` | `/fisica-basica-1/unidades/unidad-1` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/herramientas.astro` | `/fisica-basica-1/unidades/unidad-1/herramientas` |
 | `src/pages/fisica-basica-1/unidades/unidad-1/vectores.astro` | `/fisica-basica-1/unidades/unidad-1/vectores` |
@@ -224,16 +190,8 @@ Astro utiliza enrutamiento por archivos:
 | `src/pages/fisica-basica-1/ejercicios/unidad-1.astro` | `/fisica-basica-1/ejercicios/unidad-1` |
 | `src/pages/fisica-basica-1/mini-quices/index.astro` | `/fisica-basica-1/mini-quices` |
 | `src/pages/fisica-basica-1/mini-quices/[slug].astro` | `/fisica-basica-1/mini-quices/<slug>` |
-| `src/pages/fisica-basica-1/herramientas/avisos.astro` | `/fisica-basica-1/herramientas/avisos` |
-| `src/pages/fisica-basica-1/herramientas/notas.astro` | `/fisica-basica-1/herramientas/notas` |
 
-`index.astro` representa la carpeta que lo contiene. Por eso `fisica-basica-1/index.astro` no produce `/fisica-basica-1/index`, sino `/fisica-basica-1`.
-
-Banco de preguntas, Laboratorio de simulaciones y Centro de revisión no tienen
-wrapper de página en `src/pages/fisica-basica-1/herramientas/` ni en su
-contraparte inglesa: `published: false` en `src/data/teacher-tools.js` retira
-su ruta pública sin tocar su implementación. Ver
-«[Recopilación controlada y revisión docente](#recopilación-controlada-y-revisión-docente)».
+La entrada del curso activo apunta a `/fisica-basica-1/unidades` y a su contraparte inglesa. No existen páginas, aliases ni redirects para el overview, avisos de curso, cronograma, evaluación o herramientas docentes retirados.
 
 Los recursos pertenecen al curso que los selecciona. Por eso la página real
 forma parte de `COURSE_NAV`; `/recursos` no mantiene contenido duplicado y
@@ -294,8 +252,8 @@ académico vigente—, así que un cambio editorial futuro en la Unidad 1 no
 invalida archivos que un estudiante ya exportó. `1.1.0` añade
 `helpfulSupportOther`, que `1.2.0` conserva: solo existe y es obligatorio
 cuando `helpfulSupport` vale `other`; la normalización lo elimina al elegir
-otra opción. El Centro de revisión acepta las tres versiones sin migrar
-archivos del disco. Preview, TXT, JSON y CSV parten del mismo objeto validado;
+otra opción. Las tres versiones siguen validándose sin migrar archivos del
+disco. Preview, TXT, JSON y CSV parten del mismo objeto validado;
 `participationContextLabel()` resuelve la etiqueta mostrada del más específico
 al más general —tema, unidad, curso, ámbito general— y vuelve a localizar
 contra el registro vigente cuando el slug o número siguen existiendo, en vez de
@@ -340,121 +298,6 @@ una biblioteca de PDF: “Imprimir / PDF” abre la capacidad nativa del navegad
 La documentación de minimización, categorías de datos y conexión futura está
 en [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
 
-### Recopilación controlada y revisión docente
-
-El Centro de revisión (`src/components/review/`, servido por
-`ReviewCenterPage.astro`) conserva su implementación completa, pero
-`published: false` en `src/data/teacher-tools.js` retira su wrapper de página:
-`/fisica-basica-1/herramientas/revision` y `/en/basic-physics-1/tools/review`
-no existen en `dist`, no aparecen en el hub ni en `TeacherToolsNav`, y no están
-enlazadas desde ninguna superficie pública. Reactivarla exige solo volver a
-crear el wrapper (`import ReviewCenterPage from "…/ReviewCenterPage.astro"`) y
-marcar `published: true`; el componente, sus scripts y sus tests no cambian.
-Publicada, tampoco representaría un área privada: no tiene autenticación,
-backend ni control de acceso. Todo el procesamiento ocurre en la pestaña
-mediante File API.
-
-El flujo canónico usa los archivos JSON exportados por Participa. Un formulario
-externo, cuando el equipo docente decida utilizarlo, sirve únicamente como
-canal manual para recibir esos archivos; el sitio no integra proveedores,
-endpoints ni APIs. TXT, CSV y PDF siguen siendo salidas de lectura o trabajo,
-no formatos arbitrarios de importación.
-
-```text
-archivos JSON seleccionados por el docente
-   ↓ lectura local + validación independiente por archivo
-válido / advertencia / inválido
-   ↓ deduplicación por tipo e ID
-registros canónicos en memoria
-   ├─ conteos descriptivos separados por actividad
-   ├─ búsqueda, filtros y paginación
-   ├─ consulta básica de intentos de Mini quices
-   └─ propuesta original inmutable + revisión docente local
-          ↓
-      JSON / CSV / TXT / impresión de la sesión
-```
-
-La sesión de revisión usa esquema `1.0.0`. Cada elemento exportado conserva el
-objeto original, los archivos fuente y, solo para propuestas, una capa
-independiente con estado, nota y fecha de revisión. Los estados son `pending`,
-`interesting`, `needs-adjustments`, `discard` y `bank-candidate`. “Candidata al
-banco” no crea ni modifica un ejercicio: el paso al banco académico continúa
-requiriendo corrección y aprobación explícitas.
-
-Los duplicados producen una advertencia, registran todos los nombres de archivo
-y aportan una sola instancia a los agregados. Un archivo inválido no bloquea
-los demás. Los intentos de Mini quices se reconocen por esquema, ID, Mini quiz y versión.
-El Centro distingue copias anónimas e identificadas, muestra el correo
-únicamente cuando existe y permite filtrar o buscar ese dato; no consolida por
-estudiante, calificaciones ni infiere dominio.
-Todos los conteos son descriptivos y no constituyen diagnóstico, puntuación de
-satisfacción, analítica, clasificación automática ni investigación.
-
-El límite es 5 MB por archivo y las listas abiertas se paginan para mantener un
-comportamiento razonable con cientos de archivos. Limpiar la sesión requiere
-confirmación y elimina de memoria los archivos y notas de la pestaña. Las
-salidas son editables, no están firmadas y no autentican su contenido.
-
-### Organizador docente de resultados
-
-`/fisica-basica-1/herramientas/notas` concilia un listado con fuentes tabulares
-y resultados identificados de Mini quices. Es una herramienta local sin
-autenticación, backend, persistencia ni conexión a proveedores. No sustituye
-el sistema institucional ni modifica los cinco componentes oficiales de
-evaluación.
-
-La fuente de verdad es un objeto JavaScript de sesión. El DOM solo representa
-su estado:
-
-```text
-archivos y hojas sin modificar
-   ↓ mapping visible y editable
-roster + submissions normalizados (raw conservado)
-   ↓ conciliación por correo institucional normalizado
-matched / unknown / invalid / anonymous / missing
-   ↓ política explícita de duplicados y faltantes
-consolidado trazable + resumen descriptivo
-   ├─ XLSX: Consolidado / Incidencias / Resumen
-   ├─ CSV UTF-8 con BOM por cada tabla
-   ├─ TXT de resumen
-   └─ vista de impresión / Guardar como PDF
-```
-
-El correo se normaliza con Unicode NFKC, `trim` y minúsculas. No se eliminan
-puntos o aliases `+`, no se inventa un dominio y siempre se conserva
-`rawEmail`. Una identidad duplicada en el roster no se fusiona. Un correo
-desconocido no crea un estudiante. `missing` es un estado y no equivale a cero.
-
-Cada puntuación separa `rawScore`, `earnedPoints`, `possiblePoints` y
-`percentage`. Una fracción puede aportar su máximo; una fuente también puede
-usar una columna o un máximo fijo configurado. Un número sin máximo conserva
-su valor crudo y no se convierte a 0–5, 0–10 o porcentaje. Conflictos de
-escala, rangos y valores no finitos producen incidencias, no correcciones.
-
-Las políticas de duplicados son revisión pendiente, primero, último, mayor y
-promedio. Primero/último exigen timestamps válidos; mayor/promedio exigen
-porcentajes o una escala explícitamente comparable. La política y todas las
-submissions originales permanecen en el detalle. Para el promedio descriptivo,
-los faltantes quedan sin resolver por defecto; excluirlos o tratarlos como cero
-requiere una decisión visible. No existen ponderaciones ni conversión a escala
-0–5 en este bloque.
-
-Los JSON de Mini quices se validan con su contrato público. El organizador consume el
-`summary` canónico y comprueba su consistencia con la suma de preguntas sin
-recalificar pregunta por pregunta. Un intento anónimo se reconoce, pero no se
-concilia.
-
-`read-excel-file@9.3.4` y `write-excel-file@4.1.1` son dependencias MIT
-específicas para OOXML. El adaptador `results-xlsx-browser.js` usa `import()`;
-Vite produce chunks separados que solo referencia el script de esta ruta. La
-lectura obtiene valores de celda y no ejecuta macros ni fórmulas como código.
-La escritura usa tipos explícitos; cualquier string importado que comience por
-`=`, `+`, `-` o `@` se neutraliza antes de salir a XLSX o CSV.
-
-Los límites vigentes son 15 MB por archivo, 10 000 filas, 250 columnas y seis
-filas de preview. CSV y XLSX son entradas tabulares; `.xls` muestra una
-instrucción para guardar como `.xlsx` o `.csv`. No se incorpora ningún archivo
-real de estudiantes al repositorio.
 
 ### Mini quices y autodiagnóstico local
 
@@ -545,16 +388,9 @@ entrar en una tanda. En Mini quiz se materializa antes de crear el intento, y el
 snapshot conserva enunciado, respuesta, parámetros, versión e ID de instancia;
 la corrección y las exportaciones nunca regeneran la pregunta.
 
-El Editor de banco (`src/components/bank/QuestionBankEditor.astro`) sigue sin
-ruta pública —`published: false` en `src/data/teacher-tools.js`—, pero
-conserva su implementación intacta. No es administración ni tiene
-autenticación ficticia: previsualiza `singleChoice`, `number` y `multiNumber`,
-mantiene borradores en memoria y exporta `aula-fisica-question-pack-*.json` con
-Question Pack `2.0.0`, `authorSource: "teacher"` y `status: "draft"`. Cada Question 2.0 conserva una sola identidad, interacción y calificación, junto a `presentations.es` y `presentations.en`; la proyección pública deriva texto localizado sin cambiar IDs, unidades, tolerancias ni respuestas. Contenido
-con `requiresEditorialMath: true` queda fuera de Mini quices hasta composición y
-revisión editorial.
-
-El comando `npm run import:questions -- ruta/paquete.json` acepta solo JSON,
+La validación Question 2.0 y el almacenamiento importado se conservan porque
+`teacher-questions.json` forma parte de la composición pública de Unidad 1.
+No existe una interfaz docente en el sitio. El comando `npm run import:questions -- ruta/paquete.json` acepta solo JSON,
 valida IDs, paridad ES/EN, respuestas basadas en IDs y duplicados, rechaza esquemas `1.x` con un error explícito y combina los borradores en
 `teacher-questions.json`. No ejecuta el archivo, no publica y no cambia el
 estado a `review` o `published`. El flujo sigue siendo:
@@ -567,26 +403,15 @@ editor local → paquete docente JSON → importador del repositorio
 ### Avisos y flujo editorial
 
 `notices.json` conserva los datos y `notices.js` oculta su representación física.
-El esquema vigente `3.0.0` exige `locale` explícito y un `scope` validado por el contrato compartido:
+El esquema vigente `3.0.0` exige `locale` explícito y los avisos vigentes usan
+`{ "type": "global" }`. `getPublishedNotices()` filtra estado y locale;
+`getHomepageNotices()` prioriza destacados, deduplica y devuelve como máximo
+tres. `/avisos` y `/en/notices` son los únicos archivos públicos.
 
-```json
-{ "type": "global" }
-{ "type": "course", "courseId": "fisica-basica-1" }
-```
-
-`courseId` siempre se resuelve contra `courses.js`. Un ámbito global no admite
-esa propiedad y no existe inferencia por categoría, enlace o ubicación del
-editor. Las páginas consumen `getGlobalNotices()` o
-`getCourseNotices(courseId)`. `getPublishedNotices()` conserva la frontera de
-todos los publicados y `getHomepageNotices()` combina globales con cursos
-activos, prioriza destacados, deduplica y devuelve como máximo tres. `/avisos`
-es el archivo general; cada curso puede tener su archivo contextual, hoy
-`/fisica-basica-1/avisos`, ambos con estado vacío válido.
-
-El Editor de avisos genera ID, versiones y estado `draft`, obtiene los destinos
-del registro canónico, muestra contenido y ámbito en la previsualización y
-exporta `aula-fisica-notice-pack-*.json` con esquema `2.0.0`. El importador
-acepta solo JSON, valida ámbito, fechas, categorías, duplicados, texto y enlaces,
+El Editor de avisos se monta plegado después del archivo, no ofrece selector de
+curso y genera siempre `scope: { type: "global" }`. Conserva ID, versiones y
+estado `draft`, y exporta `aula-fisica-notice-pack-*.json` con esquema
+`3.0.0`. El importador valida fechas, categorías, duplicados, texto y enlaces,
 y fuerza `review`:
 
 ```text
@@ -596,8 +421,8 @@ editor local → notice pack (draft) → npm run import:notices
 
 `publishedAt` es metadato editorial, no un programador. En un sitio estático un
 cambio de disponibilidad requiere un build. La transición completa es `draft →
-review → published → archived`; en esta fase, cambiar de `review` a `published`
-es una acción editorial revisada en el repositorio.
+review → published → archived`; cambiar de `review` a `published` requiere
+una acción editorial revisada en el repositorio.
 
 Los paquetes `1.x` se rechazan de forma explícita. Carecen de ámbito y el
 importador no intenta deducirlo; cada aviso debe abrirse en el editor vigente,
@@ -813,7 +638,7 @@ Los imports CSS y los recursos generados por Astro reciben `base` durante el bui
 - cabecera, menú y portada;
 - páginas generales y estados editoriales;
 - estructura interna del curso;
-- cronograma y unidades;
+- unidades y páginas académicas del curso;
 - visualizaciones SVG académicas y sus variantes responsive e imprimibles;
 - simulación 1D en `kinematics-simulation.css`, separada de las figuras académicas estáticas;
 - breakpoints responsive y reducción de movimiento.
@@ -1023,66 +848,6 @@ del lienzo y son utilizables aunque el renderer visual falle. La dependencia se
 sirve desde el bundle local, sin CDN, y se atribuye en
 `THIRD_PARTY_NOTICES.md`.
 
-### Autoría declarativa de simulaciones
-
-El Laboratorio de simulaciones (`src/components/simulations/SimulationLab.astro`,
-servido por `SimulationLabPage.astro`) es el primer constructor visual seguro,
-aunque `published: false` retira su wrapper de página mientras no se decida
-publicarlo. Presenta los modelos reales registrados y obtiene límites,
-etiquetas, vistas y renderer desde metadata. Título, resumen, parámetros,
-bloqueo, hasta cinco presets, hasta seis observaciones y contextos de las
-unidades registradas se mantienen en memoria. Recargar descarta la sesión.
-
-```text
-formulario docente
-   ↓ createSimulationExperienceDraft() + validación estricta
-experiencia draft
-   ├─ dispatcher → renderer real del modelo seleccionado
-   └─ simulation pack 2.0.0 → descarga JSON explícita
-                                  ↓
-                     npm run import:simulations
-                                  ↓ fuerza review
-                     revisión humana en Git → published → build
-```
-
-La preview no inserta JSON en un script ejecutable ni usa `innerHTML`: Astro
-escapa el atributo de datos inicial, el contrato rechaza marcado y el cliente
-crea nodos con `createElement`, `textContent` y `replaceChildren`. Cada cambio
-válido reconstruye la geometría una vez. El runtime mantiene un solo
-`requestAnimationFrame`, lo cancela al pausar y expone `destroy()` para abandonar
-la herramienta sin dejar listeners o animaciones activos.
-
-El pack y la experiencia usan esquemas separados `2.0.0`. El pack declara ID
-aleatorio, `createdAt`, `source: teacher` y experiencias `draft`; no incluye
-cuentas, cookies, almacenamiento, dispositivo ni datos estudiantiles. El
-importador solo lee JSON, valida el registro completo, rechaza IDs existentes y
-escribe mediante archivo temporal con estado `review`.
-
-El diseño registra un renderer SVG y tres renderers p5/Canvas 2D. Añadir otra
-familia requiere modelo puro, metadata, renderer con ciclo de vida, experiencia
-validada y pruebas; el contenido no puede inyectar un renderer arbitrario.
-No existe editor de código o p5, parser de fórmulas, WebGL, sandbox, CMS, backend,
-autenticación ni publicación directa. Un futuro modo avanzado con código
-requerirá un sandbox y un modelo de seguridad distintos.
-
-Para añadir una gráfica estática:
-
-1. importar `CartesianChart.astro` en la página académica aprobada;
-2. definir dominios, ejes y series con magnitudes y unidades verificadas;
-3. asignar `id` únicos a gráfica y series;
-4. redactar `title` y `description` que expliquen la información, no la decoración;
-5. elegir patrones o marcadores que mantengan distinguibles las series;
-6. comprobar valores límite, discontinuidades, claro/oscuro y ancho móvil;
-7. ejecutar `npm run validate` y `npm run build`.
-
-No se publica una ruta de desarrollo para visualizaciones. El contrato técnico
-de la infraestructura SVG se comprueba mediante `npm run validate` y los tests
-unitarios, sin exponer datos sintéticos en el sitio estable.
-
-Canvas se usa en el proyectil porque la escena animada necesita redibujado
-continuo, vectores y una trayectoria responsive. Controles, explicación y
-alternativa accesible siguen fuera del lienzo. Una curva, diagrama vectorial o
-gráfica imprimible de complejidad moderada debe continuar en SVG.
 
 ## Accesibilidad
 
@@ -1106,11 +871,10 @@ Los contratos más importantes son:
 
 `scripts/validate.mjs` no utiliza paquetes adicionales. Recorre el sistema de archivos y comprueba:
 
-- suma de evaluación igual a 100 %;
-- sesiones consecutivas y fechas ordenadas;
-- ausencia de sesiones, rutas, avisos o videos duplicados;
-- contrato de avisos, filtro público por estado, categorías y rutas del hub docente;
+- ausencia de rutas, avisos o videos duplicados;
+- contrato de avisos, filtro público por estado/locale y ámbito global;
 - existencia de las rutas declaradas en `COURSE_NAV`;
+- ausencia de las catorce páginas administrativas retiradas y de sus route IDs;
 - tres modos de participación, temas reales, contrato local/anónimo y ausencia de `research` o `measurement` públicos;
 - enlaces internos principales;
 - funcionamiento del resolvedor con `/pagina-fisica`, anclas y URL externas;
@@ -1131,7 +895,6 @@ Los contratos más importantes son:
 - doce pruebas de participación para esquema, IDs, requeridos, enums, opcionales y serialización TXT/JSON/CSV con Unicode y saltos de línea;
 - contratos de mapa, disclosure progresivo y secuencia de ejercicios sin persistencia ni dependencias nuevas;
 - figuras académicas con dominios válidos, coordenadas físicas finitas y descripción accesible.
-- Organizador de resultados: CSV robusto, correo y puntuaciones estrictos, incidencias, conciliación, políticas de duplicados/faltantes, consolidación y XLSX de tres hojas; los fixtures son sintéticos.
 
 Comandos habituales:
 

@@ -8,14 +8,10 @@ import { withBase } from "../../utils/paths.js";
 const { locale = "es" } = Astro.props;
 const { pathname } = Astro.url;
 const navigationItems = [
-  [ROUTE_IDS.COURSE, "course"],
-  [ROUTE_IDS.COURSE_NOTICES, "notices"],
-  [ROUTE_IDS.COURSE_SCHEDULE, "schedule"],
   [ROUTE_IDS.COURSE_UNITS, "units"],
   [ROUTE_IDS.COURSE_PRACTICE, "practice"],
   [ROUTE_IDS.COURSE_MINI_QUIZZES, "bonuses"],
   [ROUTE_IDS.COURSE_VIDEOS, "videos"],
-  [ROUTE_IDS.COURSE_ASSESSMENT, "assessment"],
   [ROUTE_IDS.COURSE_RESOURCES, "resources"],
   [ROUTE_IDS.COURSE_PARTICIPATE, "participate"],
 ];

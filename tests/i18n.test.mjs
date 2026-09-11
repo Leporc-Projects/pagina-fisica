@@ -38,10 +38,10 @@ test("todas las categorías del catálogo tienen etiqueta bilingüe", () => {
 });
 
 test("t exige claves y parámetros conocidos y no interpola markup", () => {
-  assert.equal(t("en", "shell.semester", { semester: "2026-2" }), "Semester 2026-2");
+  assert.equal(t("en", "simulation.currentTime", { time: "2.0 s" }), "Current time: 2.0 s");
   assert.throws(() => t("en", "missing.key"), /Missing translation key/);
-  assert.throws(() => t("en", "shell.semester"), /Missing interpolation parameter/);
-  assert.throws(() => t("en", "shell.semester", { semester: "<b>bad</b>" }), /markup/);
+  assert.throws(() => t("en", "simulation.currentTime"), /Missing interpolation parameter/);
+  assert.throws(() => t("en", "simulation.currentTime", { time: "<b>bad</b>" }), /markup/);
 });
 
 test("los errores visibles de simulación se localizan sin cambiar sus valores", () => {
@@ -84,7 +84,7 @@ test("las rutas bilingües son humanas, reversibles y no crean prefijo /es", () 
   assert.equal(getRouteIdFromPath("/en/simulations/projectile-2d/"), ROUTE_IDS.PROJECTILE_2D);
   assert.equal(getRouteCounterpart("/simulaciones/proyectil-2d", "en"), "/en/simulations/projectile-2d");
   assert.equal(getRouteCounterpart("/en/simulations/projectile-2d", "es"), "/simulaciones/proyectil-2d");
-  assert.equal(getRouteCounterpart("/fisica-basica-1", "en"), "/en/basic-physics-1");
+  assert.equal(getRouteCounterpart("/fisica-basica-1/unidades", "en"), "/en/basic-physics-1/units");
   assert.equal(getRouteCounterpart("/fisica-basica-1/mini-quices/cinematica", "en"), "/en/basic-physics-1/mini-quizzes/cinematica");
   assert.ok(Object.values(LOCALIZED_ROUTES).every((routes) => !String(routes.es).startsWith("/es")));
 });

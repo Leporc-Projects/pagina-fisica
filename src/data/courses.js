@@ -10,7 +10,7 @@ export const COURSES = Object.freeze([
   Object.freeze({
     id: COURSE_IDS.PHYSICS_BASIC_1,
     name: "Física Básica I",
-    href: "/fisica-basica-1",
+    href: "/fisica-basica-1/unidades",
     active: true,
   }),
 ]);

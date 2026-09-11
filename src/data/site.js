@@ -19,8 +19,7 @@ export const getNavigation = (locale) => [
   },
   {
     labelKey: "nav.course",
-    href: getLocalizedPath(ROUTE_IDS.COURSE, locale),
-    disabled: !getLocalizedPath(ROUTE_IDS.COURSE, locale),
+    href: getLocalizedPath(ROUTE_IDS.COURSE_UNITS, locale),
     children: locale === "es"
       ? COURSE_NAV.filter((item) => item.includeInGlobalMenu !== false)
       : undefined,
@@ -60,7 +59,7 @@ export const NAV = [
   },
   {
     label: COURSE.name,
-    href: "/fisica-basica-1",
+    href: "/fisica-basica-1/unidades",
     children: COURSE_NAV.filter(
       (item) => item.includeInGlobalMenu !== false
     ),
@@ -87,8 +86,8 @@ export const HOME_LINKS = [
   {
     number: "01",
     label: COURSE.name,
-    description: "Información, unidades y materiales del curso activo.",
-    href: "/fisica-basica-1",
+    description: "Unidades, práctica y materiales del curso activo.",
+    href: "/fisica-basica-1/unidades",
   },
   {
     number: "02",

@@ -15,14 +15,11 @@
     "preview": "astro preview",
     "import:notices": "node scripts/import-notices.mjs",
     "import:questions": "node scripts/import-questions.mjs",
-    "import:simulations": "node scripts/import-simulations.mjs",
     "stats:loc": "node scripts/loc-stats.mjs",
     "astro": "astro"
   },
   "dependencies": {
     "astro": "^7.1.6",
-    "p5": "2.3.1",
-    "read-excel-file": "^9.3.4",
-    "write-excel-file": "^4.1.1"
+    "p5": "2.3.1"
   }
 }

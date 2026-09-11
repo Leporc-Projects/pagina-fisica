@@ -34,7 +34,7 @@ const localizePairs = (source, labels) => {
  * registro académico genérico (`getDevelopedAcademicUnitsForCourse`), así que
  * Unidades 4-7 se incorporan sin editar este módulo. `topics` aplana ese
  * catálogo para los consumidores que solo necesitan slug + título, como el
- * filtro de tema del Centro de revisión.
+ * filtro de tema de la interfaz de participación.
  */
 export const localizeParticipationData = (locale) => {
   assertSupportedLocale(locale);

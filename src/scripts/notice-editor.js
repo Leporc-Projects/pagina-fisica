@@ -27,7 +27,7 @@ const create = (tag, text, className) => {
 // in the notice contract and may deliberately differ from the surrounding UI.
 const readDraft = (form, id) => createNoticeDraft({
   locale: fieldValue(form, "locale"),
-  scope: fieldValue(form, "scope") === "global" ? { type: "global" } : { type: "course", courseId: fieldValue(form, "scope") },
+  scope: { type: "global" },
   title: fieldValue(form, "title"),
   summary: fieldValue(form, "summary"),
   content: fieldValue(form, "content"),

@@ -1,10 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 
 import { SIMULATION_EXPERIENCES } from "../src/data/simulation-experiences.js";
 import {
@@ -12,27 +7,13 @@ import {
   getTurningPoint,
 } from "../src/utils/kinematics-1d.js";
 import {
-  SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION,
   SIMULATION_EXPERIENCE_SCHEMA_VERSION,
-  createSimulationExperienceDraft,
-  createSimulationExperiencePack,
-  mergeSimulationExperiencePack,
   normalizeSimulationExperience,
-  simulationExperiencePackFilename,
-  toSimulationExperiencePackJSON,
   validateSimulationExperience,
-  validateSimulationExperiencePack,
 } from "../src/utils/simulation-experience.js";
 
 const published = SIMULATION_EXPERIENCES[0];
 const clone = (value = published) => structuredClone(value);
-const fixedCrypto = {
-  getRandomValues(bytes) {
-    bytes.fill(0xab);
-    return bytes;
-  },
-};
-const validDraft = () => ({ ...clone(), id: "teacher-kinematics-draft", status: "draft" });
 
 test("la experiencia publicada satisface el contrato 2.0.0", () => {
   assert.equal(published.schemaVersion, SIMULATION_EXPERIENCE_SCHEMA_VERSION);
@@ -199,89 +180,6 @@ test("normalizar conserva la semántica canónica", () => {
   const normalized = normalizeSimulationExperience(clone());
   assert.deepEqual(normalized, published);
   assert.notEqual(normalized, published);
-});
-
-test("crea un borrador con ID seguro sin identidad personal", () => {
-  const source = clone();
-  delete source.id;
-  const draft = createSimulationExperienceDraft(source, { cryptoApi: fixedCrypto });
-  assert.match(draft.id, /^kinematics-1d-cinematica-en-una-dimension-[0-9a-f]{12}$/);
-  assert.equal(draft.status, "draft");
-  assert.equal("author" in draft, false);
-});
-
-test("crea y valida un paquete docente 2.0.0", () => {
-  const pack = createSimulationExperiencePack([validDraft()], {
-    cryptoApi: fixedCrypto,
-    createdAt: "2026-08-11T12:00:00.000Z",
-  });
-  assert.equal(pack.schemaVersion, SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION);
-  assert.equal(pack.source, "teacher");
-  assert.equal(validateSimulationExperiencePack(pack).valid, true);
-  assert.equal(
-    simulationExperiencePackFilename(pack),
-    "aula-fisica-simulation-pack-2026-08-11-abababab.json"
-  );
-});
-
-test("rechaza paquetes inválidos, propiedades y experiencias no draft", () => {
-  const pack = createSimulationExperiencePack([validDraft()], { cryptoApi: fixedCrypto });
-  pack.extra = true;
-  assert.ok(validateSimulationExperiencePack(pack).issues.some((entry) => entry.code === "unknown-property"));
-  delete pack.extra;
-  pack.experiences[0].status = "published";
-  assert.ok(validateSimulationExperiencePack(pack).issues.some((entry) => entry.code === "non-draft-pack"));
-});
-
-test("la importación fuerza review y rechaza duplicados", () => {
-  const pack = createSimulationExperiencePack([validDraft()], { cryptoApi: fixedCrypto });
-  const merged = mergeSimulationExperiencePack(pack, [published]);
-  assert.equal(merged.imported[0].status, "review");
-  assert.equal(merged.experiences.length, 2);
-  const duplicatePack = createSimulationExperiencePack([
-    { ...validDraft(), id: published.id },
-  ], { cryptoApi: fixedCrypto });
-  assert.throws(() => mergeSimulationExperiencePack(duplicatePack, [published]), /ya existe/);
-});
-
-test("el JSON exportado es estable, legible y termina en salto de línea", () => {
-  const pack = createSimulationExperiencePack([validDraft()], {
-    cryptoApi: fixedCrypto,
-    createdAt: "2026-08-11T12:00:00.000Z",
-  });
-  const first = toSimulationExperiencePackJSON(pack);
-  const second = toSimulationExperiencePackJSON(pack);
-  assert.equal(first, second);
-  assert.ok(first.endsWith("\n"));
-  assert.deepEqual(JSON.parse(first), pack);
-});
-
-test("import:simulations procesa JSON, fuerza review y no sobrescribe", (context) => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "aula-fisica-simulations-"));
-  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const source = path.join(directory, "pack.json");
-  const target = path.join(directory, "experiences.json");
-  const pack = createSimulationExperiencePack([validDraft()], {
-    cryptoApi: fixedCrypto,
-    createdAt: "2026-08-11T12:00:00.000Z",
-  });
-  fs.writeFileSync(source, JSON.stringify(pack), "utf8");
-  fs.writeFileSync(target, "[]\n", "utf8");
-
-  const importer = fileURLToPath(new URL("../scripts/import-simulations.mjs", import.meta.url));
-  const result = spawnSync(process.execPath, [importer, source, "--target", target], {
-    encoding: "utf8",
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /estado review/);
-  const stored = JSON.parse(fs.readFileSync(target, "utf8"));
-  assert.equal(stored[0].status, "review");
-
-  const repeated = spawnSync(process.execPath, [importer, source, "--target", target], {
-    encoding: "utf8",
-  });
-  assert.notEqual(repeated.status, 0);
-  assert.match(repeated.stderr, /ya existe/);
 });
 
 test("los cuatro parámetros aceptan rangos pedagógicos restringidos", () => {

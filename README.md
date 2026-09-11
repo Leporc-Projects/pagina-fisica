@@ -2,7 +2,7 @@
 
 Sitio docente personal e independiente de César Barrero para organizar información académica, materiales propios y recursos relacionados con la enseñanza de la física. No constituye un sitio oficial de la Universidad de Antioquia.
 
-El primer curso desarrollado es Física Básica I. Los datos académicos estables provienen del programa oficial y el cronograma del semestre 2026-2 se organiza a partir del plan clase a clase.
+El primer curso activo es Física Básica I. Su organización académica estable proviene del programa oficial.
 
 Sitio publicado: [https://aulafisica.com](https://aulafisica.com)
 
@@ -52,12 +52,9 @@ pagina-fisica/
 
 Las rutas siguientes son rutas lógicas del proyecto y se publican desde la raíz de `https://aulafisica.com`.
 
-La cobertura actual está completa en español e inglés, tanto para el recorrido estudiantil como para las herramientas docentes. Las rutas inglesas equivalentes viven bajo `/en/`; las seis rutas docentes comparten implementación y conservan datos, IDs y claves de máquina entre idiomas.
+La cobertura académica actual está completa en español e inglés. Las rutas inglesas equivalentes viven bajo `/en/`; los datos, IDs, física y calificación permanecen compartidos entre idiomas.
 
 - `/`: portada y avisos recientes.
-- `/fisica-basica-1`: información general del curso.
-- `/fisica-basica-1/avisos`: avisos publicados específicamente para el curso.
-- `/fisica-basica-1/cronograma`: sesiones del semestre 2026-2.
 - `/fisica-basica-1/unidades`: catálogo de siete unidades, todas con contenido académico completo ES/EN.
 - `/fisica-basica-1/ejercicios`: catálogo de práctica; abre los bancos de las siete unidades.
 - `/fisica-basica-1/unidades/unidad-2`: Leyes de Newton, con siete temas y práctica propia.
@@ -67,15 +64,9 @@ La cobertura actual está completa en español e inglés, tanto para el recorrid
 - `/fisica-basica-1/unidades/unidad-6`: Rotación de cuerpos rígidos, con diez temas y práctica propia.
 - `/fisica-basica-1/unidades/unidad-7`: Gravitación y movimiento periódico, con diez temas y práctica propia.
 - `/fisica-basica-1/videos`: biblioteca audiovisual por unidades.
-- `/fisica-basica-1/evaluacion`: evaluación oficial y política de privacidad.
 - `/fisica-basica-1/recursos`: guías, bibliografía y recursos externos del curso.
-- `/fisica-basica-1/herramientas`: hub de herramientas docentes locales.
-- `/fisica-basica-1/herramientas/banco`: editor bilingüe de preguntas fijas Question 2.0.
-- `/fisica-basica-1/herramientas/avisos`: editor local de avisos.
-- `/fisica-basica-1/herramientas/simulaciones`: Laboratorio local para configurar, previsualizar y exportar experiencias declarativas.
-- `/fisica-basica-1/herramientas/revision`: Centro local de revisión.
-- `/fisica-basica-1/herramientas/notas`: Organizador local de resultados.
-- `/avisos`: archivo público de avisos.
+- `/fisica-basica-1/participa`: participación local con contexto del curso.
+- `/avisos`: único archivo público de avisos en español; al final incluye el editor local plegable.
 - `/recursos`: compatibilidad; redirige a los recursos de Física Básica I.
 - `/simulaciones`: catálogo canónico cuyas categorías se derivan de las simulaciones publicadas.
 - `/simulaciones/cinematica-1d`: simulación propia de movimiento unidimensional con aceleración constante.
@@ -88,8 +79,8 @@ La cobertura actual está completa en español e inglés, tanto para el recorrid
 - `/en/simulations/projectile-2d`: Proyectil 2D en inglés.
 - `/en/simulations/forces-friction`: Fuerzas y fricción en inglés.
 - `/en/simulations/pulleys`: Laboratorio de poleas y cuerdas en inglés.
-- `/en/basic-physics-1/tools`: hub docente y contrapartes inglesas completas de las cinco herramientas.
-- `/herramientas`: acceso de compatibilidad al hub docente del curso.
+- `/en/basic-physics-1/units`: entrada académica del curso activo en inglés.
+- `/en/notices`: único archivo público de avisos en inglés, con el mismo editor local.
 - `/actividades`: ruta de compatibilidad hacia ejercicios y tutorías.
 
 ## Desarrollo local
@@ -161,8 +152,8 @@ para conservar rutas lógicas portables sin escribir el dominio en cada página.
 
 ## Validación
 
-La validación interna comprueba la evaluación, el cronograma, los identificadores,
-las rutas, los enlaces internos principales, el catálogo y los contextos de las
+La validación interna comprueba los identificadores, las rutas, los enlaces
+internos principales, el catálogo y los contextos de las
 simulaciones, la infraestructura SVG y que las plantillas no introduzcan `href`
 o `src` literales incompatibles con `base`:
 
@@ -218,20 +209,6 @@ Los tres casos publicados son movimiento uniforme (`x₀=-6`, `v₀=2,5`, `a=0`,
 no persiste parámetros o progreso, no usa red y conserva contenido y gráficas
 iniciales útiles cuando JavaScript está desactivado.
 
-El Laboratorio de simulaciones funciona completamente en memoria, no usa red,
-`localStorage` ni identidad docente. Previsualiza mediante el mismo componente y
-runtime que producción para cualquiera de los cinco modelos internos registrados y descarga
-un `simulation experience pack` en estado `draft`. Al cambiar de modelo reinicia
-parámetros, vistas, presets y contextos incompatibles. Para incorporarlo al
-almacenamiento editorial:
-
-```sh
-npm run import:simulations -- ruta/al/paquete.json
-```
-
-El importador acepta únicamente JSON, valida modelos, límites, vistas, presets,
-texto y contextos, rechaza duplicados y fuerza `review`; nunca publica.
-
 p5.js está fijado en la versión 2.3.1, se distribuye desde el paquete local y se
 carga de forma diferida únicamente al montar un renderer que lo requiere; no hay
 CDN ni globals `setup`/`draw`. Su atribución y licencia LGPL-2.1 están documentadas
@@ -241,11 +218,11 @@ en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ### Avisos
 
-Los avisos se almacenan en `src/data/notices.json` con esquema `3.0.0`, locale explícito y un ámbito obligatorio: `{ "type": "global" }` o `{ "type": "course", "courseId": "fisica-basica-1" }`. Los avisos actuales tienen registros editoriales explícitos en ambos locales; nunca existe fallback o traducción en runtime entre ellos.
+Los avisos se almacenan en `src/data/notices.json` con esquema `3.0.0`, locale explícito y ámbito global. Los avisos actuales tienen registros editoriales explícitos en ambos locales; nunca existe fallback o traducción en runtime entre ellos.
 
-`src/data/notices.js` expone consultas separadas para todos los publicados, los generales, los de un curso y la selección de portada. `/avisos` muestra solo avisos generales; `/fisica-basica-1/avisos` muestra solo los del curso; la portada combina ambos ámbitos para los cursos activos, prioriza destacados y limita la salida a tres registros sin duplicados.
+`src/data/notices.js` expone la consulta de publicados y la selección de portada. `/avisos` y `/en/notices` son los únicos archivos públicos; la portada prioriza destacados y limita la salida a tres registros sin duplicados.
 
-El editor local obtiene sus destinos del registro de cursos. Sus paquetes también usan esquema `3.0.0`. Los borradores se importan con `npm run import:notices -- archivo.json` y quedan en `review` hasta su aprobación editorial. Los paquetes anteriores se rechazan porque no declaran todos los campos obligatorios; deben regenerarse y revisarse, nunca se infiere su destino o idioma.
+El editor local aparece después del archivo público y genera únicamente avisos globales. Sus paquetes también usan esquema `3.0.0`. Los borradores se importan con `npm run import:notices -- archivo.json` y quedan en `review` hasta su aprobación editorial. Los paquetes anteriores se rechazan porque no declaran todos los campos obligatorios; deben regenerarse y revisarse, nunca se infiere su idioma.
 
 ## Métricas LOC
 
@@ -266,4 +243,4 @@ La bibliografía académica se mantiene en `src/data/course.js` y sus recursos s
 
 ### Datos académicos
 
-`src/data/course.js` concentra los datos estables del curso y el cronograma. Cualquier diferencia entre el programa oficial y el plan clase a clase debe revisarse con el profesor antes de modificar la organización temática.
+`src/data/course.js` concentra la identidad, el propósito académico, la navegación retenida, las siete unidades y la bibliografía. No contiene semestre, grupo, carga horaria, porcentajes de evaluación ni cronograma. Conserva el código histórico únicamente porque forma parte de los contratos de archivo Mini Quiz 1.x y Participación 1.x; no se renderiza en la interfaz vigente.

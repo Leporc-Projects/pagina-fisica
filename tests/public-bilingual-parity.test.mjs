@@ -11,13 +11,11 @@ import { eligiblePoolForBonus } from "../src/utils/bonus.js";
 test("las proyecciones públicas conservan los invariantes académicos", () => {
   const es = localizeCourseData("es");
   const en = localizeCourseData("en");
-  assert.equal(en.COURSE.code, es.COURSE.code);
-  assert.equal(en.COURSE.totalHours, es.COURSE.totalHours);
-  assert.deepEqual(en.EVALUATION.map((item) => item.percentage), es.EVALUATION.map((item) => item.percentage));
-  assert.deepEqual(en.SCHEDULE.map((item) => [item.session, item.date]), es.SCHEDULE.map((item) => [item.session, item.date]));
-  assert.deepEqual(en.SCHEDULE.map((item) => [item.session, item.date, item.type, item.chapter]), es.SCHEDULE.map((item) => [item.session, item.date, item.type, item.chapter]));
-  assert.ok(en.SCHEDULE.every((item, index) => item.title !== es.SCHEDULE[index].title && item.topics.every(Boolean) && item.objectives.every(Boolean)));
-  assert.equal(en.EVALUATION.reduce((total, item) => total + item.percentage, 0), 100);
+  assert.equal(en.COURSE.id, es.COURSE.id);
+  assert.equal(en.COURSE.active, es.COURSE.active);
+  assert.equal(en.COURSE.href, "/en/basic-physics-1/units");
+  assert.deepEqual(en.UNITS.map((unit) => unit.number), es.UNITS.map((unit) => unit.number));
+  assert.deepEqual(en.BIBLIOGRAPHY.map((book) => book.title), es.BIBLIOGRAPHY.map((book) => book.title));
 });
 
 test("Unidad 1 conserva IDs, orden y rutas profundas localizadas", () => {

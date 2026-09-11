@@ -1,10 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 
 import {
   SIMULATION_EXPERIENCES,
@@ -24,13 +19,7 @@ import {
   getSimulationsForCourseTopic,
 } from "../src/data/simulations.js";
 import { createProjectileCanvasTransform } from "../src/utils/projectile-canvas.js";
-import {
-  createSimulationExperiencePack,
-  mergeSimulationExperiencePack,
-  validateSimulationExperience,
-  validateSimulationExperiencePack,
-} from "../src/utils/simulation-experience.js";
-import { createSimulationLabBaseConfiguration } from "../src/utils/simulation-authoring.js";
+import { validateSimulationExperience } from "../src/utils/simulation-experience.js";
 import { getKinematicsState, getTurningPoint } from "../src/utils/kinematics-1d.js";
 import {
   getSimulationRendererClient,
@@ -38,7 +27,6 @@ import {
 } from "../src/scripts/simulation-renderer-runtime.js";
 
 const clone = (value) => structuredClone(value);
-const fixedCrypto = { getRandomValues(bytes) { bytes.fill(0xcd); return bytes; } };
 
 test("registra cinco modelos internos y cinco renderers con relaciones únicas", () => {
   assert.deepEqual(SIMULATION_MODELS.map((model) => model.id), ["kinematics-1d", "projectile-2d", "forces-friction", "pulley-systems", "circular-radial-force"]);
@@ -135,23 +123,7 @@ test("el catálogo recupera las cuatro simulaciones y sus contextos", () => {
   assert.deepEqual(getSimulationsForCourseTopic("fisica-basica-1", 3, "dinamica-circular"), []);
 });
 
-test("el Laboratorio construye configuraciones base independientes", () => {
-  const kinematics = createSimulationLabBaseConfiguration("kinematics-1d");
-  const projectile = createSimulationLabBaseConfiguration("projectile-2d");
-  const forces = createSimulationLabBaseConfiguration("forces-friction");
-  const circular = createSimulationLabBaseConfiguration("circular-radial-force");
-  const pulley = createSimulationLabBaseConfiguration("pulley-systems");
-  assert.deepEqual(Object.keys(kinematics.parameters), ["x0", "v0", "a", "T"]);
-  assert.deepEqual(Object.keys(projectile.parameters), ["y0", "v0", "theta", "g"]);
-  assert.deepEqual(Object.keys(forces.parameters), ["F", "beta", "muS", "muK", "m", "alpha", "g", "v0"]);
-  assert.deepEqual(Object.keys(circular.parameters), ["v", "R", "Tmax", "m"]);
-  assert.deepEqual(Object.keys(pulley.parameters), ["m1", "m2", "m3", "mL", "mC", "muS", "muK", "g"]);
-  kinematics.parameters.v0.default = -20;
-  assert.equal(projectile.parameters.v0.default, 20);
-  assert.throws(() => createSimulationLabBaseConfiguration("future-model"), RangeError);
-});
-
-test("el preview ES/EN cambia presentación sin duplicar configuración física", () => {
+test("la presentación ES/EN cambia sin duplicar configuración física", () => {
   const canonical = getSimulationExperienceByModelId("projectile-2d");
   const es = localizeSimulationExperience(canonical, "es");
   const en = localizeSimulationExperience(canonical, "en");
@@ -159,42 +131,6 @@ test("el preview ES/EN cambia presentación sin duplicar configuración física"
   assert.deepEqual(es.parameters, en.parameters);
   assert.deepEqual(es.views, en.views);
   assert.equal(es.modelId, en.modelId);
-
-  const component = fs.readFileSync(new URL("../src/components/simulations/SimulationLab.astro", import.meta.url), "utf8");
-  const runtime = fs.readFileSync(new URL("../src/scripts/simulation-lab.js", import.meta.url), "utf8");
-  assert.match(component, /name="simulationPreviewLocale"/);
-  assert.match(runtime, /previewLocale/);
-  assert.match(runtime, /localizeSimulationExperience/);
-});
-
-test("un pack de proyectil es válido y la importación fuerza review", () => {
-  const source = clone(getSimulationExperienceByModelId("projectile-2d"));
-  source.id = "teacher-projectile-draft";
-  source.status = "draft";
-  const pack = createSimulationExperiencePack([source], { cryptoApi: fixedCrypto });
-  assert.equal(validateSimulationExperiencePack(pack).valid, true);
-  const merged = mergeSimulationExperiencePack(pack, SIMULATION_EXPERIENCES);
-  assert.equal(merged.imported[0].modelId, "projectile-2d");
-  assert.equal(merged.imported[0].status, "review");
-});
-
-test("el importador CLI acepta proyectil y conserva revisión", (context) => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "aula-projectile-import-"));
-  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const sourceExperience = clone(getSimulationExperienceByModelId("projectile-2d"));
-  sourceExperience.id = "teacher-projectile-cli";
-  sourceExperience.status = "draft";
-  const pack = createSimulationExperiencePack([sourceExperience], { cryptoApi: fixedCrypto });
-  const source = path.join(directory, "pack.json");
-  const target = path.join(directory, "experiences.json");
-  fs.writeFileSync(source, JSON.stringify(pack), "utf8");
-  fs.writeFileSync(target, "[]\n", "utf8");
-  const importer = fileURLToPath(new URL("../scripts/import-simulations.mjs", import.meta.url));
-  const result = spawnSync(process.execPath, [importer, source, "--target", target], { encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr);
-  const imported = JSON.parse(fs.readFileSync(target, "utf8"));
-  assert.equal(imported[0].modelId, "projectile-2d");
-  assert.equal(imported[0].status, "review");
 });
 
 test("el lookup cliente solo reconoce renderers registrados", () => {

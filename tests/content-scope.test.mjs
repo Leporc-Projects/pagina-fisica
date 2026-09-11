@@ -21,7 +21,7 @@ test("el registro canónico resuelve la identidad estable del curso real", () =>
   assert.deepEqual(getCourseById("fisica-basica-1"), {
     id: "fisica-basica-1",
     name: "Física Básica I",
-    href: "/fisica-basica-1",
+    href: "/fisica-basica-1/unidades",
     active: true,
   });
   assert.equal(getCourseById("curso-inventado"), undefined);

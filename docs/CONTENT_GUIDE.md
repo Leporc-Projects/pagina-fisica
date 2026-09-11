@@ -8,7 +8,6 @@ Esta guía describe cómo incorporar contenido sin romper las fuentes académica
 - Mantener separados los datos académicos centrales y el contenido editorial del sitio.
 - No asumir que el programa oficial y el plan clase a clase organizan los temas de forma equivalente.
 - No publicar contacto, oficina, horario de atención ni información del profesor del taller.
-- No incorporar todavía el cronograma del taller sin una decisión académica explícita.
 - La interfaz pública no muestra etiquetas de novedad, versiones de desarrollo ni estados internos. Los estados visibles describen disponibilidad o acciones reales del usuario.
 
 ## Añadir un aviso
@@ -32,6 +31,7 @@ Cada aviso admite:
   "category": "Curso",
   "publishedAt": "AAAA-MM-DD",
   "featured": false,
+  "scope": { "type": "global" },
   "href": "/ruta-interna-opcional",
   "status": "review"
 }
@@ -44,6 +44,7 @@ Reglas:
 - Las categorías admitidas son `Curso`, `Evaluación`, `Material`, `Horario` y `General`.
 - Los estados siguen `draft → review → published → archived`; solo `published` es público.
 - `locale` es obligatorio. Un aviso solo puede aparecer en páginas del mismo idioma; no se traduce ni se reutiliza automáticamente bajo otra URL.
+- El ámbito vigente es siempre `global`. El archivo público de cada locale reúne todos sus avisos en `/avisos` o `/en/notices`.
 - `href` se omite cuando el aviso no necesita destino. Una ruta interna se
   guarda desde la raíz lógica, sin escribir `/pagina-fisica`; la página de
   avisos añade el `base` activo. Enlaces externos deben usar HTTPS.
@@ -52,8 +53,8 @@ Reglas:
 - `Próximamente`, `En preparación` y `Sin material publicado` solo describen
   una disponibilidad real; no se usan etiquetas de novedad o proceso interno.
 
-El flujo normal es preparar el paquete en
-`/fisica-basica-1/herramientas/avisos`, descargarlo e importar:
+El flujo normal es desplegar «Gestionar avisos» al final de `/avisos` o
+`/en/notices`, preparar el paquete local, descargarlo e importar:
 
 ```sh
 npm run import:notices -- ruta/al/paquete.json
@@ -69,7 +70,7 @@ La cobertura y el flujo están definidos en [I18N.md](./I18N.md). No se crea una
 
 Los textos comunes de interfaz usan claves en los diccionarios `src/i18n/ui/`. Las magnitudes, parámetros, unidades, ecuaciones y límites físicos permanecen compartidos. Las experiencias de simulación añaden texto por locale dentro de su contrato y conservan una única configuración numérica.
 
-Toda nueva feature core se desarrolla en ES y EN desde el inicio y no se integra con traducción faltante. El contenido editorial que sea realmente específico de un idioma declara `locale` explícitamente y no usa fallback silencioso. La cobertura estudiantil y docente actual es completa en ambos idiomas.
+Toda nueva feature core se desarrolla en ES y EN desde el inicio y no se integra con traducción faltante. El contenido editorial que sea realmente específico de un idioma declara `locale` explícitamente y no usa fallback silencioso. La cobertura pública actual es completa en ambos idiomas.
 
 ## Registrar un video mediante enlace
 
@@ -275,12 +276,13 @@ historial ni filtros.
 
 ### Autoría docente mediante paquetes
 
-El Editor de banco crea solo preguntas fijas `singleChoice`, `number` o
-`multiNumber` con Question `2.0.0`. Genera el ID provisional, exige presentaciones completas ES/EN, muestra una previsualización seleccionable y exporta
-un Question Pack `2.0.0`. La identidad, los IDs de opción o campo, las unidades, las tolerancias y la respuesta se escriben una sola vez; el texto vive en `presentations.es` y `presentations.en`. No debe simular autenticación, modificar el sitio ni
-presentar un borrador como publicado. La dificultad introducida aquí sí es
-editorial porque procede de autoría/revisión docente; nunca se toma de
-`studentDifficultyEstimate`.
+Question `2.0.0` y Question Pack `2.0.0` siguen siendo los contratos de
+intercambio para preguntas fijas `singleChoice`, `number` o `multiNumber`.
+La identidad, los IDs de opción o campo, las unidades, las tolerancias y la
+respuesta se escriben una sola vez; el texto vive en `presentations.es` y
+`presentations.en`. No existe editor de banco en el producto público. El
+importador se conserva porque su almacén separado alimenta la composición
+académica pública de la Unidad 1.
 
 Todo paquete usa `authorSource: "teacher"` y `status: "draft"`. Si
 `requiresEditorialMath` es verdadero, `bonusEligible` debe ser falso hasta que
@@ -332,9 +334,8 @@ Las respuestas nuevas usan el esquema `1.2.0` y un `scope` compartido de tipo
 `global` o `course`; unidad y tema son contexto opcional bajo un curso y un tema
 nunca puede existir sin unidad. Si `helpfulSupport` es `other`,
 `helpfulSupportOther` contiene obligatoriamente la explicación libre; para
-cualquier otra opción ese campo se omite. El Centro de revisión conserva
-compatibilidad de lectura con respuestas válidas `1.0.0` y `1.1.0`, cuyos
-contratos históricos permanecen congelados.
+cualquier otra opción ese campo se omite. Los contratos históricos válidos
+`1.0.0` y `1.1.0` permanecen congelados para compatibilidad de archivos.
 
 Una propuesta estudiantil no es un ejercicio. Su flujo editorial futuro es:
 
@@ -361,71 +362,6 @@ Un mecanismo futuro de envío se conectará en la frontera que hoy ocupa
 `submissionTarget: null`, después de definir privacidad, consentimiento y flujo
 docente. No se debe introducir un proveedor o endpoint desde los componentes.
 Ver [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md).
-
-### Entrega de archivos y revisión docente
-
-JSON es el formato canónico para trasladar una respuesta de Participa al Centro
-de revisión. Si un curso utiliza Google Forms, Microsoft Forms u otro canal
-externo, este solo recibe manualmente el archivo que el estudiante decide
-adjuntar. Aula Física no llama su API, no incrusta un endpoint y no
-presenta la preparación local como un envío. La instrucción al estudiante debe
-ser concreta: exportar JSON y entregarlo por el canal indicado por el docente.
-
-El Centro de revisión acepta cada archivo de forma independiente. Un error de
-formato se describe sin descartar los demás y un ID repetido se marca como
-duplicado, sin sugerir fraude ni contar dos veces la respuesta. No se importan
-TXT o CSV arbitrarios porque perderían parte del contrato y harían ambigua su
-validación.
-
-El texto importado es contenido no confiable: se presenta como texto, nunca se
-interpreta como HTML o código. La revisión no modifica el objeto original. Para
-una propuesta se mantiene una capa local con uno de estos estados:
-
-- pendiente;
-- interesante;
-- necesita ajustes;
-- descartar;
-- candidata al banco.
-
-“Candidata al banco” es una decisión de clasificación docente, no una
-aprobación académica. El paso posterior sigue siendo manual: revisar el
-contenido, corregirlo, asignar metadatos editoriales y crear un registro nuevo
-en `UNIT_1_EXERCISES` solo tras aprobación explícita. La nota docente y la
-dificultad estimada por quien propone no deben copiarse como contenido o
-dificultad editorial oficial.
-
-Los resúmenes muestran conteos observables por actividad, tema u opción. No se
-redactan diagnósticos, índices de satisfacción, perfiles, inferencias causales
-ni conclusiones sobre todo el grupo. Los intentos de Mini quices se consultan como
-archivos individuales anónimos o identificados; el correo solo se muestra si el
-archivo lo contiene y no se usa para consolidar notas o vincular intentos.
-
-### Organizar resultados docentes
-
-El Organizador de resultados recibe tablas genéricas: no se redacta lógica que
-dependa de una posición fija o de que el archivo proceda de Google Forms o
-Microsoft Forms. Cada fuente debe mostrar y permitir cambiar hoja, fila de
-encabezado, columnas, escala y política de duplicados. Una sugerencia de
-mapping ayuda a empezar, pero nunca sustituye la revisión docente.
-
-Reglas editoriales y de datos:
-
-- conservar el valor original y su referencia de archivo/fila;
-- no corregir correos, completar dominios, fusionar identidades ni añadir
-  desconocidos al listado;
-- no llamar “nota oficial” a un resultado o promedio descriptivo;
-- no convertir un número a porcentaje sin máximo conocido;
-- tratar `missing` como estado; solo una política explícita puede usar cero en
-  el promedio descriptivo;
-- no aplicar Mini quices a examen o taller sin una regla académica posterior;
-- escribir cualquier texto importado como texto seguro en CSV/XLSX;
-- utilizar únicamente listados y resultados manifiestamente sintéticos en
-  pruebas, capturas y documentación del repositorio.
-
-La corrección se realiza sobre el archivo o el mapping. No se añade una tabla
-editable que permita reemplazar notas sin trazabilidad. Si en otro bloque se
-introducen ponderaciones, escala 0–5 o correcciones manuales, deben ser
-decisiones explícitas, auditables y seguir separadas de la nota oficial.
 
 ## Catálogo público de simulaciones
 
@@ -665,25 +601,6 @@ Antes de publicar una experiencia interactiva:
 - comprobar claro y oscuro a 1440, 1024, 768, 390 y 320 px;
 - no usar red, persistencia, HTML dinámico, evaluación de código ni datos estudiantiles.
 
-El Laboratorio local de `/fisica-basica-1/herramientas/simulaciones` prepara una
-experiencia sin código. Su sesión existe solo en memoria y la preview usa el
-mismo renderer/runtime de producción. Exporta un paquete `2.0.0` con fuente
-`teacher` y estado `draft`. Para incorporarlo:
-
-```sh
-npm run import:simulations -- ruta/al/paquete.json
-```
-
-El importador rechaza esquemas, modelos, propiedades, rangos, vistas, presets,
-textos, contextos o IDs inválidos y fuerza `review`. Después deben revisarse la
-intención académica, unidades, límites, accesibilidad y comportamiento; solo una
-edición explícita en el repositorio puede cambiar a `published`.
-
-El texto de título, resumen, labels y guía es texto plano: no admite HTML ni se
-interpreta como Markdown. Una experiencia no puede contener JavaScript,
-funciones, CSS, renderer arbitrario, URL o expresiones matemáticas ejecutables.
-El constructor actual no es un editor p5 ni un IDE.
-
 No se aceptan capturas raster de gráficas que puedan generarse con esta
 infraestructura. SVG preserva texto, nitidez y posibilidad de impresión. El
 renderer de proyectiles usa p5.js en modo instancia sobre Canvas 2D porque la
@@ -695,12 +612,6 @@ escena animada requiere redibujado frecuente. Un nuevo renderer Canvas debe:
 4. responder a tamaño, densidad de píxel, tema y movimiento reducido;
 5. cargar su dependencia local de forma diferida y nunca desde CDN;
 6. declarar dependencia, versión y licencia en `THIRD_PARTY_NOTICES.md`.
-
-Para una tercera familia se añaden primero el modelo y sus tests; después su
-metadata de parámetros/vistas, el registro del renderer, una experiencia válida,
-el dispatcher y las pruebas del Laboratorio. Cambiar de modelo debe reconstruir
-el borrador desde esa metadata y destruir la preview anterior, sin arrastrar
-parámetros ni vistas incompatibles.
 
 ## Metadatos públicos y editoriales
 
@@ -726,10 +637,10 @@ Está prohibido incorporar al repositorio o mostrar públicamente:
 - archivos reales usados para consolidar evaluaciones;
 - capturas de plataformas académicas con información identificable.
 
-La participación y las herramientas docentes actuales procesan datos
-localmente en el navegador, no envían respuestas a servidores y no conservan
-información al cerrar o recargar la página. La única persistencia
-vigente es la preferencia visual, que no debe mezclarse con datos estudiantiles.
+Participa y el Editor de avisos procesan datos localmente en el navegador, no
+envían respuestas a servidores y no conservan información al cerrar o recargar
+la página. La única persistencia vigente es la preferencia visual, que no debe
+mezclarse con datos estudiantiles.
 
 Las categorías, límites y decisiones pendientes se documentan en
 [DATA_AND_PRIVACY.md](./DATA_AND_PRIVACY.md). Ese documento es una guía técnica

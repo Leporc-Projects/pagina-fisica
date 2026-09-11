@@ -153,9 +153,6 @@ test("el dispatcher conserva los cinco slots internos y no inicializa los oculto
   }
   assert.match(runtime, /slots\.forEach\(\(slot\) => \{ slot\.hidden = slot !== activeSlot; \}\)/);
   assert.match(runtime, /activeSlot\.querySelector\(client\.selector\)/);
-  const labRuntime = source("src/scripts/simulation-lab.js");
-  assert.match(labRuntime, /mountedPreviewLocale !== previewLocale/);
-  assert.match(labRuntime, /destroySimulationExperienceRenderer\(rendererRoot\)/);
 });
 
 test("las páginas bilingües usan el registro confiable y wrappers estáticos", () => {

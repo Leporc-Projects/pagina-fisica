@@ -1,5 +1,5 @@
 ---
-// Compone la identidad del semestre y CourseNav para mantener iguales las subpáginas.
+// Compone la identidad del curso y CourseNav para mantener iguales las subpáginas.
 import CourseNav from "./CourseNav.astro";
 import { COURSE } from "../../data/course.js";
 
@@ -17,7 +17,7 @@ const {
   locale = "es",
 } = Astro.props;
 const courseName = locale === "es" ? COURSE.name : "Basic Physics I";
-const headingSection = section ?? `${courseName} · ${COURSE.semester}`;
+const headingSection = section ?? courseName;
 ---
 
 <header class="course-subpage-hero">

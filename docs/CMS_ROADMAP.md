@@ -14,11 +14,12 @@ de una publicación programada: cualquier cambio público en GitHub Pages requie
 un build y despliegue.
 
 El CMS sustituirá las fuentes detrás de consultas como
-`getPublishedNotices()`, `getGlobalNotices()`, `getCourseNotices(courseId)`,
-`getVideos*()` y `getMiniQuizzes*()`. Las páginas públicas no deben conocer si el
-origen es JSON, Git, una API o una base de datos. El registro canónico de cursos
-y el contrato de ámbito global/curso seguirán siendo fronteras estables, aunque
-su almacenamiento cambie.
+`getPublishedNotices()`, `getHomepageNotices()`, `getVideos*()` y
+`getMiniQuizzes*()`. Las páginas públicas no deben conocer si el origen es JSON,
+Git, una API o una base de datos. El registro canónico de cursos seguirá siendo
+una frontera estable, aunque su almacenamiento cambie. Los avisos actuales son
+globales; reintroducir un ámbito de curso exige una decisión de producto
+explícita, no solo un cambio de almacenamiento.
 
 También podría sustituir el almacenamiento detrás de
 `getPublishedSimulationExperiences()`, sin mezclarlo con el registro confiable
@@ -30,8 +31,8 @@ renderer en código arbitrario suministrado desde contenido.
 
 | Rol | Alcance provisional |
 | --- | --- |
-| `teacher` | Avisos, banco, materiales, revisión y resultados |
-| `workshopTeacher` | Avisos, preguntas, materiales y revisión cuando tenga permiso |
+| `teacher` | Avisos y contenido académico cuando tenga permiso |
+| `workshopTeacher` | Avisos y materiales cuando tenga permiso |
 | `maintainer` | Infraestructura, configuración y despliegue |
 
 Los roles se asignarán a cuentas verificadas, nunca a nombres personales
@@ -47,9 +48,9 @@ privilegio, rate limits donde proceda, trazabilidad de cambios y restauración
 ensayada. Tokens, contraseñas y claves vivirán en un gestor de secretos, nunca
 en contenido, código cliente ni archivos exportados.
 
-La autorización deberá evaluar también el ámbito del recurso: poder preparar
-avisos generales no implica poder publicar en todos los cursos, y un `courseId`
-solo será válido si pertenece al registro de cursos disponible para esa cuenta.
+Si una etapa futura reintroduce ámbitos editoriales, la autorización deberá
+evaluarlos por recurso. El producto actual prepara exclusivamente avisos
+globales y no debe inferir permisos de curso desde un `courseId`.
 
 Antes de migrar se deberá definir retención, propiedad de datos, exportación,
 backups, recuperación ante fallos y el mecanismo que dispara builds. No se
@@ -57,10 +58,9 @@ incorporará información estudiantil a un CMS editorial por defecto.
 
 ## Autoría avanzada de simulaciones
 
-El constructor visual local, los packs `2.0.0`, los renderers SVG y p5/Canvas 2D
-registrados y el importador en revisión sí están implementados. No están
-implementados un editor p5/Canvas, un editor de código, una galería de renderers,
-ejecución remota ni publicación
+Los renderers SVG y p5/Canvas 2D registrados y las experiencias `2.0.0`
+publicadas siguen versionados en el repositorio. No existe un laboratorio de
+autoría, un editor p5/Canvas, un editor de código, ejecución remota ni publicación
 desde el navegador. Si una etapa futura admite código docente, necesitará un
 sandbox aislado, límites de recursos, política de red, revisión de dependencias,
 versionado, auditoría y separación completa del sitio público. Es una frontera

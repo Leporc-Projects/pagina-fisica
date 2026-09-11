@@ -15,7 +15,7 @@ const links = [
     number: "01",
     label: locale === "es" ? COURSE.name : "Basic Physics I",
     description: t(locale, "home.courseDescription"),
-    href: getLocalizedPath(ROUTE_IDS.COURSE, locale),
+    href: getLocalizedPath(ROUTE_IDS.COURSE_UNITS, locale),
   },
   {
     number: "02",
@@ -50,7 +50,7 @@ const links = [
       <header class="editorial-heading">
         <p class="eyebrow eyebrow--dark">{t(locale, "home.activeCourse")}</p>
         <div><h2>{locale === "es" ? COURSE.name : "Basic Physics I"}</h2><p>{t(locale, "home.courseIntro")}</p></div>
-        <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE, locale))}>
+        <a class="text-link" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_UNITS, locale))}>
           {t(locale, "home.enterCourse")}<span aria-hidden="true">→</span>
         </a>
       </header>
@@ -74,7 +74,6 @@ const links = [
           {recentNotices.map((notice) => <NoticeCard notice={notice} compact showScope idPrefix="home-notice" locale={locale} />)}
           <div class="notice-list__links" aria-label={t(locale, "home.notices")}>
             <a class="notice-list__more" href={withBase(getLocalizedPath(ROUTE_IDS.NOTICES, locale))}>{t(locale, "home.generalNotices")}<span aria-hidden="true">→</span></a>
-            <a class="notice-list__more" href={withBase(getLocalizedPath(ROUTE_IDS.COURSE_NOTICES, locale))}>{t(locale, "home.courseNotices", { course: locale === "es" ? COURSE.name : "Basic Physics I" })}<span aria-hidden="true">→</span></a>
           </div>
         </div>
       </div>

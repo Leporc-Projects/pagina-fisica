@@ -277,7 +277,7 @@ const isExactCurrent = (href: string) =>
     </nav>
 
     <p class="menu-panel__footer">
-      {COURSE.name} · {t(locale, "shell.semester", { semester: COURSE.semester })}
+      {locale === "es" ? COURSE.name : "Basic Physics I"}
     </p>
   </section>
 </div>

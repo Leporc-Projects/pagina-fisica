@@ -39,8 +39,7 @@
     "version": 1,
     "locale": "es",
     "scope": {
-      "type": "course",
-      "courseId": "fisica-basica-1"
+      "type": "global"
     },
     "title": "Universo Mecánico: la caída de los cuerpos",
     "summary": "Para complementar lo que estamos viendo en el curso, les recomiendo el segundo capítulo de Universo Mecánico sobre la caída de los cuerpos.",
@@ -57,8 +56,7 @@
     "version": 1,
     "locale": "en",
     "scope": {
-      "type": "course",
-      "courseId": "fisica-basica-1"
+      "type": "global"
     },
     "title": "The Mechanical Universe: falling bodies",
     "summary": "To complement our course work, I recommend the second Mechanical Universe episode on falling bodies.",

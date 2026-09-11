@@ -3,12 +3,14 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import NoticeCard from "../components/NoticeCard.astro";
-import { getGlobalNotices } from "../data/notices.js";
+import NoticeEditor from "../components/notices/NoticeEditor.astro";
+import { getPublishedNotices } from "../data/notices.js";
 import { ROUTE_IDS } from "../i18n/routes.js";
 import { t } from "../i18n/index.js";
+import "../styles/notice-editor.css";
 
 const { locale = "es" } = Astro.props;
-const notices = getGlobalNotices(undefined, locale);
+const notices = getPublishedNotices(undefined, locale);
 ---
 
 <BaseLayout
@@ -49,4 +51,12 @@ const notices = getGlobalNotices(undefined, locale);
         )
     }
   </section>
+
+  <details class="notice-management">
+    <summary>{t(locale, "public.notices.manage")}</summary>
+    <div class="notice-management__content">
+      <p>{t(locale, "public.notices.manageDescription")}</p>
+      <NoticeEditor locale={locale} />
+    </div>
+  </details>
 </BaseLayout>

@@ -4,7 +4,6 @@ import { getSimulationModelById } from "../data/simulation-models.js";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "../i18n/config.js";
 
 export const SIMULATION_EXPERIENCE_SCHEMA_VERSION = "2.0.0";
-export const SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION = "2.0.0";
 export const SIMULATION_EXPERIENCE_STATUSES = Object.freeze([
   "draft",
   "review",
@@ -45,9 +44,6 @@ const HTML_MARKUP = /<\s*\/?\s*[a-z][^>]*>|<!--|-->/iu;
 
 const isPlainObject = (value) =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
-const bytesToHex = (bytes) => [...bytes]
-  .map((byte) => byte.toString(16).padStart(2, "0"))
-  .join("");
 const unique = (values) => new Set(values).size === values.length;
 const validText = (value, maximumLength) =>
   typeof value === "string" &&
@@ -365,119 +361,3 @@ export const normalizeSimulationExperience = (
     })),
   };
 };
-
-const slugify = (value) => String(value ?? "")
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "")
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, "-")
-  .replace(/^-+|-+$/g, "")
-  .slice(0, 40) || "experiencia";
-
-export const createSimulationExperienceId = (
-  modelId,
-  title,
-  cryptoApi = globalThis.crypto
-) => {
-  if (!getSimulationModelById(modelId)) throw new TypeError("El modelo no existe.");
-  if (!cryptoApi || typeof cryptoApi.getRandomValues !== "function") {
-    throw new Error("No está disponible la generación criptográfica del ID.");
-  }
-  return `${modelId}-${slugify(title)}-${bytesToHex(cryptoApi.getRandomValues(new Uint8Array(6)))}`;
-};
-
-export const createSimulationExperienceDraft = (
-  fields,
-  { id, cryptoApi = globalThis.crypto } = {}
-) => normalizeSimulationExperience({
-  ...fields,
-  id: id ?? createSimulationExperienceId(fields?.modelId, fields?.title, cryptoApi),
-  version: 1,
-  status: "draft",
-});
-
-export const createSimulationExperiencePack = (
-  experiences,
-  { cryptoApi = globalThis.crypto, createdAt = new Date().toISOString() } = {}
-) => {
-  if (!cryptoApi || typeof cryptoApi.getRandomValues !== "function") {
-    throw new Error("No está disponible la generación criptográfica del paquete.");
-  }
-  return {
-    schemaVersion: SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION,
-    packageId: `simulation-pack-${bytesToHex(cryptoApi.getRandomValues(new Uint8Array(8)))}`,
-    createdAt,
-    source: "teacher",
-    experiences: experiences.map((experience) =>
-      normalizeSimulationExperience(experience, { status: "draft" })
-    ),
-  };
-};
-
-export const validateSimulationExperiencePack = (
-  pack,
-  { existingIds = [] } = {}
-) => {
-  const issues = [];
-  const PACK_KEYS = ["schemaVersion", "packageId", "createdAt", "source", "experiences"];
-  if (!validateKeys(pack, PACK_KEYS, "pack", issues)) {
-    return { valid: false, issues, errors: issues.map((entry) => entry.message) };
-  }
-  if (pack.schemaVersion !== SIMULATION_EXPERIENCE_PACK_SCHEMA_VERSION) {
-    issue(issues, "schemaVersion", "invalid-pack-schema", "schemaVersion de paquete inválida.");
-  }
-  if (!/^simulation-pack-[0-9a-f]{16}$/.test(pack.packageId ?? "")) {
-    issue(issues, "packageId", "invalid-package-id", "packageId inválido.");
-  }
-  const createdAt = new Date(pack.createdAt);
-  if (typeof pack.createdAt !== "string" || Number.isNaN(createdAt.valueOf()) ||
-      createdAt.toISOString() !== pack.createdAt) {
-    issue(issues, "createdAt", "invalid-created-at", "createdAt debe usar ISO 8601.");
-  }
-  if (pack.source !== "teacher") {
-    issue(issues, "source", "invalid-source", "La fuente del paquete debe ser teacher.");
-  }
-  if (!Array.isArray(pack.experiences) || pack.experiences.length === 0) {
-    issue(issues, "experiences", "empty-pack", "El paquete no contiene experiencias.");
-  } else {
-    const ids = pack.experiences.map((experience) => experience?.id);
-    if (!unique(ids)) issue(issues, "experiences", "duplicate-pack-id", "El paquete contiene IDs duplicados.");
-    pack.experiences.forEach((experience, index) => {
-      const validation = validateSimulationExperience(experience, { existingIds });
-      validation.issues.forEach((entry) => issue(
-        issues,
-        `experiences[${index}].${entry.path}`,
-        entry.code,
-        `Experiencia ${index + 1}: ${entry.message}`
-      ));
-      if (experience?.status !== "draft") {
-        issue(issues, `experiences[${index}].status`, "non-draft-pack", `Experiencia ${index + 1}: el paquete solo admite estado draft.`);
-      }
-    });
-  }
-  return { valid: issues.length === 0, issues, errors: issues.map((entry) => entry.message) };
-};
-
-export const mergeSimulationExperiencePack = (pack, currentExperiences) => {
-  if (!Array.isArray(currentExperiences)) {
-    throw new TypeError("El almacenamiento de experiencias debe ser una lista.");
-  }
-  const validation = validateSimulationExperiencePack(pack, {
-    existingIds: currentExperiences.map((experience) => experience.id),
-  });
-  if (!validation.valid) throw new TypeError(validation.errors.join(" "));
-  const imported = pack.experiences.map((experience) =>
-    normalizeSimulationExperience(experience, { status: "review" })
-  );
-  return {
-    experiences: [...currentExperiences, ...imported],
-    imported,
-    packageId: pack.packageId,
-  };
-};
-
-export const simulationExperiencePackFilename = (pack) =>
-  `aula-fisica-simulation-pack-${pack.createdAt.slice(0, 10)}-${pack.packageId.slice(-8)}.json`;
-
-export const toSimulationExperiencePackJSON = (pack) =>
-  `${JSON.stringify(pack, null, 2)}\n`;

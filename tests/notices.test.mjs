@@ -8,8 +8,6 @@ import { fileURLToPath } from "node:url";
 
 import {
   NOTICES,
-  getCourseNotices,
-  getGlobalNotices,
   getHomepageNotices,
   getPublishedNotices,
 } from "../src/data/notices.js";
@@ -140,7 +138,7 @@ test("la portada prioriza featured sin duplicar y respeta el límite", () => {
   assert.equal(getHomepageNotices(20, fixtures).length, 3);
 });
 
-test("las consultas públicas separan global y curso sin filtrar estados privados", () => {
+test("el único archivo público reúne avisos publicados sin exponer estados privados", () => {
   const fixtures = [
     notice({ id: "notice-2026-08-10-000000000001", status: "published", scope: { type: "global" } }),
     notice({ id: "notice-2026-08-11-000000000002", status: "draft", scope: { type: "global" } }),
@@ -148,13 +146,10 @@ test("las consultas públicas separan global y curso sin filtrar estados privado
     notice({ id: "notice-2026-08-13-000000000004", status: "review" }),
     notice({ id: "notice-2026-08-14-000000000005", status: "archived" }),
   ];
-  assert.deepEqual(getGlobalNotices(fixtures).map((entry) => entry.id), [
+  assert.deepEqual(getPublishedNotices(fixtures).map((entry) => entry.id), [
     "notice-2026-08-10-000000000001",
-  ]);
-  assert.deepEqual(getCourseNotices("fisica-basica-1", fixtures).map((entry) => entry.id), [
     "notice-2026-08-12-000000000003",
   ]);
-  assert.throws(() => getCourseNotices("curso-inventado", fixtures), /no registrado/);
   assert.equal(getHomepageNotices(3, fixtures).every((entry) => entry.status === "published"), true);
 });
 
@@ -210,7 +205,7 @@ test("los avisos reales conservan sus datos y tienen el ámbito editorial espera
   const courseNotice = NOTICES.find((entry) => entry.title === "Universo Mecánico: la caída de los cuerpos");
   assert.deepEqual(globalNotice?.scope, { type: "global" });
   assert.equal(globalNotice?.href, "https://www.youtube.com/watch?v=GGDMi7za85s");
-  assert.deepEqual(courseNotice?.scope, { type: "course", courseId: "fisica-basica-1" });
+  assert.deepEqual(courseNotice?.scope, { type: "global" });
   assert.equal(courseNotice?.featured, true);
   assert.equal(courseNotice?.status, "published");
   assert.match(courseNotice?.href ?? "", /^https:\/\/www\.youtube\.com\//);
@@ -268,27 +263,29 @@ test("el editor exige campos, previsualiza, exporta y usa APIs de texto seguras"
   assert.match(component, /name="content"/);
   assert.match(component, /name="featured"/);
   assert.match(component, /name="href"/);
-  assert.match(component, /name="scope"[^>]*required/);
-  assert.match(component, /COURSES\.map/);
+  assert.doesNotMatch(component, /name="scope"|COURSES\.map/);
+  assert.match(component, /teacher\.notices\.global/);
   assert.match(component, /data-notice-preview/);
   assert.match(client, /createNoticePack/);
+  assert.match(client, /scope: \{ type: "global" \}/);
+  assert.doesNotMatch(client, /fieldValue\(form, "scope"\)|courseId:/);
   assert.match(client, /textContent/);
   assert.doesNotMatch(client, /innerHTML|insertAdjacentHTML|eval\s*\(/);
   assert.doesNotMatch(client, /localStorage|sessionStorage|fetch\s*\(/);
   assert.match(client, /contentScopeLabel/);
 });
 
-test("las rutas públicas y la tarjeta compacta conservan enlaces seguros y ámbitos separados", () => {
+test("la única ruta pública integra archivo y editor y conserva enlaces seguros", () => {
   const generalPage = fs.readFileSync(new URL("../src/pages/avisos.astro", import.meta.url), "utf8");
-  const coursePage = fs.readFileSync(new URL("../src/pages/fisica-basica-1/avisos.astro", import.meta.url), "utf8");
   const homepage = fs.readFileSync(new URL("../src/components/pages/HomePage.astro", import.meta.url), "utf8");
   const card = fs.readFileSync(new URL("../src/components/NoticeCard.astro", import.meta.url), "utf8");
-  assert.match(generalPage, /getGlobalNotices/);
-  assert.doesNotMatch(generalPage, /getPublishedNotices/);
-  assert.match(coursePage, /getCourseNotices\(COURSE\.id/);
-  assert.match(coursePage, /getLocalizedPath\(ROUTE_IDS\.NOTICES, locale\)/);
+  assert.match(generalPage, /getPublishedNotices/);
+  assert.match(generalPage, /<NoticeEditor locale=\{locale\}/);
+  assert.match(generalPage, /<details class="notice-management">/);
+  assert.ok(generalPage.indexOf("notice-list--archive") < generalPage.indexOf("<NoticeEditor"));
   assert.match(homepage, /showScope/);
   assert.match(homepage, /getHomepageNotices\(3/);
+  assert.doesNotMatch(homepage, /COURSE_NOTICES|courseNotices/);
   assert.match(card, /href &&/);
   assert.match(card, /target=\{external \? "_blank"/);
   assert.match(card, /rel=\{external \? "noopener noreferrer"/);
